@@ -7,7 +7,9 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'CAAGUAZU_VERSION', '1.0.0' );
+// Fuente única de verdad: el header "Version:" de style.css (evita que quede
+// desincronizada de la que compara inc/updater.php contra GitHub Releases).
+define( 'CAAGUAZU_VERSION', wp_get_theme()->get( 'Version' ) );
 
 /* ---------------------------------------------------------------------------
  * Setup
@@ -124,3 +126,4 @@ require get_template_directory() . '/inc/seo.php';
 require get_template_directory() . '/inc/map.php';
 require get_template_directory() . '/inc/cpt-subscriber.php';
 require get_template_directory() . '/inc/newsletter-form.php';
+require get_template_directory() . '/inc/updater.php';

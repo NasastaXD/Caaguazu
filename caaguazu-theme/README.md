@@ -39,6 +39,17 @@ Theme classic (no FSE) del portal oficial del departamento de Caaguazú, Paragua
 - **Búsqueda instantánea** (F9): sugerencias progresivas vía el endpoint core `/wp-json/wp/v2/search` (ya cubre Páginas/Noticias/Eventos/Artesanos por ser `show_in_rest`), sin endpoint propio.
 - **Newsletter** (F10): captura de email en el footer, guardada en el CPT interno `caaguazu_subscriber` (sin integración con un ESP externo todavía) + link RSS visible.
 
+## Actualizaciones
+
+El theme se actualiza solo desde GitHub, sin plugins de terceros: `inc/updater.php` chequea `github.com/NasastaXD/Caaguazu/releases/latest` y, si hay una versión más nueva que la instalada, aparece en **Escritorio → Actualizaciones** como cualquier otro theme ("Actualizar ahora").
+
+Para publicar una actualización:
+1. Subir el número de `Version:` en `caaguazu-theme/style.css`.
+2. Mergear ese cambio a `main`.
+3. Listo — `.github/workflows/release.yml` arma `caaguazu-theme.zip` (con `bin/build-zip.sh`) y crea el Release en GitHub solo, sin pasos manuales de tag.
+
+Los sitios con el theme instalado lo detectan en su próximo chequeo (cron cada 12h, o al abrir Actualizaciones y tocar "Buscar de nuevo").
+
 ## Edición de contenido
 
 - **Home** (hero, identidad, números, ecosistema, audiencias, footer/contacto): **Apariencia → Personalizar → Contenido del Home**.
