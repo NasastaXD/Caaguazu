@@ -196,6 +196,71 @@ function caaguazu_page_url( $slug ) {
 }
 
 /**
+ * Accesos rápidos: grid de destinos principales estilo dashboard de app,
+ * para que el sitio se navegue como un portal de servicios en vez de un
+ * blog. Un solo array central — sumar una sección nueva (ej. educación,
+ * cuando exista su página/CPT) es agregar una línea acá.
+ */
+function caaguazu_quick_access_items() {
+	return array(
+		array( 'icon' => '🧾', 'label' => __( 'Servicios', 'caaguazu' ),  'url' => caaguazu_page_url( 'servicios' ) ),
+		array( 'icon' => '📰', 'label' => __( 'Noticias', 'caaguazu' ),   'url' => get_post_type_archive_link( 'caaguazu_news' ) ),
+		array( 'icon' => '🌳', 'label' => __( 'Turismo', 'caaguazu' ),    'url' => caaguazu_page_url( 'turismo' ) ),
+		array( 'icon' => '📅', 'label' => __( 'Agenda', 'caaguazu' ),     'url' => get_post_type_archive_link( 'caaguazu_event' ) ),
+		array( 'icon' => '🚧', 'label' => __( 'Reportar', 'caaguazu' ),   'url' => caaguazu_page_url( 'reportar' ) ),
+		array( 'icon' => '🪚', 'label' => __( 'Artesanos', 'caaguazu' ),  'url' => get_post_type_archive_link( 'caaguazu_artisan' ) ),
+		array( 'icon' => '🌐', 'label' => __( 'Ecosistema', 'caaguazu' ), 'url' => caaguazu_page_url( 'ecosistema' ) ),
+		array( 'icon' => '✉️', 'label' => __( 'Contacto', 'caaguazu' ),   'url' => caaguazu_page_url( 'contacto' ) ),
+	);
+}
+
+/**
+ * Pinta la grilla de accesos rápidos.
+ */
+function caaguazu_render_quick_access() {
+	echo '<section class="quick-access" aria-label="' . esc_attr__( 'Accesos rápidos', 'caaguazu' ) . '">';
+	echo '<div class="container"><div class="qa-grid">';
+	foreach ( caaguazu_quick_access_items() as $item ) {
+		printf(
+			'<a class="qa-tile reveal" href="%s"><span class="qa-ico" aria-hidden="true">%s</span><span class="qa-label">%s</span></a>',
+			esc_url( $item['url'] ),
+			wp_kses_post( $item['icon'] ),
+			esc_html( $item['label'] )
+		);
+	}
+	echo '</div></div></section>';
+}
+
+/**
+ * Tabbar fijo inferior (solo móvil): navegación tipo app, siempre alcanzable
+ * con el pulgar, sin importar en qué página esté el usuario.
+ */
+function caaguazu_render_tabbar( $current_slug ) {
+	$items = array(
+		array( 'icon' => '🏠', 'label' => __( 'Inicio', 'caaguazu' ),   'url' => home_url( '/' ),                  'match' => 'home' ),
+		array( 'icon' => '🔍', 'label' => __( 'Buscar', 'caaguazu' ),   'url' => home_url( '/?s=' ),               'match' => 'buscar' ),
+		array( 'icon' => '🚧', 'label' => __( 'Reportar', 'caaguazu' ), 'url' => caaguazu_page_url( 'reportar' ),  'match' => 'reportar', 'cta' => true ),
+		array( 'icon' => '🌳', 'label' => __( 'Turismo', 'caaguazu' ),  'url' => caaguazu_page_url( 'turismo' ),   'match' => 'turismo' ),
+	);
+	echo '<nav class="tabbar" aria-label="' . esc_attr__( 'Navegación rápida', 'caaguazu' ) . '">';
+	foreach ( $items as $item ) {
+		printf(
+			'<a class="tabbar-link%s%s" href="%s"><span class="tabbar-ico" aria-hidden="true">%s</span><span>%s</span></a>',
+			( $current_slug === $item['match'] ) ? ' active' : '',
+			! empty( $item['cta'] ) ? ' tabbar-cta' : '',
+			esc_url( $item['url'] ),
+			wp_kses_post( $item['icon'] ),
+			esc_html( $item['label'] )
+		);
+	}
+	printf(
+		'<button type="button" class="tabbar-link" id="tabbarMenu"><span class="tabbar-ico" aria-hidden="true">☰</span><span>%s</span></button>',
+		esc_html__( 'Menú', 'caaguazu' )
+	);
+	echo '</nav>';
+}
+
+/**
  * Lee un valor del Customizer aceptando un default; usa get_theme_mod.
  */
 function caaguazu_opt( $key, $default = '' ) {
