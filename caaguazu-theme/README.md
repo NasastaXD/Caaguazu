@@ -90,6 +90,7 @@ Los sitios con el theme instalado lo detectan en su próximo chequeo (cron cada 
 - Los CPT de noticias, eventos y artesanos están expuestos en REST (`show_in_rest: true`); los de reportes y suscriptores **no**, a propósito (gestión interna).
 - `wp_mail()` en hosting compartido sin SMTP configurado puede fallar o caer en spam — para producción se recomienda un plugin de SMTP (no es una dependencia del theme, solo de la entrega del correo).
 - El mapa de puntos históricos (`[caaguazu_mapa_puntos]`) usa coordenadas aproximadas del centro de Caaguazú (`inc/map.php`) — ajustar con ubicaciones reales cuando estén disponibles.
+- **Nav con mega-menú**: `caaguazu_render_nav()`/`caaguazu_render_fallback_nav()` (`inc/helpers.php`) pintan un dropdown por cada item de nivel 1 con hijos, para llegar a destinos específicos (ej. Ykua La Patria) en un clic desde cualquier página. Turismo usa un mega-menú agrupado (`caaguazu_turismo_menu_groups()`) con accesos directos reales, no solo el hub. En el drawer móvil el submenú va siempre expandido e indentado (sin acordeón/JS extra).
 
 ## Próximos pasos sugeridos
 
