@@ -147,20 +147,6 @@ function caaguazu_customize_register( $wp_customize ) {
 	}
 
 	/* ============================================================
-	 * TRANSPARENCIA
-	 * ============================================================ */
-	$wp_customize->add_section( 'caaguazu_transp', array(
-		'title' => __( 'Transparencia (banda)', 'caaguazu' ),
-		'panel' => 'caaguazu_home',
-	) );
-	caaguazu_add_text( $wp_customize, 'transp_title', __( 'Título', 'caaguazu' ),
-		'Gobierno abierto, datos accesibles', 'caaguazu_transp' );
-	caaguazu_add_text( $wp_customize, 'transp_body',  __( 'Texto', 'caaguazu' ),
-		'Publicamos presupuesto, licitaciones y datos abiertos en formatos reutilizables. La transparencia es el cimiento del ecosistema.', 'caaguazu_transp', true );
-	caaguazu_add_text( $wp_customize, 'transp_cta1', __( 'CTA primario', 'caaguazu' ),  'Ver presupuesto',  'caaguazu_transp' );
-	caaguazu_add_text( $wp_customize, 'transp_cta2', __( 'CTA secundario', 'caaguazu' ), 'Datos abiertos',  'caaguazu_transp' );
-
-	/* ============================================================
 	 * FOOTER + IDENTIDAD GENERAL
 	 * ============================================================ */
 	$wp_customize->add_section( 'caaguazu_footer', array(

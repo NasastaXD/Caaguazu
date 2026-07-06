@@ -12,7 +12,6 @@ Theme classic (no FSE) del portal oficial del departamento de Caaguazú, Paragua
 4. Crear las páginas con estos slugs exactos (en blanco, el theme las renderiza con su hero default):
    - `sobre-caaguazu`
    - `servicios`
-   - `transparencia`
    - `ecosistema`
    - `contacto` — asignarle el **Template "Página de contacto"** (Atributos de página) para que muestre el formulario con envío real de email.
    - `reportar` — asignarle el **Template "Reportá un problema"** para habilitar el formulario de reportes ciudadanos.
@@ -31,7 +30,7 @@ Theme classic (no FSE) del portal oficial del departamento de Caaguazú, Paragua
 
 ## Edición de contenido
 
-- **Home** (hero, identidad, ecosistema, audiencias, transparencia, footer/contacto): **Apariencia → Personalizar → Contenido del Home**.
+- **Home** (hero, identidad, números, ecosistema, audiencias, footer/contacto): **Apariencia → Personalizar → Contenido del Home**.
 - **Noticias**: menú lateral **Noticias** (CPT propio). Cada noticia tiene categoría (taxonomía `caaguazu_news_cat`) y un campo "Minutos de lectura" en la sidebar.
 - **Turismo**: páginas normales de WordPress bajo `/turismo/...`; editables como cualquier página. Re-importar desde **Apariencia → Caaguazú** no pisa páginas ya editadas.
 - **Reportes ciudadanos**: menú lateral **Reportes** — no público en el sitio, solo gestión interna. Estado de triage = estado nativo de WP (Pendiente de revisión → Publicar/Papelera).
@@ -47,5 +46,4 @@ Theme classic (no FSE) del portal oficial del departamento de Caaguazú, Paragua
 ## Próximos pasos sugeridos
 
 - Reemplazar las imágenes Unsplash y el video Pexels por assets oficiales subidos a Media Library.
-- Cargar contenido real de transparencia/trámites/licitaciones cuando esté disponible (fuera de este esfuerzo por depender de aprobación institucional).
 - Ampliar el diccionario de `inc/i18n.php` si se decide traducir también el contenido editorial (hoy solo cubre strings fijas de interfaz).

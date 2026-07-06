@@ -17,8 +17,6 @@
   --t:300ms cubic-bezier(.4,0,.2,1);
   /* Motivo "tejido" (puntada ñandutí) — SVG inline, sin assets externos */
   --weave:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='12' viewBox='0 0 24 12'%3E%3Cpath d='M0 6l6-5 6 5 6-5 6 5M0 6l6 5 6-5 6 5 6-5' fill='none' stroke='%23C9A961' stroke-opacity='.6' stroke-width='1'/%3E%3C/svg%3E");
-  /* Textura veta de madera (nudos + vetas) para secciones oscuras */
-  --woodgrain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='160' viewBox='0 0 320 160'%3E%3Cg fill='none' stroke='%23FFFFFF' stroke-opacity='.35' stroke-width='1'%3E%3Cpath d='M0 20q80 12 160 0t160 8'/%3E%3Cpath d='M0 60q60-10 140 0t180-6'/%3E%3Cpath d='M0 100q90 14 170 2t150 6'/%3E%3Cpath d='M0 140q70-12 150-2t170 4'/%3E%3Cellipse cx='90' cy='80' rx='14' ry='7'/%3E%3Cellipse cx='90' cy='80' rx='26' ry='13'/%3E%3Cellipse cx='240' cy='38' rx='12' ry='6'/%3E%3Cellipse cx='240' cy='38' rx='24' ry='12'/%3E%3C/g%3E%3C/svg%3E");
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
@@ -216,16 +214,6 @@ section{padding-block:64px}
 .news .ex{margin-top:12px;font-size:14px;color:var(--text-soft);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .news .arrow{margin-top:20px}
 
-.transp{position:relative;overflow:hidden;background:var(--grad-forest);color:#fff;padding-block:80px}
-.transp-bg{position:absolute;inset:0;background:var(--woodgrain);background-size:320px 160px;opacity:.4}
-.transp-grad{position:absolute;inset:0;background:linear-gradient(90deg,rgba(44,85,48,.55) 0%,transparent 70%)}
-.transp .container{position:relative;display:grid;grid-template-columns:1fr;gap:40px;align-items:center}
-@media(min-width:1024px){.transp .container{grid-template-columns:1.4fr 1fr}}
-.transp .eyebrow{color:var(--green-mist)}
-.transp h2{font-size:clamp(32px,5vw,52px);margin-top:16px;max-width:560px}
-.transp p{margin-top:20px;max-width:560px;color:rgba(255,255,255,.85);font-size:18px;line-height:1.65}
-.transp-cta{display:flex;flex-direction:column;gap:12px}
-@media(min-width:560px) and (max-width:1023px){.transp-cta{flex-direction:row}}
 .btn-white{background:#fff;color:var(--green-forest)}
 .btn-white:hover{background:var(--bg-primary)}
 

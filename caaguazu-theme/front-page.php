@@ -2,8 +2,8 @@
 /**
  * Front page — Home de Caaguazú.
  *
- * Replica las 6 secciones del home.php original: hero, identidad,
- * ecosistema, audiencias, quiz, noticias y transparencia.
+ * Replica las secciones del home.php original: hero, identidad,
+ * números, ecosistema, audiencias, quiz y noticias.
  *
  * @package Caaguazu
  */
@@ -174,8 +174,8 @@ $quiz_map = array(
 		'title'          => caaguazu_i18n_pair( 'quiz.result.resident.title', __( 'Para vos que vivís acá', 'caaguazu' ) ),
 		'primary_url'    => caaguazu_page_url( 'servicios' ),
 		'primary_label'  => caaguazu_i18n_pair( 'quiz.result.resident.primary', __( 'Ver servicios', 'caaguazu' ) ),
-		'secondary_url'  => caaguazu_page_url( 'transparencia' ),
-		'secondary_label'=> caaguazu_i18n_pair( 'quiz.result.resident.secondary', __( 'Ver transparencia', 'caaguazu' ) ),
+		'secondary_url'  => get_post_type_archive_link( 'caaguazu_news' ),
+		'secondary_label'=> caaguazu_i18n_pair( 'quiz.result.resident.secondary', __( 'Ver noticias', 'caaguazu' ) ),
 	),
 	'visitor' => array(
 		'title'          => caaguazu_i18n_pair( 'quiz.result.visitor.title', __( 'Para tu visita a Caaguazú', 'caaguazu' ) ),
@@ -283,22 +283,6 @@ $quiz_map = array(
 			endforeach;
 		endif;
 		?>
-	</div>
-</section>
-
-<section class="transp">
-	<div class="transp-bg" aria-hidden="true"></div>
-	<div class="transp-grad" aria-hidden="true"></div>
-	<div class="container">
-		<div class="reveal">
-			<p class="eyebrow"><?php esc_html_e( 'Transparencia', 'caaguazu' ); ?></p>
-			<h2><?php echo esc_html( caaguazu_opt( 'transp_title', 'Gobierno abierto, datos accesibles' ) ); ?></h2>
-			<p><?php echo esc_html( caaguazu_opt( 'transp_body', 'Publicamos presupuesto, licitaciones y datos abiertos en formatos reutilizables. La transparencia es el cimiento del ecosistema.' ) ); ?></p>
-		</div>
-		<div class="transp-cta reveal">
-			<a class="btn btn-white" href="<?php echo esc_url( caaguazu_page_url( 'transparencia' ) ); ?>"><?php echo esc_html( caaguazu_opt( 'transp_cta1', 'Ver presupuesto' ) ); ?></a>
-			<a class="btn btn-ghost" href="<?php echo esc_url( caaguazu_page_url( 'transparencia' ) ); ?>"><?php echo esc_html( caaguazu_opt( 'transp_cta2', 'Datos abiertos' ) ); ?></a>
-		</div>
 	</div>
 </section>
 

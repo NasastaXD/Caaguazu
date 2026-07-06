@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 /**
  * Devuelve un slug estable para <body data-page="..."> e usos similares.
  * El JS y el CSS originales esperaban valores: home, sobre-caaguazu, servicios,
- * noticias, transparencia, ecosistema, contacto, buscar.
+ * noticias, turismo, ecosistema, contacto, buscar.
  */
 function caaguazu_current_page_slug() {
 	if ( is_front_page() ) {
@@ -78,7 +78,6 @@ function caaguazu_render_fallback_nav( $current_slug = '' ) {
 		'sobre-caaguazu' => __( 'Sobre Caaguazú', 'caaguazu' ),
 		'servicios'      => __( 'Servicios', 'caaguazu' ),
 		'noticias'       => __( 'Noticias', 'caaguazu' ),
-		'transparencia'  => __( 'Transparencia', 'caaguazu' ),
 		'turismo'        => __( 'Turismo', 'caaguazu' ),
 		'ecosistema'     => __( 'Ecosistema', 'caaguazu' ),
 		'contacto'       => __( 'Contacto', 'caaguazu' ),

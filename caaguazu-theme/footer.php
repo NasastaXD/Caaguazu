@@ -17,7 +17,7 @@ $email    = caaguazu_opt( 'contact_email', 'contacto@caaguazu.net' );
 $eco_url    = caaguazu_page_url( 'ecosistema' );
 $serv_url   = caaguazu_page_url( 'servicios' );
 $about_url  = caaguazu_page_url( 'sobre-caaguazu' );
-$transp_url = caaguazu_page_url( 'transparencia' );
+$tourism_url= caaguazu_page_url( 'turismo' );
 $contact_url= caaguazu_page_url( 'contacto' );
 $search_url = home_url( '/?s=' );
 
@@ -66,7 +66,7 @@ for ( $i = 0; $i < 3; $i++ ) {
 				<h4><?php caaguazu_i18n( 'footer.institucional', __( 'Institucional', 'caaguazu' ) ); ?></h4>
 				<ul>
 					<li><a href="<?php echo esc_url( $about_url ); ?>"><?php esc_html_e( 'Sobre Caaguazú', 'caaguazu' ); ?></a></li>
-					<li><a href="<?php echo esc_url( $transp_url ); ?>"><?php esc_html_e( 'Transparencia', 'caaguazu' ); ?></a></li>
+					<li><a href="<?php echo esc_url( $tourism_url ); ?>"><?php esc_html_e( 'Turismo', 'caaguazu' ); ?></a></li>
 					<li><a href="<?php echo esc_url( $contact_url ); ?>"><?php esc_html_e( 'Contacto', 'caaguazu' ); ?></a></li>
 				</ul>
 			</div>
