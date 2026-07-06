@@ -42,6 +42,8 @@ $hero_poster = caaguazu_opt_image( 'hero_poster', 'https://images.unsplash.com/p
 	<?php endif; ?>
 </section>
 
+<?php caaguazu_render_quick_access(); ?>
+
 <section class="container identity">
 	<?php for ( $i = 0; $i < 3; $i++ ) :
 		$d       = $identity_defaults[ $i ];

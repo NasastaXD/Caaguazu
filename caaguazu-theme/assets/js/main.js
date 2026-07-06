@@ -211,6 +211,7 @@
 (function(){
   // Drawer móvil
   var burger=document.getElementById('burger'),
+      tabbarMenu=document.getElementById('tabbarMenu'),
       drawer=document.getElementById('drawer'),
       bg=document.getElementById('drawerBg'),
       close=document.getElementById('drawerClose');
@@ -218,6 +219,7 @@
   function open(){ drawer.classList.add('open'); bg.classList.add('open'); drawer.setAttribute('aria-hidden','false'); }
   function shut(){ drawer.classList.remove('open'); bg.classList.remove('open'); drawer.setAttribute('aria-hidden','true'); }
   burger && burger.addEventListener('click', open);
+  tabbarMenu && tabbarMenu.addEventListener('click', open);
   close && close.addEventListener('click', shut);
   bg && bg.addEventListener('click', shut);
 })();

@@ -56,4 +56,6 @@ $is_home      = caaguazu_is_home();
 	<a href="<?php echo esc_url( home_url( '/?s=' ) ); ?>"><?php caaguazu_i18n( 'header.buscar', __( 'Buscar', 'caaguazu' ) ); ?></a>
 </aside>
 
+<?php caaguazu_render_tabbar( $current_slug ); ?>
+
 <main id="main">
