@@ -18,6 +18,8 @@ function caaguazu_tourism_pages() {
     'title' => 'Turismo en Caaguazú',
     'excerpt' => 'Capital de la Madera del Paraguay: 181 años de historia, oficio maderero, gastronomía y cultura guaraní.',
     'body' => '<p>[gn]Ka\'a Guasu[/gn] significa monte grande en guaraní. Cuando los primeros pobladores llegaron en 1845, los bosques eran tan densos que llamaban a la región simplemente «el monte grande». Esa selva le dio el nombre a Caaguazú, la madera, y el oficio que todavía hoy la define.</p>
+<h2>Destinos destacados</h2>
+[promotur_destacados]
 <div class="eco-grid">
 <a class="eco-card" href="#tourism-link:la-capital-de-la-madera#"><div class="body"><span class="eco-tag">Historia y oficio</span><h3>La Capital de la Madera</h3><p class="desc">181 años de historia, especies madereras y los artesanos que sostienen el oficio.</p><span class="arrow">Descubrir →</span></div></a>
 <a class="eco-card" href="#tourism-link:que-hacer#"><div class="body"><span class="eco-tag">Atractivos</span><h3>Qué hacer</h3><p class="desc">Ykua La Patria, el parque Techapyrã, la Iglesia Inmaculada Concepción y el Mercado de Abasto.</p><span class="arrow">Descubrir →</span></div></a>
@@ -130,7 +132,7 @@ function caaguazu_tourism_pages() {
     'parent' => 'sabores-de-caaguazu',
     'title' => 'Dónde comer en Caaguazú',
     'excerpt' => 'Lista de locales recomendados — desde puestos del mercado hasta restaurantes familiares.',
-    'body' => '<p>Mercado</p><h3>Comedores del Mercado de Abasto</h3><p>Mejor desayuno-almuerzo de la ciudad. Empanadas, chipa, sopa paraguaya recién hecha.</p>$<p>Tradicional</p><h3>Comedor La Casona</h3><p>Cocina paraguaya clásica en porciones generosas. Imperdible el vori vori en invierno.</p>$$<p>Asador</p><h3>Parrilla Ruta 7</h3><p>Asado a la estaca, mandioca y sopa paraguaya. Sobre la Ruta 7, recomendado para grupos.</p>$$<p>Casero</p><h3>Doña Mirta</h3><p>Almuerzos caseros de lunes a viernes. Ryguasu chyryry los miércoles.</p>$',
+    'body' => '<p>Mercado</p><h3>Comedores del Mercado de Abasto</h3><p>Mejor desayuno-almuerzo de la ciudad. Empanadas, chipa, sopa paraguaya recién hecha.</p>$<p>Tradicional</p><h3>Comedor La Casona</h3><p>Cocina paraguaya clásica en porciones generosas. Imperdible el vori vori en invierno.</p>$$<p>Asador</p><h3>Parrilla Ruta 7</h3><p>Asado a la estaca, mandioca y sopa paraguaya. Sobre la Ruta 7, recomendado para grupos.</p>$$<p>Casero</p><h3>Doña Mirta</h3><p>Almuerzos caseros de lunes a viernes. Ryguasu chyryry los miércoles.</p>$<h2>Directorio de locales</h2>[caaguazu_locales tipo="restaurante"]',
   ),
   'mate-y-terere' => 
   array (
@@ -194,7 +196,7 @@ function caaguazu_tourism_pages() {
     'parent' => 'planifica-tu-visita',
     'title' => 'Dónde alojarte en Caaguazú',
     'excerpt' => 'Hoteles, hospedajes y opciones para todos los presupuestos en Caaguazú y alrededores.',
-    'body' => '<p>Hotel</p><h3>Hotel Caaguazú Centro</h3><p>Sobre la avenida principal. Habitaciones standard, desayuno incluido.</p>$$<p>Hospedaje</p><h3>Hospedaje Ykua</h3><p>Familiar, a 4 cuadras del centro. Recomendado para viajeros solos.</p>$<p>Apart</p><h3>Apart Ruta 7</h3><p>Departamentos equipados sobre la ruta, ideal para estadías largas.</p>$$<p>Posada</p><h3>Posada del Bosque</h3><p>A 8 km de la ciudad, entornos verdes, ideal para familias.</p>$$$<p>Listado orientativo. Confirmá disponibilidad y tarifas directamente con cada establecimiento.</p>',
+    'body' => '<p>Hotel</p><h3>Hotel Caaguazú Centro</h3><p>Sobre la avenida principal. Habitaciones standard, desayuno incluido.</p>$$<p>Hospedaje</p><h3>Hospedaje Ykua</h3><p>Familiar, a 4 cuadras del centro. Recomendado para viajeros solos.</p>$<p>Apart</p><h3>Apart Ruta 7</h3><p>Departamentos equipados sobre la ruta, ideal para estadías largas.</p>$$<p>Posada</p><h3>Posada del Bosque</h3><p>A 8 km de la ciudad, entornos verdes, ideal para familias.</p>$$$<p>Listado orientativo. Confirmá disponibilidad y tarifas directamente con cada establecimiento.</p><h2>Directorio de locales</h2>[caaguazu_locales tipo="hotel"]',
   ),
   'mejor-epoca' => 
   array (
@@ -210,7 +212,7 @@ function caaguazu_tourism_pages() {
     'parent' => 'planifica-tu-visita',
     'title' => 'Mapa de Caaguazú',
     'excerpt' => 'Mapa interactivo de la ciudad: atracciones, hoteles y servicios.',
-    'body' => '[caaguazu_mapa]<p class="map-credit">Mapa base: OpenStreetMap contributors.</p><h2>Puntos de referencia</h2><ul><li>Ykua La Patria — centro</li><li>Iglesia Inmaculada Concepción — plaza central</li><li>Mercado de Abasto — a 4 cuadras del centro</li><li>Techapyrã — a 1 km del centro</li><li>Ruta de la Madera — Ruta 7, km 175–185</li></ul>',
+    'body' => '<h2>Locales y negocios</h2>[caaguazu_mapa alto="480px"]<h2>Puntos históricos</h2>[caaguazu_mapa_puntos]<p class="map-credit">Mapa base: OpenStreetMap contributors.</p><ul><li>Ykua La Patria — centro</li><li>Iglesia Inmaculada Concepción — plaza central</li><li>Mercado de Abasto — a 4 cuadras del centro</li><li>Techapyrã — a 1 km del centro</li><li>Ruta de la Madera — Ruta 7, km 175–185</li></ul>',
   ),
   'contacto' => 
   array (

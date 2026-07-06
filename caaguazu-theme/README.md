@@ -34,10 +34,32 @@ Theme classic (no FSE) del portal oficial del departamento de Caaguazú, Paragua
 - **SEO/Open Graph básico** (F4): meta description, canonical, OG y Twitter Card — `inc/seo.php`.
 - **Agenda de eventos** (F5): CPT `caaguazu_event` público con fecha/lugar, archive `/agenda/`, card de "Próximo evento" en el home — `inc/cpt-event.php`.
 - **Directorio de artesanos** (F6): CPT `caaguazu_artisan` público con oficio/zona/frase destacada, archive `/artesanos/` — `inc/cpt-artisan.php`. La página estática de Turismo enlaza al directorio en vez de listar perfiles fijos.
-- **Mapa interactivo** (F7): shortcode `[caaguazu_mapa]` con Leaflet — única dependencia externa del theme (CDN), cargada solo en la página que usa el shortcode (`inc/map.php`).
+- **Mapa de puntos históricos** (F7): shortcode `[caaguazu_mapa_puntos]` con Leaflet — única dependencia externa del theme (CDN), cargada solo en la página que usa el shortcode (`inc/map.php`). Se llama distinto de `[caaguazu_mapa]` para no chocar con el shortcode homónimo del plugin Caaguazú Locales (ver sección "Ecosistema de turismo").
 - **Compartir** (F8): WhatsApp/X/Facebook/copiar link en noticias y eventos — `caaguazu_share_buttons()` en `inc/helpers.php`.
 - **Búsqueda instantánea** (F9): sugerencias progresivas vía el endpoint core `/wp-json/wp/v2/search` (ya cubre Páginas/Noticias/Eventos/Artesanos por ser `show_in_rest`), sin endpoint propio.
 - **Newsletter** (F10): captura de email en el footer, guardada en el CPT interno `caaguazu_subscriber` (sin integración con un ESP externo todavía) + link RSS visible.
+
+## Ecosistema de turismo (plugins Caaguazú Locales + Caaguazú Portal)
+
+El theme está preparado para convivir en el mismo sitio con dos plugins que antes vivían en una instalación aparte (`turismo.caaguazu.net`), versionados en el repo [`nasastaxd/turismo`](https://github.com/nasastaxd/turismo) — **no se tocó su código, se instalan tal cual**:
+
+- **Caaguazú Locales**: directorio de negocios turísticos con reservas por WhatsApp, mapa editable, reseñas con cuentas y panel de dueños.
+- **Caaguazú Portal — Promotores Turísticos**: panel tipo app para que promotores publiquen destinos (flujo borrador → revisión → publicación), con vitrina pública embebible vía shortcodes.
+
+Integración ya resuelta del lado del theme:
+
+- Las páginas migradas de Turismo ya incluyen los shortcodes del plugin Locales: `[caaguazu_locales tipo="restaurante"]` en "Dónde comer", `tipo="hotel"]` en "Dónde alojarte", y `[caaguazu_mapa]` (mapa de negocios) junto al `[caaguazu_mapa_puntos]` propio en "Mapa interactivo". El hub de Turismo incluye `[promotur_destacados]` (destinos curados por promotores).
+- `single-cgz_local.php` — perfil de un local con la identidad visual del theme (el plugin lo detecta solo vía `locate_template()`, sin configuración).
+- El plugin Portal usa su propio template para `promotur_destino` (no lo pisamos); en cambio se agregaron 6 clases CSS de compatibilidad (`.container-wide`, `.section-y`, `.text-h1`, `.text-h3`, `.prose-content`) para que se vea bien sin forkear ese archivo.
+- Tokens CSS aliasados en `main.css` (`--flag-green`, `--ink`, `--paper`, `--text-primary`, etc. → los propios del theme) para que ambos plugins hereden la paleta real en vez de sus fallbacks genéricos.
+- `inc/seo.php` no duplica meta OG/Twitter en `promotur_destino` (el plugin ya las inyecta).
+- El footer suma links a "Locales y reservas" y "Mi cuenta" **solo si el plugin Locales está activo** (`post_type_exists('cgz_local')`).
+
+Cosas a tener en cuenta al instalar ambos plugins en el sitio:
+
+- El plugin Portal redirige `wp-login.php` a `/login` para usuarios no-admin (afecta a todo el sitio, no solo a sus rutas) y reserva los slugs `/login`, `/registro`, `/recuperar`, `/salir`, `/i/{token}`, `/panel(/...)` — evitar crear páginas con esos slugs.
+- El plugin Locales crea sus propias páginas `/cuenta/` y `/panel-de-mi-local/` al activarse — no hace falta crearlas a mano.
+- Ambos plugins traen su propio auto-updater apuntando a `nasastaxd/turismo` (independiente del `inc/updater.php` de este theme, que apunta a este repo).
 
 ## Actualizaciones
 
@@ -67,7 +89,7 @@ Los sitios con el theme instalado lo detectan en su próximo chequeo (cron cada 
 - El **buscador del header** apunta a `/?s=` (buscador nativo de WP).
 - Los CPT de noticias, eventos y artesanos están expuestos en REST (`show_in_rest: true`); los de reportes y suscriptores **no**, a propósito (gestión interna).
 - `wp_mail()` en hosting compartido sin SMTP configurado puede fallar o caer en spam — para producción se recomienda un plugin de SMTP (no es una dependencia del theme, solo de la entrega del correo).
-- El mapa interactivo (`[caaguazu_mapa]`) usa coordenadas aproximadas del centro de Caaguazú (`inc/map.php`) — ajustar con ubicaciones reales cuando estén disponibles.
+- El mapa de puntos históricos (`[caaguazu_mapa_puntos]`) usa coordenadas aproximadas del centro de Caaguazú (`inc/map.php`) — ajustar con ubicaciones reales cuando estén disponibles.
 
 ## Próximos pasos sugeridos
 
