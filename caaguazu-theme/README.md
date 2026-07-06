@@ -5,20 +5,14 @@ Theme classic (no FSE) del portal oficial del departamento de Caaguazú, Paragua
 ## Instalación
 
 1. Copiar/symlinkear esta carpeta (`caaguazu-theme/`) dentro de `wp-content/themes/` de tu instalación de WordPress (o generar un zip con `bin/build-zip.sh` desde la raíz del repo y subirlo desde **Apariencia → Temas → Añadir nuevo → Subir tema**).
-2. Activarlo. Al activar se siembran automáticamente:
+2. Activarlo. Al activar se siembran automáticamente, sin ningún paso manual — el sitio queda navegable de punta a punta sin 404s desde el primer momento:
+   - Las páginas requeridas por el theme, en blanco (`sobre-caaguazu`, `servicios`, `ecosistema`, `contacto` con su template de formulario, `reportar` con su template de reportes) — ver `inc/core-pages-seeder.php`. Al estar vacías, `page.php` les pinta un hero default + "En construcción" hasta que el admin cargue el contenido real.
+   - **Inicio** como página estática de portada (`Ajustes → Lectura`), solo si el sitio no tenía ya una portada configurada — mismo archivo. El theme detecta `is_front_page()` y carga `front-page.php` con todas las secciones.
    - 5 noticias demo (si no hay ninguna publicada todavía) — ver `inc/demo-content.php`.
    - La sección **Turismo** completa: 25 páginas migradas del sitio de turismo, con jerarquía de secciones/subpáginas — ver `inc/tourism-seeder.php`. Reimportable sin desactivar el theme desde **Apariencia → Caaguazú**.
    - 4 eventos demo en la agenda (`inc/demo-events.php`) y 4 perfiles en el directorio de artesanos (`inc/demo-artisans.php`).
 3. Ir a **Ajustes → Enlaces permanentes** y guardar (refresca las rewrite rules para el CPT `noticias` y las páginas anidadas de Turismo).
-4. Crear las páginas con estos slugs exactos (en blanco, el theme las renderiza con su hero default):
-   - `sobre-caaguazu`
-   - `servicios`
-   - `ecosistema`
-   - `contacto` — asignarle el **Template "Página de contacto"** (Atributos de página) para que muestre el formulario con envío real de email.
-   - `reportar` — asignarle el **Template "Reportá un problema"** para habilitar el formulario de reportes ciudadanos.
-   *(No crear `noticias` ni `turismo` como página: el CPT de noticias y el seeder de turismo ya reservan esos slugs.)*
-5. En **Apariencia → Menús**, crear un menú con esas páginas + Noticias + Turismo y asignarlo a "Menú principal" y "Menú móvil (drawer)". Si no se crea, el theme cae en un menú por defecto que ya incluye Turismo.
-6. En **Ajustes → Lectura**, "Tu página de inicio muestra → Una página estática → Página de inicio: (crear una página vacía llamada Inicio)". El theme detecta `is_front_page()` y carga `front-page.php` con todas las secciones.
+4. En **Apariencia → Menús**, crear un menú con las páginas sembradas + Noticias + Turismo y asignarlo a "Menú principal" y "Menú móvil (drawer)". Si no se crea, el theme cae en un menú por defecto que ya incluye Turismo.
 
 ## Funcionalidades
 

@@ -115,6 +115,7 @@ require get_template_directory() . '/inc/customizer-defaults.php';
 require get_template_directory() . '/inc/tourism-content.php';
 require get_template_directory() . '/inc/tourism-seeder.php';
 require get_template_directory() . '/inc/demo-content.php';
+require get_template_directory() . '/inc/core-pages-seeder.php';
 require get_template_directory() . '/inc/search-filters.php';
 require get_template_directory() . '/inc/spam-guard.php';
 require get_template_directory() . '/inc/mailer.php';
