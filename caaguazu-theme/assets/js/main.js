@@ -85,6 +85,37 @@
 })();
 
 (function(){
+  // "Caaguazú en números": contadores animados al entrar en viewport.
+  // El valor final ya viene renderizado del servidor; sin JS o con
+  // prefers-reduced-motion se queda tal cual.
+  var nums = document.querySelectorAll('.stat-num[data-count]');
+  if (!nums.length) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (!('IntersectionObserver' in window)) return;
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if (!en.isIntersecting) return;
+      io.unobserve(en.target);
+      var el = en.target,
+          target = parseInt(el.dataset.count, 10) || 0,
+          final = el.textContent,
+          start = null,
+          dur = 1600;
+      function step(ts){
+        if (start === null) start = ts;
+        var p = Math.min((ts - start) / dur, 1);
+        var eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = p < 1 ? Math.round(target * eased).toLocaleString('es-PY') : final;
+        if (p < 1) requestAnimationFrame(step);
+      }
+      el.textContent = '0';
+      requestAnimationFrame(step);
+    });
+  }, {threshold: 0.4});
+  nums.forEach(function(el){ io.observe(el); });
+})();
+
+(function(){
   // Quiz del home: 1 pregunta -> panel de resultado con 2 links resueltos server-side
   var opts = document.querySelectorAll('.quiz-opt');
   var result = document.getElementById('quizResult');

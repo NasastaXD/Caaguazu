@@ -63,6 +63,28 @@ $hero_poster = caaguazu_opt_image( 'hero_poster', 'https://images.unsplash.com/p
 	<?php endfor; ?>
 </section>
 
+<section class="stats-wrap" aria-label="<?php esc_attr_e( 'Caaguazú en números', 'caaguazu' ); ?>">
+	<div class="container">
+		<div class="weave-rule" aria-hidden="true"></div>
+		<div class="stats-grid reveal">
+			<?php foreach ( array(
+				array( 'stat_0', 181,   __( 'años de historia', 'caaguazu' ),    'stats.years' ),
+				array( 'stat_1', 90,    __( 'aserraderos activos', 'caaguazu' ), 'stats.sawmills' ),
+				array( 'stat_2', 5000,  __( 'carpinterías', 'caaguazu' ),        'stats.workshops' ),
+				array( 'stat_3', 10000, __( 'familias madereras', 'caaguazu' ),  'stats.families' ),
+			) as $s ) :
+				$stat_value = (int) caaguazu_opt( $s[0] . '_value', $s[1] );
+				$stat_label = caaguazu_opt( $s[0] . '_label', $s[2] );
+			?>
+				<div class="stat">
+					<span class="stat-num" data-count="<?php echo esc_attr( $stat_value ); ?>"><?php echo esc_html( number_format_i18n( $stat_value ) ); ?></span>
+					<span class="stat-label"><?php caaguazu_i18n( $s[3], $stat_label ); ?></span>
+				</div>
+			<?php endforeach; ?>
+		</div>
+	</div>
+</section>
+
 <section class="eco">
 	<div class="container">
 		<div class="section-head reveal">

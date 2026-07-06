@@ -20,6 +20,8 @@ $is_home      = caaguazu_is_home();
 <body <?php body_class(); ?> data-page="<?php echo esc_attr( $current_slug ); ?>">
 <?php wp_body_open(); ?>
 
+<a class="skip-link" href="#main"><?php caaguazu_i18n( 'header.skip', __( 'Saltar al contenido', 'caaguazu' ) ); ?></a>
+
 <header class="header <?php echo $is_home ? '' : 'solid'; ?>" id="header">
 	<div class="header-inner">
 		<a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="logo" aria-label="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?> — <?php esc_attr_e( 'inicio', 'caaguazu' ); ?>">

@@ -16,7 +16,7 @@ get_header(); ?>
 </nav>
 
 <div class="container search-wrap">
-	<p class="eyebrow" style="text-align:center"><?php esc_html_e( 'Buscar', 'caaguazu' ); ?></p>
+	<div style="text-align:center"><p class="eyebrow"><?php esc_html_e( 'Buscar', 'caaguazu' ); ?></p></div>
 	<h1 style="text-align:center;font-size:clamp(40px,6vw,64px);margin-top:16px"><?php esc_html_e( '¿Qué estás buscando?', 'caaguazu' ); ?></h1>
 
 	<form class="search-form" role="search" method="get" action="<?php echo esc_url( home_url( '/' ) ); ?>">

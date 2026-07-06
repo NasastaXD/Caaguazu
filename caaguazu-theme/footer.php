@@ -34,6 +34,7 @@ for ( $i = 0; $i < 3; $i++ ) {
 </main>
 
 <footer class="footer">
+	<div class="weave-rule" aria-hidden="true"></div>
 	<div class="container">
 		<div class="foot-grid">
 			<div class="foot-brand">

@@ -26,6 +26,13 @@ function caaguazu_i18n_dict() {
 
 		// Header / drawer
 		'header.buscar' => 'Ejuhu',
+		'header.skip'   => 'Eho tetepýpe',
+
+		// Caaguazú en números (home)
+		'stats.years'     => 'ary tembiasakue',
+		'stats.sawmills'  => 'aserradero omba\'apóva',
+		'stats.workshops' => 'carpintería-kuéra',
+		'stats.families'  => 'família yvyra rehegua',
 
 		// Footer
 		'footer.subportales'   => 'Sub-portal-kuéra',
