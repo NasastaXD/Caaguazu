@@ -19,6 +19,7 @@ function caaguazu_i18n_dict() {
 		'nav.sobre-caaguazu' => 'Caaguazu rehegua',
 		'nav.servicios'      => 'Mba\'apo rembiapokue',
 		'nav.noticias'       => 'Marandu',
+		'nav.agenda'         => 'Agenda',
 		'nav.turismo'        => 'Jehasa rape',
 		'nav.ecosistema'     => 'Ecosistema',
 		'nav.contacto'       => 'Ñemongeta',
@@ -43,6 +44,7 @@ function caaguazu_i18n_dict() {
 		'search.chip.todos'     => 'Opavave',
 		'search.chip.paginas'   => 'Kuatiarogue',
 		'search.chip.noticias'  => 'Marandu',
+		'search.chip.eventos'   => 'Aty',
 		'search.placeholder'    => 'Eheka kuatiarogue ha marandu…',
 
 		// Quiz del home
@@ -82,6 +84,9 @@ function caaguazu_i18n_dict() {
 		'report.field.email'     => 'Email (ndaha\'éi obligatorio)',
 		'report.field.phone'     => 'Telefono (ndaha\'éi obligatorio)',
 		'report.submit'          => 'Emondo remimongeta',
+		'report.stats.received'  => 'remimongeta oñerecibíva',
+		'report.stats.resolved'  => 'oñeatendéva',
+		'report.stats.month'     => 'ko mes-pe',
 
 		// Formulario de contacto
 		'contact.success'        => 'Aguyje ore rembijerure! Rombohovái mo\'ã ndéve ko\'ẽrõ ha ambue.',

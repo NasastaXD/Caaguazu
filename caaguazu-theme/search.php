@@ -19,21 +19,26 @@ get_header(); ?>
 	<div style="text-align:center"><p class="eyebrow"><?php esc_html_e( 'Buscar', 'caaguazu' ); ?></p></div>
 	<h1 style="text-align:center;font-size:clamp(40px,6vw,64px);margin-top:16px"><?php esc_html_e( '¿Qué estás buscando?', 'caaguazu' ); ?></h1>
 
-	<form class="search-form" role="search" method="get" action="<?php echo esc_url( home_url( '/' ) ); ?>">
-		<span style="margin-left:8px;color:var(--text-muted)">🔍</span>
-		<input type="search" name="s" value="<?php echo esc_attr( get_search_query() ); ?>"
-			placeholder="<?php esc_attr_e( 'Buscar páginas y noticias…', 'caaguazu' ); ?>"
-			aria-label="<?php esc_attr_e( 'Búsqueda', 'caaguazu' ); ?>">
-		<button type="submit"><?php esc_html_e( 'Buscar', 'caaguazu' ); ?></button>
-	</form>
+	<div class="search-form-wrap">
+		<form class="search-form" role="search" method="get" action="<?php echo esc_url( home_url( '/' ) ); ?>" autocomplete="off">
+			<span style="margin-left:8px;color:var(--text-muted)">🔍</span>
+			<input type="search" name="s" id="caaguazu-search-input" value="<?php echo esc_attr( get_search_query() ); ?>"
+				placeholder="<?php esc_attr_e( 'Buscar páginas y noticias…', 'caaguazu' ); ?>"
+				aria-label="<?php esc_attr_e( 'Búsqueda', 'caaguazu' ); ?>"
+				role="combobox" aria-expanded="false" aria-controls="caaguazu-search-suggest" aria-autocomplete="list">
+			<button type="submit"><?php esc_html_e( 'Buscar', 'caaguazu' ); ?></button>
+		</form>
+		<ul class="search-suggest" id="caaguazu-search-suggest" role="listbox" hidden></ul>
+	</div>
 
 	<?php $current_type = caaguazu_search_post_type(); ?>
 	<div class="filters">
 		<?php
 		$types = array(
-			'any'           => array( 'search.chip.todos', __( 'Todos', 'caaguazu' ) ),
-			'page'          => array( 'search.chip.paginas', __( 'Páginas', 'caaguazu' ) ),
-			'caaguazu_news' => array( 'search.chip.noticias', __( 'Noticias', 'caaguazu' ) ),
+			'any'            => array( 'search.chip.todos', __( 'Todos', 'caaguazu' ) ),
+			'page'           => array( 'search.chip.paginas', __( 'Páginas', 'caaguazu' ) ),
+			'caaguazu_news'  => array( 'search.chip.noticias', __( 'Noticias', 'caaguazu' ) ),
+			'caaguazu_event' => array( 'search.chip.eventos', __( 'Eventos', 'caaguazu' ) ),
 		);
 		foreach ( $types as $type => $i18n ) :
 		?>

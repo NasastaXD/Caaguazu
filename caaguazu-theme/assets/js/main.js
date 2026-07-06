@@ -1,5 +1,165 @@
 /* Caaguazú — front-end JS */
 (function(){
+  // Lightbox de galería: cualquier .gallery-grid img abre un <dialog> nativo
+  // con navegación por teclado y foco gestionado. Sin librerías externas.
+  var images = Array.prototype.slice.call(document.querySelectorAll('.gallery-grid img'));
+  if (!images.length || typeof HTMLDialogElement === 'undefined') return;
+
+  var dialog = document.createElement('dialog');
+  dialog.className = 'lightbox';
+  dialog.innerHTML =
+    '<button type="button" class="lightbox-close" aria-label="Cerrar">&times;</button>' +
+    '<button type="button" class="lightbox-prev" aria-label="Anterior">&lsaquo;</button>' +
+    '<img class="lightbox-img" alt="">' +
+    '<p class="lightbox-caption"></p>' +
+    '<button type="button" class="lightbox-next" aria-label="Siguiente">&rsaquo;</button>';
+  document.body.appendChild(dialog);
+
+  var imgEl = dialog.querySelector('.lightbox-img'),
+      captionEl = dialog.querySelector('.lightbox-caption'),
+      current = 0,
+      lastFocused = null;
+
+  function show(i){
+    current = (i + images.length) % images.length;
+    imgEl.src = images[current].currentSrc || images[current].src;
+    imgEl.alt = images[current].alt || '';
+    captionEl.textContent = images[current].alt || '';
+  }
+  function open(i){
+    lastFocused = document.activeElement;
+    show(i);
+    dialog.showModal();
+  }
+
+  images.forEach(function(img, i){
+    img.setAttribute('tabindex', '0');
+    img.setAttribute('role', 'button');
+    img.style.cursor = 'zoom-in';
+    img.addEventListener('click', function(){ open(i); });
+    img.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(i); }
+    });
+  });
+
+  dialog.querySelector('.lightbox-close').addEventListener('click', function(){ dialog.close(); });
+  dialog.querySelector('.lightbox-prev').addEventListener('click', function(){ show(current - 1); });
+  dialog.querySelector('.lightbox-next').addEventListener('click', function(){ show(current + 1); });
+  dialog.addEventListener('click', function(e){ if (e.target === dialog) dialog.close(); });
+  dialog.addEventListener('keydown', function(e){
+    if (e.key === 'ArrowLeft') show(current - 1);
+    if (e.key === 'ArrowRight') show(current + 1);
+  });
+  dialog.addEventListener('close', function(){ if (lastFocused) lastFocused.focus(); });
+})();
+
+(function(){
+  // Búsqueda instantánea: sugerencias progresivas vía el endpoint core
+  // /wp-json/wp/v2/search (ya cubre page/caaguazu_news/caaguazu_event/
+  // caaguazu_artisan al ser show_in_rest) — sin endpoint propio.
+  var input = document.getElementById('caaguazu-search-input');
+  var list = document.getElementById('caaguazu-search-suggest');
+  if (!input || !list || !window.fetch) return;
+
+  var typeLabels = { page: 'Página', caaguazu_news: 'Noticia', caaguazu_event: 'Evento', caaguazu_artisan: 'Artesano' };
+  var timer = null, activeIndex = -1, items = [];
+
+  function close(){
+    list.hidden = true;
+    list.innerHTML = '';
+    items = [];
+    activeIndex = -1;
+    input.setAttribute('aria-expanded', 'false');
+  }
+
+  function render(results){
+    items = results;
+    activeIndex = -1;
+    if (!results.length){ close(); return; }
+    list.innerHTML = results.map(function(r, i){
+      var label = typeLabels[r.subtype] || r.subtype;
+      return '<li role="option" id="cg-opt-' + i + '" data-url="' + r.url + '">' +
+        '<span class="s-title">' + r.title + '</span><span class="s-type">' + label + '</span></li>';
+    }).join('');
+    list.hidden = false;
+    input.setAttribute('aria-expanded', 'true');
+  }
+
+  var endpoint = (window.caaguazuConfig && window.caaguazuConfig.restSearchUrl) || '/wp-json/wp/v2/search';
+
+  input.addEventListener('input', function(){
+    var q = input.value.trim();
+    clearTimeout(timer);
+    if (q.length < 2){ close(); return; }
+    timer = setTimeout(function(){
+      fetch(endpoint + '?search=' + encodeURIComponent(q) + '&per_page=6&subtype=page,caaguazu_news,caaguazu_event,caaguazu_artisan')
+        .then(function(res){ return res.ok ? res.json() : []; })
+        .then(render)
+        .catch(function(){ close(); });
+    }, 250);
+  });
+
+  list.addEventListener('click', function(e){
+    var li = e.target.closest('li[data-url]');
+    if (li) window.location.href = li.dataset.url;
+  });
+
+  input.addEventListener('keydown', function(e){
+    if (list.hidden) return;
+    if (e.key === 'ArrowDown'){
+      e.preventDefault();
+      activeIndex = Math.min(activeIndex + 1, items.length - 1);
+    } else if (e.key === 'ArrowUp'){
+      e.preventDefault();
+      activeIndex = Math.max(activeIndex - 1, 0);
+    } else if (e.key === 'Enter' && activeIndex > -1){
+      e.preventDefault();
+      window.location.href = items[activeIndex].url;
+      return;
+    } else if (e.key === 'Escape'){
+      close();
+      return;
+    } else {
+      return;
+    }
+    Array.prototype.forEach.call(list.children, function(li, i){
+      li.classList.toggle('active', i === activeIndex);
+    });
+  });
+
+  document.addEventListener('click', function(e){
+    if (e.target !== input && !list.contains(e.target)) close();
+  });
+})();
+
+(function(){
+  // Copiar link (botón "Copiar link" de share-buttons)
+  document.querySelectorAll('.share-copy').forEach(function(btn){
+    var original = btn.textContent;
+    btn.addEventListener('click', function(){
+      var url = btn.dataset.url;
+      var done = function(){
+        btn.textContent = '✓';
+        btn.classList.add('copied');
+        setTimeout(function(){ btn.textContent = original; btn.classList.remove('copied'); }, 1800);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(done).catch(function(){});
+      } else {
+        var ta = document.createElement('textarea');
+        ta.value = url;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); done(); } catch (e) {}
+        document.body.removeChild(ta);
+      }
+    });
+  });
+})();
+
+(function(){
   // Sticky / compresión sólo cuando hero está presente (data-page="home")
   var h = document.getElementById('header');
   if (h && document.body.dataset.page === 'home'){

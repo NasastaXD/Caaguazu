@@ -172,3 +172,27 @@ function caaguazu_report_admin_column_content( $column, $post_id ) {
 	}
 }
 add_action( 'manage_caaguazu_report_posts_custom_column', 'caaguazu_report_admin_column_content', 10, 2 );
+
+/**
+ * Conteos públicos para mostrar que el canal de reportes funciona de
+ * verdad, sin exponer el contenido de los reportes (el CPT sigue sin ser
+ * público). "Resueltos" = post_status publish (el admin lo marca así al
+ * atenderlo); "Recibidos este mes" = post_date dentro del mes calendario.
+ */
+function caaguazu_report_stats() {
+	$received = wp_count_posts( 'caaguazu_report' );
+
+	$this_month = get_posts( array(
+		'post_type'      => 'caaguazu_report',
+		'post_status'    => array( 'pending', 'publish' ),
+		'posts_per_page' => -1,
+		'fields'         => 'ids',
+		'date_query'     => array( array( 'year' => (int) current_time( 'Y' ), 'month' => (int) current_time( 'n' ) ) ),
+	) );
+
+	return array(
+		'received' => (int) $received->pending + (int) $received->publish,
+		'resolved' => (int) $received->publish,
+		'this_month' => count( $this_month ),
+	);
+}

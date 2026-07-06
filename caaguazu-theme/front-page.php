@@ -209,6 +209,29 @@ $quiz_map = array(
 ?>
 <script>window.caaguazuQuizMap = <?php echo wp_json_encode( $quiz_map ); ?>;</script>
 
+<?php
+$next_event = caaguazu_upcoming_events( 1 );
+if ( $next_event->have_posts() ) :
+	$next_event->the_post();
+	$event_date     = get_post_meta( get_the_ID(), '_caaguazu_event_date', true );
+	$event_location = get_post_meta( get_the_ID(), '_caaguazu_event_location', true );
+?>
+<section class="container">
+	<a class="event-banner reveal" href="<?php the_permalink(); ?>">
+		<span class="eyebrow"><?php esc_html_e( 'Próximo evento', 'caaguazu' ); ?></span>
+		<h3><?php the_title(); ?></h3>
+		<p class="meta">
+			<?php echo esc_html( date_i18n( 'j \d\e F', strtotime( $event_date ) ) ); ?>
+			<?php if ( $event_location ) : ?> · 📍 <?php echo esc_html( $event_location ); ?><?php endif; ?>
+		</p>
+		<span class="arrow"><?php esc_html_e( 'Ver en la agenda', 'caaguazu' ); ?></span>
+	</a>
+</section>
+<?php
+	wp_reset_postdata();
+endif;
+?>
+
 <section class="container">
 	<div class="news-head reveal">
 		<div class="section-head">

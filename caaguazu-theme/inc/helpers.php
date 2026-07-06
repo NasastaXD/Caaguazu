@@ -78,6 +78,7 @@ function caaguazu_render_fallback_nav( $current_slug = '' ) {
 		'sobre-caaguazu' => __( 'Sobre Caaguazú', 'caaguazu' ),
 		'servicios'      => __( 'Servicios', 'caaguazu' ),
 		'noticias'       => __( 'Noticias', 'caaguazu' ),
+		'agenda'         => __( 'Agenda', 'caaguazu' ),
 		'turismo'        => __( 'Turismo', 'caaguazu' ),
 		'ecosistema'     => __( 'Ecosistema', 'caaguazu' ),
 		'contacto'       => __( 'Contacto', 'caaguazu' ),
@@ -119,4 +120,32 @@ function caaguazu_opt_image( $key, $default = '' ) {
 		return $src ? $src : $default;
 	}
 	return $val ? $val : $default;
+}
+
+/**
+ * Botones de compartir (WhatsApp primero — es Paraguay —, X, Facebook,
+ * copiar link). Sin SDK de terceros, solo intents por URL + Clipboard API.
+ */
+function caaguazu_share_buttons( $url, $title ) {
+	$encoded_url   = rawurlencode( $url );
+	$encoded_title = rawurlencode( $title );
+	ob_start();
+	?>
+	<div class="share-buttons">
+		<span class="share-label"><?php esc_html_e( 'Compartir', 'caaguazu' ); ?></span>
+		<a class="share-btn" target="_blank" rel="noopener noreferrer"
+			href="https://wa.me/?text=<?php echo esc_attr( $encoded_title . ' ' . $encoded_url ); ?>"
+			aria-label="<?php esc_attr_e( 'Compartir por WhatsApp', 'caaguazu' ); ?>">WhatsApp</a>
+		<a class="share-btn" target="_blank" rel="noopener noreferrer"
+			href="https://twitter.com/intent/tweet?text=<?php echo esc_attr( $encoded_title ); ?>&url=<?php echo esc_attr( $encoded_url ); ?>"
+			aria-label="<?php esc_attr_e( 'Compartir en X', 'caaguazu' ); ?>">X</a>
+		<a class="share-btn" target="_blank" rel="noopener noreferrer"
+			href="https://www.facebook.com/sharer/sharer.php?u=<?php echo esc_attr( $encoded_url ); ?>"
+			aria-label="<?php esc_attr_e( 'Compartir en Facebook', 'caaguazu' ); ?>">Facebook</a>
+		<button type="button" class="share-btn share-copy" data-url="<?php echo esc_attr( $url ); ?>">
+			<?php esc_html_e( 'Copiar link', 'caaguazu' ); ?>
+		</button>
+	</div>
+	<?php
+	return ob_get_clean();
 }

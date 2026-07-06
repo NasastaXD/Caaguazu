@@ -41,6 +41,7 @@ for ( $i = 0; $i < 3; $i++ ) {
 				<a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="name"><?php bloginfo( 'name' ); ?></a>
 				<p class="tag"><?php echo esc_html( $tagline ); ?></p>
 				<p><?php echo esc_html( $about ); ?></p>
+				<?php echo caaguazu_newsletter_form_html(); ?>
 			</div>
 
 			<div class="foot-col">
@@ -88,6 +89,7 @@ for ( $i = 0; $i < 3; $i++ ) {
 				<li><a href="<?php echo esc_url( $about_url ); ?>"><?php esc_html_e( 'Accesibilidad', 'caaguazu' ); ?></a></li>
 				<li><a href="<?php echo esc_url( $search_url ); ?>"><?php esc_html_e( 'Mapa del sitio', 'caaguazu' ); ?></a></li>
 				<li><a href="<?php echo esc_url( $about_url ); ?>"><?php esc_html_e( 'Política de privacidad', 'caaguazu' ); ?></a></li>
+				<li><a href="<?php echo esc_url( home_url( '/feed/' ) ); ?>">RSS</a></li>
 			</ul>
 		</div>
 	</div>

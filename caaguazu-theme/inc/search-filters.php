@@ -9,7 +9,7 @@
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 function caaguazu_search_post_type() {
-	$allowed = array( 'any', 'page', 'caaguazu_news' );
+	$allowed = array( 'any', 'page', 'caaguazu_news', 'caaguazu_event' );
 	$value   = isset( $_GET['post_type'] ) ? sanitize_key( wp_unslash( $_GET['post_type'] ) ) : 'any';
 	return in_array( $value, $allowed, true ) ? $value : 'any';
 }

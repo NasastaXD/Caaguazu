@@ -68,6 +68,9 @@ function caaguazu_enqueue_assets() {
 		CAAGUAZU_VERSION,
 		true
 	);
+	wp_localize_script( 'caaguazu-main', 'caaguazuConfig', array(
+		'restSearchUrl' => esc_url_raw( rest_url( 'wp/v2/search' ) ),
+	) );
 }
 add_action( 'wp_enqueue_scripts', 'caaguazu_enqueue_assets' );
 
@@ -101,6 +104,10 @@ add_filter( 'body_class', 'caaguazu_body_class' );
 require get_template_directory() . '/inc/i18n.php';
 require get_template_directory() . '/inc/helpers.php';
 require get_template_directory() . '/inc/cpt-news.php';
+require get_template_directory() . '/inc/cpt-event.php';
+require get_template_directory() . '/inc/demo-events.php';
+require get_template_directory() . '/inc/cpt-artisan.php';
+require get_template_directory() . '/inc/demo-artisans.php';
 require get_template_directory() . '/inc/customizer.php';
 require get_template_directory() . '/inc/customizer-defaults.php';
 require get_template_directory() . '/inc/tourism-content.php';
@@ -112,3 +119,8 @@ require get_template_directory() . '/inc/mailer.php';
 require get_template_directory() . '/inc/cpt-report.php';
 require get_template_directory() . '/inc/report-form.php';
 require get_template_directory() . '/inc/contact-form.php';
+require get_template_directory() . '/inc/glossary.php';
+require get_template_directory() . '/inc/seo.php';
+require get_template_directory() . '/inc/map.php';
+require get_template_directory() . '/inc/cpt-subscriber.php';
+require get_template_directory() . '/inc/newsletter-form.php';

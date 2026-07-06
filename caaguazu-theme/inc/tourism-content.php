@@ -17,7 +17,7 @@ function caaguazu_tourism_pages() {
     'parent' => NULL,
     'title' => 'Turismo en Caaguazú',
     'excerpt' => 'Capital de la Madera del Paraguay: 181 años de historia, oficio maderero, gastronomía y cultura guaraní.',
-    'body' => '<p><em>Ka\'a</em> significa monte en guaraní, <em>guasu</em> significa grande. Cuando los primeros pobladores llegaron en 1845, los bosques eran tan densos que llamaban a la región simplemente «el monte grande». Esa selva le dio el nombre a Caaguazú, la madera, y el oficio que todavía hoy la define.</p>
+    'body' => '<p>[gn]Ka\'a Guasu[/gn] significa monte grande en guaraní. Cuando los primeros pobladores llegaron en 1845, los bosques eran tan densos que llamaban a la región simplemente «el monte grande». Esa selva le dio el nombre a Caaguazú, la madera, y el oficio que todavía hoy la define.</p>
 <div class="eco-grid">
 <a class="eco-card" href="#tourism-link:la-capital-de-la-madera#"><div class="body"><span class="eco-tag">Historia y oficio</span><h3>La Capital de la Madera</h3><p class="desc">181 años de historia, especies madereras y los artesanos que sostienen el oficio.</p><span class="arrow">Descubrir →</span></div></a>
 <a class="eco-card" href="#tourism-link:que-hacer#"><div class="body"><span class="eco-tag">Atractivos</span><h3>Qué hacer</h3><p class="desc">Ykua La Patria, el parque Techapyrã, la Iglesia Inmaculada Concepción y el Mercado de Abasto.</p><span class="arrow">Descubrir →</span></div></a>
@@ -65,7 +65,8 @@ function caaguazu_tourism_pages() {
     'parent' => 'la-capital-de-la-madera',
     'title' => 'Artesanos de Caaguazú — Los rostros de la madera',
     'excerpt' => 'Perfiles de los carpinteros, parqueteros y talladores que sostienen 181 años de oficio maderero.',
-    'body' => '<p>Carpintero · 40 años de oficio</p><h3>Don Eulogio Benítez</h3><p>Barrio San Blas</p><blockquote>«La madera te enseña paciencia. No podés apurarla.»</blockquote><p>Pintora y barnizadora</p><h3>Doña Catalina Ramírez</h3><p>Ruta 7 km 178</p><blockquote>«Cada pieza pasa tres veces por mis manos antes de salir.»</blockquote><p>Parquetero · tercera generación</p><h3>Mauricio Ovelar</h3><p>Caaguazú centro</p><blockquote>«Mi abuelo puso los pisos del primer polideportivo del país.»</blockquote><p>Juguetería tradicional</p><h3>Familia Fernández</h3><p>Casillas Ruta 7</p><blockquote>«Vendemos lo mismo desde 1962. Autitos de cedro.»</blockquote>',
+    'body' => '<p>Detrás de cada mueble, juguete o piso de Caaguazú hay una historia de oficio heredado. Conocé a los carpinteros, parqueteros, pintoras y jugueteros que sostienen 181 años de tradición maderera.</p>'
+      . '<div class="eco-grid"><a class="eco-card" href="' . esc_url( get_post_type_archive_link( 'caaguazu_artisan' ) ) . '"><div class="body"><span class="eco-tag">Directorio</span><h3>Ver perfiles de artesanos</h3><p class="desc">Nombre, oficio, zona y la frase que los define — un directorio vivo, no una lista fija.</p><span class="arrow">Conocerlos →</span></div></a></div>',
   ),
   'que-hacer' => 
   array (
@@ -97,7 +98,7 @@ function caaguazu_tourism_pages() {
     'parent' => 'que-hacer',
     'title' => 'Mercado de Abasto — Vida local en Caaguazú',
     'excerpt' => 'El mercado central: productos frescos, comida típica, hierbas medicinales y poha ñana.',
-    'body' => '<h2>Qué encontrás</h2><ul><li><strong>Frescos del campo:</strong> mandioca, batata, zapallo, choclo, frutas estacionales.</li><li><strong>Comida rápida tradicional:</strong> empanadas, chipa guasu, mbeju, sopa paraguaya.</li><li><strong>Hierbas medicinales (poha ñana):</strong> el saber ancestral guaraní en manos de yuyeras y yuyeros.</li><li><strong>Artesanía menor:</strong> guampas, bombillas, cestos.</li></ul><h2>Cuándo ir</h2><p>Lo más vivo es entre las 6 y las 10 h. Llevá billetes chicos y bolsa propia.</p>',
+    'body' => '<h2>Qué encontrás</h2><ul><li><strong>Frescos del campo:</strong> mandioca, batata, zapallo, choclo, frutas estacionales.</li><li><strong>Comida rápida tradicional:</strong> empanadas, chipa guasu, mbeju, sopa paraguaya.</li><li><strong>Hierbas medicinales ([gn]poha ñana[/gn]):</strong> el saber ancestral guaraní en manos de yuyeras y yuyeros.</li><li><strong>Artesanía menor:</strong> guampas, bombillas, cestos.</li></ul><h2>Cuándo ir</h2><p>Lo más vivo es entre las 6 y las 10 h. Llevá billetes chicos y bolsa propia.</p>',
   ),
   'parques-y-naturaleza' => 
   array (
@@ -137,7 +138,7 @@ function caaguazu_tourism_pages() {
     'parent' => 'sabores-de-caaguazu',
     'title' => 'Mate y tereré — La cultura de la ronda en Caaguazú',
     'excerpt' => 'Tereré al mediodía, mate al amanecer. La ronda es el ritual social más persistente del Paraguay.',
-    'body' => '<h2>El tereré</h2><p>Yerba mate bien tupida en la guampa, agua bien fría con hielo en el termo, y el añadido caaguaceño: hierbas frescas machacadas en mortero — menta, cedrón, kokũ, burrito. Cada familia tiene su combinación. Cada combinación es una declaración de pertenencia.</p><h2>El mate</h2><p>El mate aparece de madrugada, antes que el sol. Caliente, amargo, compartido. En invierno se prolonga toda la mañana. La guampa pasa de mano en mano siguiendo el sentido de las agujas del reloj.</p><h2>Reglas no escritas</h2><ul><li>Nunca se rechaza el primer convite — es una bienvenida.</li><li>«Gracias» significa «no quiero más». Decílo solo cuando termines.</li><li>No se mueve la bombilla con la mano.</li><li>El cebador es el último en tomar.</li></ul>',
+    'body' => '<h2>El [gn]tereré[/gn]</h2><p>Yerba mate bien tupida en la guampa, agua bien fría con hielo en el termo, y el añadido caaguaceño: hierbas frescas machacadas en mortero — menta, cedrón, kokũ, burrito. Cada familia tiene su combinación. Cada combinación es una declaración de pertenencia.</p><h2>El mate</h2><p>El mate aparece de madrugada, antes que el sol. Caliente, amargo, compartido. En invierno se prolonga toda la mañana. La guampa pasa de mano en mano siguiendo el sentido de las agujas del reloj.</p><h2>Reglas no escritas</h2><ul><li>Nunca se rechaza el primer convite — es una bienvenida.</li><li>«Gracias» significa «no quiero más». Decílo solo cuando termines.</li><li>No se mueve la bombilla con la mano.</li><li>El cebador es el último en tomar.</li></ul>',
   ),
   'vivir-caaguazu' => 
   array (
@@ -161,7 +162,7 @@ function caaguazu_tourism_pages() {
     'parent' => 'vivir-caaguazu',
     'title' => 'Guaraní en nuestra ciudad — Glosario caaguaceño',
     'excerpt' => 'Términos guaraní que vas a escuchar en Caaguazú: significado, pronunciación, contexto.',
-    'body' => 'Ka\'a Guasu/kaˈʔa guaˈsu/monte grande / selva grande<p>El nombre original del territorio de Caaguazú.</p>Ykua/ɨˈkua/manantial / fuente de agua<p>Como en Ykua La Patria, el manantial fundacional.</p>Ryguasu chyryry/rɨguaˈsu tʃɨrɨˈrɨ/gallina frita tradicional<p>Plato emblema de Caaguazú.</p>Mandi\'o/manˈdiʔo/mandioca / yucaTereré/tereˈre/yerba mate fría<p>El ritual social paraguayo por excelencia.</p>Poha ñana/poˈha ɲaˈna/plantas medicinalesTechapyrã/tetʃapɨˈɾã/mucho por verSopa paraguaya/ˈsopa paɾaˈɣwaja/pastel de maíz (no es sopa)Vori vori/ˈvori ˈvori/sopa con bolitas de maízKesu/keˈsu/queso fresco paraguayo',
+    'body' => '<dl class="glossary"><div class="glossary-item"><dt>Ka\'a Guasu<span class="ipa">/kaˈʔa guaˈsu/</span></dt><dd>monte grande / selva grande <span class="ctx">El nombre original del territorio de Caaguazú.</span></dd></div><div class="glossary-item"><dt>Ykua<span class="ipa">/ɨˈkua/</span></dt><dd>manantial / fuente de agua <span class="ctx">Como en Ykua La Patria, el manantial fundacional.</span></dd></div><div class="glossary-item"><dt>Ryguasu chyryry<span class="ipa">/rɨguaˈsu tʃɨrɨˈrɨ/</span></dt><dd>gallina frita tradicional <span class="ctx">Plato emblema de Caaguazú.</span></dd></div><div class="glossary-item"><dt>Mandi\'o<span class="ipa">/manˈdiʔo/</span></dt><dd>mandioca / yuca</dd></div><div class="glossary-item"><dt>Tereré<span class="ipa">/tereˈre/</span></dt><dd>yerba mate fría <span class="ctx">El ritual social paraguayo por excelencia.</span></dd></div><div class="glossary-item"><dt>Poha ñana<span class="ipa">/poˈha ɲaˈna/</span></dt><dd>plantas medicinales</dd></div><div class="glossary-item"><dt>Techapyrã<span class="ipa">/tetʃapɨˈɾã/</span></dt><dd>mucho por ver</dd></div><div class="glossary-item"><dt>Sopa paraguaya<span class="ipa">/ˈsopa paɾaˈɣwaja/</span></dt><dd>pastel de maíz (no es sopa)</dd></div><div class="glossary-item"><dt>Vori vori<span class="ipa">/ˈvori ˈvori/</span></dt><dd>sopa con bolitas de maíz</dd></div><div class="glossary-item"><dt>Kesu<span class="ipa">/keˈsu/</span></dt><dd>queso fresco paraguayo</dd></div></dl>',
   ),
   'galeria' => 
   array (
@@ -169,7 +170,7 @@ function caaguazu_tourism_pages() {
     'parent' => 'vivir-caaguazu',
     'title' => 'Galería — Caaguazú en imágenes',
     'excerpt' => 'Fotografías de la Capital de la Madera: oficios, paisaje, fiestas, gente.',
-    'body' => '<img src="https://images.unsplash.com/photo-1448375240586-882707db888b?w=1200&auto=format&fit=crop&q=80" alt="Bosque al amanecer" loading="lazy"><img src="https://images.unsplash.com/photo-1504148455328-c376907d081c?w=1200&auto=format&fit=crop&q=80" alt="Manos trabajando madera" loading="lazy"><img src="https://images.unsplash.com/photo-1437482078695-73f5ca6c96e2?w=1200&auto=format&fit=crop&q=80" alt="Río en el bosque" loading="lazy"><img src="https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=1200&auto=format&fit=crop&q=80" alt="Troncos apilados" loading="lazy"><img src="https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=1200&auto=format&fit=crop&q=80" alt="Productos de mercado" loading="lazy"><img src="https://images.unsplash.com/photo-1548407260-da850faa41e3?w=1200&auto=format&fit=crop&q=80" alt="Iglesia al atardecer" loading="lazy"><img src="https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=1200&auto=format&fit=crop&q=80" alt="Parque verde" loading="lazy"><img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&auto=format&fit=crop&q=80" alt="Dosel del bosque" loading="lazy">',
+    'body' => '<div class="gallery-grid"><img src="https://images.unsplash.com/photo-1448375240586-882707db888b?w=1200&auto=format&fit=crop&q=80" alt="Bosque al amanecer" loading="lazy"><img src="https://images.unsplash.com/photo-1504148455328-c376907d081c?w=1200&auto=format&fit=crop&q=80" alt="Manos trabajando madera" loading="lazy"><img src="https://images.unsplash.com/photo-1437482078695-73f5ca6c96e2?w=1200&auto=format&fit=crop&q=80" alt="Río en el bosque" loading="lazy"><img src="https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=1200&auto=format&fit=crop&q=80" alt="Troncos apilados" loading="lazy"><img src="https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=1200&auto=format&fit=crop&q=80" alt="Productos de mercado" loading="lazy"><img src="https://images.unsplash.com/photo-1548407260-da850faa41e3?w=1200&auto=format&fit=crop&q=80" alt="Iglesia al atardecer" loading="lazy"><img src="https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=1200&auto=format&fit=crop&q=80" alt="Parque verde" loading="lazy"><img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&auto=format&fit=crop&q=80" alt="Dosel del bosque" loading="lazy"></div>',
   ),
   'planifica-tu-visita' => 
   array (
@@ -209,7 +210,7 @@ function caaguazu_tourism_pages() {
     'parent' => 'planifica-tu-visita',
     'title' => 'Mapa de Caaguazú',
     'excerpt' => 'Mapa interactivo de la ciudad: atracciones, hoteles y servicios.',
-    'body' => '<p>Mapa base: OpenStreetMap contributors.</p><h2>Puntos de referencia</h2><ul><li>Ykua La Patria — centro</li><li>Iglesia Inmaculada Concepción — plaza central</li><li>Mercado de Abasto — a 4 cuadras del centro</li><li>Techapyrã — a 1 km del centro</li><li>Ruta de la Madera — Ruta 7, km 175–185</li></ul>',
+    'body' => '[caaguazu_mapa]<p class="map-credit">Mapa base: OpenStreetMap contributors.</p><h2>Puntos de referencia</h2><ul><li>Ykua La Patria — centro</li><li>Iglesia Inmaculada Concepción — plaza central</li><li>Mercado de Abasto — a 4 cuadras del centro</li><li>Techapyrã — a 1 km del centro</li><li>Ruta de la Madera — Ruta 7, km 175–185</li></ul>',
   ),
   'contacto' => 
   array (
