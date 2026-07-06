@@ -68,15 +68,29 @@ address{font-style:normal;margin-top:16px;font-size:14px;line-height:1.7;color:v
 .logo-tld{font-size:10px;text-transform:uppercase;letter-spacing:.18em;color:rgba(255,255,255,.7)}
 .header.solid .logo-tld,.header.scrolled .logo-tld{color:var(--text-muted)}
 .nav{display:none;gap:28px;align-items:center}
-.nav a{position:relative;font-size:14px;font-weight:500;color:rgba(255,255,255,.85);transition:color var(--t)}
-.nav a::after{content:"";position:absolute;left:0;right:0;bottom:-6px;height:2px;background:var(--accent-gold);
+.nav-item{position:relative}
+.nav-link{position:relative;display:inline-block;font-size:14px;font-weight:500;color:rgba(255,255,255,.85);transition:color var(--t)}
+.nav-link::after{content:"";position:absolute;left:0;right:0;bottom:-6px;height:2px;background:var(--accent-gold);
   transform:scaleX(0);transform-origin:left;transition:transform var(--t)}
-.nav a:hover::after,.nav a.active::after{transform:scaleX(1)}
-.nav a:hover{color:#fff}
-.nav a.active{color:#fff;font-weight:600}
-.header.solid .nav a,.header.scrolled .nav a{color:var(--text-soft)}
-.header.solid .nav a:hover,.header.scrolled .nav a:hover,
-.header.solid .nav a.active,.header.scrolled .nav a.active{color:var(--green-deep)}
+.nav-link:hover::after,.nav-link.active::after{transform:scaleX(1)}
+.nav-link:hover{color:#fff}
+.nav-link.active{color:#fff;font-weight:600}
+.header.solid .nav-link,.header.scrolled .nav-link{color:var(--text-soft)}
+.header.solid .nav-link:hover,.header.scrolled .nav-link:hover,
+.header.solid .nav-link.active,.header.scrolled .nav-link.active{color:var(--green-deep)}
+
+/* Mega-menu / dropdown de nav (desktop) — hover o foco de teclado en .nav-item */
+.nav-dropdown{position:absolute;top:100%;left:50%;transform:translateX(-50%) translateY(6px);
+  min-width:220px;background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius-md);
+  box-shadow:var(--shadow-lift);padding:10px;display:flex;gap:4px;opacity:0;visibility:hidden;
+  transition:opacity var(--t),transform var(--t),visibility var(--t);z-index:70}
+.nav-item:hover .nav-dropdown,.nav-item:focus-within .nav-dropdown{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)}
+.nav-dropdown-col{display:flex;flex-direction:column;min-width:190px;padding:6px 10px}
+.nav-dropdown-col h4{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin:4px 6px 8px}
+.nav-dropdown-link{padding:9px 8px;border-radius:8px;font-size:14px;font-weight:500;color:var(--text);transition:background var(--t),color var(--t)}
+.nav-dropdown-link:hover,.nav-dropdown-link:focus-visible{background:var(--bg-elevated);color:var(--green-deep)}
+.nav-dropdown--mega{left:auto;right:0;transform:translateY(6px);display:grid;grid-template-columns:repeat(4,minmax(180px,1fr));gap:4px;padding:18px;min-width:680px}
+.nav-item:hover .nav-dropdown--mega,.nav-item:focus-within .nav-dropdown--mega{transform:translateY(0)}
 .header-actions{display:flex;align-items:center;gap:12px}
 .icon-btn{width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;
   border-radius:999px;color:#fff;transition:background var(--t)}
@@ -102,6 +116,23 @@ address{font-style:normal;margin-top:16px;font-size:14px;line-height:1.7;color:v
 .drawer a{padding:14px 12px;border-radius:8px;font-weight:500;color:var(--text)}
 .drawer a:hover{background:var(--bg-elevated)}
 .drawer .close{align-self:flex-end;width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;border-radius:999px;font-size:24px;color:var(--text-soft)}
+/* Sub-menús dentro del drawer móvil: sin hover, se muestran siempre expandidos
+   e indentados debajo de su padre (accordion "siempre abierto", sin JS extra). */
+.drawer .nav-item{display:flex;flex-direction:column}
+.drawer .nav-dropdown{position:static;transform:none;opacity:1;visibility:visible;box-shadow:none;
+  border:0;background:none;display:flex;flex-direction:column;min-width:0;padding:0 0 6px 14px}
+.drawer .nav-dropdown--mega{grid-template-columns:none;min-width:0;padding:0 0 6px 14px}
+.drawer .nav-dropdown-col{min-width:0;padding:0}
+.drawer .nav-dropdown-col h4{margin:10px 0 4px}
+.drawer .nav-dropdown-link{padding:10px 12px;font-size:13px;color:var(--text-soft)}
+.drawer .nav-dropdown-link:hover{background:var(--bg-elevated);color:var(--green-deep)}
+/* .nav-link trae colores pensados para el header transparente (blanco sobre
+   el hero) — en el drawer, de fondo claro, hay que forzarlo a los tokens de texto
+   normales o el link queda invisible (blanco sobre blanco) al estar activo/hover. */
+.drawer .nav-link{color:var(--text)}
+.drawer .nav-link::after{display:none}
+.drawer .nav-link:hover{color:var(--green-deep)}
+.drawer .nav-link.active{color:var(--green-deep)}
 
 /* Hero */
 .hero{position:relative;height:100vh;min-height:640px;overflow:hidden;background:var(--bg-dark);color:#fff}

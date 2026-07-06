@@ -37,8 +37,11 @@ function caaguazu_is_home() {
 }
 
 /**
- * Renderiza el menú principal como una lista plana de <a> (no <ul>/<li>),
- * que es lo que espera el CSS original con `.nav > a`.
+ * Renderiza el menú principal. Cada item de nivel 1 es un <div class="nav-item">;
+ * si tiene hijos (en un menú real de WP, vía menu_item_parent) se agrega un
+ * mega-menú desplegable con esos hijos — así una sección con muchas subpáginas
+ * (como Turismo) es alcanzable en un clic desde cualquier parte del sitio,
+ * en vez de tener que bajar hub por hub.
  */
 function caaguazu_render_nav( $location = 'primary', $current_slug = '' ) {
 	$locations = get_nav_menu_locations();
@@ -52,26 +55,49 @@ function caaguazu_render_nav( $location = 'primary', $current_slug = '' ) {
 		caaguazu_render_fallback_nav( $current_slug );
 		return;
 	}
+
+	$children = array();
 	foreach ( $items as $item ) {
+		if ( $item->menu_item_parent ) {
+			$children[ $item->menu_item_parent ][] = $item;
+		}
+	}
+
+	foreach ( $items as $item ) {
+		if ( $item->menu_item_parent ) {
+			continue; // se pintan como hijos de su padre, no de nuevo en el nivel 1.
+		}
 		$is_active = '';
-		if ( $current_slug && $item->object === 'page' ) {
+		if ( $current_slug && 'page' === $item->object ) {
 			$page = get_post( (int) $item->object_id );
 			if ( $page && $page->post_name === $current_slug ) {
-				$is_active = ' class="active"';
+				$is_active = ' active';
 			}
 		}
+		$kids = isset( $children[ $item->ID ] ) ? $children[ $item->ID ] : array();
+		echo '<div class="nav-item">';
 		printf(
-			'<a href="%s"%s>%s</a>',
+			'<a class="nav-link%s" href="%s">%s</a>',
+			esc_attr( $is_active ),
 			esc_url( $item->url ),
-			$is_active,
 			esc_html( $item->title )
 		);
+		if ( $kids ) {
+			echo '<div class="nav-dropdown"><div class="nav-dropdown-col">';
+			foreach ( $kids as $kid ) {
+				printf( '<a class="nav-dropdown-link" href="%s">%s</a>', esc_url( $kid->url ), esc_html( $kid->title ) );
+			}
+			echo '</div></div>';
+		}
+		echo '</div>';
 	}
 }
 
 /**
  * Menú por defecto si el admin todavía no configuró uno en Apariencia → Menús.
- * Coincide con el $NAV original.
+ * Turismo lleva un mega-menú con las secciones/destinos reales (Ykua La
+ * Patria, Techapyrã, etc.) para que se llegue en un clic desde cualquier
+ * página, sin tener que pasar por el hub y después por su sub-hub.
  */
 function caaguazu_render_fallback_nav( $current_slug = '' ) {
 	$defaults = array(
@@ -86,9 +112,76 @@ function caaguazu_render_fallback_nav( $current_slug = '' ) {
 	foreach ( $defaults as $slug => $label ) {
 		$page = get_page_by_path( $slug );
 		$url  = $page ? get_permalink( $page ) : home_url( '/' . $slug . '/' );
-		$cls  = ( $slug === $current_slug ) ? ' class="active"' : '';
-		printf( '<a href="%s"%s>%s</a>', esc_url( $url ), $cls, caaguazu_i18n_html( 'nav.' . $slug, $label ) );
+		$cls  = ( $slug === $current_slug ) ? ' active' : '';
+		echo '<div class="nav-item">';
+		printf( '<a class="nav-link%s" href="%s">%s</a>', esc_attr( $cls ), esc_url( $url ), caaguazu_i18n_html( 'nav.' . $slug, $label ) );
+		if ( 'turismo' === $slug ) {
+			caaguazu_render_turismo_dropdown();
+		}
+		echo '</div>';
 	}
+}
+
+/**
+ * Grupos de accesos directos a destinos reales de Turismo, para el
+ * mega-menú del nav y el acordeón del drawer móvil. Las claves son los
+ * wp_slug reales sembrados por inc/tourism-seeder.php (ver inc/tourism-content.php).
+ */
+function caaguazu_turismo_menu_groups() {
+	return array(
+		__( 'La Capital de la Madera', 'caaguazu' ) => array(
+			'la-capital-de-la-madera'    => __( 'Introducción', 'caaguazu' ),
+			'historia'                   => __( 'Historia', 'caaguazu' ),
+			'la-ruta-de-la-madera'        => __( 'La Ruta de la Madera', 'caaguazu' ),
+			'artesanos'                   => __( 'Artesanos', 'caaguazu' ),
+		),
+		__( 'Qué hacer', 'caaguazu' ) => array(
+			'ykua-la-patria'          => __( 'Ykua La Patria', 'caaguazu' ),
+			'patrimonio-religioso'    => __( 'Patrimonio religioso', 'caaguazu' ),
+			'mercado-municipal'       => __( 'Mercado de Abasto', 'caaguazu' ),
+			'parques-y-naturaleza'    => __( 'Parque Techapyrã', 'caaguazu' ),
+		),
+		__( 'Sabores', 'caaguazu' ) => array(
+			'platos-tipicos' => __( 'Platos típicos', 'caaguazu' ),
+			'donde-comer'    => __( 'Dónde comer', 'caaguazu' ),
+			'mate-y-terere'  => __( 'Mate y tereré', 'caaguazu' ),
+		),
+		__( 'Planificá tu visita', 'caaguazu' ) => array(
+			'como-llegar'       => __( 'Cómo llegar', 'caaguazu' ),
+			'donde-alojarte'    => __( 'Dónde alojarte', 'caaguazu' ),
+			'mapa-interactivo'  => __( 'Mapa interactivo', 'caaguazu' ),
+		),
+	);
+}
+
+/**
+ * Resuelve la URL real de una página de Turismo (anidada bajo turismo/…)
+ * a partir de su wp_slug, reusando el mismo cálculo de ruta que usa el
+ * seeder para no duplicar esa lógica.
+ */
+function caaguazu_tourism_page_url( $wp_slug ) {
+	if ( ! function_exists( 'caaguazu_tourism_pages' ) || ! function_exists( 'caaguazu_tourism_full_path' ) ) {
+		return home_url( '/' );
+	}
+	$pages = caaguazu_tourism_pages();
+	if ( ! isset( $pages[ $wp_slug ] ) ) {
+		return home_url( '/' );
+	}
+	$full_path = caaguazu_tourism_full_path( $wp_slug, $pages );
+	$page      = get_page_by_path( $full_path );
+	return $page ? get_permalink( $page ) : home_url( '/' . $full_path . '/' );
+}
+
+function caaguazu_render_turismo_dropdown() {
+	echo '<div class="nav-dropdown nav-dropdown--mega">';
+	foreach ( caaguazu_turismo_menu_groups() as $group_label => $links ) {
+		echo '<div class="nav-dropdown-col"><h4>' . esc_html( $group_label ) . '</h4>';
+		foreach ( $links as $slug => $label ) {
+			printf( '<a class="nav-dropdown-link" href="%s">%s</a>', esc_url( caaguazu_tourism_page_url( $slug ) ), esc_html( $label ) );
+		}
+		echo '</div>';
+	}
+	echo '</div>';
 }
 
 /**
