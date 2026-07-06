@@ -1,0 +1,58 @@
+name: Release theme zip
+
+# Se dispara solo cuando un push a main toca la linea "Version:" de
+# style.css. Arma caaguazu-theme.zip (bin/build-zip.sh) y publica un
+# GitHub Release con ese asset — de ahi lee las actualizaciones
+# caaguazu-theme/inc/updater.php. Sin pasos manuales de tag: alcanza con
+# subir el numero de version en el PR que se mergea a main.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'caaguazu-theme/style.css'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Leer version de style.css
+        id: version
+        run: |
+          VERSION=$(grep -m1 '^Version:' caaguazu-theme/style.css | sed -E 's/Version:[[:space:]]*//' | tr -d '\r')
+          if [ -z "$VERSION" ]; then
+            echo "No se encontro la linea Version: en style.css" >&2
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Verificar si el tag ya existe
+        id: check
+        run: |
+          if git rev-parse "${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Armar caaguazu-theme.zip
+        if: steps.check.outputs.exists == 'false'
+        run: bash bin/build-zip.sh
+
+      - name: Crear Release y subir el zip
+        if: steps.check.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ steps.version.outputs.tag }}" caaguazu-theme.zip \
+            --title "${{ steps.version.outputs.tag }}" \
+            --generate-notes
