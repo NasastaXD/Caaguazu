@@ -1,0 +1,110 @@
+/* Caaguazú — front-end JS */
+(function(){
+  // Sticky / compresión sólo cuando hero está presente (data-page="home")
+  var h = document.getElementById('header');
+  if (h && document.body.dataset.page === 'home'){
+    var onScroll = function(){ h.classList.toggle('scrolled', window.scrollY > 100); };
+    window.addEventListener('scroll', onScroll, {passive:true});
+    onScroll();
+  }
+})();
+
+(function(){
+  // Parallax hero
+  var m = document.getElementById('heroMedia');
+  if (!m) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  window.addEventListener('scroll', function(){
+    m.style.transform = 'translate3d(0,' + (window.scrollY * 0.4) + 'px,0)';
+  }, {passive:true});
+})();
+
+(function(){
+  // Video toggle
+  var v = document.getElementById('heroVideo'),
+      b = document.getElementById('videoToggle');
+  if (!v || !b) return;
+  b.addEventListener('click', function(){
+    if (v.paused){ v.play(); b.textContent='❚❚'; b.setAttribute('aria-label','Pausar video'); }
+    else { v.pause(); b.textContent='▶'; b.setAttribute('aria-label','Reproducir video'); }
+  });
+})();
+
+(function(){
+  // Reveal on scroll
+  var els = document.querySelectorAll('.reveal');
+  if (!('IntersectionObserver' in window)){
+    els.forEach(function(el){ el.classList.add('in'); });
+    return;
+  }
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if (en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+    });
+  }, {threshold:0.2});
+  els.forEach(function(el, i){
+    el.style.transitionDelay = ((i % 3) * 80) + 'ms';
+    io.observe(el);
+  });
+})();
+
+(function(){
+  // Drawer móvil
+  var burger=document.getElementById('burger'),
+      drawer=document.getElementById('drawer'),
+      bg=document.getElementById('drawerBg'),
+      close=document.getElementById('drawerClose');
+  if (!drawer) return;
+  function open(){ drawer.classList.add('open'); bg.classList.add('open'); drawer.setAttribute('aria-hidden','false'); }
+  function shut(){ drawer.classList.remove('open'); bg.classList.remove('open'); drawer.setAttribute('aria-hidden','true'); }
+  burger && burger.addEventListener('click', open);
+  close && close.addEventListener('click', shut);
+  bg && bg.addEventListener('click', shut);
+})();
+
+(function(){
+  // Selector de idioma ES/GN funcional: toggle 100% cliente, persistido en
+  // localStorage. El HTML servido es siempre el mismo (dual-render en PHP),
+  // así que esto no depende de cookies ni rompe ningún cache de página.
+  var isCurrentlyGn = document.documentElement.classList.contains('lang-gn');
+  var current = document.querySelector('.lang button[data-lang="' + (isCurrentlyGn ? 'GN' : 'ES') + '"]');
+  if (current) {
+    document.querySelectorAll('.lang button').forEach(function(x){ x.classList.remove('on'); });
+    current.classList.add('on');
+  }
+  document.querySelectorAll('.lang button[data-lang]').forEach(function(b){
+    if (b.disabled) return;
+    b.addEventListener('click', function(){
+      b.parentNode.querySelectorAll('button').forEach(function(x){ x.classList.remove('on'); });
+      b.classList.add('on');
+      var isGn = b.dataset.lang === 'GN';
+      document.documentElement.classList.toggle('lang-gn', isGn);
+      try { localStorage.setItem('caaguazuLang', isGn ? 'GN' : 'ES'); } catch (e) {}
+    });
+  });
+})();
+
+(function(){
+  // Quiz del home: 1 pregunta -> panel de resultado con 2 links resueltos server-side
+  var opts = document.querySelectorAll('.quiz-opt');
+  var result = document.getElementById('quizResult');
+  if (!opts.length || !result || !window.caaguazuQuizMap) return;
+  function pick(field){
+    return document.documentElement.classList.contains('lang-gn') ? field.gn : field.es;
+  }
+  opts.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      opts.forEach(function(b){ b.classList.remove('selected'); });
+      btn.classList.add('selected');
+      var data = window.caaguazuQuizMap[btn.dataset.key];
+      if (!data) return;
+      result.innerHTML =
+        '<h3>' + pick(data.title) + '</h3>' +
+        '<div class="quiz-result-links">' +
+          '<a class="btn btn-primary" href="' + data.primary_url + '">' + pick(data.primary_label) + '</a>' +
+          '<a class="arrow" href="' + data.secondary_url + '">' + pick(data.secondary_label) + '</a>' +
+        '</div>';
+      result.hidden = false;
+    });
+  });
+})();
