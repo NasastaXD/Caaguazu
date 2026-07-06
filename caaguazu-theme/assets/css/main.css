@@ -17,6 +17,16 @@
   --t:300ms cubic-bezier(.4,0,.2,1);
   /* Motivo "tejido" (puntada ñandutí) — SVG inline, sin assets externos */
   --weave:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='12' viewBox='0 0 24 12'%3E%3Cpath d='M0 6l6-5 6 5 6-5 6 5M0 6l6 5 6-5 6 5 6-5' fill='none' stroke='%23C9A961' stroke-opacity='.6' stroke-width='1'/%3E%3C/svg%3E");
+
+  /* Alias para los plugins del ecosistema turismo (Caaguazú Locales / Portal
+     de Promotores): ambos heredan colores vía var(--nombre, fallback), acá
+     les damos los nombres que esperan apuntando a nuestros propios tokens.
+     --font-display, --font-body, --text-muted y --border ya coinciden
+     de nombre, no necesitan alias. */
+  --flag-green:var(--green-deep); --flag-green-deep:var(--green-forest); --flag-green-soft:var(--green-sage);
+  --ink:var(--bg-dark); --paper:var(--bg-primary); --paper-elevated:var(--bg-elevated); --snow:var(--bg-pure);
+  --text-primary:var(--text); --text-secondary:var(--text-soft);
+  --radius:var(--radius-md);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
@@ -408,6 +418,19 @@ dialog.lightbox[open]{display:flex;align-items:center;justify-content:center}
 .lightbox-close{top:20px;right:20px}
 .lightbox-prev{left:20px;top:50%;transform:translateY(-50%)}
 .lightbox-next{right:20px;top:50%;transform:translateY(-50%)}
+
+/* Clases de compatibilidad para el plugin Caaguazú Portal — su template
+   público (promotur/public/single-destino.php, no lo pisamos) asume estas
+   utilidades genéricas del theme de turismo original. Más simple y menos
+   frágil que forkear ese template (bastante más complejo: QR, itinerario,
+   reportes) solo para renombrar 4 clases. */
+.container-wide{max-width:1200px;margin:0 auto;padding:0 24px}
+.section-y{padding-block:64px}
+@media(min-width:768px){.section-y{padding-block:96px}}
+.text-h1{font-family:var(--font-display);font-size:clamp(40px,6vw,64px);font-weight:600;line-height:1.1}
+.text-h3{font-family:var(--font-display);font-size:clamp(19px,2.2vw,23px);font-weight:600;line-height:1.2}
+.prose-content{max-width:760px;font-size:17px;line-height:1.75;color:var(--text-soft)}
+.prose-content p{margin-top:16px}
 
 /* Accesibilidad: sin animaciones para quien las desactivó */
 @media (prefers-reduced-motion: reduce){

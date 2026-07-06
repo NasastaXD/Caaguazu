@@ -1,6 +1,10 @@
 <?php
 /**
- * Mapa interactivo (Leaflet) de puntos de interés — shortcode [caaguazu_mapa].
+ * Mapa interactivo (Leaflet) de puntos de interés/historia — shortcode
+ * [caaguazu_mapa_puntos]. Complementa (no reemplaza) al [caaguazu_mapa] del
+ * plugin Caaguazú Locales, que muestra negocios reales editables — el
+ * nombre distinto evita que un add_shortcode() pise al otro (WP no avisa
+ * si dos registran el mismo tag, gana el que se registra último).
  *
  * Única función del theme que depende de un recurso externo (Leaflet vía
  * CDN, igual que hacía el theme de turismo original): se carga solo en las
@@ -32,17 +36,17 @@ function caaguazu_map_shortcode() {
 		'<div class="caaguazu-map" id="caaguazu-map-%1$d" data-points=\'%2$s\' role="application" aria-label="%3$s"></div>',
 		$rendered,
 		esc_attr( $points ),
-		esc_attr__( 'Mapa interactivo de Caaguazú', 'caaguazu' )
+		esc_attr__( 'Mapa de puntos históricos de Caaguazú', 'caaguazu' )
 	);
 }
-add_shortcode( 'caaguazu_mapa', 'caaguazu_map_shortcode' );
+add_shortcode( 'caaguazu_mapa_puntos', 'caaguazu_map_shortcode' );
 
 function caaguazu_map_assets() {
 	if ( is_admin() ) {
 		return;
 	}
 	global $post;
-	if ( ! $post || ! has_shortcode( $post->post_content, 'caaguazu_mapa' ) ) {
+	if ( ! $post || ! has_shortcode( $post->post_content, 'caaguazu_mapa_puntos' ) ) {
 		return;
 	}
 

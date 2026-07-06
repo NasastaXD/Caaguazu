@@ -68,6 +68,10 @@ for ( $i = 0; $i < 3; $i++ ) {
 				<ul>
 					<li><a href="<?php echo esc_url( $about_url ); ?>"><?php esc_html_e( 'Sobre Caaguazú', 'caaguazu' ); ?></a></li>
 					<li><a href="<?php echo esc_url( $tourism_url ); ?>"><?php esc_html_e( 'Turismo', 'caaguazu' ); ?></a></li>
+					<?php if ( post_type_exists( 'cgz_local' ) ) : ?>
+						<li><a href="<?php echo esc_url( get_post_type_archive_link( 'cgz_local' ) ); ?>"><?php esc_html_e( 'Locales y reservas', 'caaguazu' ); ?></a></li>
+						<li><a href="<?php echo esc_url( home_url( '/cuenta/' ) ); ?>"><?php esc_html_e( 'Mi cuenta', 'caaguazu' ); ?></a></li>
+					<?php endif; ?>
 					<li><a href="<?php echo esc_url( $contact_url ); ?>"><?php esc_html_e( 'Contacto', 'caaguazu' ); ?></a></li>
 				</ul>
 			</div>

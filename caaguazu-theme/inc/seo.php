@@ -54,6 +54,11 @@ function caaguazu_seo_head() {
 	if ( is_admin() ) {
 		return;
 	}
+	// El plugin Caaguazú Portal ya inyecta sus propias og:*/twitter:* en los
+	// singles de promotur_destino (class-seo.php) — no duplicar.
+	if ( is_singular( 'promotur_destino' ) ) {
+		return;
+	}
 
 	$description = caaguazu_seo_description();
 	$image       = caaguazu_seo_image();
