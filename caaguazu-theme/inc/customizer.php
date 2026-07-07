@@ -92,41 +92,10 @@ function caaguazu_customize_register( $wp_customize ) {
 	}
 
 	/* ============================================================
-	 * ECOSISTEMA (3 cards)
+	 * ECOSISTEMA — ahora la registra el plugin Caaguazú Módulos
+	 * (caaguazu-modulos/includes/modules/module-ecosistema.php), que
+	 * engancha su propia sección al panel "caaguazu_home" de acá arriba.
 	 * ============================================================ */
-	$wp_customize->add_section( 'caaguazu_ecosystem', array(
-		'title' => __( 'Ecosistema (3 sub-portales)', 'caaguazu' ),
-		'panel' => 'caaguazu_home',
-	) );
-
-	$wp_customize->add_setting( 'eco_section_title', array(
-		'default' => 'Un portal, múltiples puertas',
-		'sanitize_callback' => 'sanitize_text_field',
-	) );
-	$wp_customize->add_control( 'eco_section_title', array(
-		'label'   => __( 'Título de la sección', 'caaguazu' ),
-		'section' => 'caaguazu_ecosystem',
-	) );
-	$wp_customize->add_setting( 'eco_section_body', array(
-		'default' => 'Caaguazu.net es el hub central de una red de sub-portales especializados. Cada uno mantiene su voz, todos comparten la misma identidad.',
-		'sanitize_callback' => 'sanitize_textarea_field',
-	) );
-	$wp_customize->add_control( 'eco_section_body', array(
-		'label'   => __( 'Descripción de la sección', 'caaguazu' ),
-		'section' => 'caaguazu_ecosystem',
-		'type'    => 'textarea',
-	) );
-
-	$eco_defaults = caaguazu_ecosystem_defaults();
-	for ( $i = 0; $i < 3; $i++ ) {
-		$d = $eco_defaults[ $i ];
-		caaguazu_add_text(  $wp_customize, "eco_{$i}_tag",   __( 'Tag (subdominio)', 'caaguazu' ), $d['tag'],   'caaguazu_ecosystem' );
-		caaguazu_add_text(  $wp_customize, "eco_{$i}_title", __( 'Título', 'caaguazu' ),           $d['title'], 'caaguazu_ecosystem' );
-		caaguazu_add_text(  $wp_customize, "eco_{$i}_body",  __( 'Descripción', 'caaguazu' ),      $d['body'],  'caaguazu_ecosystem', true );
-		caaguazu_add_text(  $wp_customize, "eco_{$i}_cta",   __( 'Texto del CTA', 'caaguazu' ),    $d['cta'],   'caaguazu_ecosystem' );
-		caaguazu_add_url(   $wp_customize, "eco_{$i}_url",   __( 'URL externa (vacío = "próximamente")', 'caaguazu' ), $d['url'], 'caaguazu_ecosystem' );
-		caaguazu_add_image( $wp_customize, "eco_{$i}_image", __( 'Imagen', 'caaguazu' ),           $d['image'], 'caaguazu_ecosystem' );
-	}
 
 	/* ============================================================
 	 * FOOTER + IDENTIDAD GENERAL

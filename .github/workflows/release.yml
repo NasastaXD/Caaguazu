@@ -1,10 +1,12 @@
 name: Release theme zip
 
 # Se dispara solo cuando un push a main toca la linea "Version:" de
-# style.css. Arma caaguazu-theme.zip (bin/build-zip.sh) y publica un
-# GitHub Release con ese asset — de ahi lee las actualizaciones
-# caaguazu-theme/inc/updater.php. Sin pasos manuales de tag: alcanza con
-# subir el numero de version en el PR que se mergea a main.
+# style.css. Arma caaguazu-theme.zip + caaguazu-modulos.zip +
+# caaguazu-turismo.zip (bin/build-zip.sh) y publica un GitHub Release con
+# esos assets — de ahi lee las actualizaciones caaguazu-theme/inc/updater.php
+# (los plugins todavia se reinstalan a mano bajando el zip del release, no
+# tienen auto-updater propio). Sin pasos manuales de tag: alcanza con subir
+# el numero de version en el PR que se mergea a main.
 
 on:
   push:
@@ -44,15 +46,16 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Armar caaguazu-theme.zip
+      - name: Armar los zips (theme + plugins)
         if: steps.check.outputs.exists == 'false'
         run: bash bin/build-zip.sh
 
-      - name: Crear Release y subir el zip
+      - name: Crear Release y subir los zips
         if: steps.check.outputs.exists == 'false'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "${{ steps.version.outputs.tag }}" caaguazu-theme.zip \
+          gh release create "${{ steps.version.outputs.tag }}" \
+            caaguazu-theme.zip caaguazu-modulos.zip caaguazu-turismo.zip \
             --title "${{ steps.version.outputs.tag }}" \
             --generate-notes

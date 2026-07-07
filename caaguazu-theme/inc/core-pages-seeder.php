@@ -1,17 +1,19 @@
 <?php
 /**
  * Siembra al activar las páginas estáticas que el theme necesita (Sobre
- * Caaguazú, Ecosistema, Contacto) y configura "Inicio" como página estática
- * de portada, para que el sitio no tenga ningún 404 ni quede en el índice
- * de blog por defecto de WordPress sin tocar nada a mano (antes eran pasos
- * manuales del README). Se crean en blanco a propósito: page.php ya sabe
- * pintar un hero default + "En construcción" cuando no hay contenido
- * cargado todavía; el admin las completa después. No pisa páginas que ya
- * existan por slug ni una portada ya configurada.
+ * Caaguazú, Contacto) y configura "Inicio" como página estática de portada,
+ * para que el sitio no tenga ningún 404 ni quede en el índice de blog por
+ * defecto de WordPress sin tocar nada a mano (antes eran pasos manuales del
+ * README). Se crean en blanco a propósito: page.php ya sabe pintar un hero
+ * default + "En construcción" cuando no hay contenido cargado todavía; el
+ * admin las completa después. No pisa páginas que ya existan por slug ni
+ * una portada ya configurada.
  *
- * Servicios y Reportar quedaron afuera a propósito (no se van a lanzar
- * todavía) — ver caaguazu_quick_access_items()/caaguazu_render_tabbar() en
- * inc/helpers.php, que tampoco los enlazan.
+ * Ecosistema, Noticias, Agenda y Turismo ya no viven acá — cada uno siembra
+ * su propia página/CPT desde su plugin correspondiente (ver caaguazu-modulos/
+ * y caaguazu-turismo/). Servicios y Reportar quedaron afuera a propósito
+ * (no se van a lanzar todavía) — ver caaguazu_quick_access_items() en
+ * inc/helpers.php, que tampoco los enlaza.
  *
  * `after_switch_theme` sólo dispara al ACTIVAR el theme, no cuando un sitio
  * ya activo recibe una actualización in-place vía inc/updater.php — por eso
@@ -31,7 +33,6 @@ add_action( 'admin_init', 'caaguazu_catch_up_core_pages' );
 function caaguazu_seed_core_pages() {
 	$pages = array(
 		'sobre-caaguazu' => array( 'title' => __( 'Sobre Caaguazú', 'caaguazu' ) ),
-		'ecosistema'     => array( 'title' => __( 'Ecosistema', 'caaguazu' ) ),
 		'contacto'       => array( 'title' => __( 'Contacto', 'caaguazu' ), 'template' => 'page-templates/page-contacto.php' ),
 	);
 

@@ -1,15 +1,13 @@
 <?php
 /**
  * Siembra la sección Turismo (páginas reales, migradas del sitio de turismo
- * que se fusionó a este portal) al activar el theme. Reimportable a mano
+ * que se fusionó a este portal) al activar el plugin. Reimportable a mano
  * desde Apariencia → Caaguazú sin pisar páginas ya editadas.
  *
- * @package Caaguazu
+ * @package Caaguazu_Turismo
  */
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
-
-add_action( 'after_switch_theme', 'caaguazu_seed_tourism_on_activation' );
 
 function caaguazu_seed_tourism_on_activation() {
 	if ( get_option( 'caaguazu_tourism_seeded' ) ) {
@@ -18,6 +16,14 @@ function caaguazu_seed_tourism_on_activation() {
 	caaguazu_run_tourism_seed();
 	update_option( 'caaguazu_tourism_seeded', 1 );
 }
+
+/**
+ * `register_activation_hook` solo corre al ACTIVAR este plugin — un sitio
+ * que ya lo tuviera activo antes de un cambio de contenido nunca vuelve a
+ * dispararlo. Catch-up en `admin_init`, mismo patrón que
+ * caaguazu-theme/inc/core-pages-seeder.php.
+ */
+add_action( 'admin_init', 'caaguazu_seed_tourism_on_activation' );
 
 /**
  * Devuelve el path completo (padre/hijo/nieto) de un slug de turismo,

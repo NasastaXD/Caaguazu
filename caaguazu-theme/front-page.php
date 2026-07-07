@@ -11,7 +11,6 @@
 get_header();
 
 $identity_defaults = caaguazu_identity_defaults();
-$eco_defaults      = caaguazu_ecosystem_defaults();
 
 $hero_video  = caaguazu_opt( 'hero_video_url', 'https://videos.pexels.com/video-files/2491284/2491284-uhd_2560_1440_24fps.mp4' );
 $hero_poster = caaguazu_opt_image( 'hero_poster', 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1920&q=80' );
@@ -86,6 +85,7 @@ $hero_poster = caaguazu_opt_image( 'hero_poster', 'https://images.unsplash.com/p
 	</div>
 </section>
 
+<?php if ( function_exists( 'caaguazu_ecosystem_defaults' ) ) : $eco_defaults = caaguazu_ecosystem_defaults(); ?>
 <section class="eco">
 	<div class="container">
 		<div class="section-head reveal">
@@ -119,6 +119,7 @@ $hero_poster = caaguazu_opt_image( 'hero_poster', 'https://images.unsplash.com/p
 		</div>
 	</div>
 </section>
+<?php endif; ?>
 
 <section class="quiz-wrap">
 	<div class="container">
@@ -187,11 +188,12 @@ $quiz_map = array(
 <script>window.caaguazuQuizMap = <?php echo wp_json_encode( $quiz_map ); ?>;</script>
 
 <?php
-$next_event = caaguazu_upcoming_events( 1 );
-if ( $next_event->have_posts() ) :
-	$next_event->the_post();
-	$event_date     = get_post_meta( get_the_ID(), '_caaguazu_event_date', true );
-	$event_location = get_post_meta( get_the_ID(), '_caaguazu_event_location', true );
+if ( function_exists( 'caaguazu_upcoming_events' ) ) :
+	$next_event = caaguazu_upcoming_events( 1 );
+	if ( $next_event->have_posts() ) :
+		$next_event->the_post();
+		$event_date     = get_post_meta( get_the_ID(), '_caaguazu_event_date', true );
+		$event_location = get_post_meta( get_the_ID(), '_caaguazu_event_location', true );
 ?>
 <section class="container">
 	<a class="event-banner reveal" href="<?php the_permalink(); ?>">
@@ -205,10 +207,12 @@ if ( $next_event->have_posts() ) :
 	</a>
 </section>
 <?php
-	wp_reset_postdata();
+		wp_reset_postdata();
+	endif;
 endif;
 ?>
 
+<?php if ( post_type_exists( 'caaguazu_news' ) ) : ?>
 <section class="container">
 	<div class="news-head reveal">
 		<div class="section-head">
@@ -285,6 +289,7 @@ endif;
 		?>
 	</div>
 </section>
+<?php endif; ?>
 
 <?php
 get_footer();

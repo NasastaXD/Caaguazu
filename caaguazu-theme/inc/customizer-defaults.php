@@ -32,32 +32,6 @@ function caaguazu_identity_defaults() {
 	);
 }
 
-function caaguazu_ecosystem_defaults() {
-	return array(
-		array(
-			'tag'   => 'Turismo',
-			'title' => 'Turismo',
-			'body'  => 'Información sobre historia, oficio maderero, gastronomía y cultura guaraní del departamento.',
-			'cta'   => 'Ver sección de Turismo',
-			'url'   => caaguazu_page_url( 'turismo' ),
-			'image' => 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1400&q=80',
-		),
-		array(
-			'tag'   => 'cead.caaguazu.net',
-			'title' => 'Centro de Estudios y Desarrollo',
-			'body'  => 'Sub-portal dedicado a investigación, formación y proyectos de desarrollo sostenible para el departamento.',
-			'cta'   => 'Ir al sitio del CEAD',
-			'url'   => 'https://cead.caaguazu.net',
-			'image' => 'https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=1400&q=80',
-		),
-		array(
-			'tag'   => 'Próximamente',
-			'title' => 'Nuevo sub-portal',
-			'body'  => 'Un nuevo espacio del ecosistema Caaguazú se encuentra en preparación y estará disponible próximamente.',
-			'cta'   => 'Próximamente',
-			'url'   => '',
-			'image' => 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=1400&q=80',
-		),
-	);
-}
+/* caaguazu_ecosystem_defaults() ahora vive en el plugin Caaguazú Módulos
+   (caaguazu-modulos/includes/modules/module-ecosistema.php). */
 
