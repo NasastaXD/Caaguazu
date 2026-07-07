@@ -84,7 +84,7 @@ Para publicar una actualización:
 2. Mergear ese cambio a `main`.
 3. Listo — `.github/workflows/release.yml` arma `caaguazu-theme.zip`, `caaguazu-modulos.zip` y `caaguazu-turismo.zip` (con `bin/build-zip.sh`) y crea el Release en GitHub con los tres como assets, sin pasos manuales de tag.
 
-Los sitios con el theme instalado lo detectan en su próximo chequeo (cron cada 12h, o al abrir Actualizaciones y tocar "Buscar de nuevo"). Los plugins hay que resubirlos a mano cuando cambien.
+Los sitios con el theme instalado lo detectan en su próximo chequeo de WP (cron cada 12h) o al forzarlo a mano: el botón nativo "Volver a comprobar" de **Escritorio → Actualizaciones**, o el atajo **⟳ Buscar actualización** en la barra de admin (visible en cualquier pantalla), fuerzan un chequeo inmediato contra GitHub sin esperar el cache interno de 12h de `inc/updater.php` (antes de esto, el botón nativo no servía de nada porque ese cache seguía sirviendo el release viejo). Los plugins hay que resubirlos a mano cuando cambien.
 
 ## Edición de contenido
 

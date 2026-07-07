@@ -28,6 +28,41 @@ class Caaguazu_GitHub_Updater {
 		add_filter( 'pre_set_site_transient_update_themes', array( $this, 'check_update' ) );
 		add_filter( 'themes_api', array( $this, 'theme_info' ), 10, 3 );
 		add_action( 'upgrader_process_complete', array( $this, 'clear_cache' ), 10, 2 );
+		add_action( 'load-update-core.php', array( $this, 'maybe_force_check' ) );
+		add_action( 'admin_bar_menu', array( $this, 'admin_bar_button' ), 100 );
+	}
+
+	/**
+	 * El botón nativo "Volver a comprobar" de Escritorio → Actualizaciones
+	 * pone `?force-check=1` y hace que WP vuelva a llamar a nuestro filtro
+	 * de `pre_set_site_transient_update_themes` — pero antes de este método,
+	 * ese filtro seguía devolviendo el release cacheado en `get_transient()`
+	 * hasta que pasaran las 12h, así que el botón nativo no servía de nada.
+	 * `load-update-core.php` corre antes de que esa página dispare el
+	 * refresh, así que limpiar el cache acá alcanza para que WP pegue de
+	 * nuevo contra la API de GitHub en el mismo request.
+	 */
+	public function maybe_force_check() {
+		if ( ! empty( $_GET['force-check'] ) ) {
+			$this->clear_cache();
+		}
+	}
+
+	/**
+	 * Atajo en la barra de admin (visible en cualquier pantalla) al mismo
+	 * "Volver a comprobar" nativo, para no depender de que alguien sepa que
+	 * ese link chiquito existe en Escritorio → Actualizaciones.
+	 */
+	public function admin_bar_button( $wp_admin_bar ) {
+		if ( ! current_user_can( 'update_themes' ) ) {
+			return;
+		}
+		$wp_admin_bar->add_node( array(
+			'id'    => 'caaguazu-check-update',
+			'title' => '⟳ ' . __( 'Buscar actualización', 'caaguazu' ),
+			'href'  => esc_url( self_admin_url( 'update-core.php?force-check=1' ) ),
+			'meta'  => array( 'title' => __( 'Chequea GitHub ahora mismo, sin esperar el cache de 12h.', 'caaguazu' ) ),
+		) );
 	}
 
 	/**
