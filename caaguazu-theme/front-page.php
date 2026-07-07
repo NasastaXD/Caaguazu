@@ -42,6 +42,8 @@ $hero_poster = caaguazu_opt_image( 'hero_poster', 'https://upload.wikimedia.org/
 
 <?php caaguazu_render_quick_access(); ?>
 
+<?php caaguazu_render_turismo_carousel(); ?>
+
 <section class="container identity">
 	<?php for ( $i = 0; $i < 3; $i++ ) :
 		$d       = $identity_defaults[ $i ];

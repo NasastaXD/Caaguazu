@@ -15,6 +15,11 @@ $is_home      = caaguazu_is_home();
 <meta charset="<?php bloginfo( 'charset' ); ?>">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#1B6B44">
+<link rel="manifest" href="<?php echo esc_url( home_url( '/caaguazu-manifest.webmanifest' ) ); ?>">
+<link rel="apple-touch-icon" href="<?php echo esc_url( get_template_directory_uri() . '/assets/icons/icon-180.png' ); ?>">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Caaguazú">
 <?php wp_head(); ?>
 </head>
 <body <?php body_class(); ?> data-page="<?php echo esc_attr( $current_slug ); ?>">

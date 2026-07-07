@@ -166,6 +166,41 @@ function caaguazu_render_quick_access() {
 }
 
 /**
+ * Carrusel de destinos de Turismo para el home: scroll horizontal con
+ * tarjetas que se asoman al borde, en vez de una grilla estática. Depende
+ * del helper `caaguazu_tourism_page_url()` que expone el plugin Caaguazú
+ * Turismo — si el plugin no está activo, esta sección no se imprime.
+ */
+function caaguazu_render_turismo_carousel() {
+	if ( ! function_exists( 'caaguazu_tourism_page_url' ) ) {
+		return;
+	}
+	$destinos = array(
+		array( 'slug' => 'la-capital-de-la-madera', 'tag' => 'Historia y oficio', 'title' => 'La Capital de la Madera', 'desc' => 'Especies madereras y artesanos.' ),
+		array( 'slug' => 'que-hacer', 'tag' => 'Atractivos', 'title' => 'Qué hacer', 'desc' => 'Ykua La Patria, Techapyrã.' ),
+		array( 'slug' => 'platos-tipicos', 'tag' => 'Gastronomía', 'title' => 'Platos típicos', 'desc' => 'Ryguasu chyryry, sopa paraguaya.' ),
+		array( 'slug' => 'como-llegar', 'tag' => 'Info práctica', 'title' => 'Cómo llegar', 'desc' => 'Desde Asunción o Ciudad del Este.' ),
+	);
+	echo '<section class="container">';
+	echo '<div class="news-head reveal"><div class="section-head">';
+	echo '<p class="eyebrow">' . esc_html__( 'Turismo', 'caaguazu' ) . '</p>';
+	echo '<h2>' . esc_html__( 'Para descubrir en Caaguazú', 'caaguazu' ) . '</h2>';
+	echo '</div><a class="arrow" href="' . esc_url( caaguazu_tourism_page_url( 'turismo' ) ) . '">' . esc_html__( 'Ver todo', 'caaguazu' ) . '</a></div>';
+	echo '<div class="turismo-carousel reveal">';
+	foreach ( $destinos as $d ) {
+		printf(
+			'<a class="turismo-card" href="%s"><span class="eco-tag">%s</span><h3>%s</h3><p>%s</p><span class="arrow">%s</span></a>',
+			esc_url( caaguazu_tourism_page_url( $d['slug'] ) ),
+			esc_html( $d['tag'] ),
+			esc_html( $d['title'] ),
+			esc_html( $d['desc'] ),
+			esc_html__( 'Descubrir', 'caaguazu' )
+		);
+	}
+	echo '</div></section>';
+}
+
+/**
  * Tabbar fijo inferior (solo móvil): navegación tipo app, siempre alcanzable
  * con el pulgar, sin importar en qué página esté el usuario.
  */

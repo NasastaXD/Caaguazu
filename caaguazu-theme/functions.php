@@ -125,3 +125,4 @@ require get_template_directory() . '/inc/map.php';
 require get_template_directory() . '/inc/cpt-subscriber.php';
 require get_template_directory() . '/inc/newsletter-form.php';
 require get_template_directory() . '/inc/updater.php';
+require get_template_directory() . '/inc/pwa.php';
