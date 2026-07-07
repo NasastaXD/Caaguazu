@@ -95,6 +95,9 @@ function caaguazu_body_class( $classes ) {
 	if ( is_front_page() ) {
 		$classes[] = 'page-home';
 	}
+	if ( is_page() && get_post_meta( get_queried_object_id(), '_caaguazu_tourism', true ) ) {
+		$classes[] = 'tourism-page';
+	}
 	return $classes;
 }
 add_filter( 'body_class', 'caaguazu_body_class' );

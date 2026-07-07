@@ -21,13 +21,13 @@ function caaguazu_identity_defaults() {
 			'eyebrow' => 'Historia',
 			'title'   => 'Capital paraguaya de la madera',
 			'body'    => "El nombre Caaguazú proviene del guaraní ka'aguasu, que significa monte grande. Desde su fundación, la actividad maderera fue la base económica del departamento y hoy define su identidad productiva.",
-			'image'   => 'https://images.unsplash.com/photo-1605092676920-8ac5ae40c7c8?auto=format&fit=crop&w=1400&q=80',
+			'image'   => 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Carpenter_in_his_workshop.jpg/1280px-Carpenter_in_his_workshop.jpg',
 		),
 		array(
 			'eyebrow' => 'Población',
 			'title'   => 'Una comunidad bilingüe',
 			'body'    => 'Caaguazú tiene más de 550.000 habitantes. La mayoría se comunica en español y guaraní por igual, lo que hace del bilingüismo una característica central de la vida cotidiana del departamento.',
-			'image'   => 'https://images.unsplash.com/photo-1529390079861-591de354faf5?auto=format&fit=crop&w=1400&q=80',
+			'image'   => 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1400&q=80',
 		),
 	);
 }

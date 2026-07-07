@@ -49,7 +49,7 @@ function caaguazu_customize_register( $wp_customize ) {
 
 	// Video MP4 (URL) y poster (URL/imagen).
 	$wp_customize->add_setting( 'hero_video_url', array(
-		'default'           => 'https://videos.pexels.com/video-files/2491284/2491284-uhd_2560_1440_24fps.mp4',
+		'default'           => '',
 		'sanitize_callback' => 'esc_url_raw',
 	) );
 	$wp_customize->add_control( 'hero_video_url', array(
@@ -60,7 +60,7 @@ function caaguazu_customize_register( $wp_customize ) {
 	) );
 
 	$wp_customize->add_setting( 'hero_poster', array(
-		'default'           => 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1920&q=80',
+		'default'           => 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Puente_Madera_Caaguaz%C3%BA_-_panoramio.jpg/1920px-Puente_Madera_Caaguaz%C3%BA_-_panoramio.jpg',
 		'sanitize_callback' => 'esc_url_raw',
 	) );
 	$wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, 'hero_poster', array(
