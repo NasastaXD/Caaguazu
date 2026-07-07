@@ -23,9 +23,9 @@ function caaguazu_tourism_pages() {
 <div class="eco-grid">
 <a class="eco-card" href="#tourism-link:la-capital-de-la-madera#"><div class="body"><span class="eco-tag">Historia y oficio</span><h3>La Capital de la Madera</h3><p class="desc">Historia, especies madereras y artesanos del departamento.</p><span class="arrow">Ver sección →</span></div></a>
 <a class="eco-card" href="#tourism-link:que-hacer#"><div class="body"><span class="eco-tag">Atractivos</span><h3>Qué hacer</h3><p class="desc">Ykua La Patria, el parque Techapyrã, la Iglesia Inmaculada Concepción y el Mercado de Abasto.</p><span class="arrow">Ver sección →</span></div></a>
-<a class="eco-card" href="#tourism-link:sabores-de-caaguazu#"><div class="body"><span class="eco-tag">Gastronomía</span><h3>Sabores de Caaguazú</h3><p class="desc">Platos típicos, dónde comer y la cultura del mate y tereré.</p><span class="arrow">Ver sección →</span></div></a>
-<a class="eco-card" href="#tourism-link:vivir-caaguazu#"><div class="body"><span class="eco-tag">Cultura</span><h3>Vivir Caaguazú</h3><p class="desc">Festividades, galería de imágenes y glosario de guaraní.</p><span class="arrow">Ver sección →</span></div></a>
-<a class="eco-card" href="#tourism-link:planifica-tu-visita#"><div class="body"><span class="eco-tag">Info práctica</span><h3>Planificá tu visita</h3><p class="desc">Cómo llegar, dónde alojarte y la mejor época para venir.</p><span class="arrow">Ver sección →</span></div></a>
+<a class="eco-card" href="#tourism-link:platos-tipicos#"><div class="body"><span class="eco-tag">Gastronomía</span><h3>Sabores de Caaguazú</h3><p class="desc">Platos típicos, dónde comer y la cultura del mate y tereré.</p><span class="arrow">Ver sección →</span></div></a>
+<a class="eco-card" href="#tourism-link:festividades#"><div class="body"><span class="eco-tag">Cultura</span><h3>Vivir Caaguazú</h3><p class="desc">Festividades, galería de imágenes y glosario de guaraní.</p><span class="arrow">Ver sección →</span></div></a>
+<a class="eco-card" href="#tourism-link:como-llegar#"><div class="body"><span class="eco-tag">Info práctica</span><h3>Planificá tu visita</h3><p class="desc">Cómo llegar, dónde alojarte y la mejor época para venir.</p><span class="arrow">Ver sección →</span></div></a>
 <a class="eco-card" href="#tourism-link:contacto#"><div class="body"><span class="eco-tag">Turismo</span><h3>Contacto</h3><p class="desc">Secretaría de Turismo de la Municipalidad de Caaguazú.</p><span class="arrow">Ver sección →</span></div></a>
 </div>',
   ),
@@ -83,11 +83,11 @@ function caaguazu_tourism_pages() {
     'title' => 'Qué hacer en Caaguazú',
     'excerpt' => 'Ykua La Patria, la Ruta de la Madera, el parque Techapyrã, la Iglesia Inmaculada Concepción y el Mercado de Abasto.',
     'body' => '<div class="eco-grid">'
-      . '<a class="eco-card" href="#tourism-link:que-hacer/ykua-la-patria#"><div class="img"><img src="https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=1600&auto=format&fit=crop&q=80" alt="Manantial natural rodeado de vegetación" loading="lazy"></div><div class="body"><span class="eco-tag">Sitio fundacional</span><h3>Ykua La Patria</h3><p class="desc">El manantial donde se fundó la ciudad. Parque histórico con monolito conmemorativo de 1845.</p><span class="arrow">Ver más</span></div></a>'
-      . '<a class="eco-card" href="#tourism-link:la-capital-de-la-madera/la-ruta-de-la-madera#"><div class="img"><img src="https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=1200&auto=format&fit=crop&q=80" alt="Detalle de troncos y veta de madera apilada" loading="lazy"></div><div class="body"><span class="eco-tag">Recorrido</span><h3>La Ruta de la Madera</h3><p class="desc">Talleres abiertos sobre la Ruta 7, con carpinteros trabajando y muebles y juguetes a la venta.</p><span class="arrow">Ver más</span></div></a>'
-      . '<a class="eco-card" href="#tourism-link:que-hacer/patrimonio-religioso#"><div class="img"><img src="https://images.unsplash.com/photo-1548407260-da850faa41e3?w=1200&auto=format&fit=crop&q=80" alt="Fachada de iglesia católica al atardecer" loading="lazy"></div><div class="body"><span class="eco-tag">Patrimonio religioso</span><h3>Inmaculada Concepción</h3><p class="desc">60 m² de murales del artista Jorge Aguirre. Iluminación nocturna e misas patronales el 8 de diciembre.</p><span class="arrow">Ver más</span></div></a>'
+      . '<a class="eco-card" href="#tourism-link:que-hacer/ykua-la-patria#"><div class="img"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Ycua_La_Patria_(Caaguaz%C3%BA).jpg/1280px-Ycua_La_Patria_(Caaguaz%C3%BA).jpg" alt="Monolito y manantial de Ykua La Patria" loading="lazy"></div><div class="body"><span class="eco-tag">Sitio fundacional</span><h3>Ykua La Patria</h3><p class="desc">El manantial donde se fundó la ciudad. Parque histórico con monolito conmemorativo de 1845.</p><span class="arrow">Ver más</span></div></a>'
+      . '<a class="eco-card" href="#tourism-link:la-capital-de-la-madera/la-ruta-de-la-madera#"><div class="img"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Carpenter_in_his_workshop.jpg/1280px-Carpenter_in_his_workshop.jpg" alt="Carpintero trabajando la madera en su taller" loading="lazy"></div><div class="body"><span class="eco-tag">Recorrido</span><h3>La Ruta de la Madera</h3><p class="desc">Talleres abiertos sobre la Ruta 7, con carpinteros trabajando y muebles y juguetes a la venta.</p><span class="arrow">Ver más</span></div></a>'
+      . '<a class="eco-card" href="#tourism-link:que-hacer/patrimonio-religioso#"><div class="img"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/Iglesia_de_la_Inmaculada_Concepci%C3%B3n_(Caaguaz%C3%BA).jpg/1280px-Iglesia_de_la_Inmaculada_Concepci%C3%B3n_(Caaguaz%C3%BA).jpg" alt="Fachada de la Iglesia Inmaculada Concepción de Caaguazú, con sus murales" loading="lazy"></div><div class="body"><span class="eco-tag">Patrimonio religioso</span><h3>Inmaculada Concepción</h3><p class="desc">60 m² de murales del artista Jorge Aguirre. Iluminación nocturna e misas patronales el 8 de diciembre.</p><span class="arrow">Ver más</span></div></a>'
       . '<a class="eco-card" href="#tourism-link:que-hacer/mercado-municipal#"><div class="img"><img src="https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=1200&auto=format&fit=crop&q=80" alt="Puesto de mercado con productos frescos" loading="lazy"></div><div class="body"><span class="eco-tag">Vida local</span><h3>Mercado de Abasto</h3><p class="desc">Centro comercial de la ciudad. Productos frescos, comida tradicional y hierbas medicinales.</p><span class="arrow">Ver más</span></div></a>'
-      . '<a class="eco-card" href="#tourism-link:que-hacer/parques-y-naturaleza#"><div class="img"><img src="https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=1200&auto=format&fit=crop&q=80" alt="Parque verde con árboles altos" loading="lazy"></div><div class="body"><span class="eco-tag">Familiar</span><h3>Parque Techapyrã</h3><p class="desc">Único parque del país con reproducciones de dinosaurios a escala real. 5 hectáreas a 1 km del centro.</p><span class="arrow">Ver más</span></div></a>'
+      . '<a class="eco-card" href="#tourism-link:que-hacer/parques-y-naturaleza#"><div class="img"><img src="https://images.unsplash.com/photo-1519331379826-f10be5486c6f?w=1200&auto=format&fit=crop&q=80" alt="Sendero arbolado en un parque urbano" loading="lazy"></div><div class="body"><span class="eco-tag">Familiar</span><h3>Parque Techapyrã</h3><p class="desc">Único parque del país con reproducciones de dinosaurios a escala real. 5 hectáreas a 1 km del centro.</p><span class="arrow">Ver más</span></div></a>'
       . '</div>',
   ),
   'ykua-la-patria' =>
@@ -122,18 +122,10 @@ function caaguazu_tourism_pages() {
     'excerpt' => 'Parque Techapyrã, único en el país con dinosaurios a escala real, y espacios verdes de la ciudad.',
     'body' => '<h2>Techapyrã</h2><p>Único parque del Paraguay con reproducciones de dinosaurios a escala real. Ocupa cinco hectáreas a un kilómetro del centro de Caaguazú y es utilizado por familias, grupos escolares y visitantes.</p><h2>Datos prácticos</h2><ul><li><strong>Ubicación:</strong> a 1 km del centro de Caaguazú</li><li><strong>Horario:</strong> martes a domingo, 9 a 18 h</li><li><strong>Recomendación de horario:</strong> mañanas, evitando el mediodía en verano</li><li><strong>Sugerencias:</strong> llevar agua, repelente y gorra</li></ul>',
   ),
-  'sabores-de-caaguazu' =>
-  array (
-    'old_slug' => 'sabores-de-caaguazu',
-    'parent' => 'turismo',
-    'title' => 'Sabores de Caaguazú — Cocina típica paraguaya',
-    'excerpt' => 'Ryguasu chyryry, sopa paraguaya, chipa guasu, mbeju, y la cultura del mate y tereré.',
-    'body' => '<p>La cocina de Caaguazú se basa en productos locales: maíz, mandioca, gallina criolla y queso paraguayo. El mate y el tereré son parte habitual de la vida cotidiana en el departamento.</p><div class="cta-row"><a class="btn btn-primary" href="#tourism-link:sabores-de-caaguazu/platos-tipicos#">Ver platos típicos →</a><a class="btn btn-outline" href="#tourism-link:sabores-de-caaguazu/donde-comer#">Ver dónde comer →</a><a class="btn btn-outline" href="#tourism-link:sabores-de-caaguazu/mate-y-terere#">Ver mate y tereré →</a></div>',
-  ),
   'platos-tipicos' =>
   array (
     'old_slug' => 'sabores-de-caaguazu/platos-tipicos',
-    'parent' => 'sabores-de-caaguazu',
+    'parent' => 'turismo',
     'title' => 'Platos típicos de Caaguazú',
     'excerpt' => 'Ryguasu chyryry, sopa paraguaya, chipa guasu, mbeju y vori vori: platos representativos de la región.',
     'body' => '<div class="info-grid">'
@@ -143,12 +135,12 @@ function caaguazu_tourism_pages() {
       . '<div class="info-card"><h3>Mbeju</h3><span class="meta">Almidón de mandioca</span><p>Tortilla de almidón de mandioca con queso y grasa, crujiente por fuera y suave por dentro.</p></div>'
       . '<div class="info-card"><h3>Vori vori</h3><span class="meta">Plato de invierno</span><p>Sopa con bolitas de harina de maíz y queso, en caldo de gallina. Plato habitual en invierno.</p></div>'
       . '<div class="info-card"><h3>Mandi\'o chyryry</h3><span class="meta">Guarnición</span><p>Mandioca cocida y salteada con cebolla y grasa. Guarnición frecuente en las comidas.</p></div>'
-      . '</div>',
+      . '</div><div class="cta-row"><a class="btn btn-primary" href="#tourism-link:sabores-de-caaguazu/donde-comer#">Ver dónde comer →</a><a class="btn btn-outline" href="#tourism-link:sabores-de-caaguazu/mate-y-terere#">Ver mate y tereré →</a></div>',
   ),
   'donde-comer' =>
   array (
     'old_slug' => 'sabores-de-caaguazu/donde-comer',
-    'parent' => 'sabores-de-caaguazu',
+    'parent' => 'turismo',
     'title' => 'Dónde comer en Caaguazú',
     'excerpt' => 'Locales recomendados, desde puestos del mercado hasta restaurantes familiares.',
     'body' => '<div class="info-grid">'
@@ -161,35 +153,27 @@ function caaguazu_tourism_pages() {
   'mate-y-terere' =>
   array (
     'old_slug' => 'sabores-de-caaguazu/mate-y-terere',
-    'parent' => 'sabores-de-caaguazu',
+    'parent' => 'turismo',
     'title' => 'Mate y tereré en Caaguazú',
     'excerpt' => 'El tereré al mediodía y el mate al amanecer, dos costumbres cotidianas del departamento.',
     'body' => '<h2>El [gn]tereré[/gn]</h2><p>Se prepara con yerba mate en la guampa y agua fría con hielo en el termo. En Caaguazú es habitual agregar hierbas frescas machacadas —menta, cedrón, kokũ, burrito—, según la preferencia de cada familia.</p><h2>El mate</h2><p>El mate se toma temprano por la mañana, caliente y compartido. En invierno su consumo suele extenderse durante toda la mañana. La guampa se comparte entre los presentes, en un orden establecido.</p><h2>Costumbres habituales</h2><ul><li>No se suele rechazar el primer convite.</li><li>Decir «gracias» indica que no se desea repetir.</li><li>No se mueve la bombilla con la mano.</li><li>El cebador es, por costumbre, el último en tomar.</li></ul>',
   ),
-  'vivir-caaguazu' =>
-  array (
-    'old_slug' => 'vivir-caaguazu',
-    'parent' => 'turismo',
-    'title' => 'Vivir Caaguazú — Cultura y vida cotidiana',
-    'excerpt' => 'El idioma guaraní, las fiestas patronales y la vida cotidiana del departamento.',
-    'body' => '<p>Esta sección reúne información sobre el idioma guaraní, las festividades locales y otros aspectos de la vida cotidiana en Caaguazú.</p><div class="cta-row"><a class="btn btn-primary" href="#tourism-link:vivir-caaguazu/guarani-en-nuestra-ciudad#">Ver glosario de guaraní →</a><a class="btn btn-outline" href="#tourism-link:vivir-caaguazu/festividades#">Ver festividades →</a><a class="btn btn-outline" href="#tourism-link:vivir-caaguazu/galeria#">Ver galería →</a></div>',
-  ),
   'festividades' =>
   array (
     'old_slug' => 'vivir-caaguazu/festividades',
-    'parent' => 'vivir-caaguazu',
+    'parent' => 'turismo',
     'title' => 'Festividades y calendario — Caaguazú',
     'excerpt' => 'Fiesta patronal del 8 de diciembre, aniversario fundacional del 8 de mayo y encuentros comunitarios.',
     'body' => '<div class="info-grid">'
       . '<div class="info-card"><h3>Fiesta Patronal Inmaculada Concepción</h3><span class="meta">8 de diciembre</span><p>Procesión, misa en Ykua La Patria, festivales musicales y peñas folklóricas.</p></div>'
       . '<div class="info-card"><h3>Aniversario de Caaguazú</h3><span class="meta">8 de mayo</span><p>Desfiles estudiantiles, festivales artísticos y acto conmemorativo de la fundación (181 años en 2026).</p></div>'
       . '<div class="info-card"><h3>Tereré en la plaza</h3><span class="meta">Todo el año</span><p>Encuentro social habitual en las plazas de la ciudad, sin fecha fija.</p></div>'
-      . '</div>',
+      . '</div><div class="cta-row"><a class="btn btn-primary" href="#tourism-link:vivir-caaguazu/guarani-en-nuestra-ciudad#">Ver glosario de guaraní →</a><a class="btn btn-outline" href="#tourism-link:vivir-caaguazu/galeria#">Ver galería →</a></div>',
   ),
   'guarani-en-nuestra-ciudad' =>
   array (
     'old_slug' => 'vivir-caaguazu/guarani-en-nuestra-ciudad',
-    'parent' => 'vivir-caaguazu',
+    'parent' => 'turismo',
     'title' => 'Guaraní en Caaguazú — Glosario',
     'excerpt' => 'Términos guaraní de uso frecuente en Caaguazú: significado, pronunciación y contexto.',
     'body' => '<dl class="glossary"><div class="glossary-item"><dt>Ka\'a Guasu<span class="ipa">/kaˈʔa guaˈsu/</span></dt><dd>monte grande / selva grande <span class="ctx">Nombre original del territorio de Caaguazú.</span></dd></div><div class="glossary-item"><dt>Ykua<span class="ipa">/ɨˈkua/</span></dt><dd>manantial / fuente de agua <span class="ctx">Como en Ykua La Patria, el manantial fundacional.</span></dd></div><div class="glossary-item"><dt>Ryguasu chyryry<span class="ipa">/rɨguaˈsu tʃɨrɨˈrɨ/</span></dt><dd>gallina frita tradicional <span class="ctx">Plato representativo de Caaguazú.</span></dd></div><div class="glossary-item"><dt>Mandi\'o<span class="ipa">/manˈdiʔo/</span></dt><dd>mandioca / yuca</dd></div><div class="glossary-item"><dt>Tereré<span class="ipa">/tereˈre/</span></dt><dd>yerba mate fría <span class="ctx">Costumbre social habitual en Paraguay.</span></dd></div><div class="glossary-item"><dt>Poha ñana<span class="ipa">/poˈha ɲaˈna/</span></dt><dd>plantas medicinales</dd></div><div class="glossary-item"><dt>Techapyrã<span class="ipa">/tetʃapɨˈɾã/</span></dt><dd>mucho por ver</dd></div><div class="glossary-item"><dt>Sopa paraguaya<span class="ipa">/ˈsopa paɾaˈɣwaja/</span></dt><dd>pastel de maíz (pese al nombre, no es una sopa)</dd></div><div class="glossary-item"><dt>Vori vori<span class="ipa">/ˈvori ˈvori/</span></dt><dd>sopa con bolitas de maíz</dd></div><div class="glossary-item"><dt>Kesu<span class="ipa">/keˈsu/</span></dt><dd>queso fresco paraguayo</dd></div></dl>',
@@ -197,31 +181,32 @@ function caaguazu_tourism_pages() {
   'galeria' =>
   array (
     'old_slug' => 'vivir-caaguazu/galeria',
-    'parent' => 'vivir-caaguazu',
+    'parent' => 'turismo',
     'title' => 'Galería — Caaguazú en imágenes',
     'excerpt' => 'Fotografías de Caaguazú: oficios, paisaje, fiestas y vida cotidiana.',
-    'body' => '<div class="gallery-grid"><img src="https://images.unsplash.com/photo-1448375240586-882707db888b?w=1200&auto=format&fit=crop&q=80" alt="Bosque al amanecer" loading="lazy"><img src="https://images.unsplash.com/photo-1504148455328-c376907d081c?w=1200&auto=format&fit=crop&q=80" alt="Manos trabajando madera" loading="lazy"><img src="https://images.unsplash.com/photo-1437482078695-73f5ca6c96e2?w=1200&auto=format&fit=crop&q=80" alt="Río en el bosque" loading="lazy"><img src="https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=1200&auto=format&fit=crop&q=80" alt="Troncos apilados" loading="lazy"><img src="https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=1200&auto=format&fit=crop&q=80" alt="Productos de mercado" loading="lazy"><img src="https://images.unsplash.com/photo-1548407260-da850faa41e3?w=1200&auto=format&fit=crop&q=80" alt="Iglesia al atardecer" loading="lazy"><img src="https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=1200&auto=format&fit=crop&q=80" alt="Parque verde" loading="lazy"><img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&auto=format&fit=crop&q=80" alt="Dosel del bosque" loading="lazy"></div>',
-  ),
-  'planifica-tu-visita' =>
-  array (
-    'old_slug' => 'planifica-tu-visita',
-    'parent' => 'turismo',
-    'title' => 'Planificá tu visita — Caaguazú',
-    'excerpt' => 'Cómo llegar, dónde alojarte, mejor época del año y mapa interactivo de Caaguazú.',
-    'body' => '<p>Caaguazú se encuentra a 180 km al este de Asunción y a 145 km al oeste de Ciudad del Este, sobre la Ruta 7.</p><div class="cta-row"><a class="btn btn-primary" href="#tourism-link:planifica-tu-visita/como-llegar#">Ver cómo llegar →</a><a class="btn btn-outline" href="#tourism-link:planifica-tu-visita/donde-alojarte#">Ver dónde alojarte →</a><a class="btn btn-outline" href="#tourism-link:planifica-tu-visita/mejor-epoca#">Ver mejor época →</a><a class="btn btn-outline" href="#tourism-link:planifica-tu-visita/mapa-interactivo#">Ver mapa →</a></div>',
+    'body' => '<div class="gallery-grid">'
+      . '<img src="https://images.unsplash.com/photo-1448375240586-882707db888b?w=1200&auto=format&fit=crop&q=80" alt="Bosque al amanecer" loading="lazy">'
+      . '<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Carpenter_in_his_workshop.jpg/1280px-Carpenter_in_his_workshop.jpg" alt="Carpintero trabajando la madera en su taller" loading="lazy">'
+      . '<img src="https://images.unsplash.com/photo-1437482078695-73f5ca6c96e2?w=1200&auto=format&fit=crop&q=80" alt="Río en el bosque" loading="lazy">'
+      . '<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Municipalidad_de_Caaguaz%C3%BA_Paraguay_-_panoramio.jpg/1280px-Municipalidad_de_Caaguaz%C3%BA_Paraguay_-_panoramio.jpg" alt="Municipalidad de Caaguazú" loading="lazy">'
+      . '<img src="https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=1200&auto=format&fit=crop&q=80" alt="Productos de mercado" loading="lazy">'
+      . '<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/Iglesia_de_la_Inmaculada_Concepci%C3%B3n_(Caaguaz%C3%BA).jpg/1280px-Iglesia_de_la_Inmaculada_Concepci%C3%B3n_(Caaguaz%C3%BA).jpg" alt="Iglesia Inmaculada Concepción de Caaguazú" loading="lazy">'
+      . '<img src="https://images.unsplash.com/photo-1519331379826-f10be5486c6f?w=1200&auto=format&fit=crop&q=80" alt="Sendero arbolado en un parque urbano" loading="lazy">'
+      . '<img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&auto=format&fit=crop&q=80" alt="Dosel del bosque" loading="lazy">'
+      . '</div>',
   ),
   'como-llegar' =>
   array (
     'old_slug' => 'planifica-tu-visita/como-llegar',
-    'parent' => 'planifica-tu-visita',
+    'parent' => 'turismo',
     'title' => 'Cómo llegar a Caaguazú',
     'excerpt' => 'En auto o en bus desde Asunción y Ciudad del Este, sobre la Ruta 7.',
-    'body' => '<h2>Desde Asunción</h2><ul><li><strong>Distancia:</strong> 180 km al este</li><li><strong>En auto:</strong> 2 h 30 min por Ruta 2 y Ruta 7</li><li><strong>En bus:</strong> cualquier servicio Asunción–Ciudad del Este realiza parada en Caaguazú. Frecuencia aproximada: cada 30–60 min.</li></ul><h2>Desde Ciudad del Este</h2><ul><li><strong>Distancia:</strong> 145 km al oeste</li><li><strong>En auto:</strong> 2 h por Ruta 7</li><li><strong>En bus:</strong> mismos servicios, frecuencia similar.</li></ul><h2>Dentro de la ciudad</h2><p>El centro se recorre a pie en aproximadamente 20 minutos. Para llegar a Techapyrã o a la Ruta de la Madera se recomienda taxi o vehículo propio.</p>',
+    'body' => '<h2>Desde Asunción</h2><ul><li><strong>Distancia:</strong> 180 km al este</li><li><strong>En auto:</strong> 2 h 30 min por Ruta 2 y Ruta 7</li><li><strong>En bus:</strong> cualquier servicio Asunción–Ciudad del Este realiza parada en Caaguazú. Frecuencia aproximada: cada 30–60 min.</li></ul><h2>Desde Ciudad del Este</h2><ul><li><strong>Distancia:</strong> 145 km al oeste</li><li><strong>En auto:</strong> 2 h por Ruta 7</li><li><strong>En bus:</strong> mismos servicios, frecuencia similar.</li></ul><h2>Dentro de la ciudad</h2><p>El centro se recorre a pie en aproximadamente 20 minutos. Para llegar a Techapyrã o a la Ruta de la Madera se recomienda taxi o vehículo propio.</p><div class="cta-row"><a class="btn btn-primary" href="#tourism-link:planifica-tu-visita/donde-alojarte#">Ver dónde alojarte →</a><a class="btn btn-outline" href="#tourism-link:planifica-tu-visita/mejor-epoca#">Ver mejor época →</a><a class="btn btn-outline" href="#tourism-link:planifica-tu-visita/mapa-interactivo#">Ver mapa →</a></div>',
   ),
   'donde-alojarte' =>
   array (
     'old_slug' => 'planifica-tu-visita/donde-alojarte',
-    'parent' => 'planifica-tu-visita',
+    'parent' => 'turismo',
     'title' => 'Dónde alojarte en Caaguazú',
     'excerpt' => 'Hoteles y hospedajes disponibles en Caaguazú y alrededores.',
     'body' => '<div class="info-grid">'
@@ -234,7 +219,7 @@ function caaguazu_tourism_pages() {
   'mejor-epoca' =>
   array (
     'old_slug' => 'planifica-tu-visita/mejor-epoca',
-    'parent' => 'planifica-tu-visita',
+    'parent' => 'turismo',
     'title' => 'Mejor época para visitar Caaguazú',
     'excerpt' => 'Clima subtropical y recomendaciones según la época del año.',
     'body' => '<table><thead><tr><th>Temporada</th><th>Clima</th><th>Recomendación</th></tr></thead><tbody><tr><td>Verano (dic–feb)</td><td>Caluroso y húmedo (28–38 °C). Tormentas vespertinas frecuentes.</td><td>Programar actividades temprano; llevar tereré.</td></tr><tr><td>Otoño (mar–may)</td><td>Templado y estable (18–28 °C). Considerada la mejor época para visitar.</td><td>Adecuado para la Ruta de la Madera, Techapyrã y caminatas.</td></tr><tr><td>Invierno (jun–ago)</td><td>Fresco a frío (8–22 °C). Mañanas húmedas, tardes soleadas.</td><td>Llevar abrigo.</td></tr><tr><td>Primavera (sep–nov)</td><td>Templado (18–30 °C). Floración del lapacho.</td><td>Septiembre: floración del lapacho en la ciudad.</td></tr></tbody></table><p><strong>Recomendación general:</strong> abril–mayo y septiembre–octubre son los períodos más adecuados para la visita.</p>',
@@ -242,7 +227,7 @@ function caaguazu_tourism_pages() {
   'mapa-interactivo' =>
   array (
     'old_slug' => 'planifica-tu-visita/mapa-interactivo',
-    'parent' => 'planifica-tu-visita',
+    'parent' => 'turismo',
     'title' => 'Mapa de Caaguazú',
     'excerpt' => 'Mapa interactivo de la ciudad: atracciones, hoteles y servicios.',
     'body' => '<h2>Locales y negocios</h2>[caaguazu_mapa alto="480px"]<h2>Puntos históricos</h2>[caaguazu_mapa_puntos]<p class="map-credit">Mapa base: OpenStreetMap contributors.</p><ul><li>Ykua La Patria — centro</li><li>Iglesia Inmaculada Concepción — plaza central</li><li>Mercado de Abasto — a 4 cuadras del centro</li><li>Techapyrã — a 1 km del centro</li><li>Ruta de la Madera — Ruta 7, km 175–185</li></ul>',
