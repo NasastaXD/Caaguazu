@@ -26,6 +26,51 @@ function caaguazu_seed_tourism_on_activation() {
 add_action( 'admin_init', 'caaguazu_seed_tourism_on_activation' );
 
 /**
+ * Antes de v1.1.0, 'sabores-de-caaguazu', 'vivir-caaguazu' y
+ * 'planifica-tu-visita' eran páginas puente reales (un párrafo + botones,
+ * sin contenido propio) — se eliminaron de caaguazu_tourism_pages() porque
+ * no aportaban nada que el propio hub de Turismo no mostrara ya. En sitios
+ * que ya las tenían sembradas, esta rutina reubica a sus páginas hijas
+ * directamente bajo 'turismo' y borra la página puente, que de otro modo
+ * quedaría huérfana y duplicada respecto a las páginas nuevas que crea el
+ * reseed normal.
+ */
+function caaguazu_tourism_flatten_hierarchy() {
+	if ( get_option( 'caaguazu_tourism_flattened_v2' ) ) {
+		return;
+	}
+
+	$hub = get_page_by_path( 'turismo' );
+	if ( ! $hub ) {
+		update_option( 'caaguazu_tourism_flattened_v2', 1 );
+		return;
+	}
+
+	$old_hubs = array(
+		'sabores-de-caaguazu' => array( 'platos-tipicos', 'donde-comer', 'mate-y-terere' ),
+		'vivir-caaguazu'      => array( 'festividades', 'guarani-en-nuestra-ciudad', 'galeria' ),
+		'planifica-tu-visita' => array( 'como-llegar', 'donde-alojarte', 'mejor-epoca', 'mapa-interactivo' ),
+	);
+
+	foreach ( $old_hubs as $old_hub_slug => $children ) {
+		foreach ( $children as $child_slug ) {
+			$child = get_page_by_path( 'turismo/' . $old_hub_slug . '/' . $child_slug );
+			if ( $child && (int) $child->post_parent !== (int) $hub->ID ) {
+				wp_update_post( array( 'ID' => $child->ID, 'post_parent' => $hub->ID ) );
+			}
+		}
+
+		$old_hub = get_page_by_path( 'turismo/' . $old_hub_slug );
+		if ( $old_hub ) {
+			wp_delete_post( $old_hub->ID, true );
+		}
+	}
+
+	update_option( 'caaguazu_tourism_flattened_v2', 1 );
+}
+add_action( 'admin_init', 'caaguazu_tourism_flatten_hierarchy' );
+
+/**
  * Devuelve el path completo (padre/hijo/nieto) de un slug de turismo,
  * caminando la cadena de 'parent' definida en caaguazu_tourism_pages().
  */
