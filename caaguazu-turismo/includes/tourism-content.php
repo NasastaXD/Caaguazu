@@ -136,7 +136,14 @@ function caaguazu_tourism_pages() {
     'parent' => 'sabores-de-caaguazu',
     'title' => 'Platos típicos de Caaguazú',
     'excerpt' => 'Ryguasu chyryry, sopa paraguaya, chipa guasu, mbeju y vori vori: platos representativos de la región.',
-    'body' => '<h3>Ryguasu chyryry</h3><p>Pollo desmenuzado salteado con cebolla, locote y huevo revuelto. Es uno de los platos caseros más habituales.</p><h3>Sopa paraguaya</h3><p>Pese al nombre, no es una sopa: es un pan denso de harina de maíz, queso paraguayo y cebolla. Se sirve como acompañamiento de asados y pucheros.</p><h3>Chipa guasu</h3><p>Torta de maíz fresco con queso, leche y huevo, servida tibia y cortada en cuadrados.</p><h3>Mbeju</h3><p>Tortilla de almidón de mandioca con queso y grasa, crujiente por fuera y suave por dentro.</p><h3>Vori vori</h3><p>Sopa con bolitas de harina de maíz y queso, en caldo de gallina. Plato habitual en invierno.</p><h3>Mandi\'o chyryry</h3><p>Mandioca cocida y salteada con cebolla y grasa. Guarnición frecuente en las comidas.</p>',
+    'body' => '<div class="info-grid">'
+      . '<div class="info-card"><h3>Ryguasu chyryry</h3><span class="meta">Plato casero</span><p>Pollo desmenuzado salteado con cebolla, locote y huevo revuelto. Es uno de los platos caseros más habituales.</p></div>'
+      . '<div class="info-card"><h3>Sopa paraguaya</h3><span class="meta">Acompañamiento</span><p>Pese al nombre, no es una sopa: es un pan denso de harina de maíz, queso paraguayo y cebolla. Se sirve como acompañamiento de asados y pucheros.</p></div>'
+      . '<div class="info-card"><h3>Chipa guasu</h3><span class="meta">Torta de maíz</span><p>Torta de maíz fresco con queso, leche y huevo, servida tibia y cortada en cuadrados.</p></div>'
+      . '<div class="info-card"><h3>Mbeju</h3><span class="meta">Almidón de mandioca</span><p>Tortilla de almidón de mandioca con queso y grasa, crujiente por fuera y suave por dentro.</p></div>'
+      . '<div class="info-card"><h3>Vori vori</h3><span class="meta">Plato de invierno</span><p>Sopa con bolitas de harina de maíz y queso, en caldo de gallina. Plato habitual en invierno.</p></div>'
+      . '<div class="info-card"><h3>Mandi\'o chyryry</h3><span class="meta">Guarnición</span><p>Mandioca cocida y salteada con cebolla y grasa. Guarnición frecuente en las comidas.</p></div>'
+      . '</div>',
   ),
   'donde-comer' =>
   array (
@@ -144,7 +151,12 @@ function caaguazu_tourism_pages() {
     'parent' => 'sabores-de-caaguazu',
     'title' => 'Dónde comer en Caaguazú',
     'excerpt' => 'Locales recomendados, desde puestos del mercado hasta restaurantes familiares.',
-    'body' => '<p>Mercado</p><h3>Comedores del Mercado de Abasto</h3><p>Desayunos y almuerzos con empanadas, chipa y sopa paraguaya recién hechos.</p>$<p>Cocina tradicional</p><h3>Comedor La Casona</h3><p>Cocina paraguaya en porciones generosas. Recomendado el vori vori en invierno.</p>$$<p>Parrilla</p><h3>Parrilla Ruta 7</h3><p>Asado a la estaca, mandioca y sopa paraguaya. Ubicado sobre la Ruta 7; recomendado para grupos.</p>$$<p>Comida casera</p><h3>Doña Mirta</h3><p>Almuerzos caseros de lunes a viernes. Ryguasu chyryry los miércoles.</p>$<h2>Directorio de locales</h2>[caaguazu_locales tipo="restaurante"]',
+    'body' => '<div class="info-grid">'
+      . '<div class="info-card"><h3>Comedores del Mercado de Abasto</h3><span class="meta">Mercado · $</span><p>Desayunos y almuerzos con empanadas, chipa y sopa paraguaya recién hechos.</p></div>'
+      . '<div class="info-card"><h3>Comedor La Casona</h3><span class="meta">Cocina tradicional · $$</span><p>Cocina paraguaya en porciones generosas. Recomendado el vori vori en invierno.</p></div>'
+      . '<div class="info-card"><h3>Parrilla Ruta 7</h3><span class="meta">Parrilla · $$</span><p>Asado a la estaca, mandioca y sopa paraguaya. Ubicado sobre la Ruta 7; recomendado para grupos.</p></div>'
+      . '<div class="info-card"><h3>Doña Mirta</h3><span class="meta">Comida casera · $</span><p>Almuerzos caseros de lunes a viernes. Ryguasu chyryry los miércoles.</p></div>'
+      . '</div><h2>Directorio de locales</h2>[caaguazu_locales tipo="restaurante"]',
   ),
   'mate-y-terere' =>
   array (
@@ -168,7 +180,11 @@ function caaguazu_tourism_pages() {
     'parent' => 'vivir-caaguazu',
     'title' => 'Festividades y calendario — Caaguazú',
     'excerpt' => 'Fiesta patronal del 8 de diciembre, aniversario fundacional del 8 de mayo y encuentros comunitarios.',
-    'body' => '8 DIC<h3>Fiesta Patronal Inmaculada Concepción</h3><p>Procesión, misa en Ykua La Patria, festivales musicales y peñas folklóricas.</p>8 MAY<h3>Aniversario de Caaguazú</h3><p>Desfiles estudiantiles, festivales artísticos y acto conmemorativo de la fundación (181 años en 2026).</p>TODO EL AÑO<h3>Tereré en la plaza</h3><p>Encuentro social habitual en las plazas de la ciudad, sin fecha fija.</p>',
+    'body' => '<div class="info-grid">'
+      . '<div class="info-card"><h3>Fiesta Patronal Inmaculada Concepción</h3><span class="meta">8 de diciembre</span><p>Procesión, misa en Ykua La Patria, festivales musicales y peñas folklóricas.</p></div>'
+      . '<div class="info-card"><h3>Aniversario de Caaguazú</h3><span class="meta">8 de mayo</span><p>Desfiles estudiantiles, festivales artísticos y acto conmemorativo de la fundación (181 años en 2026).</p></div>'
+      . '<div class="info-card"><h3>Tereré en la plaza</h3><span class="meta">Todo el año</span><p>Encuentro social habitual en las plazas de la ciudad, sin fecha fija.</p></div>'
+      . '</div>',
   ),
   'guarani-en-nuestra-ciudad' =>
   array (
@@ -208,7 +224,12 @@ function caaguazu_tourism_pages() {
     'parent' => 'planifica-tu-visita',
     'title' => 'Dónde alojarte en Caaguazú',
     'excerpt' => 'Hoteles y hospedajes disponibles en Caaguazú y alrededores.',
-    'body' => '<p>Hotel</p><h3>Hotel Caaguazú Centro</h3><p>Sobre la avenida principal. Habitaciones estándar, desayuno incluido.</p>$$<p>Hospedaje</p><h3>Hospedaje Ykua</h3><p>A 4 cuadras del centro. Recomendado para viajeros que viajan solos.</p>$<p>Apart</p><h3>Apart Ruta 7</h3><p>Departamentos equipados sobre la ruta, adecuados para estadías prolongadas.</p>$$<p>Posada</p><h3>Posada del Bosque</h3><p>A 8 km de la ciudad, en entorno natural. Adecuado para familias.</p>$$$<p>Listado orientativo. Se recomienda confirmar disponibilidad y tarifas directamente con cada establecimiento.</p><h2>Directorio de locales</h2>[caaguazu_locales tipo="hotel"]',
+    'body' => '<div class="info-grid">'
+      . '<div class="info-card"><h3>Hotel Caaguazú Centro</h3><span class="meta">Hotel · $$</span><p>Sobre la avenida principal. Habitaciones estándar, desayuno incluido.</p></div>'
+      . '<div class="info-card"><h3>Hospedaje Ykua</h3><span class="meta">Hospedaje · $</span><p>A 4 cuadras del centro. Recomendado para viajeros que viajan solos.</p></div>'
+      . '<div class="info-card"><h3>Apart Ruta 7</h3><span class="meta">Apart · $$</span><p>Departamentos equipados sobre la ruta, adecuados para estadías prolongadas.</p></div>'
+      . '<div class="info-card"><h3>Posada del Bosque</h3><span class="meta">Posada · $$$</span><p>A 8 km de la ciudad, en entorno natural. Adecuado para familias.</p></div>'
+      . '</div><p>Listado orientativo. Se recomienda confirmar disponibilidad y tarifas directamente con cada establecimiento.</p><h2>Directorio de locales</h2>[caaguazu_locales tipo="hotel"]',
   ),
   'mejor-epoca' =>
   array (

@@ -3,7 +3,7 @@
  * Plugin Name:       Caaguazú Turismo
  * Plugin URI:        https://caaguazu.net
  * Description:       Módulo Turismo del portal: 25 páginas de historia, oficio maderero, gastronomía y cultura guaraní (migradas del sitio de turismo original), como plugin independiente del theme. Orquesta —sin modificar su código— los plugins Caaguazú Locales (directorio de negocios/reservas) y Caaguazú Portal (destinos de promotores), cuyos shortcodes ya están embebidos en el contenido sembrado acá. Se registra solo en el nav y los accesos rápidos del theme vía los filtros `caaguazu_nav_items`/`caaguazu_quick_access_items`.
- * Version:           1.0.0
+ * Version:           1.1.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Departamento de Caaguazú
