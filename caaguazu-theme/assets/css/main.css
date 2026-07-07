@@ -148,11 +148,13 @@ address{font-style:normal;margin-top:16px;font-size:14px;line-height:1.7;color:v
   background:var(--bg-pure);border-top:1px solid var(--border);
   box-shadow:0 -4px 20px -8px rgba(16,32,24,.14);
   padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
-.tabbar-link{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+.tabbar-link{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
   padding:6px 2px;border-radius:var(--radius-md);font-size:10px;font-weight:600;
   color:var(--text-muted);transition:color var(--t),transform var(--t)}
 .tabbar-link:active{transform:scale(.92)}
 .tabbar-link.active{color:var(--green-deep)}
+.tabbar-link.active::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:4px;height:4px;border-radius:50%;background:var(--accent-gold)}
 .tabbar-ico{font-size:20px;line-height:1}
 .tabbar-cta{color:var(--green-deep)}
 .tabbar-cta .tabbar-ico{width:38px;height:38px;margin-top:-16px;display:inline-flex;
@@ -531,6 +533,38 @@ dialog.lightbox[open]{display:flex;align-items:center;justify-content:center}
 .text-h3{font-family:var(--font-display);font-size:clamp(19px,2.2vw,23px);font-weight:600;line-height:1.2}
 .prose-content{max-width:760px;font-size:17px;line-height:1.75;color:var(--text-soft)}
 .prose-content p{margin-top:16px}
+
+/* Carrusel de Turismo (home): scroll horizontal con snap, tarjetas que se
+   asoman al borde para invitar a deslizar en vez de tocar "ver más". */
+.turismo-carousel{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;
+  padding-bottom:8px;margin-top:32px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.turismo-carousel::-webkit-scrollbar{display:none}
+.turismo-card{flex:0 0 auto;width:190px;scroll-snap-align:start;padding:20px;
+  border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--bg-pure);
+  text-decoration:none;color:inherit;transition:transform var(--t),box-shadow var(--t)}
+.turismo-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lift)}
+.turismo-card .eco-tag{display:inline-block;background:var(--gold-soft);color:var(--earth-bark);
+  font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+  padding:4px 10px;border-radius:100px}
+.turismo-card h3{font-family:var(--font-display);font-size:17px;margin:14px 0 6px}
+.turismo-card p{font-size:13px;color:var(--text-soft);margin:0}
+.turismo-card .arrow{margin-top:14px;font-size:12px;font-weight:700;color:var(--green-deep)}
+
+/* Banner "instalar app": una sola línea, fijo abajo (arriba del tabbar en
+   móvil), se guarda en localStorage si se cierra o ya se instaló. */
+.install-banner{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));
+  z-index:60;display:flex;align-items:center;gap:10px;padding:12px 14px;
+  background:var(--green-forest);color:#fff;border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-lift)}
+@media(max-width:1023.98px){.install-banner{bottom:calc(78px + env(safe-area-inset-bottom))}}
+.install-banner-icon{flex:none;display:flex;color:var(--accent-gold)}
+.install-banner p{flex:1;margin:0;font-size:12.5px;line-height:1.4}
+.install-banner-btn{flex:none;background:var(--accent-gold);color:var(--green-forest);
+  border:none;border-radius:100px;padding:8px 16px;font-size:12.5px;font-weight:700;
+  font-family:var(--font-body);cursor:pointer}
+.install-banner-close{flex:none;background:none;border:none;color:rgba(255,255,255,.7);
+  font-size:20px;line-height:1;cursor:pointer;padding:0 2px}
+@media(min-width:640px){.install-banner{left:auto;right:24px;bottom:24px;max-width:340px}}
 
 /* Accesibilidad: sin animaciones para quien las desactivó */
 @media (prefers-reduced-motion: reduce){
