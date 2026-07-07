@@ -61,10 +61,3 @@ function caaguazu_ecosystem_defaults() {
 	);
 }
 
-function caaguazu_audiences_defaults() {
-	return array(
-		array( 'icon' => '👥',  'title' => 'Ciudadanos', 'body' => 'Información sobre trámites, servicios municipales y vida local.', 'cta' => 'Ver servicios',         'slug' => 'servicios' ),
-		array( 'icon' => '💼',  'title' => 'Empresas',   'body' => 'Información sobre inversión, licencias y oportunidades de negocio.', 'cta' => 'Ver información para empresas', 'slug' => 'servicios' ),
-		array( 'icon' => '🏞️', 'title' => 'Visitantes', 'body' => 'Información para planificar una visita a Caaguazú.',            'cta' => 'Planificar visita',      'slug' => 'ecosistema' ),
-	);
-}

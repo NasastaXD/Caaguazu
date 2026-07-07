@@ -15,7 +15,6 @@ $email    = caaguazu_opt( 'contact_email', 'contacto@caaguazu.net' );
 
 // Para los enlaces del footer — defaults a slugs estándar.
 $eco_url    = caaguazu_page_url( 'ecosistema' );
-$serv_url   = caaguazu_page_url( 'servicios' );
 $about_url  = caaguazu_page_url( 'sobre-caaguazu' );
 $tourism_url= caaguazu_page_url( 'turismo' );
 $contact_url= caaguazu_page_url( 'contacto' );
@@ -51,15 +50,6 @@ for ( $i = 0; $i < 3; $i++ ) {
 						<li><a href="<?php echo esc_url( $s['url'] ); ?>" target="_blank" rel="noreferrer"><?php echo esc_html( $s['tag'] ); ?></a></li>
 					<?php endforeach; ?>
 					<li><a href="<?php echo esc_url( $eco_url ); ?>"><?php esc_html_e( 'Ver ecosistema completo', 'caaguazu' ); ?></a></li>
-				</ul>
-			</div>
-
-			<div class="foot-col">
-				<h4><?php caaguazu_i18n( 'footer.servicios', __( 'Servicios', 'caaguazu' ) ); ?></h4>
-				<ul>
-					<li><a href="<?php echo esc_url( $serv_url ); ?>"><?php esc_html_e( 'Ciudadanos', 'caaguazu' ); ?></a></li>
-					<li><a href="<?php echo esc_url( $serv_url ); ?>"><?php esc_html_e( 'Empresas', 'caaguazu' ); ?></a></li>
-					<li><a href="<?php echo esc_url( $serv_url ); ?>"><?php esc_html_e( 'Trámites en línea', 'caaguazu' ); ?></a></li>
 				</ul>
 			</div>
 

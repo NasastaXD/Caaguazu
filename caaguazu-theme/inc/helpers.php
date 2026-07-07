@@ -102,7 +102,6 @@ function caaguazu_render_nav( $location = 'primary', $current_slug = '' ) {
 function caaguazu_render_fallback_nav( $current_slug = '' ) {
 	$defaults = array(
 		'sobre-caaguazu' => __( 'Sobre Caaguazú', 'caaguazu' ),
-		'servicios'      => __( 'Servicios', 'caaguazu' ),
 		'noticias'       => __( 'Noticias', 'caaguazu' ),
 		'agenda'         => __( 'Agenda', 'caaguazu' ),
 		'turismo'        => __( 'Turismo', 'caaguazu' ),
@@ -203,12 +202,9 @@ function caaguazu_page_url( $slug ) {
  */
 function caaguazu_quick_access_items() {
 	return array(
-		array( 'icon' => '🧾', 'label' => __( 'Servicios', 'caaguazu' ),  'url' => caaguazu_page_url( 'servicios' ) ),
 		array( 'icon' => '📰', 'label' => __( 'Noticias', 'caaguazu' ),   'url' => get_post_type_archive_link( 'caaguazu_news' ) ),
 		array( 'icon' => '🌳', 'label' => __( 'Turismo', 'caaguazu' ),    'url' => caaguazu_page_url( 'turismo' ) ),
 		array( 'icon' => '📅', 'label' => __( 'Agenda', 'caaguazu' ),     'url' => get_post_type_archive_link( 'caaguazu_event' ) ),
-		array( 'icon' => '🚧', 'label' => __( 'Reportar', 'caaguazu' ),   'url' => caaguazu_page_url( 'reportar' ) ),
-		array( 'icon' => '🪚', 'label' => __( 'Artesanos', 'caaguazu' ),  'url' => get_post_type_archive_link( 'caaguazu_artisan' ) ),
 		array( 'icon' => '🌐', 'label' => __( 'Ecosistema', 'caaguazu' ), 'url' => caaguazu_page_url( 'ecosistema' ) ),
 		array( 'icon' => '✉️', 'label' => __( 'Contacto', 'caaguazu' ),   'url' => caaguazu_page_url( 'contacto' ) ),
 	);
@@ -237,10 +233,10 @@ function caaguazu_render_quick_access() {
  */
 function caaguazu_render_tabbar( $current_slug ) {
 	$items = array(
-		array( 'icon' => '🏠', 'label' => __( 'Inicio', 'caaguazu' ),   'url' => home_url( '/' ),                  'match' => 'home' ),
-		array( 'icon' => '🔍', 'label' => __( 'Buscar', 'caaguazu' ),   'url' => home_url( '/?s=' ),               'match' => 'buscar' ),
-		array( 'icon' => '🚧', 'label' => __( 'Reportar', 'caaguazu' ), 'url' => caaguazu_page_url( 'reportar' ),  'match' => 'reportar', 'cta' => true ),
-		array( 'icon' => '🌳', 'label' => __( 'Turismo', 'caaguazu' ),  'url' => caaguazu_page_url( 'turismo' ),   'match' => 'turismo' ),
+		array( 'icon' => '🏠', 'label' => __( 'Inicio', 'caaguazu' ),   'url' => home_url( '/' ),                              'match' => 'home' ),
+		array( 'icon' => '🔍', 'label' => __( 'Buscar', 'caaguazu' ),   'url' => home_url( '/?s=' ),                           'match' => 'buscar' ),
+		array( 'icon' => '📰', 'label' => __( 'Noticias', 'caaguazu' ), 'url' => get_post_type_archive_link( 'caaguazu_news' ), 'match' => 'noticias' ),
+		array( 'icon' => '🌳', 'label' => __( 'Turismo', 'caaguazu' ),  'url' => caaguazu_page_url( 'turismo' ),               'match' => 'turismo' ),
 	);
 	echo '<nav class="tabbar" aria-label="' . esc_attr__( 'Navegación rápida', 'caaguazu' ) . '">';
 	foreach ( $items as $item ) {

@@ -129,24 +129,6 @@ function caaguazu_customize_register( $wp_customize ) {
 	}
 
 	/* ============================================================
-	 * AUDIENCIAS (3 cards)
-	 * ============================================================ */
-	$wp_customize->add_section( 'caaguazu_audiences', array(
-		'title' => __( 'Audiencias (3 tarjetas)', 'caaguazu' ),
-		'panel' => 'caaguazu_home',
-	) );
-
-	$aud_defaults = caaguazu_audiences_defaults();
-	for ( $i = 0; $i < 3; $i++ ) {
-		$d = $aud_defaults[ $i ];
-		caaguazu_add_text( $wp_customize, "aud_{$i}_icon",  __( 'Emoji', 'caaguazu' ),     $d['icon'],  'caaguazu_audiences' );
-		caaguazu_add_text( $wp_customize, "aud_{$i}_title", __( 'Título', 'caaguazu' ),    $d['title'], 'caaguazu_audiences' );
-		caaguazu_add_text( $wp_customize, "aud_{$i}_body",  __( 'Descripción', 'caaguazu' ), $d['body'], 'caaguazu_audiences', true );
-		caaguazu_add_text( $wp_customize, "aud_{$i}_cta",   __( 'Texto del CTA', 'caaguazu' ), $d['cta'], 'caaguazu_audiences' );
-		caaguazu_add_text( $wp_customize, "aud_{$i}_slug",  __( 'Slug de la página destino', 'caaguazu' ), $d['slug'], 'caaguazu_audiences' );
-	}
-
-	/* ============================================================
 	 * FOOTER + IDENTIDAD GENERAL
 	 * ============================================================ */
 	$wp_customize->add_section( 'caaguazu_footer', array(
