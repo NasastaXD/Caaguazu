@@ -18,20 +18,20 @@ while ( have_posts() ) :
 
 	// Hero defaults heredados del stub original. El admin los sobrescribe poniendo featured image y contenido.
 	$stub_heros = array(
-		'sobre-caaguazu' => array( 'Sobre Caaguazú', 'Un departamento entre bosques y oficios',
-			'Tres siglos de historia productiva, una geografía marcada por el monte grande y una comunidad bilingüe que define la identidad caaguaceña.',
+		'sobre-caaguazu' => array( 'Sobre Caaguazú', 'Información general del departamento',
+			'Datos sobre geografía, historia y población del departamento de Caaguazú.',
 			'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1400&q=80' ),
 		'servicios'      => array( 'Servicios', 'Trámites y servicios',
-			'Acceso unificado a las gestiones del departamento. Ciudadanos, empresas y visitantes encuentran aquí su punto de entrada.',
+			'Información sobre trámites y servicios disponibles para ciudadanos, empresas y visitantes.',
 			'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1400&q=80' ),
-		'noticias'       => array( 'Noticias', 'Actualidad de Caaguazú',
-			'Comunicados, publicaciones y cobertura de los hechos que dan forma al departamento.',
+		'noticias'       => array( 'Noticias', 'Noticias del departamento',
+			'Comunicados y publicaciones oficiales de Caaguazú.',
 			'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=1400&q=80' ),
-		'ecosistema'     => array( 'Ecosistema', 'Un ecosistema, múltiples experiencias',
-			'Caaguazu.net es el hub central de una red federada de sub-portales especializados. Cada uno con su voz, todos bajo la misma identidad.',
+		'ecosistema'     => array( 'Ecosistema', 'Sub-portales del departamento',
+			'Acceso a los sub-portales especializados de Caaguazú, cada uno con contenido propio dentro de una misma identidad institucional.',
 			'https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=1400&q=80' ),
-		'contacto'       => array( 'Contacto', 'Hablemos',
-			'Canales oficiales para ciudadanos, prensa, empresas y otros gobiernos.',
+		'contacto'       => array( 'Contacto', 'Canales de contacto',
+			'Canales de contacto oficiales para ciudadanos, prensa, empresas y otros organismos.',
 			'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1400&q=80' ),
 	);
 

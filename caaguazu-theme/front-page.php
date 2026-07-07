@@ -34,7 +34,7 @@ $hero_poster = caaguazu_opt_image( 'hero_poster', 'https://images.unsplash.com/p
 		<p class="eyebrow"><?php echo esc_html( caaguazu_opt( 'hero_eyebrow', 'Departamento de Paraguay' ) ); ?></p>
 		<h1><?php echo esc_html( caaguazu_opt( 'hero_title', 'Caaguazú' ) ); ?></h1>
 		<p class="sub"><?php echo esc_html( caaguazu_opt( 'hero_sub', 'Capital de la Madera' ) ); ?></p>
-		<p class="lead"><?php echo esc_html( caaguazu_opt( 'hero_lead', 'Donde los bosques subtropicales, los oficios heredados y una comunidad bilingüe escriben el presente de un departamento que mira al futuro.' ) ); ?></p>
+		<p class="lead"><?php echo esc_html( caaguazu_opt( 'hero_lead', 'Portal oficial del departamento de Caaguazú. Información institucional, servicios, noticias y turismo en un mismo sitio.' ) ); ?></p>
 	</div>
 	<span class="scroll-hint" aria-hidden="true"></span>
 	<?php if ( $hero_video ) : ?>
@@ -91,8 +91,8 @@ $hero_poster = caaguazu_opt_image( 'hero_poster', 'https://images.unsplash.com/p
 	<div class="container">
 		<div class="section-head reveal">
 			<p class="eyebrow"><?php esc_html_e( 'Ecosistema', 'caaguazu' ); ?></p>
-			<h2><?php echo esc_html( caaguazu_opt( 'eco_section_title', 'Un portal, múltiples puertas' ) ); ?></h2>
-			<p><?php echo esc_html( caaguazu_opt( 'eco_section_body', 'Caaguazu.net es el hub central de una red de sub-portales especializados. Cada uno mantiene su voz, todos comparten la misma identidad.' ) ); ?></p>
+			<h2><?php echo esc_html( caaguazu_opt( 'eco_section_title', 'Sub-portales del departamento' ) ); ?></h2>
+			<p><?php echo esc_html( caaguazu_opt( 'eco_section_body', 'Caaguazu.net centraliza el acceso a los sub-portales especializados del departamento. Cada uno conserva su propio contenido dentro de una misma identidad institucional.' ) ); ?></p>
 		</div>
 		<div class="eco-grid">
 			<?php for ( $i = 0; $i < 3; $i++ ) :
@@ -124,7 +124,8 @@ $hero_poster = caaguazu_opt_image( 'hero_poster', 'https://images.unsplash.com/p
 <section class="container">
 	<div class="section-head reveal">
 		<p class="eyebrow"><?php esc_html_e( 'Servicios', 'caaguazu' ); ?></p>
-		<h2><?php esc_html_e( 'Servicios para todos', 'caaguazu' ); ?></h2>
+		<h2><?php esc_html_e( 'Información según tu perfil', 'caaguazu' ); ?></h2>
+		<p><?php esc_html_e( 'Seleccioná una categoría para ver la información y los servicios correspondientes.', 'caaguazu' ); ?></p>
 	</div>
 	<div class="aud-grid">
 		<?php for ( $i = 0; $i < 3; $i++ ) :
@@ -148,9 +149,9 @@ $hero_poster = caaguazu_opt_image( 'hero_poster', 'https://images.unsplash.com/p
 <section class="quiz-wrap">
 	<div class="container">
 		<div class="quiz reveal">
-			<p class="eyebrow"><?php caaguazu_i18n( 'quiz.eyebrow', __( 'Ayudanos a orientarte', 'caaguazu' ) ); ?></p>
-			<h2><?php caaguazu_i18n( 'quiz.title', __( '¿Qué te trajo a Caaguazú hoy?', 'caaguazu' ) ); ?></h2>
-			<p class="intro"><?php caaguazu_i18n( 'quiz.intro', __( 'Respondé una pregunta corta y te recomendamos por dónde empezar.', 'caaguazu' ) ); ?></p>
+			<p class="eyebrow"><?php caaguazu_i18n( 'quiz.eyebrow', __( 'Guía rápida', 'caaguazu' ) ); ?></p>
+			<h2><?php caaguazu_i18n( 'quiz.title', __( '¿Qué información buscás?', 'caaguazu' ) ); ?></h2>
+			<p class="intro"><?php caaguazu_i18n( 'quiz.intro', __( 'Seleccioná una opción para ver los enlaces recomendados según tu perfil.', 'caaguazu' ) ); ?></p>
 			<div class="quiz-opts">
 				<?php foreach ( array(
 					array( 'resident', '🏡', 'quiz.opt.resident', __( 'Soy residente', 'caaguazu' ) ),
@@ -173,35 +174,35 @@ $hero_poster = caaguazu_opt_image( 'hero_poster', 'https://images.unsplash.com/p
 <?php
 $quiz_map = array(
 	'resident' => array(
-		'title'          => caaguazu_i18n_pair( 'quiz.result.resident.title', __( 'Para vos que vivís acá', 'caaguazu' ) ),
+		'title'          => caaguazu_i18n_pair( 'quiz.result.resident.title', __( 'Información para residentes', 'caaguazu' ) ),
 		'primary_url'    => caaguazu_page_url( 'servicios' ),
 		'primary_label'  => caaguazu_i18n_pair( 'quiz.result.resident.primary', __( 'Ver servicios', 'caaguazu' ) ),
 		'secondary_url'  => get_post_type_archive_link( 'caaguazu_news' ),
 		'secondary_label'=> caaguazu_i18n_pair( 'quiz.result.resident.secondary', __( 'Ver noticias', 'caaguazu' ) ),
 	),
 	'visitor' => array(
-		'title'          => caaguazu_i18n_pair( 'quiz.result.visitor.title', __( 'Para tu visita a Caaguazú', 'caaguazu' ) ),
+		'title'          => caaguazu_i18n_pair( 'quiz.result.visitor.title', __( 'Información para visitantes', 'caaguazu' ) ),
 		'primary_url'    => caaguazu_page_url( 'turismo' ),
-		'primary_label'  => caaguazu_i18n_pair( 'quiz.result.visitor.primary', __( 'Explorar turismo', 'caaguazu' ) ),
+		'primary_label'  => caaguazu_i18n_pair( 'quiz.result.visitor.primary', __( 'Ver sección de Turismo', 'caaguazu' ) ),
 		'secondary_url'  => caaguazu_page_url( 'ecosistema' ),
-		'secondary_label'=> caaguazu_i18n_pair( 'quiz.result.visitor.secondary', __( 'Ver el ecosistema', 'caaguazu' ) ),
+		'secondary_label'=> caaguazu_i18n_pair( 'quiz.result.visitor.secondary', __( 'Ver ecosistema', 'caaguazu' ) ),
 	),
 	'investor' => array(
-		'title'          => caaguazu_i18n_pair( 'quiz.result.investor.title', __( 'Para invertir en el departamento', 'caaguazu' ) ),
+		'title'          => caaguazu_i18n_pair( 'quiz.result.investor.title', __( 'Información para inversores', 'caaguazu' ) ),
 		'primary_url'    => caaguazu_page_url( 'servicios' ),
 		'primary_label'  => caaguazu_i18n_pair( 'quiz.result.investor.primary', __( 'Ver servicios', 'caaguazu' ) ),
 		'secondary_url'  => caaguazu_page_url( 'ecosistema' ),
-		'secondary_label'=> caaguazu_i18n_pair( 'quiz.result.investor.secondary', __( 'Ver el ecosistema', 'caaguazu' ) ),
+		'secondary_label'=> caaguazu_i18n_pair( 'quiz.result.investor.secondary', __( 'Ver ecosistema', 'caaguazu' ) ),
 	),
 	'student' => array(
-		'title'          => caaguazu_i18n_pair( 'quiz.result.student.title', __( 'Para vos que estudiás', 'caaguazu' ) ),
+		'title'          => caaguazu_i18n_pair( 'quiz.result.student.title', __( 'Información para estudiantes', 'caaguazu' ) ),
 		'primary_url'    => caaguazu_page_url( 'ecosistema' ),
-		'primary_label'  => caaguazu_i18n_pair( 'quiz.result.student.primary', __( 'Ver el ecosistema', 'caaguazu' ) ),
+		'primary_label'  => caaguazu_i18n_pair( 'quiz.result.student.primary', __( 'Ver ecosistema', 'caaguazu' ) ),
 		'secondary_url'  => caaguazu_page_url( 'contacto' ),
-		'secondary_label'=> caaguazu_i18n_pair( 'quiz.result.student.secondary', __( 'Contactanos', 'caaguazu' ) ),
+		'secondary_label'=> caaguazu_i18n_pair( 'quiz.result.student.secondary', __( 'Ir a contacto', 'caaguazu' ) ),
 	),
 	'other' => array(
-		'title'          => caaguazu_i18n_pair( 'quiz.result.other.title', __( 'Contanos qué necesitás', 'caaguazu' ) ),
+		'title'          => caaguazu_i18n_pair( 'quiz.result.other.title', __( 'Otras consultas', 'caaguazu' ) ),
 		'primary_url'    => caaguazu_page_url( 'contacto' ),
 		'primary_label'  => caaguazu_i18n_pair( 'quiz.result.other.primary', __( 'Ir a contacto', 'caaguazu' ) ),
 		'secondary_url'  => home_url( '/?s=' ),
@@ -237,8 +238,8 @@ endif;
 <section class="container">
 	<div class="news-head reveal">
 		<div class="section-head">
-			<p class="eyebrow"><?php esc_html_e( 'Noticias y publicaciones', 'caaguazu' ); ?></p>
-			<h2><?php esc_html_e( 'Lo último de Caaguazú', 'caaguazu' ); ?></h2>
+			<p class="eyebrow"><?php esc_html_e( 'Noticias', 'caaguazu' ); ?></p>
+			<h2><?php esc_html_e( 'Últimas publicaciones', 'caaguazu' ); ?></h2>
 		</div>
 		<a class="arrow" href="<?php echo esc_url( get_post_type_archive_link( 'caaguazu_news' ) ); ?>"><?php esc_html_e( 'Ver todas', 'caaguazu' ); ?></a>
 	</div>
