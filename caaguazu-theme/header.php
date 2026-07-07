@@ -14,7 +14,7 @@ $is_home      = caaguazu_is_home();
 <script>(function(){try{if(localStorage.getItem('caaguazuLang')==='GN'){document.documentElement.classList.add('lang-gn');}}catch(e){}})();</script>
 <meta charset="<?php bloginfo( 'charset' ); ?>">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#006400">
+<meta name="theme-color" content="#1B6B44">
 <?php wp_head(); ?>
 </head>
 <body <?php body_class(); ?> data-page="<?php echo esc_attr( $current_slug ); ?>">
