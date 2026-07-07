@@ -3,7 +3,7 @@
  * Front page — Home de Caaguazú.
  *
  * Replica las secciones del home.php original: hero, identidad,
- * números, ecosistema, audiencias, quiz y noticias.
+ * números, ecosistema, quiz y noticias.
  *
  * @package Caaguazu
  */
@@ -12,7 +12,6 @@ get_header();
 
 $identity_defaults = caaguazu_identity_defaults();
 $eco_defaults      = caaguazu_ecosystem_defaults();
-$aud_defaults      = caaguazu_audiences_defaults();
 
 $hero_video  = caaguazu_opt( 'hero_video_url', 'https://videos.pexels.com/video-files/2491284/2491284-uhd_2560_1440_24fps.mp4' );
 $hero_poster = caaguazu_opt_image( 'hero_poster', 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1920&q=80' );
@@ -121,31 +120,6 @@ $hero_poster = caaguazu_opt_image( 'hero_poster', 'https://images.unsplash.com/p
 	</div>
 </section>
 
-<section class="container">
-	<div class="section-head reveal">
-		<p class="eyebrow"><?php esc_html_e( 'Servicios', 'caaguazu' ); ?></p>
-		<h2><?php esc_html_e( 'Información según tu perfil', 'caaguazu' ); ?></h2>
-		<p><?php esc_html_e( 'Seleccioná una categoría para ver la información y los servicios correspondientes.', 'caaguazu' ); ?></p>
-	</div>
-	<div class="aud-grid">
-		<?php for ( $i = 0; $i < 3; $i++ ) :
-			$d     = $aud_defaults[ $i ];
-			$icon  = caaguazu_opt( "aud_{$i}_icon",  $d['icon'] );
-			$title = caaguazu_opt( "aud_{$i}_title", $d['title'] );
-			$body  = caaguazu_opt( "aud_{$i}_body",  $d['body'] );
-			$cta   = caaguazu_opt( "aud_{$i}_cta",   $d['cta'] );
-			$slug  = caaguazu_opt( "aud_{$i}_slug",  $d['slug'] );
-		?>
-			<a class="aud reveal" href="<?php echo esc_url( caaguazu_page_url( $slug ) ); ?>">
-				<div class="ico"><?php echo wp_kses_post( $icon ); ?></div>
-				<h3><?php echo esc_html( $title ); ?></h3>
-				<p class="desc"><?php echo esc_html( $body ); ?></p>
-				<span class="arrow"><?php echo esc_html( $cta ); ?></span>
-			</a>
-		<?php endfor; ?>
-	</div>
-</section>
-
 <section class="quiz-wrap">
 	<div class="container">
 		<div class="quiz reveal">
@@ -175,10 +149,10 @@ $hero_poster = caaguazu_opt_image( 'hero_poster', 'https://images.unsplash.com/p
 $quiz_map = array(
 	'resident' => array(
 		'title'          => caaguazu_i18n_pair( 'quiz.result.resident.title', __( 'Información para residentes', 'caaguazu' ) ),
-		'primary_url'    => caaguazu_page_url( 'servicios' ),
-		'primary_label'  => caaguazu_i18n_pair( 'quiz.result.resident.primary', __( 'Ver servicios', 'caaguazu' ) ),
-		'secondary_url'  => get_post_type_archive_link( 'caaguazu_news' ),
-		'secondary_label'=> caaguazu_i18n_pair( 'quiz.result.resident.secondary', __( 'Ver noticias', 'caaguazu' ) ),
+		'primary_url'    => get_post_type_archive_link( 'caaguazu_news' ),
+		'primary_label'  => caaguazu_i18n_pair( 'quiz.result.resident.primary', __( 'Ver noticias', 'caaguazu' ) ),
+		'secondary_url'  => get_post_type_archive_link( 'caaguazu_event' ),
+		'secondary_label'=> caaguazu_i18n_pair( 'quiz.result.resident.secondary', __( 'Ver agenda', 'caaguazu' ) ),
 	),
 	'visitor' => array(
 		'title'          => caaguazu_i18n_pair( 'quiz.result.visitor.title', __( 'Información para visitantes', 'caaguazu' ) ),
@@ -189,10 +163,10 @@ $quiz_map = array(
 	),
 	'investor' => array(
 		'title'          => caaguazu_i18n_pair( 'quiz.result.investor.title', __( 'Información para inversores', 'caaguazu' ) ),
-		'primary_url'    => caaguazu_page_url( 'servicios' ),
-		'primary_label'  => caaguazu_i18n_pair( 'quiz.result.investor.primary', __( 'Ver servicios', 'caaguazu' ) ),
-		'secondary_url'  => caaguazu_page_url( 'ecosistema' ),
-		'secondary_label'=> caaguazu_i18n_pair( 'quiz.result.investor.secondary', __( 'Ver ecosistema', 'caaguazu' ) ),
+		'primary_url'    => caaguazu_page_url( 'ecosistema' ),
+		'primary_label'  => caaguazu_i18n_pair( 'quiz.result.investor.primary', __( 'Ver ecosistema', 'caaguazu' ) ),
+		'secondary_url'  => caaguazu_page_url( 'contacto' ),
+		'secondary_label'=> caaguazu_i18n_pair( 'quiz.result.investor.secondary', __( 'Ir a contacto', 'caaguazu' ) ),
 	),
 	'student' => array(
 		'title'          => caaguazu_i18n_pair( 'quiz.result.student.title', __( 'Información para estudiantes', 'caaguazu' ) ),

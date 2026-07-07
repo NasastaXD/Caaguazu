@@ -58,6 +58,8 @@ address{font-style:normal;margin-top:16px;font-size:14px;line-height:1.7;color:v
 .btn-primary:hover{filter:brightness(1.12);transform:translateY(-1px);box-shadow:var(--shadow-soft)}
 .btn-ghost{border:1px solid rgba(255,255,255,.6);color:#fff}
 .btn-ghost:hover{background:rgba(255,255,255,.1)}
+.btn-outline{border:1px solid var(--green-deep);color:var(--green-deep);background:transparent}
+.btn-outline:hover{background:var(--green-mist)}
 .arrow{display:inline-flex;align-items:center;gap:8px;color:var(--green-deep);font-weight:600;font-size:14px;transition:gap var(--t)}
 .arrow:hover{gap:12px}
 .arrow::after{content:"→";transition:transform var(--t)}
@@ -176,6 +178,10 @@ address{font-style:normal;margin-top:16px;font-size:14px;line-height:1.7;color:v
 .qa-tile:nth-child(4n+4) .qa-ico{background:rgba(27,107,68,.09)}
 .qa-label{font-size:13px;font-weight:600;color:var(--text)}
 @media(min-width:560px){.qa-grid{grid-template-columns:repeat(4,1fr)}}
+/* Si el número de accesos no completa la última fila, centrar el sobrante
+   en vez de dejarlo huérfano contra el borde izquierdo. */
+.qa-grid a:nth-child(5):last-child{grid-column:1/-1;max-width:260px;margin-inline:auto}
+@media(min-width:560px){.qa-grid a:nth-child(5):last-child{grid-column:2/4;max-width:none}}
 
 /* Hero */
 .hero{position:relative;height:100vh;min-height:640px;overflow:hidden;background:var(--bg-dark);color:#fff}
@@ -349,7 +355,7 @@ section{padding-block:64px}
 .footer > .weave-rule{opacity:.45;margin-top:12px}
 .footer .container{padding-block:64px}
 .foot-grid{display:grid;grid-template-columns:1fr;gap:48px}
-@media(min-width:768px){.foot-grid{grid-template-columns:1.2fr 1fr 1fr 1fr 1.1fr}}
+@media(min-width:768px){.foot-grid{grid-template-columns:1.3fr 1fr 1fr 1.1fr}}
 .foot-brand .name{font-family:var(--font-display);font-size:30px;font-weight:600;color:var(--green-deep)}
 .foot-brand .tag{margin-top:8px;font-style:italic;color:var(--text-muted);font-size:14px}
 .foot-brand p{margin-top:24px;max-width:280px;font-size:14px;line-height:1.65;color:var(--text-soft)}
@@ -424,7 +430,25 @@ section{padding-block:64px}
 .entry-content a.eco-card{text-decoration:none;color:inherit}
 .entry-content .eco-card h3{margin:16px 0 0}
 .entry-content .eco-card .desc{margin-top:12px}
+.entry-content .eco-card .img img{margin-top:0}
 .entry-content strong{color:var(--text)}
+
+/* Botones de navegación entre sub-páginas de Turismo — reemplazan los links
+   sueltos que hacían sentir esas páginas como un blog en vez de un portal. */
+.entry-content .cta-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:40px}
+.entry-content a.btn{text-decoration:none}
+.entry-content a.btn-primary{color:#fff}
+.entry-content a.btn-outline{color:var(--green-deep)}
+
+/* Mini-cards para datos cortos dentro del contenido editorial (ej. especies
+   madereras): mismo lenguaje visual que el resto del sitio. */
+.entry-content .info-grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:24px}
+@media(min-width:640px){.entry-content .info-grid{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:900px){.entry-content .info-grid{grid-template-columns:repeat(3,1fr)}}
+.entry-content .info-card{padding:20px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--bg-pure)}
+.entry-content .info-card h3{margin:0 0 4px;font-size:18px}
+.entry-content .info-card .meta{display:block;margin:0 0 8px;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--green-forest)}
+.entry-content .info-card p{margin-top:0;font-size:14px}
 
 /* Formularios públicos (reporte ciudadano, contacto) */
 .hp-field{position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden}
