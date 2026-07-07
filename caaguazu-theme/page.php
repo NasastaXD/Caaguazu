@@ -43,6 +43,7 @@ while ( have_posts() ) :
 		return get_post_field( 'post_name', $id );
 	}, $ancestors );
 	$is_tourism     = 'turismo' === $slug || in_array( 'turismo', $ancestor_slugs, true );
+	$is_tourism_hub = 'turismo' === $slug;
 
 	$hero    = isset( $stub_heros[ $slug] ) ? $stub_heros[ $slug ] : array(
 		$is_tourism ? __( 'Turismo', 'caaguazu' ) : __( 'Página', 'caaguazu' ),
@@ -69,7 +70,20 @@ while ( have_posts() ) :
 	</ol>
 </nav>
 
-<?php if ( $is_tourism ) : ?>
+<?php if ( $is_tourism_hub ) : ?>
+	<section class="tourism-hero-full">
+		<div class="img">
+			<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Carpenter_in_his_workshop.jpg/1280px-Carpenter_in_his_workshop.jpg" alt="" loading="eager">
+		</div>
+		<div class="container inner">
+			<p class="eyebrow"><?php echo esc_html( $eyebrow ); ?></p>
+			<h1><?php echo esc_html( $title ); ?></h1>
+			<?php if ( $sub ) : ?>
+				<p class="lead"><?php echo esc_html( $sub ); ?></p>
+			<?php endif; ?>
+		</div>
+	</section>
+<?php elseif ( $is_tourism ) : ?>
 	<section class="container page-hero tourism-hero">
 		<p class="eyebrow"><?php echo esc_html( $eyebrow ); ?></p>
 		<h1><?php echo esc_html( $title ); ?></h1>

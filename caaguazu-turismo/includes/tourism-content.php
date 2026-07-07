@@ -17,16 +17,21 @@ function caaguazu_tourism_pages() {
     'parent' => NULL,
     'title' => 'Turismo en Caaguazú',
     'excerpt' => 'Información turística de Caaguazú: historia, oficio maderero, gastronomía y cultura guaraní.',
-    'body' => '<p>El nombre Caaguazú proviene del guaraní [gn]Ka\'a Guasu[/gn], que significa monte grande. La ciudad fue fundada en 1845 junto a un manantial rodeado de bosque denso. La actividad maderera, presente desde los orígenes del poblado, define hasta hoy la identidad productiva del departamento.</p>
+    'body' => '<div class="stats-grid stats-grid--compact tourism-stats">
+<div class="stat"><span class="stat-num">181</span><span class="stat-label">años de historia</span></div>
+<div class="stat"><span class="stat-num">90</span><span class="stat-label">aserraderos activos</span></div>
+<div class="stat"><span class="stat-num">5.000</span><span class="stat-label">carpinterías</span></div>
+</div>
+<p>El nombre Caaguazú proviene del guaraní [gn]Ka\'a Guasu[/gn], que significa monte grande. La ciudad fue fundada en 1845 junto a un manantial rodeado de bosque denso. La actividad maderera, presente desde los orígenes del poblado, define hasta hoy la identidad productiva del departamento.</p>
 <h2>Secciones</h2>
 [promotur_destacados]
 <div class="eco-grid">
-<a class="eco-card" href="#tourism-link:la-capital-de-la-madera#"><div class="body"><span class="eco-tag">Historia y oficio</span><h3>La Capital de la Madera</h3><p class="desc">Historia, especies madereras y artesanos del departamento.</p><span class="arrow">Ver sección →</span></div></a>
-<a class="eco-card" href="#tourism-link:que-hacer#"><div class="body"><span class="eco-tag">Atractivos</span><h3>Qué hacer</h3><p class="desc">Ykua La Patria, el parque Techapyrã, la Iglesia Inmaculada Concepción y el Mercado de Abasto.</p><span class="arrow">Ver sección →</span></div></a>
-<a class="eco-card" href="#tourism-link:platos-tipicos#"><div class="body"><span class="eco-tag">Gastronomía</span><h3>Sabores de Caaguazú</h3><p class="desc">Platos típicos, dónde comer y la cultura del mate y tereré.</p><span class="arrow">Ver sección →</span></div></a>
-<a class="eco-card" href="#tourism-link:festividades#"><div class="body"><span class="eco-tag">Cultura</span><h3>Vivir Caaguazú</h3><p class="desc">Festividades, galería de imágenes y glosario de guaraní.</p><span class="arrow">Ver sección →</span></div></a>
-<a class="eco-card" href="#tourism-link:como-llegar#"><div class="body"><span class="eco-tag">Info práctica</span><h3>Planificá tu visita</h3><p class="desc">Cómo llegar, dónde alojarte y la mejor época para venir.</p><span class="arrow">Ver sección →</span></div></a>
-<a class="eco-card" href="#tourism-link:contacto#"><div class="body"><span class="eco-tag">Turismo</span><h3>Contacto</h3><p class="desc">Secretaría de Turismo de la Municipalidad de Caaguazú.</p><span class="arrow">Ver sección →</span></div></a>
+<a class="eco-card" href="#tourism-link:la-capital-de-la-madera#"><div class="body"><span class="eco-tag">Historia y oficio</span><h3>La Capital de la Madera</h3><p class="desc">Historia, especies madereras y artesanos del departamento.</p><span class="arrow">Ver sección</span></div></a>
+<a class="eco-card" href="#tourism-link:que-hacer#"><div class="body"><span class="eco-tag">Atractivos</span><h3>Qué hacer</h3><p class="desc">Ykua La Patria, el parque Techapyrã, la Iglesia Inmaculada Concepción y el Mercado de Abasto.</p><span class="arrow">Ver sección</span></div></a>
+<a class="eco-card" href="#tourism-link:platos-tipicos#"><div class="body"><span class="eco-tag">Gastronomía</span><h3>Sabores de Caaguazú</h3><p class="desc">Platos típicos, dónde comer y la cultura del mate y tereré.</p><span class="arrow">Ver sección</span></div></a>
+<a class="eco-card" href="#tourism-link:festividades#"><div class="body"><span class="eco-tag">Cultura</span><h3>Vivir Caaguazú</h3><p class="desc">Festividades, galería de imágenes y glosario de guaraní.</p><span class="arrow">Ver sección</span></div></a>
+<a class="eco-card" href="#tourism-link:como-llegar#"><div class="body"><span class="eco-tag">Info práctica</span><h3>Planificá tu visita</h3><p class="desc">Cómo llegar, dónde alojarte y la mejor época para venir.</p><span class="arrow">Ver sección</span></div></a>
+<a class="eco-card" href="#tourism-link:contacto#"><div class="body"><span class="eco-tag">Turismo</span><h3>Contacto</h3><p class="desc">Secretaría de Turismo de la Municipalidad de Caaguazú.</p><span class="arrow">Ver sección</span></div></a>
 </div>',
   ),
   'la-capital-de-la-madera' =>
@@ -74,7 +79,7 @@ function caaguazu_tourism_pages() {
     'title' => 'Artesanos de Caaguazú',
     'excerpt' => 'Perfiles de carpinteros, parqueteros y talladores del departamento.',
     'body' => '<p>Directorio de carpinteros, parqueteros, pintoras y jugueteros que se dedican al oficio maderero en Caaguazú.</p>'
-      . '<div class="eco-grid"><a class="eco-card" href="' . esc_url( get_post_type_archive_link( 'caaguazu_artisan' ) ) . '"><div class="body"><span class="eco-tag">Directorio</span><h3>Ver perfiles de artesanos</h3><p class="desc">Nombre, oficio, zona y una frase de cada artesano — un directorio actualizable, no una lista fija.</p><span class="arrow">Ver directorio →</span></div></a></div>',
+      . '<div class="eco-grid"><a class="eco-card" href="' . esc_url( get_post_type_archive_link( 'caaguazu_artisan' ) ) . '"><div class="body"><span class="eco-tag">Directorio</span><h3>Ver perfiles de artesanos</h3><p class="desc">Nombre, oficio, zona y una frase de cada artesano — un directorio actualizable, no una lista fija.</p><span class="arrow">Ver directorio</span></div></a></div>',
   ),
   'que-hacer' =>
   array (
