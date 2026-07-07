@@ -23,7 +23,7 @@ function caaguazu_ecosystem_defaults() {
 			'body'  => 'Información sobre historia, oficio maderero, gastronomía y cultura guaraní del departamento.',
 			'cta'   => 'Ver sección de Turismo',
 			'url'   => function_exists( 'caaguazu_page_url' ) ? caaguazu_page_url( 'turismo' ) : home_url( '/turismo/' ),
-			'image' => 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1400&q=80',
+			'image' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/Iglesia_de_la_Inmaculada_Concepci%C3%B3n_(Caaguaz%C3%BA).jpg/1280px-Iglesia_de_la_Inmaculada_Concepci%C3%B3n_(Caaguaz%C3%BA).jpg',
 		),
 		array(
 			'tag'   => 'cead.caaguazu.net',
@@ -39,7 +39,7 @@ function caaguazu_ecosystem_defaults() {
 			'body'  => 'Un nuevo espacio del ecosistema Caaguazú se encuentra en preparación y estará disponible próximamente.',
 			'cta'   => 'Próximamente',
 			'url'   => '',
-			'image' => 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=1400&q=80',
+			'image' => 'https://images.unsplash.com/photo-1519331379826-f10be5486c6f?auto=format&fit=crop&w=1400&q=80',
 		),
 	);
 }

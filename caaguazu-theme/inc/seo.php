@@ -37,7 +37,7 @@ function caaguazu_seo_image() {
 			return $src;
 		}
 	}
-	return caaguazu_opt_image( 'hero_poster', 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1920&q=80' );
+	return caaguazu_opt_image( 'hero_poster', 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Puente_Madera_Caaguaz%C3%BA_-_panoramio.jpg/1920px-Puente_Madera_Caaguaz%C3%BA_-_panoramio.jpg' );
 }
 
 function caaguazu_seo_title() {

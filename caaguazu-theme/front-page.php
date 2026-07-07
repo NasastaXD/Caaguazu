@@ -12,8 +12,8 @@ get_header();
 
 $identity_defaults = caaguazu_identity_defaults();
 
-$hero_video  = caaguazu_opt( 'hero_video_url', 'https://videos.pexels.com/video-files/2491284/2491284-uhd_2560_1440_24fps.mp4' );
-$hero_poster = caaguazu_opt_image( 'hero_poster', 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1920&q=80' );
+$hero_video  = caaguazu_opt( 'hero_video_url', '' );
+$hero_poster = caaguazu_opt_image( 'hero_poster', 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Puente_Madera_Caaguaz%C3%BA_-_panoramio.jpg/1920px-Puente_Madera_Caaguaz%C3%BA_-_panoramio.jpg' );
 ?>
 
 <section class="hero" aria-label="<?php esc_attr_e( 'Caaguazú, Capital de la Madera', 'caaguazu' ); ?>">

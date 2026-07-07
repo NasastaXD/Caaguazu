@@ -20,16 +20,16 @@ while ( have_posts() ) :
 	$stub_heros = array(
 		'sobre-caaguazu' => array( 'Sobre Caaguazú', 'Información general del departamento',
 			'Datos sobre geografía, historia y población del departamento de Caaguazú.',
-			'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1400&q=80' ),
+			'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Municipalidad_de_Caaguaz%C3%BA_Paraguay_-_panoramio.jpg/1280px-Municipalidad_de_Caaguaz%C3%BA_Paraguay_-_panoramio.jpg' ),
 		'servicios'      => array( 'Servicios', 'Trámites y servicios',
 			'Información sobre trámites y servicios disponibles para ciudadanos, empresas y visitantes.',
-			'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1400&q=80' ),
+			'https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1400&q=80' ),
 		'noticias'       => array( 'Noticias', 'Noticias del departamento',
 			'Comunicados y publicaciones oficiales de Caaguazú.',
-			'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=1400&q=80' ),
+			'https://images.unsplash.com/photo-1495020689067-958852a7765e?auto=format&fit=crop&w=1400&q=80' ),
 		'ecosistema'     => array( 'Ecosistema', 'Sub-portales del departamento',
 			'Acceso a los sub-portales especializados de Caaguazú, cada uno con contenido propio dentro de una misma identidad institucional.',
-			'https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=1400&q=80' ),
+			'https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/Plaza_principal_de_Caaguaz%C3%BA.jpg/1280px-Plaza_principal_de_Caaguaz%C3%BA.jpg' ),
 		'contacto'       => array( 'Contacto', 'Canales de contacto',
 			'Canales de contacto oficiales para ciudadanos, prensa, empresas y otros organismos.',
 			'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1400&q=80' ),
@@ -69,20 +69,27 @@ while ( have_posts() ) :
 	</ol>
 </nav>
 
-<section class="container page-hero">
-	<div class="grid">
-		<div>
-			<p class="eyebrow"><?php echo esc_html( $eyebrow ); ?></p>
-			<h1><?php echo esc_html( $title ); ?></h1>
-			<?php if ( $sub ) : ?>
-				<p class="sub"><?php echo esc_html( $sub ); ?></p>
+<?php if ( $is_tourism ) : ?>
+	<section class="container page-hero tourism-hero">
+		<p class="eyebrow"><?php echo esc_html( $eyebrow ); ?></p>
+		<h1><?php echo esc_html( $title ); ?></h1>
+	</section>
+<?php else : ?>
+	<section class="container page-hero">
+		<div class="grid">
+			<div>
+				<p class="eyebrow"><?php echo esc_html( $eyebrow ); ?></p>
+				<h1><?php echo esc_html( $title ); ?></h1>
+				<?php if ( $sub ) : ?>
+					<p class="sub"><?php echo esc_html( $sub ); ?></p>
+				<?php endif; ?>
+			</div>
+			<?php if ( $img ) : ?>
+				<div class="img"><img src="<?php echo esc_url( $img ); ?>" alt="" loading="lazy"></div>
 			<?php endif; ?>
 		</div>
-		<?php if ( $img ) : ?>
-			<div class="img"><img src="<?php echo esc_url( $img ); ?>" alt="" loading="lazy"></div>
-		<?php endif; ?>
-	</div>
-</section>
+	</section>
+<?php endif; ?>
 
 <?php
 $content = trim( wp_strip_all_tags( get_the_content() ) );
