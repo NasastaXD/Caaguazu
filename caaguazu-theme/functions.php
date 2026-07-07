@@ -105,16 +105,10 @@ add_filter( 'body_class', 'caaguazu_body_class' );
 
 require get_template_directory() . '/inc/i18n.php';
 require get_template_directory() . '/inc/helpers.php';
-require get_template_directory() . '/inc/cpt-news.php';
-require get_template_directory() . '/inc/cpt-event.php';
-require get_template_directory() . '/inc/demo-events.php';
 require get_template_directory() . '/inc/cpt-artisan.php';
 require get_template_directory() . '/inc/demo-artisans.php';
 require get_template_directory() . '/inc/customizer.php';
 require get_template_directory() . '/inc/customizer-defaults.php';
-require get_template_directory() . '/inc/tourism-content.php';
-require get_template_directory() . '/inc/tourism-seeder.php';
-require get_template_directory() . '/inc/demo-content.php';
 require get_template_directory() . '/inc/core-pages-seeder.php';
 require get_template_directory() . '/inc/search-filters.php';
 require get_template_directory() . '/inc/spam-guard.php';
