@@ -160,9 +160,11 @@
 })();
 
 (function(){
-  // Sticky / compresión sólo cuando hero está presente (data-page="home")
+  // Sticky / compresión sólo cuando hay un hero a sangre detrás del header
+  // transparente: la home y el hub de Turismo (su propio hero oscuro).
   var h = document.getElementById('header');
-  if (h && document.body.dataset.page === 'home'){
+  var hasBleedHero = document.body.classList.contains('page-home') || document.body.classList.contains('tourism-hub');
+  if (h && hasBleedHero){
     var onScroll = function(){ h.classList.toggle('scrolled', window.scrollY > 100); };
     window.addEventListener('scroll', onScroll, {passive:true});
     onScroll();

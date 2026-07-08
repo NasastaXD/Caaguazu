@@ -104,3 +104,44 @@ add_filter( 'caaguazu_nav_items', function ( $items ) {
 	);
 	return $items;
 } );
+
+/**
+ * Las 6 secciones de primer nivel de Turismo (las mismas de la grilla del
+ * hub) — a diferencia de caaguazu_turismo_menu_groups() (sub-secciones del
+ * mega-menú), esta lista es la que usa el shell propio de Turismo que
+ * expone el theme (header/tabbar/footer distintos mientras se navega
+ * dentro del ecosistema) vía el filtro `caaguazu_tourism_shell_items`.
+ */
+function caaguazu_turismo_shell_sections() {
+	return array(
+		// slug => [ icono, label completo (nav/footer), label corto (tabbar) ]
+		'la-capital-de-la-madera' => array( '🪵', __( 'La Capital de la Madera', 'caaguazu-turismo' ), __( 'Historia', 'caaguazu-turismo' ) ),
+		'que-hacer'               => array( '🏞️', __( 'Qué hacer', 'caaguazu-turismo' ), __( 'Qué hacer', 'caaguazu-turismo' ) ),
+		'platos-tipicos'          => array( '🍲', __( 'Sabores', 'caaguazu-turismo' ), __( 'Sabores', 'caaguazu-turismo' ) ),
+		'festividades'            => array( '🎉', __( 'Vivir Caaguazú', 'caaguazu-turismo' ), __( 'Cultura', 'caaguazu-turismo' ) ),
+		'como-llegar'             => array( '🗺️', __( 'Planificá tu visita', 'caaguazu-turismo' ), __( 'Visitar', 'caaguazu-turismo' ) ),
+		'contacto'                => array( '✉️', __( 'Contacto', 'caaguazu-turismo' ), __( 'Contacto', 'caaguazu-turismo' ) ),
+	);
+}
+
+add_filter( 'caaguazu_tourism_shell_items', function ( $items ) {
+	foreach ( caaguazu_turismo_shell_sections() as $slug => $data ) {
+		$items[] = array(
+			'slug'  => $slug,
+			'label' => $data[1],
+			'short' => $data[2],
+			'icon'  => $data[0],
+			'url'   => caaguazu_tourism_page_url( $slug ),
+		);
+	}
+	if ( post_type_exists( 'cgz_local' ) ) {
+		$items[] = array(
+			'slug'  => 'directorio',
+			'label' => __( 'Directorio de locales', 'caaguazu-turismo' ),
+			'short' => __( 'Directorio', 'caaguazu-turismo' ),
+			'icon'  => '📍',
+			'url'   => get_post_type_archive_link( 'cgz_local' ),
+		);
+	}
+	return $items;
+} );

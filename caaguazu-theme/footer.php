@@ -5,7 +5,8 @@
  * @package Caaguazu
  */
 
-$is_home  = caaguazu_is_home();
+$is_home    = caaguazu_is_home();
+$in_tourism = caaguazu_is_tourism_context();
 $tagline  = caaguazu_opt( 'site_tagline_custom', 'Capital de la Madera' );
 $about    = caaguazu_opt( 'footer_about', 'Portal oficial del departamento de Caaguazú, Paraguay.' );
 $org      = caaguazu_opt( 'contact_org', 'Gobernación de Caaguazú' );
@@ -44,13 +45,22 @@ for ( $i = 0; $i < 3; $i++ ) {
 			</div>
 
 			<div class="foot-col">
-				<h4><?php caaguazu_i18n( 'footer.subportales', __( 'Sub-portales', 'caaguazu' ) ); ?></h4>
-				<ul>
-					<?php foreach ( $eco_subs as $s ) : ?>
-						<li><a href="<?php echo esc_url( $s['url'] ); ?>" target="_blank" rel="noreferrer"><?php echo esc_html( $s['tag'] ); ?></a></li>
-					<?php endforeach; ?>
-					<li><a href="<?php echo esc_url( $eco_url ); ?>"><?php esc_html_e( 'Ver ecosistema completo', 'caaguazu' ); ?></a></li>
-				</ul>
+				<?php if ( $in_tourism ) : ?>
+					<h4><?php esc_html_e( 'Secciones', 'caaguazu' ); ?></h4>
+					<ul>
+						<?php foreach ( apply_filters( 'caaguazu_tourism_shell_items', array() ) as $s ) : ?>
+							<li><a href="<?php echo esc_url( $s['url'] ); ?>"><?php echo esc_html( $s['label'] ); ?></a></li>
+						<?php endforeach; ?>
+					</ul>
+				<?php else : ?>
+					<h4><?php caaguazu_i18n( 'footer.subportales', __( 'Sub-portales', 'caaguazu' ) ); ?></h4>
+					<ul>
+						<?php foreach ( $eco_subs as $s ) : ?>
+							<li><a href="<?php echo esc_url( $s['url'] ); ?>" target="_blank" rel="noreferrer"><?php echo esc_html( $s['tag'] ); ?></a></li>
+						<?php endforeach; ?>
+						<li><a href="<?php echo esc_url( $eco_url ); ?>"><?php esc_html_e( 'Ver ecosistema completo', 'caaguazu' ); ?></a></li>
+					</ul>
+				<?php endif; ?>
 			</div>
 
 			<div class="foot-col">

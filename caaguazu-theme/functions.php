@@ -95,10 +95,10 @@ function caaguazu_body_class( $classes ) {
 	if ( is_front_page() ) {
 		$classes[] = 'page-home';
 	}
-	if ( is_page() && get_post_meta( get_queried_object_id(), '_caaguazu_tourism', true ) ) {
+	if ( caaguazu_is_tourism_context() ) {
 		$classes[] = 'tourism-page';
 	}
-	if ( is_page() && 'turismo' === get_post_field( 'post_name', get_queried_object_id() ) ) {
+	if ( caaguazu_is_tourism_hub() ) {
 		$classes[] = 'tourism-hub';
 	}
 	return $classes;
@@ -111,6 +111,7 @@ add_filter( 'body_class', 'caaguazu_body_class' );
 
 require get_template_directory() . '/inc/i18n.php';
 require get_template_directory() . '/inc/helpers.php';
+require get_template_directory() . '/inc/tourism-shell.php';
 require get_template_directory() . '/inc/cpt-artisan.php';
 require get_template_directory() . '/inc/demo-artisans.php';
 require get_template_directory() . '/inc/customizer.php';

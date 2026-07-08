@@ -39,11 +39,8 @@ while ( have_posts() ) :
 	// entrada fija en $stub_heros -- son demasiadas para hardcodear una por una --
 	// así que el hero se arma con los datos reales de la propia página.
 	$ancestors      = get_post_ancestors( get_the_ID() );
-	$ancestor_slugs = array_map( function ( $id ) {
-		return get_post_field( 'post_name', $id );
-	}, $ancestors );
-	$is_tourism     = 'turismo' === $slug || in_array( 'turismo', $ancestor_slugs, true );
-	$is_tourism_hub = 'turismo' === $slug;
+	$is_tourism     = caaguazu_is_tourism_context();
+	$is_tourism_hub = caaguazu_is_tourism_hub();
 
 	$hero    = isset( $stub_heros[ $slug] ) ? $stub_heros[ $slug ] : array(
 		$is_tourism ? __( 'Turismo', 'caaguazu' ) : __( 'Página', 'caaguazu' ),
@@ -58,17 +55,19 @@ while ( have_posts() ) :
 	$label   = get_the_title();
 ?>
 
-<nav class="container breadcrumb" aria-label="<?php esc_attr_e( 'Migas de pan', 'caaguazu' ); ?>">
-	<ol>
-		<li><a href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php esc_html_e( 'Inicio', 'caaguazu' ); ?></a></li>
-		<?php foreach ( array_reverse( $ancestors ) as $ancestor_id ) : ?>
+<?php if ( ! $is_tourism_hub ) : ?>
+	<nav class="container breadcrumb" aria-label="<?php esc_attr_e( 'Migas de pan', 'caaguazu' ); ?>">
+		<ol>
+			<li><a href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php esc_html_e( 'Inicio', 'caaguazu' ); ?></a></li>
+			<?php foreach ( array_reverse( $ancestors ) as $ancestor_id ) : ?>
+				<li>›</li>
+				<li><a href="<?php echo esc_url( get_permalink( $ancestor_id ) ); ?>"><?php echo esc_html( get_the_title( $ancestor_id ) ); ?></a></li>
+			<?php endforeach; ?>
 			<li>›</li>
-			<li><a href="<?php echo esc_url( get_permalink( $ancestor_id ) ); ?>"><?php echo esc_html( get_the_title( $ancestor_id ) ); ?></a></li>
-		<?php endforeach; ?>
-		<li>›</li>
-		<li aria-current="page"><?php echo esc_html( $label ); ?></li>
-	</ol>
-</nav>
+			<li aria-current="page"><?php echo esc_html( $label ); ?></li>
+		</ol>
+	</nav>
+<?php endif; ?>
 
 <?php if ( $is_tourism_hub ) : ?>
 	<section class="tourism-hero-full">
