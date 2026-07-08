@@ -227,6 +227,24 @@
 })();
 
 (function(){
+  // Los grupos del mega-menú (.nav-dropdown-col, <details open> por HTML)
+  // arrancan colapsados en viewports angostos -- si no hay JS, se quedan
+  // abiertos (mismo comportamiento que antes, sin regresión).
+  var groups = document.querySelectorAll('.nav-dropdown-col');
+  if (!groups.length) return;
+  var mq = window.matchMedia('(min-width: 1024px)');
+  function sync(){
+    groups.forEach(function(d){
+      if (mq.matches) { d.setAttribute('open', ''); }
+      else { d.removeAttribute('open'); }
+    });
+  }
+  sync();
+  if (mq.addEventListener) { mq.addEventListener('change', sync); }
+  else if (mq.addListener) { mq.addListener(sync); }
+})();
+
+(function(){
   // Selector de idioma ES/GN funcional: toggle 100% cliente, persistido en
   // localStorage. El HTML servido es siempre el mismo (dual-render en PHP),
   // así que esto no depende de cookies ni rompe ningún cache de página.

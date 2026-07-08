@@ -93,11 +93,24 @@ address{font-style:normal;margin-top:16px;font-size:14px;line-height:1.7;color:v
   transition:opacity var(--t),transform var(--t),visibility var(--t);z-index:70}
 .nav-item:hover .nav-dropdown,.nav-item:focus-within .nav-dropdown{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)}
 .nav-dropdown-col{display:flex;flex-direction:column;min-width:190px;padding:6px 10px}
-.nav-dropdown-col h4{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin:4px 6px 8px}
-.nav-dropdown-link{padding:9px 8px;border-radius:8px;font-size:14px;font-weight:500;color:var(--text);transition:background var(--t),color var(--t)}
+.nav-dropdown-col summary{display:flex;align-items:center;justify-content:space-between;gap:6px;
+  list-style:none;cursor:pointer;font-size:11px;text-transform:uppercase;letter-spacing:.06em;
+  color:var(--text-muted);margin:4px 6px 8px;padding:2px 0}
+.nav-dropdown-col summary::-webkit-details-marker{display:none}
+.nav-dropdown-col summary::after{content:"⌄";font-size:13px;line-height:1;transition:transform var(--t);flex:none}
+.nav-dropdown-col[open] summary::after{transform:rotate(180deg)}
+.nav-dropdown-link{display:block;padding:9px 8px;border-radius:8px;font-size:14px;font-weight:500;color:var(--text);transition:background var(--t),color var(--t)}
 .nav-dropdown-link:hover,.nav-dropdown-link:focus-visible{background:var(--bg-elevated);color:var(--green-deep)}
 .nav-dropdown--mega{left:auto;right:0;transform:translateY(6px);display:grid;grid-template-columns:repeat(4,minmax(180px,1fr));gap:4px;padding:18px;min-width:680px}
 .nav-item:hover .nav-dropdown--mega,.nav-item:focus-within .nav-dropdown--mega{transform:translateY(0)}
+/* <details class="nav-dropdown-col" open> viene abierto por HTML -- en
+   desktop se queda así (nada lo cierra) y no hace falta que el summary sea
+   clickeable; main.js es quien le saca el `open` en viewports angostos
+   para que el drawer móvil arranque colapsado. */
+@media(min-width:1024px){
+  .nav-dropdown-col summary{pointer-events:none}
+  .nav-dropdown-col summary::after{display:none}
+}
 .header-actions{display:flex;align-items:center;gap:12px}
 .icon-btn{width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;
   border-radius:999px;color:#fff;transition:background var(--t)}
@@ -124,14 +137,17 @@ address{font-style:normal;margin-top:16px;font-size:14px;line-height:1.7;color:v
 .drawer a{padding:14px 12px;border-radius:8px;font-weight:500;color:var(--text)}
 .drawer a:hover{background:var(--bg-elevated)}
 .drawer .close{align-self:flex-end;width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;border-radius:999px;font-size:24px;color:var(--text-soft)}
-/* Sub-menús dentro del drawer móvil: sin hover, se muestran siempre expandidos
-   e indentados debajo de su padre (accordion "siempre abierto", sin JS extra). */
+/* Sub-menús dentro del drawer móvil: indentados debajo de su padre, cada
+   grupo un <details> que arranca colapsado y se toca para expandir — evita
+   volcar todas las sub-páginas de una sección como una lista larga sin
+   jerarquía apenas se abre el drawer. */
 .drawer .nav-item{display:flex;flex-direction:column}
 .drawer .nav-dropdown{position:static;transform:none;opacity:1;visibility:visible;box-shadow:none;
   border:0;background:none;display:flex;flex-direction:column;min-width:0;padding:0 0 6px 14px}
 .drawer .nav-dropdown--mega{grid-template-columns:none;min-width:0;padding:0 0 6px 14px}
-.drawer .nav-dropdown-col{min-width:0;padding:0}
-.drawer .nav-dropdown-col h4{margin:10px 0 4px}
+.drawer .nav-dropdown-col{min-width:0;padding:0;border-top:1px solid var(--border)}
+.drawer .nav-dropdown-col:first-child{border-top:0}
+.drawer .nav-dropdown-col summary{margin:10px 0 4px;padding:6px 4px}
 .drawer .nav-dropdown-link{padding:10px 12px;font-size:13px;color:var(--text-soft)}
 .drawer .nav-dropdown-link:hover{background:var(--bg-elevated);color:var(--green-deep)}
 /* .nav-link trae colores pensados para el header transparente (blanco sobre
