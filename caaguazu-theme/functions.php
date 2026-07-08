@@ -63,6 +63,15 @@ function caaguazu_enqueue_assets() {
 		CAAGUAZU_VERSION
 	);
 
+	// Animaciones (Animate.css extraído + efectos propios) — ver
+	// assets/css/animations.css y assets/js/animations.js.
+	wp_enqueue_style(
+		'caaguazu-animations',
+		get_theme_file_uri( '/assets/css/animations.css' ),
+		array( 'caaguazu-main' ),
+		CAAGUAZU_VERSION
+	);
+
 	wp_enqueue_script(
 		'caaguazu-main',
 		get_theme_file_uri( '/assets/js/main.js' ),
@@ -70,8 +79,20 @@ function caaguazu_enqueue_assets() {
 		CAAGUAZU_VERSION,
 		true
 	);
+	wp_enqueue_script(
+		'caaguazu-animations',
+		get_theme_file_uri( '/assets/js/animations.js' ),
+		array( 'caaguazu-main' ),
+		CAAGUAZU_VERSION,
+		true
+	);
 	wp_localize_script( 'caaguazu-main', 'caaguazuConfig', array(
-		'restSearchUrl' => esc_url_raw( rest_url( 'wp/v2/search' ) ),
+		'restSearchUrl'   => esc_url_raw( rest_url( 'wp/v2/search' ) ),
+		// Frontera de módulos para el telón de transición (animations.js):
+		// URLs que pertenecen al ecosistema Turismo (hub + Locales + Portal).
+		'tourismPrefixes' => array_map( 'esc_url_raw', caaguazu_tourism_url_prefixes() ),
+		'i18nTourism'     => __( 'Turismo', 'caaguazu' ),
+		'i18nHome'        => __( 'Caaguazú', 'caaguazu' ),
 	) );
 }
 add_action( 'wp_enqueue_scripts', 'caaguazu_enqueue_assets' );

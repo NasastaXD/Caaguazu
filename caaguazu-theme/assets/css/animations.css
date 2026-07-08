@@ -1,0 +1,105 @@
+/* ============================================================
+   Caaguazú — Animaciones (assets/js/animations.js es la contraparte)
+
+   Parte 1: subset extraído de Animate.css v4.1.1 (MIT) — solo los
+   keyframes que el sitio usa de verdad (fadeIn, fadeInUp, fadeInLeft,
+   zoomIn), no la librería completa (92KB → ~2KB).
+   Parte 2: efectos propios del sitio — partículas doradas de aserrín
+   en los heros, ripple al clickear, telón de transición entre módulos
+   (Caaguazú ↔ Turismo), Ken Burns en heros, y la base del tilt 3D.
+
+   Todo respeta prefers-reduced-motion (acá y en el JS).
+   ============================================================ */
+
+/* --- Animate.css v4.1.1 (extracto) --------------------------------- */
+:root{--animate-duration:1s;--animate-delay:1s;--animate-repeat:1}
+.animate__animated{-webkit-animation-duration:1s;animation-duration:1s;-webkit-animation-duration:var(--animate-duration);animation-duration:var(--animate-duration);-webkit-animation-fill-mode:both;animation-fill-mode:both}
+.animate__fast{-webkit-animation-duration:.8s;animation-duration:.8s;-webkit-animation-duration:calc(var(--animate-duration)*0.8);animation-duration:calc(var(--animate-duration)*0.8)}
+.animate__faster{-webkit-animation-duration:.5s;animation-duration:.5s;-webkit-animation-duration:calc(var(--animate-duration)/2);animation-duration:calc(var(--animate-duration)/2)}
+@media (prefers-reduced-motion:reduce),print{.animate__animated{-webkit-animation-duration:1ms!important;animation-duration:1ms!important;-webkit-transition-duration:1ms!important;transition-duration:1ms!important;-webkit-animation-iteration-count:1!important;animation-iteration-count:1!important}.animate__animated[class*=Out]{opacity:0}}
+@-webkit-keyframes fadeIn{0%{opacity:0}to{opacity:1}}
+@keyframes fadeIn{0%{opacity:0}to{opacity:1}}
+.animate__fadeIn{-webkit-animation-name:fadeIn;animation-name:fadeIn}
+@-webkit-keyframes fadeInUp{0%{opacity:0;-webkit-transform:translate3d(0,100%,0);transform:translate3d(0,100%,0)}to{opacity:1;-webkit-transform:translateZ(0);transform:translateZ(0)}}
+@keyframes fadeInUp{0%{opacity:0;-webkit-transform:translate3d(0,100%,0);transform:translate3d(0,100%,0)}to{opacity:1;-webkit-transform:translateZ(0);transform:translateZ(0)}}
+.animate__fadeInUp{-webkit-animation-name:fadeInUp;animation-name:fadeInUp}
+@-webkit-keyframes fadeInLeft{0%{opacity:0;-webkit-transform:translate3d(-100%,0,0);transform:translate3d(-100%,0,0)}to{opacity:1;-webkit-transform:translateZ(0);transform:translateZ(0)}}
+@keyframes fadeInLeft{0%{opacity:0;-webkit-transform:translate3d(-100%,0,0);transform:translate3d(-100%,0,0)}to{opacity:1;-webkit-transform:translateZ(0);transform:translateZ(0)}}
+.animate__fadeInLeft{-webkit-animation-name:fadeInLeft;animation-name:fadeInLeft}
+@-webkit-keyframes zoomIn{0%{opacity:0;-webkit-transform:scale3d(.3,.3,.3);transform:scale3d(.3,.3,.3)}50%{opacity:1}}
+@keyframes zoomIn{0%{opacity:0;-webkit-transform:scale3d(.3,.3,.3);transform:scale3d(.3,.3,.3)}50%{opacity:1}}
+.animate__zoomIn{-webkit-animation-name:zoomIn;animation-name:zoomIn}
+
+/* --- Scroll-trigger (el JS auto-marca contenido de Turismo/plugins) --- */
+/* La opacidad inicial la pone el JS inline (no acá) para que sin JS el
+   contenido siga siempre visible. */
+.scroll-animate.animate__animated{opacity:1}
+
+/* --- Ken Burns: zoom lentísimo en las fotos de hero ------------------ */
+@keyframes cgzKenburns{from{transform:scale(1)}to{transform:scale(1.08)}}
+body.page-home .hero-media img,
+.tourism-hero-full .img img{
+  animation:cgzKenburns 22s ease-in-out infinite alternate;
+  will-change:transform}
+
+/* --- Tilt 3D del hero principal (el JS mueve las variables) ---------- */
+body.page-home .hero{perspective:1100px}
+body.page-home .hero-inner{
+  transform:rotateX(var(--tilt-x,0deg)) rotateY(var(--tilt-y,0deg));
+  transform-style:preserve-3d;
+  transition:transform .18s ease-out;
+  will-change:transform}
+body.page-home .hero-inner h1{transform:translateZ(46px)}
+body.page-home .hero-inner .sub{transform:translateZ(28px)}
+body.page-home .hero-inner .eyebrow,
+body.page-home .hero-inner .lead{transform:translateZ(14px)}
+
+/* --- Partículas: aserrín dorado flotando en los heros ---------------- */
+.cgz-particles{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:1}
+.cgz-particles span{
+  position:absolute;bottom:-8px;border-radius:50%;
+  background:var(--accent-gold);opacity:0;
+  animation:cgzFloat var(--p-dur,12s) linear var(--p-delay,0s) infinite;
+  filter:blur(.4px)}
+@keyframes cgzFloat{
+  0%{transform:translateY(0) translateX(0);opacity:0}
+  8%{opacity:var(--p-op,.5)}
+  85%{opacity:var(--p-op,.5)}
+  100%{transform:translateY(calc(-1*var(--p-rise,70vh))) translateX(var(--p-drift,20px));opacity:0}}
+
+/* --- Ripple al clickear (botones, tiles, tabbar) --------------------- */
+.fx-ripple{position:relative;overflow:hidden}
+.fx-ripple-wave{
+  position:absolute;border-radius:50%;pointer-events:none;
+  background:currentColor;opacity:.18;transform:scale(0);
+  animation:cgzRipple .55s ease-out forwards}
+@keyframes cgzRipple{to{transform:scale(2.6);opacity:0}}
+
+/* --- Telón de transición entre módulos (Caaguazú ↔ Turismo) ---------- */
+.module-curtain{
+  position:fixed;inset:0;z-index:200;pointer-events:none;
+  transform:translateY(101%);
+  display:flex;align-items:center;justify-content:center;
+  will-change:transform}
+.module-curtain.to-turismo{background:linear-gradient(160deg,var(--earth-bark),var(--wood-deep))}
+.module-curtain.to-caaguazu{background:linear-gradient(160deg,var(--green-forest),var(--green-deep))}
+.module-curtain.in{transform:translateY(0);transition:transform .42s cubic-bezier(.65,0,.35,1)}
+.module-curtain .label{
+  font-family:var(--font-display);font-size:clamp(28px,5vw,44px);font-weight:600;
+  color:#fff;opacity:0;transform:translateY(14px);letter-spacing:.01em}
+.module-curtain.in .label{opacity:1;transform:none;transition:opacity .28s ease-out .16s,transform .28s ease-out .16s}
+
+/* Entrada al llegar al otro módulo: el contenido sube suave */
+@keyframes cgzModuleEnter{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+body.module-enter #main{animation:cgzModuleEnter .5s ease-out both}
+
+/* --- Accesibilidad: sin movimiento para quien lo desactivó ----------- */
+@media (prefers-reduced-motion: reduce){
+  body.page-home .hero-media img,
+  .tourism-hero-full .img img{animation:none}
+  body.page-home .hero-inner{transform:none;transition:none}
+  .cgz-particles{display:none}
+  .fx-ripple-wave{animation:none;opacity:0}
+  .module-curtain{display:none}
+  body.module-enter #main{animation:none}
+}
