@@ -205,7 +205,7 @@ function caaguazu_modulos_seed_agenda() {
 
 add_filter( 'caaguazu_quick_access_items', function ( $items ) {
 	$items[] = array(
-		'icon'  => '📅',
+		'icon'  => 'calendar',
 		'label' => __( 'Agenda', 'caaguazu-modulos' ),
 		'url'   => get_post_type_archive_link( 'caaguazu_event' ),
 	);

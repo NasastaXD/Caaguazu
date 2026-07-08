@@ -96,7 +96,7 @@ function caaguazu_render_tourism_header( $current_slug ) {
 	<header class="header tourism-header <?php echo $is_hub ? '' : 'solid'; ?>" id="header">
 		<div class="header-inner">
 			<div class="logo tourism-logo">
-				<a class="tourism-back" href="<?php echo esc_url( home_url( '/' ) ); ?>">← <?php esc_html_e( 'Caaguazú', 'caaguazu' ); ?></a>
+				<a class="tourism-back" href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php echo caaguazu_icon( 'back' ); ?> <?php esc_html_e( 'Caaguazú', 'caaguazu' ); ?></a>
 				<a class="logo-name" href="<?php echo esc_url( $hub_url ); ?>"><?php esc_html_e( 'Turismo', 'caaguazu' ); ?></a>
 			</div>
 
@@ -105,8 +105,8 @@ function caaguazu_render_tourism_header( $current_slug ) {
 			</nav>
 
 			<div class="header-actions">
-				<a href="<?php echo esc_url( get_search_link() ? get_search_link() : home_url( '/?s=' ) ); ?>" class="icon-btn" aria-label="<?php esc_attr_e( 'Buscar', 'caaguazu' ); ?>">🔍</a>
-				<button class="icon-btn burger" id="burger" aria-label="<?php esc_attr_e( 'Abrir menú', 'caaguazu' ); ?>">☰</button>
+				<a href="<?php echo esc_url( get_search_link() ? get_search_link() : home_url( '/?s=' ) ); ?>" class="icon-btn" aria-label="<?php esc_attr_e( 'Buscar', 'caaguazu' ); ?>"><?php echo caaguazu_icon( 'search' ); ?></a>
+				<button class="icon-btn burger" id="burger" aria-label="<?php esc_attr_e( 'Abrir menú', 'caaguazu' ); ?>"><?php echo caaguazu_icon( 'menu' ); ?></button>
 			</div>
 		</div>
 	</header>
@@ -114,7 +114,7 @@ function caaguazu_render_tourism_header( $current_slug ) {
 	<div class="drawer-bg" id="drawerBg"></div>
 	<aside class="drawer" id="drawer" aria-hidden="true">
 		<button class="close" id="drawerClose" aria-label="<?php esc_attr_e( 'Cerrar', 'caaguazu' ); ?>">×</button>
-		<a class="tourism-back" href="<?php echo esc_url( home_url( '/' ) ); ?>">← <?php esc_html_e( 'Volver a Caaguazú', 'caaguazu' ); ?></a>
+		<a class="tourism-back" href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php echo caaguazu_icon( 'back' ); ?> <?php esc_html_e( 'Volver a Caaguazú', 'caaguazu' ); ?></a>
 		<?php caaguazu_render_nav_item_list( $items, $active ); ?>
 	</aside>
 	<?php
@@ -133,11 +133,11 @@ function caaguazu_render_tourism_tabbar( $current_slug ) {
 	$sections = array_slice( apply_filters( 'caaguazu_tourism_shell_items', array() ), 0, 3 );
 
 	$items = array(
-		array( 'icon' => '🌳', 'label' => __( 'Inicio', 'caaguazu' ), 'url' => $hub_url, 'match' => 'turismo' ),
+		array( 'icon' => 'tree', 'label' => __( 'Inicio', 'caaguazu' ), 'url' => $hub_url, 'match' => 'turismo' ),
 	);
 	foreach ( $sections as $s ) {
 		$items[] = array(
-			'icon'  => isset( $s['icon'] ) ? $s['icon'] : '📍',
+			'icon'  => isset( $s['icon'] ) ? $s['icon'] : 'pin',
 			'label' => isset( $s['short'] ) ? $s['short'] : $s['label'],
 			'url'   => $s['url'],
 			'match' => $s['slug'],
@@ -150,13 +150,14 @@ function caaguazu_render_tourism_tabbar( $current_slug ) {
 			'<a class="tabbar-link%s" href="%s"><span class="tabbar-ico" aria-hidden="true">%s</span><span>%s</span></a>',
 			( $active === $item['match'] ) ? ' active' : '',
 			esc_url( $item['url'] ),
-			wp_kses_post( $item['icon'] ),
+			caaguazu_icon( $item['icon'] ),
 			esc_html( $item['label'] )
 		);
 	}
 	printf(
-		'<a class="tabbar-link" href="%s"><span class="tabbar-ico" aria-hidden="true">↩</span><span>%s</span></a>',
+		'<a class="tabbar-link" href="%s"><span class="tabbar-ico" aria-hidden="true">%s</span><span>%s</span></a>',
 		esc_url( home_url( '/' ) ),
+		caaguazu_icon( 'back' ),
 		esc_html__( 'Caaguazú', 'caaguazu' )
 	);
 	echo '</nav>';

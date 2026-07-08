@@ -218,7 +218,7 @@ function caaguazu_modulos_seed_noticias() {
  */
 add_filter( 'caaguazu_quick_access_items', function ( $items ) {
 	$items[] = array(
-		'icon'  => '📰',
+		'icon'  => 'news',
 		'label' => __( 'Noticias', 'caaguazu-modulos' ),
 		'url'   => get_post_type_archive_link( 'caaguazu_news' ),
 	);
