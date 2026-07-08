@@ -72,16 +72,21 @@ function caaguazu_turismo_hub_url() {
 }
 
 /**
- * Mega-menú de Turismo: se pasa como `dropdown_cb` en el item de nav.
+ * Mega-menú de Turismo: se pasa como `dropdown_cb` en el item de nav. Cada
+ * grupo es un <details open> — abierto por default (igual que antes, y el
+ * comportamiento correcto sin JS). En el drawer móvil, un pequeño script en
+ * main.js le saca el atributo `open` a estos grupos si el viewport es
+ * angosto, así arrancan colapsados y se tocan para expandir en vez de
+ * volcar las ~20 páginas de Turismo como una lista larga sin jerarquía.
  */
 function caaguazu_render_turismo_dropdown() {
 	echo '<div class="nav-dropdown nav-dropdown--mega">';
 	foreach ( caaguazu_turismo_menu_groups() as $group_label => $links ) {
-		echo '<div class="nav-dropdown-col"><h4>' . esc_html( $group_label ) . '</h4>';
+		echo '<details class="nav-dropdown-col" open><summary>' . esc_html( $group_label ) . '</summary>';
 		foreach ( $links as $slug => $label ) {
 			printf( '<a class="nav-dropdown-link" href="%s">%s</a>', esc_url( caaguazu_tourism_page_url( $slug ) ), esc_html( $label ) );
 		}
-		echo '</div>';
+		echo '</details>';
 	}
 	echo '</div>';
 }
