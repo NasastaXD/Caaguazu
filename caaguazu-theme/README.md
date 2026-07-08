@@ -2,18 +2,18 @@
 
 Theme classic (no FSE) del portal oficial del departamento de Caaguazú, Paraguay.
 
-El theme se ocupa de presentación (templates, Customizer de Hero/Identidad, formularios de contacto/reporte). Los módulos de contenido (Noticias, Agenda, Ecosistema, Turismo) viven en dos plugins hermanos en la raíz del repo — [`caaguazu-modulos/`](../caaguazu-modulos/) y [`caaguazu-turismo/`](../caaguazu-turismo/) — para poder activarse/desactivarse y actualizarse sin tocar el theme. Ver "Arquitectura de módulos" más abajo.
+El theme se ocupa de presentación (templates, Customizer de Hero/Identidad, formularios de contacto/reporte). Los módulos de contenido (Noticias, Agenda, Ecosistema, Educación, Turismo) viven en dos plugins hermanos en la raíz del repo — [`caaguazu-modulos/`](../caaguazu-modulos/) y [`caaguazu-turismo/`](../caaguazu-turismo/) — para poder activarse/desactivarse y actualizarse sin tocar el theme. Ver "Arquitectura de módulos" más abajo.
 
 ## Instalación
 
 1. Copiar/symlinkear `caaguazu-theme/`, `caaguazu-modulos/` y `caaguazu-turismo/` dentro de `wp-content/themes/` y `wp-content/plugins/` respectivamente (o generar los tres zips con `bin/build-zip.sh` desde la raíz del repo y subirlos desde **Apariencia → Temas → Añadir nuevo → Subir tema** / **Plugins → Añadir nuevo → Subir plugin**).
 2. Activar el theme **y** los dos plugins. Al activarlos se siembra todo automáticamente, sin pasos manuales — el sitio queda navegable de punta a punta sin 404s:
    - El theme siembra `sobre-caaguazu` y `contacto` (con su template de formulario) en blanco, y configura **Inicio** como portada estática si el sitio no tenía ya una configurada — ver `inc/core-pages-seeder.php`.
-   - `caaguazu-modulos` siembra 5 noticias demo, 4 eventos demo en la agenda, y la página `ecosistema` en blanco.
+   - `caaguazu-modulos` siembra 5 noticias demo, 4 eventos demo en la agenda, la página `ecosistema` en blanco, y 4 entradas demo de Educación (una por tipo: Escuelas/Becas/Programas/Estadísticas).
    - `caaguazu-turismo` siembra las 25 páginas de Turismo (historia, gastronomía, cultura guaraní) con su jerarquía de secciones/subpáginas. Reimportable sin desactivar el plugin desde **Apariencia → Caaguazú**.
    - Todas estas siembras corren tanto al activar (`register_activation_hook`/`after_switch_theme`) como, con un flag para no repetirse, en `admin_init` — así un sitio que ya tenía el theme o los plugins activos antes de que existiera alguna de estas siembras la recibe igual en la próxima actualización, sin tener que reactivar nada.
 3. Ir a **Ajustes → Enlaces permanentes** y guardar (refresca las rewrite rules para los CPTs y las páginas anidadas de Turismo).
-4. En **Apariencia → Menús**, crear un menú con las páginas sembradas + Noticias + Agenda + Turismo + Ecosistema y asignarlo a "Menú principal" y "Menú móvil (drawer)". Si no se crea, el theme cae en un menú de fallback armado con lo que cada plugin activo va registrando (ver abajo) — Sobre Caaguazú y Contacto son lo único que el theme trae de por sí.
+4. En **Apariencia → Menús**, crear un menú con las páginas sembradas + Noticias + Agenda + Educación + Turismo + Ecosistema y asignarlo a "Menú principal" y "Menú móvil (drawer)". Si no se crea, el theme cae en un menú de fallback armado con lo que cada plugin activo va registrando (ver abajo) — Sobre Caaguazú y Contacto son lo único que el theme trae de por sí.
 5. El directorio de **Artesanos** (CPT `caaguazu_artisan`, `inc/cpt-artisan.php`) y las funciones de **Servicios**/**Reportá un problema** siguen viviendo en el theme, pero no se lanzan todavía a pedido del departamento (ver "Funcionalidades").
 
 ## Arquitectura de módulos (plugins)
@@ -48,6 +48,7 @@ El theme solo aporta `sobre-caaguazu` (primero) y `contacto` (siempre último) d
 - **Reportes en números** (F3): contador público de reportes recibidos/atendidos/del mes en la página de reportar — `caaguazu_report_stats()` en `inc/cpt-report.php`. No expone el contenido de los reportes.
 - **SEO/Open Graph básico** (F4): meta description, canonical, OG y Twitter Card — `inc/seo.php`.
 - **Agenda de eventos** (F5): CPT `caaguazu_event` público con fecha/lugar, archive `/agenda/`, card de "Próximo evento" en el home — plugin `caaguazu-modulos` (`includes/modules/module-agenda.php`); el theme solo aporta `archive-caaguazu_event.php`/`single-caaguazu_event.php`.
+- **Educación** (v2.9): CPT `caaguazu_educacion` público con taxonomía `caaguazu_edu_tipo` (Escuelas/Becas/Programas/Estadísticas) y un dato destacado opcional por entrada (`_caaguazu_edu_stat`, p. ej. "320 cupos"), archive `/educacion/` — plugin `caaguazu-modulos` (`includes/modules/module-educacion.php`); el theme aporta `archive-caaguazu_educacion.php`/`single-caaguazu_educacion.php` y el nuevo ícono `book` en `inc/icons.php`. CEAD (cead.caaguazu.net) sigue siendo un sitio WordPress aparte, listado como tarjeta en Ecosistema — este módulo no lo reemplaza ni lo integra, es contenido educativo propio del departamento viviendo dentro de este mismo sitio.
 - **Directorio de artesanos** (F6): CPT `caaguazu_artisan` público con oficio/zona/frase destacada, archive `/artesanos/` — `inc/cpt-artisan.php` (theme; ver nota de "no lanzado todavía" arriba).
 - **Mapa de puntos históricos** (F7): shortcode `[caaguazu_mapa_puntos]` con Leaflet — única dependencia externa del theme (CDN), cargada solo en la página que usa el shortcode (`inc/map.php`). Se llama distinto de `[caaguazu_mapa]` para no chocar con el shortcode homónimo del plugin Caaguazú Locales (ver sección "Ecosistema de turismo").
 - **Compartir** (F8): WhatsApp/X/Facebook/copiar link en noticias y eventos — `caaguazu_share_buttons()` en `inc/helpers.php`.
