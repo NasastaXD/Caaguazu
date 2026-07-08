@@ -148,12 +148,7 @@ function caaguazu_tourism_pages() {
     'parent' => 'turismo',
     'title' => 'Dónde comer en Caaguazú',
     'excerpt' => 'Locales recomendados, desde puestos del mercado hasta restaurantes familiares.',
-    'body' => '<div class="info-grid">'
-      . '<div class="info-card"><h3>Comedores del Mercado de Abasto</h3><span class="meta">Mercado · $</span><p>Desayunos y almuerzos con empanadas, chipa y sopa paraguaya recién hechos.</p></div>'
-      . '<div class="info-card"><h3>Comedor La Casona</h3><span class="meta">Cocina tradicional · $$</span><p>Cocina paraguaya en porciones generosas. Recomendado el vori vori en invierno.</p></div>'
-      . '<div class="info-card"><h3>Parrilla Ruta 7</h3><span class="meta">Parrilla · $$</span><p>Asado a la estaca, mandioca y sopa paraguaya. Ubicado sobre la Ruta 7; recomendado para grupos.</p></div>'
-      . '<div class="info-card"><h3>Doña Mirta</h3><span class="meta">Comida casera · $</span><p>Almuerzos caseros de lunes a viernes. Ryguasu chyryry los miércoles.</p></div>'
-      . '</div><h2>Directorio de locales</h2>[caaguazu_locales tipo="restaurante"]',
+    'body' => '<p>Desde comedores del mercado hasta restaurantes familiares — el directorio se actualiza en vivo, no es una lista fija.</p><h2>Directorio de locales</h2>[caaguazu_locales tipo="restaurante"]',
   ),
   'mate-y-terere' =>
   array (
@@ -214,12 +209,7 @@ function caaguazu_tourism_pages() {
     'parent' => 'turismo',
     'title' => 'Dónde alojarte en Caaguazú',
     'excerpt' => 'Hoteles y hospedajes disponibles en Caaguazú y alrededores.',
-    'body' => '<div class="info-grid">'
-      . '<div class="info-card"><h3>Hotel Caaguazú Centro</h3><span class="meta">Hotel · $$</span><p>Sobre la avenida principal. Habitaciones estándar, desayuno incluido.</p></div>'
-      . '<div class="info-card"><h3>Hospedaje Ykua</h3><span class="meta">Hospedaje · $</span><p>A 4 cuadras del centro. Recomendado para viajeros que viajan solos.</p></div>'
-      . '<div class="info-card"><h3>Apart Ruta 7</h3><span class="meta">Apart · $$</span><p>Departamentos equipados sobre la ruta, adecuados para estadías prolongadas.</p></div>'
-      . '<div class="info-card"><h3>Posada del Bosque</h3><span class="meta">Posada · $$$</span><p>A 8 km de la ciudad, en entorno natural. Adecuado para familias.</p></div>'
-      . '</div><p>Listado orientativo. Se recomienda confirmar disponibilidad y tarifas directamente con cada establecimiento.</p><h2>Directorio de locales</h2>[caaguazu_locales tipo="hotel"]',
+    'body' => '<p>Se recomienda confirmar disponibilidad y tarifas directamente con cada establecimiento.</p><h2>Directorio de locales</h2>[caaguazu_locales tipo="hotel"]',
   ),
   'mejor-epoca' =>
   array (
