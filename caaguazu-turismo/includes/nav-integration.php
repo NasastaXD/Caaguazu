@@ -143,5 +143,12 @@ add_filter( 'caaguazu_tourism_shell_items', function ( $items ) {
 			'url'   => get_post_type_archive_link( 'cgz_local' ),
 		);
 	}
+	$items[] = array(
+		'slug'  => 'mapa-interactivo',
+		'label' => __( 'Mapa', 'caaguazu-turismo' ),
+		'short' => __( 'Mapa', 'caaguazu-turismo' ),
+		'icon'  => 'target',
+		'url'   => caaguazu_tourism_page_url( 'mapa-interactivo' ),
+	);
 	return $items;
 } );
