@@ -22,13 +22,54 @@ function caaguazu_is_tourism_context() {
 	if ( is_page() && get_post_meta( get_queried_object_id(), '_caaguazu_tourism', true ) ) {
 		return true;
 	}
-	if ( post_type_exists( 'cgz_local' ) && is_singular( 'cgz_local' ) ) {
+	// Perfiles Y archivos de Locales/Portal: el ítem "Directorio de locales"
+	// del propio shell apunta al archivo de cgz_local — si el archivo
+	// renderizara con el chrome institucional, navegar el shell te sacaría
+	// del shell.
+	if ( post_type_exists( 'cgz_local' ) && ( is_singular( 'cgz_local' ) || is_post_type_archive( 'cgz_local' ) ) ) {
 		return true;
 	}
-	if ( post_type_exists( 'promotur_destino' ) && is_singular( 'promotur_destino' ) ) {
+	if ( post_type_exists( 'promotur_destino' ) && ( is_singular( 'promotur_destino' ) || is_post_type_archive( 'promotur_destino' ) ) ) {
 		return true;
+	}
+	foreach ( array( 'promotur_categoria', 'promotur_zona', 'promotur_etiqueta' ) as $tax ) {
+		if ( taxonomy_exists( $tax ) && is_tax( $tax ) ) {
+			return true;
+		}
 	}
 	return false;
+}
+
+/**
+ * Prefijos de URL que pertenecen al ecosistema Turismo — para que el JS
+ * (telón de transición entre módulos, animations.js) pueda saber si un link
+ * cruza la frontera Caaguazú ↔ Turismo sin adivinar. Espeja la lógica de
+ * caaguazu_is_tourism_context() pero en términos de URLs.
+ */
+function caaguazu_tourism_url_prefixes() {
+	$prefixes = array( caaguazu_page_url( 'turismo' ) );
+	if ( post_type_exists( 'cgz_local' ) ) {
+		$archive = get_post_type_archive_link( 'cgz_local' );
+		if ( $archive ) {
+			$prefixes[] = $archive;
+		}
+	}
+	if ( post_type_exists( 'promotur_destino' ) ) {
+		$archive = get_post_type_archive_link( 'promotur_destino' );
+		if ( $archive ) {
+			$prefixes[] = $archive;
+		}
+	}
+	foreach ( array( 'promotur_categoria', 'promotur_zona', 'promotur_etiqueta' ) as $tax ) {
+		if ( ! taxonomy_exists( $tax ) ) {
+			continue;
+		}
+		$tax_obj = get_taxonomy( $tax );
+		if ( $tax_obj && ! empty( $tax_obj->rewrite['slug'] ) ) {
+			$prefixes[] = home_url( '/' . $tax_obj->rewrite['slug'] . '/' );
+		}
+	}
+	return array_values( array_unique( $prefixes ) );
 }
 
 /**

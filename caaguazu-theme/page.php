@@ -74,7 +74,7 @@ while ( have_posts() ) :
 		<div class="img">
 			<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Carpenter_in_his_workshop.jpg/1280px-Carpenter_in_his_workshop.jpg" alt="" loading="eager">
 		</div>
-		<div class="container inner">
+		<div class="container inner hero-fade">
 			<p class="eyebrow"><?php echo esc_html( $eyebrow ); ?></p>
 			<h1><?php echo esc_html( $title ); ?></h1>
 			<?php if ( $sub ) : ?>
