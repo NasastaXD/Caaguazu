@@ -219,7 +219,10 @@ function caaguazu_render_tabbar( $current_slug ) {
 		array( 'icon' => 'home',   'label' => __( 'Inicio', 'caaguazu' ),   'url' => home_url( '/' ),                              'match' => 'home' ),
 		array( 'icon' => 'search', 'label' => __( 'Buscar', 'caaguazu' ),   'url' => home_url( '/?s=' ),                           'match' => 'buscar' ),
 		array( 'icon' => 'news',   'label' => __( 'Noticias', 'caaguazu' ), 'url' => get_post_type_archive_link( 'caaguazu_news' ), 'match' => 'noticias' ),
-		array( 'icon' => 'tree',   'label' => __( 'Turismo', 'caaguazu' ),  'url' => caaguazu_page_url( 'turismo' ),               'match' => 'turismo' ),
+		// Ecosistema y no Turismo directo: el hub de Ecosistema es la puerta a
+		// todos los sub-portales (Turismo, CEAD y los que vengan) — así sumar
+		// un módulo nuevo no obliga a repensar el tabbar cada vez.
+		array( 'icon' => 'globe',  'label' => __( 'Ecosistema', 'caaguazu' ), 'url' => caaguazu_page_url( 'ecosistema' ),          'match' => 'ecosistema' ),
 	);
 	echo '<nav class="tabbar" aria-label="' . esc_attr__( 'Navegación rápida', 'caaguazu' ) . '">';
 	foreach ( $items as $item ) {

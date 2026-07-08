@@ -93,6 +93,33 @@ body.page-home .hero-inner .lead{transform:translateZ(14px)}
 @keyframes cgzModuleEnter{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
 body.module-enter #main{animation:cgzModuleEnter .5s ease-out both}
 
+/* --- Splash de entrada (home, una vez por sesión) --------------------
+   El markup + la lógica de mostrar/sacar viven inline en header.php
+   (tienen que correr antes del primer paint). pathLength="100" en el SVG
+   normaliza los trazos, así el dibujado usa dasharray 100 sin importar la
+   geometría real de cada path. */
+.cgz-splash{position:fixed;inset:0;z-index:300;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:14px;cursor:pointer;
+  background:linear-gradient(165deg,#0E1912,var(--green-forest))}
+.cgz-splash[hidden]{display:none}
+.cgz-splash svg{width:104px;height:104px;color:var(--accent-gold);
+  animation:cgzSplashSettle 1.4s cubic-bezier(.22,1,.36,1) both}
+.cgz-splash .ring,
+.cgz-splash .glyph{stroke-dasharray:100;stroke-dashoffset:100;fill:none}
+.cgz-splash .ring{animation:cgzDraw 1s ease-out .15s forwards}
+.cgz-splash .glyph{animation:cgzDraw .8s ease-out .55s forwards}
+@keyframes cgzDraw{to{stroke-dashoffset:0}}
+@keyframes cgzSplashSettle{from{opacity:0;transform:rotateY(70deg) scale(.8)}to{opacity:1;transform:none}}
+.cgz-splash .name{font-family:var(--font-display);font-weight:600;letter-spacing:-.01em;
+  font-size:clamp(36px,8vw,54px);color:#fff;opacity:0;animation:cgzSplashUp .6s ease-out 1s forwards}
+.cgz-splash .tag{font-size:11px;font-weight:600;letter-spacing:.38em;text-transform:uppercase;
+  color:var(--accent-gold);padding-left:.38em;opacity:0;animation:cgzSplashUp .6s ease-out 1.25s forwards}
+@keyframes cgzSplashUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.cgz-splash.out{opacity:0;transform:scale(1.05);pointer-events:none;
+  transition:opacity .5s ease,transform .5s ease}
+/* Mientras el splash está en pantalla, el hero de abajo espera su turno */
+.cgz-splashing .hero-fade > *{animation-play-state:paused}
+
 /* --- Accesibilidad: sin movimiento para quien lo desactivó ----------- */
 @media (prefers-reduced-motion: reduce){
   body.page-home .hero-media img,
@@ -102,4 +129,5 @@ body.module-enter #main{animation:cgzModuleEnter .5s ease-out both}
   .fx-ripple-wave{animation:none;opacity:0}
   .module-curtain{display:none}
   body.module-enter #main{animation:none}
+  .cgz-splash{display:none!important}
 }
