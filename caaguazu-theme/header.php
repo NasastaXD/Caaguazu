@@ -28,6 +28,46 @@ $in_tourism   = caaguazu_is_tourism_context();
 
 <a class="skip-link" href="#main"><?php caaguazu_i18n( 'header.skip', __( 'Saltar al contenido', 'caaguazu' ) ); ?></a>
 
+<?php if ( is_front_page() ) : ?>
+	<?php /* Splash de entrada (estilo intro del sub-portal CEAD): el pino se
+	   dibuja, aparece el wordmark y el telón se levanta. Solo en la home,
+	   una vez por sesión de navegador, clickeable para saltear. El script
+	   inline corre ANTES del primer paint (es sincrónico dentro del body),
+	   así no hay flash de contenido ni de splash indebido; sin JS el div
+	   queda hidden y no molesta. Estilos en assets/css/animations.css. */ ?>
+	<div class="cgz-splash" id="cgzSplash" hidden aria-hidden="true">
+		<svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+			<circle class="ring" cx="48" cy="48" r="44" pathLength="100"/>
+			<g transform="translate(13.2,10.3) scale(2.9)">
+				<path class="glyph" d="M12 3 7 10h2.8L6 16h3.6L7 21h10l-2.6-5h3.6l-3.8-6H17z" pathLength="100"/>
+				<line class="glyph" x1="12" y1="21" x2="12" y2="23" pathLength="100"/>
+			</g>
+		</svg>
+		<span class="name"><?php echo esc_html( get_bloginfo( 'name' ) ); ?></span>
+		<span class="tag"><?php echo esc_html( caaguazu_opt( 'site_tagline_custom', 'Capital de la Madera' ) ); ?></span>
+	</div>
+	<script>
+	(function () {
+		var s = document.getElementById('cgzSplash');
+		try {
+			if (sessionStorage.getItem('cgzSplashSeen') ||
+				window.matchMedia('(prefers-reduced-motion: reduce)').matches) { s.remove(); return; }
+			sessionStorage.setItem('cgzSplashSeen', '1');
+		} catch (e) { s.remove(); return; }
+		s.hidden = false;
+		document.documentElement.classList.add('cgz-splashing'); // pausa el hero-fade de abajo
+		function out() {
+			if (!s.parentNode) { return; }
+			document.documentElement.classList.remove('cgz-splashing');
+			s.classList.add('out');
+			setTimeout(function () { s.remove(); }, 500);
+		}
+		s.addEventListener('click', out);
+		setTimeout(out, 2300);
+	})();
+	</script>
+<?php endif; ?>
+
 <?php if ( $in_tourism ) : ?>
 	<?php caaguazu_render_tourism_header( $current_slug ); ?>
 <?php else : ?>
