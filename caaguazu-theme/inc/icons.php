@@ -34,6 +34,7 @@ function caaguazu_icon( $key ) {
 		'celebration' => '<path d="M12 3l2.2 6.8H21l-5.6 4.1L17.6 21 12 16.9 6.4 21l2.2-7.1L3 9.8h6.8z"/>',
 		'map'         => '<polygon points="2 7 8 4 16 7 22 4 22 18 16 21 8 18 2 21"/><line x1="8" y1="4" x2="8" y2="18"/><line x1="16" y1="7" x2="16" y2="21"/>',
 		'pin'         => '<path d="M20 10c0 6.5-8 12-8 12s-8-5.5-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="2.6"/>',
+			'target'      => '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/><line x1="12" y1="1.5" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22.5" y2="12"/>',
 		'back'        => '<line x1="19" y1="12" x2="5" y2="12"/><polyline points="11 18 5 12 11 6"/>',
 		'close'       => '<line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>',
 	);
