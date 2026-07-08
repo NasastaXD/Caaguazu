@@ -101,6 +101,7 @@ address{font-style:normal;margin-top:16px;font-size:14px;line-height:1.7;color:v
 .header-actions{display:flex;align-items:center;gap:12px}
 .icon-btn{width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;
   border-radius:999px;color:#fff;transition:background var(--t)}
+.icon-btn svg{width:20px;height:20px}
 .icon-btn:hover{background:rgba(255,255,255,.1)}
 .header.solid .icon-btn,.header.scrolled .icon-btn{color:var(--text-soft)}
 .header.solid .icon-btn:hover,.header.scrolled .icon-btn:hover{background:var(--bg-elevated)}
@@ -155,11 +156,13 @@ address{font-style:normal;margin-top:16px;font-size:14px;line-height:1.7;color:v
 .tabbar-link.active{color:var(--green-deep)}
 .tabbar-link.active::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);
   width:4px;height:4px;border-radius:50%;background:var(--accent-gold)}
-.tabbar-ico{font-size:20px;line-height:1}
+.tabbar-ico{font-size:20px;line-height:1;display:inline-flex;align-items:center;justify-content:center}
+.tabbar-ico svg{width:20px;height:20px}
 .tabbar-cta{color:var(--green-deep)}
 .tabbar-cta .tabbar-ico{width:38px;height:38px;margin-top:-16px;display:inline-flex;
   align-items:center;justify-content:center;border-radius:999px;background:var(--grad-forest);
   color:#fff;font-size:17px;box-shadow:var(--shadow-lift)}
+.tabbar-cta .tabbar-ico svg{width:19px;height:19px}
 @media(min-width:1024px){.tabbar{display:none}}
 @media(max-width:1023.98px){body{padding-bottom:70px}}
 
@@ -174,6 +177,7 @@ address{font-style:normal;margin-top:16px;font-size:14px;line-height:1.7;color:v
 .qa-tile:active{transform:translateY(-1px) scale(.97)}
 .qa-ico{width:52px;height:52px;display:inline-flex;align-items:center;justify-content:center;
   border-radius:var(--radius-md);font-size:24px;background:var(--gold-soft);transition:transform var(--t)}
+.qa-ico svg{width:26px;height:26px;color:var(--green-deep)}
 .qa-tile:hover .qa-ico{transform:scale(1.08) rotate(-4deg)}
 .qa-tile:nth-child(4n+2) .qa-ico{background:rgba(143,174,151,.18)}
 .qa-tile:nth-child(4n+3) .qa-ico{background:rgba(122,106,88,.12)}
@@ -427,11 +431,13 @@ body.tourism-page .header.scrolled{
   background:rgba(250,246,240,.92);
 }
 .tourism-logo{display:flex;flex-direction:column;gap:2px;align-items:flex-start}
-.tourism-back{font-size:11px;font-weight:600;letter-spacing:.04em;color:rgba(255,255,255,.65);transition:color var(--t)}
+.tourism-back{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;
+  letter-spacing:.04em;color:rgba(255,255,255,.65);transition:color var(--t)}
+.tourism-back svg{width:12px;height:12px}
 .tourism-back:hover{color:#fff}
 .header.solid .tourism-back,.header.scrolled .tourism-back{color:var(--text-muted)}
 .header.solid .tourism-back:hover,.header.scrolled .tourism-back:hover{color:var(--green-deep)}
-.drawer .tourism-back{display:block;margin-bottom:14px;font-size:13px;color:var(--text-soft)}
+.drawer .tourism-back{display:inline-flex;margin-bottom:14px;font-size:13px;color:var(--text-soft)}
 .drawer .tourism-back:hover{color:var(--green-deep)}
 
 .wip{max-width:720px;margin:0 auto 96px;padding:40px;border:1px dashed var(--border);

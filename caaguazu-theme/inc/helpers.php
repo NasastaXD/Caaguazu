@@ -154,7 +154,7 @@ function caaguazu_page_url( $slug ) {
  */
 function caaguazu_quick_access_items() {
 	$items   = apply_filters( 'caaguazu_quick_access_items', array() );
-	$items[] = array( 'icon' => '✉️', 'label' => __( 'Contacto', 'caaguazu' ), 'url' => caaguazu_page_url( 'contacto' ) );
+	$items[] = array( 'icon' => 'mail', 'label' => __( 'Contacto', 'caaguazu' ), 'url' => caaguazu_page_url( 'contacto' ) );
 	return $items;
 }
 
@@ -168,7 +168,7 @@ function caaguazu_render_quick_access() {
 		printf(
 			'<a class="qa-tile reveal" href="%s"><span class="qa-ico" aria-hidden="true">%s</span><span class="qa-label">%s</span></a>',
 			esc_url( $item['url'] ),
-			wp_kses_post( $item['icon'] ),
+			caaguazu_icon( $item['icon'] ),
 			esc_html( $item['label'] )
 		);
 	}
@@ -216,10 +216,10 @@ function caaguazu_render_turismo_carousel() {
  */
 function caaguazu_render_tabbar( $current_slug ) {
 	$items = array(
-		array( 'icon' => '🏠', 'label' => __( 'Inicio', 'caaguazu' ),   'url' => home_url( '/' ),                              'match' => 'home' ),
-		array( 'icon' => '🔍', 'label' => __( 'Buscar', 'caaguazu' ),   'url' => home_url( '/?s=' ),                           'match' => 'buscar' ),
-		array( 'icon' => '📰', 'label' => __( 'Noticias', 'caaguazu' ), 'url' => get_post_type_archive_link( 'caaguazu_news' ), 'match' => 'noticias' ),
-		array( 'icon' => '🌳', 'label' => __( 'Turismo', 'caaguazu' ),  'url' => caaguazu_page_url( 'turismo' ),               'match' => 'turismo' ),
+		array( 'icon' => 'home',   'label' => __( 'Inicio', 'caaguazu' ),   'url' => home_url( '/' ),                              'match' => 'home' ),
+		array( 'icon' => 'search', 'label' => __( 'Buscar', 'caaguazu' ),   'url' => home_url( '/?s=' ),                           'match' => 'buscar' ),
+		array( 'icon' => 'news',   'label' => __( 'Noticias', 'caaguazu' ), 'url' => get_post_type_archive_link( 'caaguazu_news' ), 'match' => 'noticias' ),
+		array( 'icon' => 'tree',   'label' => __( 'Turismo', 'caaguazu' ),  'url' => caaguazu_page_url( 'turismo' ),               'match' => 'turismo' ),
 	);
 	echo '<nav class="tabbar" aria-label="' . esc_attr__( 'Navegación rápida', 'caaguazu' ) . '">';
 	foreach ( $items as $item ) {
@@ -228,12 +228,13 @@ function caaguazu_render_tabbar( $current_slug ) {
 			( $current_slug === $item['match'] ) ? ' active' : '',
 			! empty( $item['cta'] ) ? ' tabbar-cta' : '',
 			esc_url( $item['url'] ),
-			wp_kses_post( $item['icon'] ),
+			caaguazu_icon( $item['icon'] ),
 			esc_html( $item['label'] )
 		);
 	}
 	printf(
-		'<button type="button" class="tabbar-link" id="tabbarMenu"><span class="tabbar-ico" aria-hidden="true">☰</span><span>%s</span></button>',
+		'<button type="button" class="tabbar-link" id="tabbarMenu"><span class="tabbar-ico" aria-hidden="true">%s</span><span>%s</span></button>',
+		caaguazu_icon( 'menu' ),
 		esc_html__( 'Menú', 'caaguazu' )
 	);
 	echo '</nav>';

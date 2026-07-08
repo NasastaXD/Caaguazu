@@ -110,6 +110,7 @@ add_filter( 'body_class', 'caaguazu_body_class' );
  * ------------------------------------------------------------------------ */
 
 require get_template_directory() . '/inc/i18n.php';
+require get_template_directory() . '/inc/icons.php';
 require get_template_directory() . '/inc/helpers.php';
 require get_template_directory() . '/inc/tourism-shell.php';
 require get_template_directory() . '/inc/cpt-artisan.php';

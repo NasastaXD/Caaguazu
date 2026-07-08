@@ -124,7 +124,7 @@ add_action( 'admin_init', 'caaguazu_modulos_catch_up_ecosistema' );
 
 add_filter( 'caaguazu_quick_access_items', function ( $items ) {
 	$items[] = array(
-		'icon'  => '🌐',
+		'icon'  => 'globe',
 		'label' => __( 'Ecosistema', 'caaguazu-modulos' ),
 		'url'   => function_exists( 'caaguazu_page_url' ) ? caaguazu_page_url( 'ecosistema' ) : home_url( '/ecosistema/' ),
 	);
