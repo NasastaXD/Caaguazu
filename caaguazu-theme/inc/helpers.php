@@ -8,6 +8,85 @@
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 /**
+ * Noticias, Agenda y Educación viven como Entradas nativas de WordPress
+ * (post_type=post) diferenciadas por Categoría — no como custom post types
+ * propios — para que el contenido esté donde cualquiera que usó WordPress
+ * ya sabe buscarlo. Estos dos helpers son el punto único donde se resuelve
+ * "¿de qué familia es esta categoría/entrada?", para no repetir la lógica
+ * de árbol de categorías en cada template.
+ */
+
+/**
+ * true si $post_id tiene asignada la categoría de slug $slug, o cualquiera
+ * de sus sub-categorías — un editor normalmente solo tilda la más
+ * específica (p. ej. "Cultura"), no también su padre ("Noticias"), así que
+ * no alcanza con comparar categorías exactas.
+ */
+function caaguazu_post_in_category_tree( $post_id, $slug ) {
+	$root = get_category_by_slug( $slug );
+	if ( ! $root ) {
+		return false;
+	}
+	$tree_ids     = array_merge( array( $root->term_id ), get_term_children( $root->term_id, 'category' ) );
+	$post_cat_ids = wp_get_post_categories( $post_id );
+	return (bool) array_intersect( $tree_ids, $post_cat_ids );
+}
+
+/**
+ * Familia de un término de categoría ('noticias'|'agenda'|'educacion') si
+ * el término (o alguno de sus ancestros) es una de las tres raíces que
+ * declaran los módulos de contenido — o null si es una categoría ajena a
+ * este sistema (p. ej. una que el admin creó a mano para otra cosa).
+ */
+function caaguazu_category_family( $term ) {
+	if ( ! $term instanceof WP_Term ) {
+		return null;
+	}
+	$roots = array( 'noticias', 'agenda', 'educacion' );
+	if ( in_array( $term->slug, $roots, true ) ) {
+		return $term->slug;
+	}
+	foreach ( get_ancestors( $term->term_id, 'category' ) as $ancestor_id ) {
+		$ancestor = get_category( $ancestor_id );
+		if ( $ancestor && in_array( $ancestor->slug, $roots, true ) ) {
+			return $ancestor->slug;
+		}
+	}
+	return null;
+}
+
+/**
+ * Misma idea que caaguazu_category_family() pero para un post en un
+ * single: mira sus categorías asignadas (no la categoría "actual" de un
+ * archivo) y devuelve la primera familia que encuentre.
+ */
+function caaguazu_post_category_family( $post_id ) {
+	foreach ( get_the_category( $post_id ) as $term ) {
+		$family = caaguazu_category_family( $term );
+		if ( $family ) {
+			return $family;
+		}
+	}
+	return null;
+}
+
+/**
+ * URL del archivo de una categoría por slug, con fallback a /{slug}/ si
+ * todavía no existe (p. ej. plugin recién activado, antes de que el
+ * catch-up de siembra haya corrido).
+ */
+function caaguazu_category_url( $slug ) {
+	$term = get_category_by_slug( $slug );
+	if ( $term ) {
+		$link = get_category_link( $term );
+		if ( ! is_wp_error( $link ) ) {
+			return $link;
+		}
+	}
+	return home_url( '/' . $slug . '/' );
+}
+
+/**
  * Devuelve un slug estable para <body data-page="..."> e usos similares.
  * El JS y el CSS originales esperaban valores: home, sobre-caaguazu, servicios,
  * noticias, turismo, ecosistema, contacto, buscar.
@@ -16,7 +95,10 @@ function caaguazu_current_page_slug() {
 	if ( is_front_page() ) {
 		return 'home';
 	}
-	if ( is_singular( 'caaguazu_news' ) || is_post_type_archive( 'caaguazu_news' ) || is_tax( 'caaguazu_news_cat' ) ) {
+	if ( is_singular( 'post' ) && 'noticias' === caaguazu_post_category_family( get_queried_object_id() ) ) {
+		return 'noticias';
+	}
+	if ( is_category() && 'noticias' === caaguazu_category_family( get_queried_object() ) ) {
 		return 'noticias';
 	}
 	if ( is_search() ) {
@@ -254,7 +336,7 @@ function caaguazu_render_tabbar( $current_slug ) {
 	$items = array(
 		array( 'icon' => 'home',   'label' => __( 'Inicio', 'caaguazu' ),   'url' => home_url( '/' ),                              'match' => 'home' ),
 		array( 'icon' => 'search', 'label' => __( 'Buscar', 'caaguazu' ),   'url' => home_url( '/?s=' ),                           'match' => 'buscar' ),
-		array( 'icon' => 'news',   'label' => __( 'Noticias', 'caaguazu' ), 'url' => get_post_type_archive_link( 'caaguazu_news' ), 'match' => 'noticias' ),
+		array( 'icon' => 'news',   'label' => __( 'Noticias', 'caaguazu' ), 'url' => caaguazu_category_url( 'noticias' ), 'match' => 'noticias' ),
 		// Ecosistema y no Turismo directo: el hub de Ecosistema es la puerta a
 		// todos los sub-portales (Turismo, CEAD y los que vengan) — así sumar
 		// un módulo nuevo no obliga a repensar el tabbar cada vez.

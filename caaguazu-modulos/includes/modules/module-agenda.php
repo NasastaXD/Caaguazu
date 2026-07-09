@@ -1,51 +1,36 @@
 <?php
 /**
- * Módulo Agenda — CPT `caaguazu_event` con fecha/lugar, demo seeder, y
- * auto-registro en nav/accesos rápidos del theme.
+ * Módulo Agenda — categoría "Agenda" sobre las Entradas nativas de
+ * WordPress, demo seeder, y auto-registro en nav/accesos rápidos del theme.
  *
- * Migrado desde caaguazu-theme/inc/cpt-event.php + inc/demo-events.php: el
- * theme mantiene archive-caaguazu_event.php/single-caaguazu_event.php y la
- * card de "Próximo evento" del home, que siguen llamando a
- * `caaguazu_upcoming_events()` por nombre.
+ * Hasta la 1.4.0 este módulo era un CPT propio (`caaguazu_event`). Pasó a
+ * ser Entradas nativas + Categoría — mismo motivo que module-noticias.php.
  *
  * @package Caaguazu_Modulos
  */
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-function caaguazu_register_event_cpt() {
-	register_post_type( 'caaguazu_event', array(
-		'labels' => array(
-			'name'               => __( 'Eventos', 'caaguazu-modulos' ),
-			'singular_name'      => __( 'Evento', 'caaguazu-modulos' ),
-			'add_new'            => __( 'Añadir evento', 'caaguazu-modulos' ),
-			'add_new_item'       => __( 'Añadir nuevo evento', 'caaguazu-modulos' ),
-			'edit_item'          => __( 'Editar evento', 'caaguazu-modulos' ),
-			'view_item'          => __( 'Ver evento', 'caaguazu-modulos' ),
-			'search_items'       => __( 'Buscar eventos', 'caaguazu-modulos' ),
-			'not_found'          => __( 'No se encontraron eventos.', 'caaguazu-modulos' ),
-			'not_found_in_trash' => __( 'No hay eventos en la papelera.', 'caaguazu-modulos' ),
-			'menu_name'          => __( 'Eventos', 'caaguazu-modulos' ),
-		),
-		'public'            => true,
-		'show_in_rest'      => true,
-		'menu_icon'         => 'dashicons-calendar-alt',
-		'has_archive'       => 'agenda',
-		'rewrite'           => array( 'slug' => 'agenda' ),
-		'supports'          => array( 'title', 'editor', 'excerpt', 'thumbnail', 'revisions' ),
-		'show_in_nav_menus' => true,
-	) );
+/**
+ * Categoría "Agenda", creada si no existe todavía. Memoizada por request.
+ */
+function caaguazu_agenda_ensure_category() {
+	static $cat_id = null;
+	if ( null === $cat_id ) {
+		$cat_id = caaguazu_ensure_category( 'Agenda', 'agenda' );
+	}
+	return $cat_id;
 }
-add_action( 'init', 'caaguazu_register_event_cpt' );
+add_action( 'init', 'caaguazu_agenda_ensure_category', 20 );
 
 function caaguazu_register_event_meta() {
-	register_post_meta( 'caaguazu_event', '_caaguazu_event_date', array(
+	register_post_meta( 'post', '_caaguazu_event_date', array(
 		'type'          => 'string',
 		'single'        => true,
 		'show_in_rest'  => true,
 		'auth_callback' => function () { return current_user_can( 'edit_posts' ); },
 	) );
-	register_post_meta( 'caaguazu_event', '_caaguazu_event_location', array(
+	register_post_meta( 'post', '_caaguazu_event_location', array(
 		'type'          => 'string',
 		'single'        => true,
 		'show_in_rest'  => true,
@@ -54,8 +39,13 @@ function caaguazu_register_event_meta() {
 }
 add_action( 'init', 'caaguazu_register_event_meta' );
 
+/**
+ * Metabox de fecha/lugar. Aparece en toda Entrada, igual que el de
+ * module-noticias.php — ver comentario ahí sobre por qué no se puede
+ * condicionar a la categoría tildada en el mismo formulario.
+ */
 function caaguazu_event_metabox() {
-	add_meta_box( 'caaguazu_event_meta', __( 'Datos del evento', 'caaguazu-modulos' ), 'caaguazu_event_metabox_html', 'caaguazu_event', 'side' );
+	add_meta_box( 'caaguazu_event_meta', __( 'Agenda: fecha y lugar', 'caaguazu-modulos' ), 'caaguazu_event_metabox_html', 'post', 'side' );
 }
 add_action( 'add_meta_boxes', 'caaguazu_event_metabox' );
 
@@ -71,6 +61,9 @@ function caaguazu_event_metabox_html( $post ) {
 	<p>
 		<label for="caaguazu_event_location"><strong><?php esc_html_e( 'Lugar', 'caaguazu-modulos' ); ?></strong></label><br>
 		<input type="text" id="caaguazu_event_location" name="caaguazu_event_location" value="<?php echo esc_attr( $location ); ?>" style="width:100%">
+	</p>
+	<p style="color:#666;font-size:12px">
+		<?php esc_html_e( 'Solo aplica si la entrada está en la categoría Agenda.', 'caaguazu-modulos' ); ?>
 	</p>
 	<?php
 }
@@ -88,14 +81,15 @@ function caaguazu_event_save_meta( $post_id ) {
 		update_post_meta( $post_id, '_caaguazu_event_location', sanitize_text_field( $_POST['caaguazu_event_location'] ) );
 	}
 }
-add_action( 'save_post_caaguazu_event', 'caaguazu_event_save_meta' );
+add_action( 'save_post_post', 'caaguazu_event_save_meta' );
 
 /**
- * El archivo de eventos ordena por fecha del evento (ascendente), no por
- * fecha de publicación — así los próximos aparecen primero.
+ * El archivo de la categoría Agenda ordena por fecha del evento
+ * (ascendente), no por fecha de publicación — así los próximos aparecen
+ * primero.
  */
 function caaguazu_event_archive_order( $query ) {
-	if ( is_admin() || ! $query->is_main_query() || ! is_post_type_archive( 'caaguazu_event' ) ) {
+	if ( is_admin() || ! $query->is_main_query() || ! $query->is_category( 'agenda' ) ) {
 		return;
 	}
 	$query->set( 'meta_key', '_caaguazu_event_date' );
@@ -110,7 +104,8 @@ add_action( 'pre_get_posts', 'caaguazu_event_archive_order' );
 function caaguazu_upcoming_events( $limit = 1 ) {
 	$today = current_time( 'Y-m-d' );
 	return new WP_Query( array(
-		'post_type'      => 'caaguazu_event',
+		'post_type'      => 'post',
+		'category_name'  => 'agenda',
 		'posts_per_page' => $limit,
 		'no_found_rows'  => true,
 		'meta_key'       => '_caaguazu_event_date',
@@ -138,16 +133,49 @@ function caaguazu_next_occurrence( $month, $day ) {
 }
 
 /**
- * Siembra 4 eventos demo al activar el plugin (si no hay ninguno todavía).
- * Las fechas anuales se calculan a la próxima ocurrencia desde hoy, así el
- * evento nunca aparece "vencido" sin importar cuándo se instale el plugin.
+ * Sitios que ya tenían este módulo activo antes de la 1.5.0 (CPT propio
+ * `caaguazu_event`) tienen ese contenido atrapado en un tipo de contenido
+ * que ya no se registra. Lo pasa a Entrada + categoría Agenda.
+ */
+function caaguazu_modulos_migrate_agenda_from_cpt() {
+	if ( get_option( 'caaguazu_modulos_agenda_migrated' ) ) {
+		return;
+	}
+
+	$old_posts = get_posts( array(
+		'post_type'      => 'caaguazu_event',
+		'post_status'    => 'any',
+		'posts_per_page' => -1,
+		'fields'         => 'ids',
+	) );
+
+	if ( $old_posts ) {
+		$cat_id = caaguazu_agenda_ensure_category();
+		foreach ( $old_posts as $post_id ) {
+			wp_update_post( array( 'ID' => $post_id, 'post_type' => 'post' ) );
+			wp_set_post_terms( $post_id, array( $cat_id ), 'category' );
+		}
+	}
+
+	update_option( 'caaguazu_modulos_agenda_migrated', 1 );
+}
+
+/**
+ * Siembra 4 eventos demo (si no hay ninguno todavía en la categoría
+ * Agenda). Las fechas anuales se calculan a la próxima ocurrencia desde
+ * hoy, así el evento nunca aparece "vencido" sin importar cuándo se
+ * instale el plugin. Migra primero cualquier resto del CPT viejo.
  */
 function caaguazu_modulos_seed_agenda() {
+	caaguazu_modulos_migrate_agenda_from_cpt();
+
+	$cat_id   = caaguazu_agenda_ensure_category();
 	$existing = get_posts( array(
-		'post_type'      => 'caaguazu_event',
+		'post_type'      => 'post',
 		'post_status'    => 'any',
 		'posts_per_page' => 1,
 		'fields'         => 'ids',
+		'category__in'   => array( $cat_id ),
 	) );
 	if ( ! empty( $existing ) ) {
 		return;
@@ -186,7 +214,7 @@ function caaguazu_modulos_seed_agenda() {
 
 	foreach ( $events as $e ) {
 		$post_id = wp_insert_post( array(
-			'post_type'    => 'caaguazu_event',
+			'post_type'    => 'post',
 			'post_status'  => 'publish',
 			'post_title'   => $e['title'],
 			'post_excerpt' => $e['excerpt'],
@@ -200,14 +228,29 @@ function caaguazu_modulos_seed_agenda() {
 		update_post_meta( $post_id, '_caaguazu_event_date', $e['date'] );
 		update_post_meta( $post_id, '_caaguazu_event_location', $e['location'] );
 		update_post_meta( $post_id, '_caaguazu_demo', 1 );
+		wp_set_post_terms( $post_id, array( $cat_id ), 'category' );
 	}
 }
+
+/**
+ * `register_activation_hook` solo corre al activar este plugin — catch-up
+ * en `admin_init` para que la migración desde el CPT viejo corra sola en
+ * la próxima visita a wp-admin en un sitio que ya lo tenía activo.
+ */
+function caaguazu_modulos_catch_up_agenda() {
+	if ( get_option( 'caaguazu_modulos_agenda_caught_up' ) ) {
+		return;
+	}
+	caaguazu_modulos_seed_agenda();
+	update_option( 'caaguazu_modulos_agenda_caught_up', 1 );
+}
+add_action( 'admin_init', 'caaguazu_modulos_catch_up_agenda' );
 
 add_filter( 'caaguazu_quick_access_items', function ( $items ) {
 	$items[] = array(
 		'icon'  => 'calendar',
 		'label' => __( 'Agenda', 'caaguazu-modulos' ),
-		'url'   => get_post_type_archive_link( 'caaguazu_event' ),
+		'url'   => caaguazu_category_url( 'agenda' ),
 	);
 	return $items;
 } );
@@ -216,7 +259,7 @@ add_filter( 'caaguazu_nav_items', function ( $items ) {
 	$items[] = array(
 		'slug'  => 'agenda',
 		'label' => __( 'Agenda', 'caaguazu-modulos' ),
-		'url'   => get_post_type_archive_link( 'caaguazu_event' ),
+		'url'   => caaguazu_category_url( 'agenda' ),
 	);
 	return $items;
 } );

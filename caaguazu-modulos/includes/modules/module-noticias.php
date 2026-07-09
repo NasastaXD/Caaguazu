@@ -1,60 +1,57 @@
 <?php
 /**
- * Módulo Noticias — CPT `caaguazu_news` + taxonomía de categorías, demo
- * seeder, y auto-registro en nav/accesos rápidos del theme.
+ * Módulo Noticias — categoría "Noticias" (con 5 sub-categorías) sobre las
+ * Entradas nativas de WordPress, demo seeder, y auto-registro en
+ * nav/accesos rápidos del theme.
  *
- * Migrado desde caaguazu-theme/inc/cpt-news.php + inc/demo-content.php:
- * el theme mantiene sus templates (archive-caaguazu_news.php,
- * single-caaguazu_news.php) que siguen funcionando igual, ya que llaman a
- * estas mismas funciones por nombre.
+ * Hasta la 1.4.0 este módulo era un CPT propio (`caaguazu_news`) con su
+ * propia taxonomía (`caaguazu_news_cat`). Pasó a ser Entradas nativas +
+ * Categoría para que el contenido viva en el lugar de siempre de
+ * WordPress (Entradas → Todas las entradas), editable con las
+ * herramientas que cualquiera que ya usó WordPress reconoce, en vez de
+ * una pantalla de administración aparte.
  *
  * @package Caaguazu_Modulos
  */
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-function caaguazu_register_news_cpt() {
-	register_post_type( 'caaguazu_news', array(
-		'labels' => array(
-			'name'               => __( 'Noticias', 'caaguazu-modulos' ),
-			'singular_name'      => __( 'Noticia', 'caaguazu-modulos' ),
-			'add_new'            => __( 'Añadir noticia', 'caaguazu-modulos' ),
-			'add_new_item'       => __( 'Añadir nueva noticia', 'caaguazu-modulos' ),
-			'edit_item'          => __( 'Editar noticia', 'caaguazu-modulos' ),
-			'new_item'           => __( 'Nueva noticia', 'caaguazu-modulos' ),
-			'view_item'          => __( 'Ver noticia', 'caaguazu-modulos' ),
-			'search_items'       => __( 'Buscar noticias', 'caaguazu-modulos' ),
-			'not_found'          => __( 'No se encontraron noticias.', 'caaguazu-modulos' ),
-			'not_found_in_trash' => __( 'No hay noticias en la papelera.', 'caaguazu-modulos' ),
-			'menu_name'          => __( 'Noticias', 'caaguazu-modulos' ),
-		),
-		'public'        => true,
-		'show_in_rest'  => true,
-		'menu_icon'     => 'dashicons-megaphone',
-		'has_archive'   => 'noticias',
-		'rewrite'       => array( 'slug' => 'noticias' ),
-		'supports'      => array( 'title', 'editor', 'excerpt', 'thumbnail', 'revisions', 'author' ),
-		'show_in_nav_menus' => true,
-	) );
+/**
+ * Categoría "Noticias" + sus 5 sub-categorías, creadas si no existen
+ * todavía. La sub-categoría "Turismo" lleva un slug propio
+ * ('noticias-turismo'): "turismo" ya es el slug de la página hub del
+ * ecosistema Turismo, y dos cosas no pueden compartir slug en WordPress.
+ * Memoizado por request: esto lo llaman varias funciones de este archivo.
+ */
+function caaguazu_noticias_ensure_categories() {
+	static $cats = null;
+	if ( null !== $cats ) {
+		return $cats;
+	}
 
-	register_taxonomy( 'caaguazu_news_cat', 'caaguazu_news', array(
-		'labels' => array(
-			'name'          => __( 'Categorías de noticia', 'caaguazu-modulos' ),
-			'singular_name' => __( 'Categoría', 'caaguazu-modulos' ),
-		),
-		'public'       => true,
-		'show_in_rest' => true,
-		'hierarchical' => true,
-		'rewrite'      => array( 'slug' => 'noticias-categoria' ),
-	) );
+	$parent_id = caaguazu_ensure_category( 'Noticias', 'noticias' );
+	$children  = array(
+		'Desarrollo' => '',
+		'Cultura'    => '',
+		'Gobierno'   => '',
+		'Turismo'    => 'noticias-turismo',
+		'Comunidad'  => '',
+	);
+	$child_ids = array();
+	foreach ( $children as $name => $slug ) {
+		$child_ids[ $name ] = caaguazu_ensure_category( $name, $slug, $parent_id );
+	}
+
+	$cats = array( 'parent' => $parent_id, 'children' => $child_ids );
+	return $cats;
 }
-add_action( 'init', 'caaguazu_register_news_cpt' );
+add_action( 'init', 'caaguazu_noticias_ensure_categories', 20 );
 
 /**
- * Meta: minutos de lectura (mostrado en la tarjeta del home original como "4 min").
+ * Meta: minutos de lectura (mostrado en la tarjeta como "4 min").
  */
 function caaguazu_register_news_meta() {
-	register_post_meta( 'caaguazu_news', '_caaguazu_read_minutes', array(
+	register_post_meta( 'post', '_caaguazu_read_minutes', array(
 		'type'         => 'integer',
 		'single'       => true,
 		'show_in_rest' => true,
@@ -64,14 +61,17 @@ function caaguazu_register_news_meta() {
 add_action( 'init', 'caaguazu_register_news_meta' );
 
 /**
- * Metabox simple para el campo de minutos. Sin dependencias de ACF.
+ * Metabox simple para el campo de minutos. Aparece en toda Entrada (no
+ * solo en las de la categoría Noticias — WordPress no ofrece una forma
+ * simple de condicionar metaboxes a una categoría tildada en el mismo
+ * formulario); queda vacío/sin usar en cualquier otra.
  */
 function caaguazu_news_metabox() {
 	add_meta_box(
 		'caaguazu_news_meta',
-		__( 'Datos de la noticia', 'caaguazu-modulos' ),
+		__( 'Noticias: minutos de lectura', 'caaguazu-modulos' ),
 		'caaguazu_news_metabox_html',
-		'caaguazu_news',
+		'post',
 		'side'
 	);
 }
@@ -86,7 +86,7 @@ function caaguazu_news_metabox_html( $post ) {
 		<input type="number" id="caaguazu_read_minutes" name="caaguazu_read_minutes" value="<?php echo esc_attr( $mins ); ?>" min="1" max="60" style="width:80px">
 	</p>
 	<p style="color:#666;font-size:12px">
-		<?php esc_html_e( 'Se muestra en las tarjetas como "X min de lectura". Dejar vacío para ocultar.', 'caaguazu-modulos' ); ?>
+		<?php esc_html_e( 'Solo aplica si la entrada está en la categoría Noticias. Se muestra como "X min de lectura". Dejar vacío para ocultar.', 'caaguazu-modulos' ); ?>
 	</p>
 	<?php
 }
@@ -106,43 +106,86 @@ function caaguazu_news_save_meta( $post_id ) {
 		}
 	}
 }
-add_action( 'save_post_caaguazu_news', 'caaguazu_news_save_meta' );
+add_action( 'save_post_post', 'caaguazu_news_save_meta' );
 
 /**
- * Devuelve la primera categoría de noticia como etiqueta corta para la tarjeta.
+ * Etiqueta corta para la tarjeta: la sub-categoría más específica que
+ * tenga asignada (salteando la categoría "Noticias" genérica si hay una
+ * más puntual), o "Noticias" si no tiene ninguna otra.
  */
 function caaguazu_news_primary_term( $post_id ) {
-	$terms = get_the_terms( $post_id, 'caaguazu_news_cat' );
-	if ( $terms && ! is_wp_error( $terms ) ) {
-		return $terms[0]->name;
+	$terms = get_the_category( $post_id );
+	foreach ( $terms as $term ) {
+		if ( 'noticias' !== $term->slug ) {
+			return $term->name;
+		}
 	}
-	return '';
+	return $terms ? $terms[0]->name : '';
 }
 
 /**
- * Siembra 5 noticias demo al activar el plugin (si no hay ninguna todavía).
+ * Sitios que ya tenían este módulo activo antes de la 1.5.0 (CPT propio
+ * `caaguazu_news` + taxonomía `caaguazu_news_cat`) tienen ese contenido
+ * "atrapado" en un tipo de contenido que ya no se registra. Lo pasa a
+ * Entrada + Categoría nativa, conservando ID/fecha/contenido/meta —
+ * get_posts() sigue encontrando el post type viejo por el valor crudo de
+ * la columna, esté registrado o no.
  */
-function caaguazu_modulos_seed_noticias() {
-	$existing = get_posts( array(
-		'post_type'      => 'caaguazu_news',
-		'post_status'    => 'any',
-		'posts_per_page' => 1,
-		'fields'         => 'ids',
-	) );
-	if ( ! empty( $existing ) ) {
+function caaguazu_modulos_migrate_noticias_from_cpt() {
+	if ( get_option( 'caaguazu_modulos_noticias_migrated' ) ) {
 		return;
 	}
 
-	$categories = array( 'Desarrollo', 'Cultura', 'Gobierno', 'Turismo', 'Comunidad' );
-	$cat_ids    = array();
-	foreach ( $categories as $cat_name ) {
-		$term = term_exists( $cat_name, 'caaguazu_news_cat' );
-		if ( ! $term ) {
-			$term = wp_insert_term( $cat_name, 'caaguazu_news_cat' );
+	$old_posts = get_posts( array(
+		'post_type'      => 'caaguazu_news',
+		'post_status'    => 'any',
+		'posts_per_page' => -1,
+		'fields'         => 'ids',
+	) );
+
+	if ( $old_posts ) {
+		$cats = caaguazu_noticias_ensure_categories();
+		foreach ( $old_posts as $post_id ) {
+			$old_terms = wp_get_object_terms( $post_id, 'caaguazu_news_cat' );
+			wp_update_post( array( 'ID' => $post_id, 'post_type' => 'post' ) );
+
+			$term_ids = array();
+			if ( ! is_wp_error( $old_terms ) ) {
+				foreach ( $old_terms as $old_term ) {
+					if ( isset( $cats['children'][ $old_term->name ] ) ) {
+						$term_ids[] = (int) $cats['children'][ $old_term->name ];
+					}
+				}
+			}
+			if ( ! $term_ids ) {
+				$term_ids[] = $cats['parent'];
+			}
+			wp_set_post_terms( $post_id, $term_ids, 'category' );
 		}
-		if ( ! is_wp_error( $term ) ) {
-			$cat_ids[ $cat_name ] = is_array( $term ) ? $term['term_id'] : $term;
-		}
+	}
+
+	update_option( 'caaguazu_modulos_noticias_migrated', 1 );
+}
+
+/**
+ * Siembra 5 noticias demo (si no hay ninguna todavía en la categoría
+ * Noticias). Migra primero cualquier resto del CPT viejo.
+ */
+function caaguazu_modulos_seed_noticias() {
+	caaguazu_modulos_migrate_noticias_from_cpt();
+
+	$cats    = caaguazu_noticias_ensure_categories();
+	$all_ids = array_merge( array( $cats['parent'] ), array_values( $cats['children'] ) );
+
+	$existing = get_posts( array(
+		'post_type'      => 'post',
+		'post_status'    => 'any',
+		'posts_per_page' => 1,
+		'fields'         => 'ids',
+		'category__in'   => $all_ids,
+	) );
+	if ( ! empty( $existing ) ) {
+		return;
 	}
 
 	$news = array(
@@ -190,7 +233,7 @@ function caaguazu_modulos_seed_noticias() {
 
 	foreach ( $news as $n ) {
 		$post_id = wp_insert_post( array(
-			'post_type'    => 'caaguazu_news',
+			'post_type'    => 'post',
 			'post_status'  => 'publish',
 			'post_title'   => $n['title'],
 			'post_excerpt' => $n['excerpt'],
@@ -205,11 +248,27 @@ function caaguazu_modulos_seed_noticias() {
 		update_post_meta( $post_id, '_caaguazu_read_minutes', $n['minutes'] );
 		update_post_meta( $post_id, '_caaguazu_demo', 1 );
 
-		if ( isset( $cat_ids[ $n['cat'] ] ) ) {
-			wp_set_post_terms( $post_id, array( (int) $cat_ids[ $n['cat'] ] ), 'caaguazu_news_cat' );
+		if ( isset( $cats['children'][ $n['cat'] ] ) ) {
+			wp_set_post_terms( $post_id, array( (int) $cats['children'][ $n['cat'] ] ), 'category' );
 		}
 	}
 }
+
+/**
+ * `register_activation_hook` solo corre al activar este plugin — un
+ * sitio que ya lo tenga activo (el caso normal: esto es una
+ * actualización, no una instalación nueva) nunca lo dispara. Catch-up en
+ * `admin_init` para que la migración desde el CPT viejo corra sola en la
+ * próxima visita a wp-admin.
+ */
+function caaguazu_modulos_catch_up_noticias() {
+	if ( get_option( 'caaguazu_modulos_noticias_caught_up' ) ) {
+		return;
+	}
+	caaguazu_modulos_seed_noticias();
+	update_option( 'caaguazu_modulos_noticias_caught_up', 1 );
+}
+add_action( 'admin_init', 'caaguazu_modulos_catch_up_noticias' );
 
 /**
  * Auto-registro en los accesos rápidos y el nav de fallback del theme.
@@ -220,7 +279,7 @@ add_filter( 'caaguazu_quick_access_items', function ( $items ) {
 	$items[] = array(
 		'icon'  => 'news',
 		'label' => __( 'Noticias', 'caaguazu-modulos' ),
-		'url'   => get_post_type_archive_link( 'caaguazu_news' ),
+		'url'   => caaguazu_category_url( 'noticias' ),
 	);
 	return $items;
 } );
@@ -229,7 +288,7 @@ add_filter( 'caaguazu_nav_items', function ( $items ) {
 	$items[] = array(
 		'slug'  => 'noticias',
 		'label' => __( 'Noticias', 'caaguazu-modulos' ),
-		'url'   => get_post_type_archive_link( 'caaguazu_news' ),
+		'url'   => caaguazu_category_url( 'noticias' ),
 	);
 	return $items;
 } );

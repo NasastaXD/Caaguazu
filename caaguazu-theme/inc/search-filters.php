@@ -1,32 +1,43 @@
 <?php
 /**
  * Filtros de búsqueda reales (antes decorativos): tipo de contenido y,
- * si el tipo es Noticias, categoría. 100% vía GET + pre_get_posts, sin JS.
+ * si el tipo es Noticias, sub-categoría. 100% vía GET + pre_get_posts, sin JS.
+ *
+ * Noticias/Agenda ya no son post types propios (ver "Compatibilidad con
+ * WordPress" en el README) — son Entradas nativas por Categoría, así que
+ * el filtro por "tipo" filtra por Categoría en vez de por post_type.
  *
  * @package Caaguazu
  */
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-function caaguazu_search_post_type() {
-	$allowed = array( 'any', 'page', 'caaguazu_news', 'caaguazu_event' );
-	$value   = isset( $_GET['post_type'] ) ? sanitize_key( wp_unslash( $_GET['post_type'] ) ) : 'any';
+function caaguazu_search_type() {
+	$allowed = array( 'any', 'page', 'noticias', 'agenda' );
+	$value   = isset( $_GET['tipo'] ) ? sanitize_key( wp_unslash( $_GET['tipo'] ) ) : 'any';
 	return in_array( $value, $allowed, true ) ? $value : 'any';
 }
 
+/**
+ * Sub-categoría de Noticias pedida por GET, validada contra el árbol real
+ * de la categoría Noticias (no cualquier slug de categoría del sitio).
+ */
 function caaguazu_search_news_cat() {
 	if ( ! isset( $_GET['news_cat'] ) ) {
 		return '';
 	}
 	$slug = sanitize_title( wp_unslash( $_GET['news_cat'] ) );
-	$term = get_term_by( 'slug', $slug, 'caaguazu_news_cat' );
-	return $term ? $slug : '';
+	$term = get_category_by_slug( $slug );
+	if ( ! $term || 'noticias' !== caaguazu_category_family( $term ) || 'noticias' === $term->slug ) {
+		return '';
+	}
+	return $slug;
 }
 
-function caaguazu_search_filter_url( $post_type, $news_cat = '' ) {
+function caaguazu_search_filter_url( $type, $news_cat = '' ) {
 	$args = array( 's' => get_search_query() );
-	if ( 'any' !== $post_type ) {
-		$args['post_type'] = $post_type;
+	if ( 'any' !== $type ) {
+		$args['tipo'] = $type;
 	}
 	if ( $news_cat ) {
 		$args['news_cat'] = $news_cat;
@@ -39,20 +50,16 @@ function caaguazu_filter_search_query( $query ) {
 		return;
 	}
 
-	$post_type = caaguazu_search_post_type();
-	if ( 'any' !== $post_type ) {
-		$query->set( 'post_type', $post_type );
+	$type = caaguazu_search_type();
+	if ( 'page' === $type ) {
+		$query->set( 'post_type', 'page' );
+		return;
 	}
-
-	if ( 'caaguazu_news' === $post_type ) {
-		$news_cat = caaguazu_search_news_cat();
-		if ( $news_cat ) {
-			$query->set( 'tax_query', array( array(
-				'taxonomy' => 'caaguazu_news_cat',
-				'field'    => 'slug',
-				'terms'    => $news_cat,
-			) ) );
-		}
+	if ( 'noticias' === $type || 'agenda' === $type ) {
+		$query->set( 'post_type', 'post' );
+		$news_cat = 'noticias' === $type ? caaguazu_search_news_cat() : '';
+		$query->set( 'category_name', $news_cat ? $news_cat : $type );
 	}
+	// 'any': no se toca post_type, WP busca en todo lo público del sitio.
 }
 add_action( 'pre_get_posts', 'caaguazu_filter_search_query' );

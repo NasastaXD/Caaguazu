@@ -31,14 +31,14 @@ get_header(); ?>
 		<ul class="search-suggest" id="caaguazu-search-suggest" role="listbox" hidden></ul>
 	</div>
 
-	<?php $current_type = caaguazu_search_post_type(); ?>
+	<?php $current_type = caaguazu_search_type(); ?>
 	<div class="filters">
 		<?php
 		$types = array(
-			'any'            => array( 'search.chip.todos', __( 'Todos', 'caaguazu' ) ),
-			'page'           => array( 'search.chip.paginas', __( 'Páginas', 'caaguazu' ) ),
-			'caaguazu_news'  => array( 'search.chip.noticias', __( 'Noticias', 'caaguazu' ) ),
-			'caaguazu_event' => array( 'search.chip.eventos', __( 'Eventos', 'caaguazu' ) ),
+			'any'      => array( 'search.chip.todos', __( 'Todos', 'caaguazu' ) ),
+			'page'     => array( 'search.chip.paginas', __( 'Páginas', 'caaguazu' ) ),
+			'noticias' => array( 'search.chip.noticias', __( 'Noticias', 'caaguazu' ) ),
+			'agenda'   => array( 'search.chip.eventos', __( 'Eventos', 'caaguazu' ) ),
 		);
 		foreach ( $types as $type => $i18n ) :
 		?>
@@ -46,15 +46,16 @@ get_header(); ?>
 		<?php endforeach; ?>
 	</div>
 
-	<?php if ( 'caaguazu_news' === $current_type ) :
-		$current_cat = caaguazu_search_news_cat();
-		$cats        = get_terms( array( 'taxonomy' => 'caaguazu_news_cat', 'hide_empty' => true ) );
+	<?php if ( 'noticias' === $current_type ) :
+		$current_cat  = caaguazu_search_news_cat();
+		$noticias_cat = get_category_by_slug( 'noticias' );
+		$cats         = $noticias_cat ? get_terms( array( 'taxonomy' => 'category', 'hide_empty' => true, 'parent' => $noticias_cat->term_id ) ) : array();
 		if ( ! empty( $cats ) && ! is_wp_error( $cats ) ) :
 	?>
 		<div class="filters">
-			<a class="chip <?php echo ! $current_cat ? 'on' : ''; ?>" href="<?php echo caaguazu_search_filter_url( 'caaguazu_news' ); ?>"><?php esc_html_e( 'Todas las categorías', 'caaguazu' ); ?></a>
+			<a class="chip <?php echo ! $current_cat ? 'on' : ''; ?>" href="<?php echo caaguazu_search_filter_url( 'noticias' ); ?>"><?php esc_html_e( 'Todas las categorías', 'caaguazu' ); ?></a>
 			<?php foreach ( $cats as $cat ) : ?>
-				<a class="chip <?php echo $current_cat === $cat->slug ? 'on' : ''; ?>" href="<?php echo caaguazu_search_filter_url( 'caaguazu_news', $cat->slug ); ?>"><?php echo esc_html( $cat->name ); ?></a>
+				<a class="chip <?php echo $current_cat === $cat->slug ? 'on' : ''; ?>" href="<?php echo caaguazu_search_filter_url( 'noticias', $cat->slug ); ?>"><?php echo esc_html( $cat->name ); ?></a>
 			<?php endforeach; ?>
 		</div>
 	<?php endif; endif; ?>
@@ -68,7 +69,18 @@ get_header(); ?>
 							<div class="img"><?php the_post_thumbnail( 'caaguazu-card', array( 'loading' => 'lazy' ) ); ?></div>
 						<?php endif; ?>
 						<div class="body">
-							<span class="cat"><?php echo esc_html( get_post_type_object( get_post_type() )->labels->singular_name ); ?></span>
+							<?php
+							$family_labels = array(
+								'noticias'  => __( 'Noticias', 'caaguazu' ),
+								'agenda'    => __( 'Agenda', 'caaguazu' ),
+								'educacion' => __( 'Educación', 'caaguazu' ),
+							);
+							$result_family = 'post' === get_post_type() ? caaguazu_post_category_family( get_the_ID() ) : null;
+							$badge         = $result_family && isset( $family_labels[ $result_family ] )
+								? $family_labels[ $result_family ]
+								: get_post_type_object( get_post_type() )->labels->singular_name;
+							?>
+							<span class="cat"><?php echo esc_html( $badge ); ?></span>
 							<h3><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h3>
 							<p class="ex"><?php echo esc_html( wp_trim_words( get_the_excerpt(), 25 ) ); ?></p>
 							<a class="arrow" href="<?php the_permalink(); ?>"><?php esc_html_e( 'Ver', 'caaguazu' ); ?></a>
