@@ -7,6 +7,10 @@
  * @package Caaguazu
  */
 
+if ( caaguazu_maybe_render_builder_content() ) {
+	return;
+}
+
 get_header();
 
 while ( have_posts() ) :

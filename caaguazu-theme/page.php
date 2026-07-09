@@ -5,8 +5,19 @@
  * Si la página no tiene contenido en el editor, muestra el mismo
  * "en construcción" del sitio original.
  *
+ * Caso aparte: si la página fue diseñada con un editor visual (Elementor),
+ * `caaguazu_maybe_render_builder_content()` corta acá mismo — importa
+ * sobre todo para una página que el editor dejó con el campo `post_content`
+ * "vacío" a ojos de WordPress (Elementor guarda el diseño real aparte):
+ * sin este corte, el chequeo de "¿hay contenido?" de más abajo lo mandaría
+ * al bloque de "en construcción" en vez de mostrar lo que se diseñó.
+ *
  * @package Caaguazu
  */
+
+if ( caaguazu_maybe_render_builder_content() ) {
+	return;
+}
 
 get_header();
 
