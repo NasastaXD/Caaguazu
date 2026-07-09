@@ -93,7 +93,7 @@ function caaguazu_render_turismo_dropdown() {
 
 add_filter( 'caaguazu_quick_access_items', function ( $items ) {
 	$items[] = array(
-		'icon'  => '🌴', // emoji a propósito (no un ícono SVG dibujado) — distinto del 🌳 del splash de entrada.
+		'icon'  => '🌲', // emoji a propósito (no un ícono SVG dibujado) — mismo emoji que el splash de entrada.
 		'label' => __( 'Turismo', 'caaguazu-turismo' ),
 		'url'   => caaguazu_turismo_hub_url(),
 	);
