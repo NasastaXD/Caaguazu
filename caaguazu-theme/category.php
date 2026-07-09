@@ -62,13 +62,21 @@ if ( $family && $term->slug !== $family ) {
 					$is_past  = $date && $date < $today;
 				?>
 					<article class="news event-card<?php echo $is_past ? ' event-past' : ''; ?>">
+						<?php if ( $date ) : ?>
+							<span class="event-datebox" aria-hidden="true">
+								<strong><?php echo esc_html( date_i18n( 'j', strtotime( $date ) ) ); ?></strong>
+								<span><?php echo esc_html( date_i18n( 'M', strtotime( $date ) ) ); ?></span>
+							</span>
+						<?php endif; ?>
 						<?php if ( has_post_thumbnail() ) : ?>
 							<div class="img"><?php the_post_thumbnail( 'caaguazu-card', array( 'loading' => 'lazy' ) ); ?></div>
 						<?php endif; ?>
 						<div class="body">
-							<?php if ( $date ) : ?><span class="cat"><?php echo esc_html( date_i18n( 'j \d\e F, Y', strtotime( $date ) ) ); ?></span><?php endif; ?>
 							<h3><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h3>
-							<?php if ( $location ) : ?><p class="meta"><?php echo caaguazu_icon( 'pin' ); ?> <?php echo esc_html( $location ); ?></p><?php endif; ?>
+							<p class="meta">
+								<?php if ( $date ) : ?><?php echo esc_html( date_i18n( 'j \d\e F, Y', strtotime( $date ) ) ); ?><?php endif; ?>
+								<?php if ( $location ) : ?> · <?php echo caaguazu_icon( 'pin' ); ?> <?php echo esc_html( $location ); ?><?php endif; ?>
+							</p>
 							<p class="ex"><?php echo esc_html( wp_trim_words( get_the_excerpt(), 22 ) ); ?></p>
 							<a class="arrow" href="<?php the_permalink(); ?>"><?php esc_html_e( 'Ver evento', 'caaguazu' ); ?></a>
 						</div>

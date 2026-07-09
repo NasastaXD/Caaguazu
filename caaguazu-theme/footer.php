@@ -43,46 +43,80 @@ $elementor_footer_done = function_exists( 'elementor_theme_do_location' ) && ele
 	<div class="weave-rule" aria-hidden="true"></div>
 	<div class="container">
 		<div class="foot-grid">
-			<div class="foot-brand">
+			<div class="foot-brand" id="newsletter">
 				<a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="name"><?php bloginfo( 'name' ); ?></a>
 				<p class="tag"><?php echo esc_html( $tagline ); ?></p>
 				<p><?php echo esc_html( $about ); ?></p>
 				<?php echo caaguazu_newsletter_form_html(); ?>
 			</div>
 
-			<div class="foot-col">
-				<?php if ( $current_eco ) : ?>
+			<?php if ( $current_eco ) : ?>
+				<div class="foot-col">
 					<h4><?php esc_html_e( 'Secciones', 'caaguazu' ); ?></h4>
 					<ul>
 						<?php foreach ( caaguazu_ecosystem_items( $current_eco ) as $s ) : ?>
 							<li><a href="<?php echo esc_url( $s['url'] ); ?>"><?php echo esc_html( $s['label'] ); ?></a></li>
 						<?php endforeach; ?>
 					</ul>
-				<?php else : ?>
-					<h4><?php caaguazu_i18n( 'footer.subportales', __( 'Sub-portales', 'caaguazu' ) ); ?></h4>
+				</div>
+				<div class="foot-col">
+					<h4><?php caaguazu_i18n( 'footer.institucional', __( 'Institucional', 'caaguazu' ) ); ?></h4>
 					<ul>
+						<li><a href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php esc_html_e( 'Ir a caaguazu.net', 'caaguazu' ); ?></a></li>
+						<li><a href="<?php echo esc_url( $about_url ); ?>"><?php esc_html_e( 'Sobre Caaguazú', 'caaguazu' ); ?></a></li>
+						<li><a href="<?php echo esc_url( $eco_url ); ?>"><?php esc_html_e( 'Ver ecosistema completo', 'caaguazu' ); ?></a></li>
+						<li><a href="<?php echo esc_url( $contact_url ); ?>"><?php esc_html_e( 'Contacto', 'caaguazu' ); ?></a></li>
+					</ul>
+				</div>
+			<?php else : ?>
+				<?php /* Grupos cívicos (rediseño V2): la ciudad como portal — cada
+				   columna es un área real del sitio, no una etiqueta inventada.
+				   "Proyectos digitales" todavía no tiene una fuente de contenido
+				   propia (CPT/página) más allá del hub de Ecosistema, así que por
+				   ahora ese concepto vive dentro de "Ciudad" (enlace "Ver ecosistema
+				   completo") en vez de fabricar una columna con enlaces falsos. */ ?>
+				<div class="foot-col">
+					<h4><?php esc_html_e( 'Ciudad', 'caaguazu' ); ?></h4>
+					<ul>
+						<li><a href="<?php echo esc_url( $about_url ); ?>"><?php esc_html_e( 'Sobre Caaguazú', 'caaguazu' ); ?></a></li>
+						<li><a href="<?php echo esc_url( caaguazu_category_url( 'noticias' ) ); ?>"><?php esc_html_e( 'Noticias', 'caaguazu' ); ?></a></li>
+						<li><a href="<?php echo esc_url( caaguazu_category_url( 'agenda' ) ); ?>"><?php esc_html_e( 'Agenda de la ciudad', 'caaguazu' ); ?></a></li>
+						<li><a href="<?php echo esc_url( $eco_url ); ?>"><?php esc_html_e( 'Ver ecosistema completo', 'caaguazu' ); ?></a></li>
+					</ul>
+				</div>
+
+				<div class="foot-col">
+					<h4><?php esc_html_e( 'Servicios', 'caaguazu' ); ?></h4>
+					<ul>
+						<li><a href="<?php echo esc_url( $search_url ); ?>"><?php esc_html_e( 'Buscar información', 'caaguazu' ); ?></a></li>
+						<?php if ( post_type_exists( 'cgz_local' ) ) : ?>
+							<li><a href="<?php echo esc_url( get_post_type_archive_link( 'cgz_local' ) ); ?>"><?php esc_html_e( 'Locales y reservas', 'caaguazu' ); ?></a></li>
+							<li><a href="<?php echo esc_url( home_url( '/cuenta/' ) ); ?>"><?php esc_html_e( 'Mi cuenta', 'caaguazu' ); ?></a></li>
+						<?php endif; ?>
+						<li><a href="<?php echo esc_url( $contact_url ); ?>"><?php esc_html_e( 'Contacto', 'caaguazu' ); ?></a></li>
+					</ul>
+				</div>
+
+				<div class="foot-col">
+					<h4><?php esc_html_e( 'Cultura y turismo', 'caaguazu' ); ?></h4>
+					<ul>
+						<?php foreach ( caaguazu_ecosystems() as $eco ) : ?>
+							<li><a href="<?php echo esc_url( caaguazu_ecosystem_hub_url( $eco ) ); ?>"><?php echo esc_html( $eco['label'] ); ?></a></li>
+						<?php endforeach; ?>
 						<?php foreach ( $eco_subs as $s ) : ?>
 							<li><a href="<?php echo esc_url( $s['url'] ); ?>" target="_blank" rel="noreferrer"><?php echo esc_html( $s['tag'] ); ?></a></li>
 						<?php endforeach; ?>
-						<li><a href="<?php echo esc_url( $eco_url ); ?>"><?php esc_html_e( 'Ver ecosistema completo', 'caaguazu' ); ?></a></li>
 					</ul>
-				<?php endif; ?>
-			</div>
+				</div>
 
-			<div class="foot-col">
-				<h4><?php caaguazu_i18n( 'footer.institucional', __( 'Institucional', 'caaguazu' ) ); ?></h4>
-				<ul>
-					<li><a href="<?php echo esc_url( $about_url ); ?>"><?php esc_html_e( 'Sobre Caaguazú', 'caaguazu' ); ?></a></li>
-					<?php foreach ( caaguazu_ecosystems() as $eco ) : ?>
-						<li><a href="<?php echo esc_url( caaguazu_ecosystem_hub_url( $eco ) ); ?>"><?php echo esc_html( $eco['label'] ); ?></a></li>
-					<?php endforeach; ?>
-					<?php if ( post_type_exists( 'cgz_local' ) ) : ?>
-						<li><a href="<?php echo esc_url( get_post_type_archive_link( 'cgz_local' ) ); ?>"><?php esc_html_e( 'Locales y reservas', 'caaguazu' ); ?></a></li>
-						<li><a href="<?php echo esc_url( home_url( '/cuenta/' ) ); ?>"><?php esc_html_e( 'Mi cuenta', 'caaguazu' ); ?></a></li>
-					<?php endif; ?>
-					<li><a href="<?php echo esc_url( $contact_url ); ?>"><?php esc_html_e( 'Contacto', 'caaguazu' ); ?></a></li>
-				</ul>
-			</div>
+				<div class="foot-col">
+					<h4><?php esc_html_e( 'Educación y comunidad', 'caaguazu' ); ?></h4>
+					<ul>
+						<li><a href="<?php echo esc_url( caaguazu_category_url( 'educacion' ) ); ?>"><?php esc_html_e( 'Escuelas, becas y programas', 'caaguazu' ); ?></a></li>
+						<li><a href="#newsletter"><?php esc_html_e( 'Recibí el boletín', 'caaguazu' ); ?></a></li>
+					</ul>
+				</div>
+			<?php endif; ?>
 
 			<div class="foot-col">
 				<h4><?php caaguazu_i18n( 'footer.contacto', __( 'Contacto', 'caaguazu' ) ); ?></h4>

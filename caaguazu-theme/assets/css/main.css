@@ -1,27 +1,36 @@
 /* ============================================================
-   Caaguazú — Design System (tokens)
+   Caaguazú — Design System V2 (tokens)
    ============================================================ */
 :root{
-  /* Paleta v2 — "pino y madera": mismo relato (bosque, oficio, dorado
-     artesanal) pero con un verde pino refinado en lugar del verde puro
-     #006400 (muy saturado, se veía datado), fondos casi blancos en lugar
-     del crema amarillento, y tinta con matiz verde. Contraste AA en todos
-     los pares texto/fondo. */
-  --bg-primary:#FDFDFB; --bg-pure:#FFFFFF; --bg-elevated:#F4F6F2; --bg-dark:#14201A;
-  --green-deep:#1B6B44; --green-forest:#123F2C; --green-sage:#8FAE97; --green-mist:#E3EDE6;
-  --earth-beige:#EFE8D8; --earth-wood:#7A6A58; --earth-bark:#40372E; --wood-deep:#5A4632;
-  --accent-gold:#C59D45; --gold-soft:rgba(197,157,69,.12);
+  /* Paleta V2 — dirección cívico-editorial (Helsinki/Amsterdam): portal de
+     ciudad, no campaña turística. Blanco cálido + verde cívico + tinta como
+     estructura; madera/beige/dorado quedan como acento restringido para
+     cultura, historia y turismo — nunca compiten con el verde en el UI
+     funcional. Mismos NOMBRES de variable que la v1 ("pino y madera") para
+     no romper ninguna de las cientos de reglas que ya las usan ni los alias
+     que consumen los plugins del ecosistema turismo (Locales/Portal, ver
+     más abajo) — sólo cambian los valores. Contraste AA en todos los pares
+     texto/fondo. */
+  --bg-primary:#FBFAF6; --bg-pure:#FFFFFF; --bg-elevated:#F1F4EF; --bg-dark:#0F3324;
+  --green-deep:#145A3A; --green-forest:#123F2C; --green-sage:#8FAE97; --green-mist:#DDEAE1;
+  --earth-beige:#EFE3D2; --earth-wood:#7A6A58; --earth-bark:#40372E; --wood-deep:#5A4632;
+  --accent-gold:#B88725; --gold-soft:rgba(184,135,37,.12);
   --grad-forest:linear-gradient(135deg,var(--green-forest),var(--green-deep));
-  --text:#212722; --text-soft:rgba(33,39,34,0.76); --text-muted:rgba(33,39,34,0.55);
-  --border:rgba(23,46,34,0.12);
-  --shadow-soft:0 4px 16px -8px rgba(16,32,24,.16);
-  --shadow-lift:0 12px 32px -12px rgba(16,32,24,.22);
+  --text:#151A17; --text-soft:#46524A; --text-muted:#707A72;
+  --border:#DDE3DB;
+  --shadow-soft:0 4px 16px -8px rgba(15,51,36,.14);
+  --shadow-lift:0 12px 32px -12px rgba(15,51,36,.20);
   --radius-sm:4px; --radius-md:8px; --radius-lg:16px; --radius-xl:24px;
   --font-display:'Playfair Display', Georgia, serif;
   --font-body:'Lato', system-ui, -apple-system, sans-serif;
   --t:300ms cubic-bezier(.4,0,.2,1);
   /* Motivo "tejido" (puntada ñandutí) — SVG inline, sin assets externos */
-  --weave:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='12' viewBox='0 0 24 12'%3E%3Cpath d='M0 6l6-5 6 5 6-5 6 5M0 6l6 5 6-5 6 5 6-5' fill='none' stroke='%23C59D45' stroke-opacity='.6' stroke-width='1'/%3E%3C/svg%3E");
+  --weave:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='12' viewBox='0 0 24 12'%3E%3Cpath d='M0 6l6-5 6 5 6-5 6 5M0 6l6 5 6-5 6 5 6-5' fill='none' stroke='%23B88725' stroke-opacity='.6' stroke-width='1'/%3E%3C/svg%3E");
+
+  /* Vocabulario V2 para los nuevos componentes (familias de tarjetas) —
+     alias de los tokens de arriba, no valores nuevos: una sola fuente de
+     verdad, dos nombres (el histórico del theme y el del sistema V2). */
+  --accent-wood:var(--earth-wood); --accent-brass:var(--accent-gold); --accent-soft:var(--earth-beige);
 
   /* Alias para los plugins del ecosistema turismo (Caaguazú Locales / Portal
      de Promotores): ambos heredan colores vía var(--nombre, fallback), acá
@@ -37,7 +46,16 @@
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
 body{font-family:var(--font-body);background:var(--bg-primary);color:var(--text);
   -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;line-height:1.55}
-h1,h2,h3,h4,h5{font-family:var(--font-display);font-weight:600;letter-spacing:-.01em;line-height:1.1}
+/* Tipografía V2: "la serif da identidad, la sans da sistema" — por default
+   TODOS los títulos son sans (UI, nav, cards, formularios, agenda,
+   noticias); la serif (var(--font-display)) se reserva explícitamente para
+   el wordmark, el hero y los títulos editoriales largos (identidad,
+   secciones, artículos) vía selectores puntuales más abajo. */
+h1,h2,h3,h4,h5{font-family:var(--font-body);font-weight:700;letter-spacing:-.01em;line-height:1.15}
+.logo-name,.hero-civic h1,.hero-civic .sub,.section-head h2,.move h2,.eco-card h3,
+.foot-brand .name,.page-hero h1,.entry-content h2,.entry-content h3,.glossary-item dt,
+.text-h1,.text-h3,.tourism-hero-full h1,.hero h1,.hero .sub{
+  font-family:var(--font-display);font-weight:600;letter-spacing:-.01em;line-height:1.1}
 a{color:inherit;text-decoration:none}
 img{display:block;max-width:100%;height:auto}
 button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
@@ -64,27 +82,75 @@ address{font-style:normal;margin-top:16px;font-size:14px;line-height:1.7;color:v
 .arrow:hover{gap:12px}
 .arrow::after{content:"→";transition:transform var(--t)}
 
-/* Header */
-.header{position:fixed;inset:0 0 auto 0;z-index:50;height:72px;transition:all var(--t);background:transparent}
-.header.solid,.header.scrolled{height:56px;background:rgba(253,253,251,.9);backdrop-filter:blur(12px);
-  -webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
-.header-inner{max-width:1200px;margin:0 auto;height:100%;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+/* Header V2 — cívico, claro por default (Amsterdam/Helsinki: header claro
+   siempre, no una variante "transparente sobre hero oscuro" para el sitio
+   institucional). Turismo/Educación conservan su hero propio a sangre
+   (identidad cultural preservada a propósito) así que el shell de
+   ecosistema (.eco-header) SÍ sigue necesitando el modo "sobre foto" en su
+   hub — por eso más abajo se restaura el look transparente original
+   exclusivamente para `.header.eco-header` (mayor especificidad que
+   `.header` solo, así gana la cascada); el sitio institucional no vuelve a
+   usar esa variante. Cero cambios de JS: sigue alternando las mismas
+   clases .solid/.scrolled. */
+.header{position:fixed;inset:0 0 auto 0;z-index:50;transition:all var(--t);
+  background:rgba(255,255,255,.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border)}
+.header.scrolled{box-shadow:var(--shadow-soft)}
+/* Utility bar: franja fina arriba del header principal con el rótulo del
+   portal + enlaces de utilidad — solo desde tablet (768px) para no
+   recargar el header en celular (ver "Header transformation" del plan);
+   no se imprime dentro del shell de ecosistemas (ver header.php). */
+.util-bar{display:none}
+@media(min-width:768px){
+  .util-bar{display:block;border-bottom:1px solid var(--border);background:var(--bg-elevated)}
+  .util-bar-inner{max-width:1200px;margin:0 auto;padding:6px 24px;
+    display:flex;align-items:center;justify-content:space-between;gap:16px}
+  .util-tag{font-size:11px;font-weight:600;letter-spacing:.03em;color:var(--text-muted)}
+  .util-links{display:flex;gap:20px}
+  .util-links a{font-size:11px;font-weight:600;color:var(--text-muted);transition:color var(--t)}
+  .util-links a:hover{color:var(--green-deep)}
+}
+.header-inner{max-width:1200px;margin:0 auto;height:64px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
 .logo{display:flex;align-items:baseline;gap:8px}
-.logo-name{font-family:var(--font-display);font-size:24px;font-weight:600;color:#fff;transition:color var(--t)}
-.header.solid .logo-name,.header.scrolled .logo-name{color:var(--green-deep)}
-.logo-tld{font-size:10px;text-transform:uppercase;letter-spacing:.18em;color:rgba(255,255,255,.7)}
-.header.solid .logo-tld,.header.scrolled .logo-tld{color:var(--text-muted)}
+.logo-name{font-size:22px;color:var(--green-deep);transition:color var(--t)}
+.logo-tld{font-size:10px;text-transform:uppercase;letter-spacing:.18em;color:var(--text-muted)}
 .nav{display:none;gap:28px;align-items:center}
 .nav-item{position:relative}
-.nav-link{position:relative;display:inline-block;font-size:14px;font-weight:500;color:rgba(255,255,255,.85);transition:color var(--t)}
+.nav-link{position:relative;display:inline-block;font-size:14px;font-weight:500;color:var(--text-soft);transition:color var(--t)}
 .nav-link::after{content:"";position:absolute;left:0;right:0;bottom:-6px;height:2px;background:var(--accent-gold);
   transform:scaleX(0);transform-origin:left;transition:transform var(--t)}
 .nav-link:hover::after,.nav-link.active::after{transform:scaleX(1)}
-.nav-link:hover{color:#fff}
-.nav-link.active{color:#fff;font-weight:600}
-.header.solid .nav-link,.header.scrolled .nav-link{color:var(--text-soft)}
-.header.solid .nav-link:hover,.header.scrolled .nav-link:hover,
-.header.solid .nav-link.active,.header.scrolled .nav-link.active{color:var(--green-deep)}
+.nav-link:hover,.nav-link.active{color:var(--green-deep)}
+.nav-link.active{font-weight:600}
+
+/* Shell de ecosistemas (Turismo/Educación): restaura exactamente el look
+   original — transparente con texto blanco sobre el hero a sangre del hub,
+   claro en el resto de sus páginas — que el header institucional de arriba
+   ya no usa. `.header.eco-header` (dos clases) le gana en especificidad a
+   `.header` solo, así estas reglas pisan las de civic-default de arriba
+   sin tocar nada del lado institucional. */
+.header.eco-header{background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;border-bottom-color:transparent}
+.header.eco-header.solid,.header.eco-header.scrolled{background:rgba(253,253,251,.9);backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);border-bottom-color:var(--border)}
+.header.eco-header .logo-name{color:#fff}
+.header.eco-header.solid .logo-name,.header.eco-header.scrolled .logo-name{color:var(--green-deep)}
+.header.eco-header .logo-tld{color:rgba(255,255,255,.7)}
+.header.eco-header.solid .logo-tld,.header.eco-header.scrolled .logo-tld{color:var(--text-muted)}
+.header.eco-header .nav-link{color:rgba(255,255,255,.85)}
+.header.eco-header .nav-link:hover,.header.eco-header .nav-link.active{color:#fff}
+.header.eco-header.solid .nav-link,.header.eco-header.scrolled .nav-link{color:var(--text-soft)}
+.header.eco-header.solid .nav-link:hover,.header.eco-header.scrolled .nav-link:hover,
+.header.eco-header.solid .nav-link.active,.header.eco-header.scrolled .nav-link.active{color:var(--green-deep)}
+.header.eco-header .icon-btn{color:#fff}
+.header.eco-header .icon-btn:hover{background:rgba(255,255,255,.1)}
+.header.eco-header.solid .icon-btn,.header.eco-header.scrolled .icon-btn{color:var(--text-soft)}
+.header.eco-header.solid .icon-btn:hover,.header.eco-header.scrolled .icon-btn:hover{background:var(--bg-elevated)}
+.header.eco-header .lang{border-color:rgba(255,255,255,.3)}
+.header.eco-header .lang button{color:rgba(255,255,255,.85)}
+.header.eco-header .lang button.on{background:#fff;color:var(--green-deep)}
+.header.eco-header.solid .lang,.header.eco-header.scrolled .lang{border-color:var(--border)}
+.header.eco-header.solid .lang button,.header.eco-header.scrolled .lang button{color:var(--text-muted)}
+.header.eco-header.solid .lang button.on,.header.eco-header.scrolled .lang button.on{background:var(--green-deep);color:#fff}
 
 /* Mega-menu / dropdown de nav (desktop) — hover o foco de teclado en .nav-item */
 .nav-dropdown{position:absolute;top:100%;left:50%;transform:translateX(-50%) translateY(6px);
@@ -113,17 +179,12 @@ address{font-style:normal;margin-top:16px;font-size:14px;line-height:1.7;color:v
 }
 .header-actions{display:flex;align-items:center;gap:12px}
 .icon-btn{width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;
-  border-radius:999px;color:#fff;transition:background var(--t)}
+  border-radius:999px;color:var(--text-soft);transition:background var(--t)}
 .icon-btn svg{width:20px;height:20px}
-.icon-btn:hover{background:rgba(255,255,255,.1)}
-.header.solid .icon-btn,.header.scrolled .icon-btn{color:var(--text-soft)}
-.header.solid .icon-btn:hover,.header.scrolled .icon-btn:hover{background:var(--bg-elevated)}
-.lang{display:none;gap:4px;padding:4px;border:1px solid rgba(255,255,255,.3);border-radius:999px}
-.header.solid .lang,.header.scrolled .lang{border-color:var(--border)}
-.lang button{padding:4px 10px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.06em;color:rgba(255,255,255,.85);transition:all var(--t)}
-.lang button.on{background:#fff;color:var(--green-deep)}
-.header.solid .lang button,.header.scrolled .lang button{color:var(--text-muted)}
-.header.solid .lang button.on,.header.scrolled .lang button.on{background:var(--green-deep);color:#fff}
+.icon-btn:hover{background:var(--bg-elevated)}
+.lang{display:none;gap:4px;padding:4px;border:1px solid var(--border);border-radius:999px}
+.lang button{padding:4px 10px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--text-muted);transition:all var(--t)}
+.lang button.on{background:var(--green-deep);color:#fff}
 .burger{display:inline-flex}
 @media(min-width:1024px){.nav{display:flex}.burger{display:none}}
 @media(min-width:768px){.lang{display:inline-flex}}
@@ -192,23 +253,21 @@ address{font-style:normal;margin-top:16px;font-size:14px;line-height:1.7;color:v
 @media(min-width:1024px){.tabbar{display:none}}
 @media(max-width:1023.98px){body{padding-bottom:70px}}
 
-/* Accesos rápidos — grid tipo dashboard de app, la puerta de entrada a cada
-   sección del portal desde el home (evita el "hay que buscar todo"). */
+/* Accesos rápidos — atajos cívicos, la puerta de entrada a cada sección
+   del portal desde el home (evita el "hay que buscar todo"). Tratamiento
+   sobrio (V2): tarjeta plana, ícono con un solo acento de color, sin
+   rotaciones ni fondos arcoíris por posición — lee como directorio de
+   servicios, no como tiles de app. */
 .quick-access{padding:36px 0 4px}
 .qa-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
 .qa-tile{display:flex;flex-direction:column;align-items:center;gap:10px;padding:22px 12px;
   background:var(--bg-pure);border:1px solid var(--border);border-radius:var(--radius-lg);
-  text-align:center;transition:transform var(--t),box-shadow var(--t),border-color var(--t)}
-.qa-tile:hover{transform:translateY(-4px);box-shadow:var(--shadow-lift);border-color:transparent}
-.qa-tile:active{transform:translateY(-1px) scale(.97)}
+  text-align:center;transition:border-color var(--t),box-shadow var(--t)}
+.qa-tile:hover{border-color:var(--green-deep);box-shadow:var(--shadow-soft)}
 .qa-ico{width:52px;height:52px;display:inline-flex;align-items:center;justify-content:center;
-  border-radius:var(--radius-md);font-size:24px;background:var(--gold-soft);transition:transform var(--t);
+  border-radius:var(--radius-md);font-size:22px;background:var(--green-mist);
   filter:grayscale(1)} /* si el ítem trae un emoji literal en vez de una clave SVG, se ve monocromo igual que el resto de los íconos */
-.qa-ico svg{width:26px;height:26px;color:var(--green-deep)}
-.qa-tile:hover .qa-ico{transform:scale(1.08) rotate(-4deg)}
-.qa-tile:nth-child(4n+2) .qa-ico{background:rgba(143,174,151,.18)}
-.qa-tile:nth-child(4n+3) .qa-ico{background:rgba(122,106,88,.12)}
-.qa-tile:nth-child(4n+4) .qa-ico{background:rgba(27,107,68,.09)}
+.qa-ico svg{width:24px;height:24px;color:var(--green-deep)}
 .qa-label{font-size:13px;font-weight:600;color:var(--text)}
 @media(min-width:560px){.qa-grid{grid-template-columns:repeat(4,1fr)}}
 /* Si el número de accesos no completa la última fila, centrar el sobrante
@@ -216,26 +275,28 @@ address{font-style:normal;margin-top:16px;font-size:14px;line-height:1.7;color:v
 .qa-grid a:nth-child(5):last-child{grid-column:1/-1;max-width:260px;margin-inline:auto}
 @media(min-width:560px){.qa-grid a:nth-child(5):last-child{grid-column:2/4;max-width:none}}
 
-/* Hero */
-.hero{position:relative;height:100vh;min-height:640px;overflow:hidden;background:var(--bg-dark);color:#fff}
-.hero-media{position:absolute;inset:0;will-change:transform}
-.hero-media video,.hero-media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.hero-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(16,26,20,.35) 0%,rgba(16,26,20,.55) 60%,rgba(16,26,20,.78) 100%)}
-.hero-inner{position:relative;z-index:2;max-width:1200px;margin:0 auto;height:100%;padding:0 24px;display:flex;flex-direction:column;justify-content:center}
-.hero .eyebrow{color:rgba(255,255,255,.85)}
-.hero h1{font-size:clamp(64px,10vw,112px);font-weight:600;letter-spacing:-.02em;margin-top:16px}
-.hero .sub{font-family:var(--font-display);font-style:italic;font-size:clamp(28px,4.5vw,48px);color:rgba(255,255,255,.9);margin-top:8px}
-.hero .lead{margin-top:32px;max-width:560px;font-size:18px;line-height:1.6;color:rgba(255,255,255,.85)}
-.hero-fade > *{opacity:0;transform:translateY(40px);animation:heroFade .7s ease-out forwards}
-.hero-fade > *:nth-child(1){animation-delay:.2s} .hero-fade > *:nth-child(2){animation-delay:.4s}
-.hero-fade > *:nth-child(3){animation-delay:.6s} .hero-fade > *:nth-child(4){animation-delay:.8s}
-@keyframes heroFade{to{opacity:1;transform:translateY(0)}}
-.scroll-hint{position:absolute;left:50%;bottom:32px;transform:translateX(-50%);width:1px;height:40px;background:rgba(255,255,255,.6);
-  transform-origin:top;animation:hint 1.8s ease-in-out infinite;z-index:2}
-@keyframes hint{0%,100%{transform:translateX(-50%) scaleY(.4);opacity:.4}50%{transform:translateX(-50%) scaleY(1);opacity:1}}
-.video-toggle{position:absolute;right:24px;bottom:24px;z-index:2;width:40px;height:40px;border-radius:999px;
-  border:1px solid rgba(255,255,255,.4);background:rgba(0,0,0,.3);backdrop-filter:blur(6px);color:#fff;display:none;align-items:center;justify-content:center}
-@media(min-width:768px){.video-toggle{display:inline-flex}}
+/* Hero cívico V2 — editorial, claro, sin foto/video a sangre: copia a la
+   izquierda + panel de accesos destacados a la derecha (dato real del
+   sitio, no una maqueta estática — ver front-page.php). Altura por
+   contenido, no 100vh: entra completo bajo el header fijo sin necesitar
+   "scroll hint" ni parallax. */
+.hero-civic{position:relative;padding:calc(64px + 40px) 0 64px;overflow:hidden;
+  background:linear-gradient(180deg,var(--bg-elevated),var(--bg-primary) 60%)}
+@media(min-width:768px){.hero-civic{padding-top:calc(64px + 34px + 48px)}}
+.hero-civic-grid{display:grid;grid-template-columns:1fr;gap:40px;align-items:center}
+@media(min-width:960px){.hero-civic-grid{grid-template-columns:1.2fr 1fr;gap:56px}}
+.hero-civic-copy h1{margin-top:16px;font-size:clamp(34px,5.2vw,58px);line-height:1.08}
+.hero-civic-copy .sub{margin-top:20px;max-width:52ch;font-size:18px;line-height:1.65;color:var(--text-soft);font-style:normal}
+.hero-civic-cta{margin-top:32px;display:flex;flex-wrap:wrap;gap:12px}
+.hero-civic-panel{background:var(--bg-pure);border:1px solid var(--border);border-radius:var(--radius-xl);
+  padding:28px;box-shadow:var(--shadow-soft)}
+.hero-civic-panel-label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--green-forest)}
+.hero-civic-panel-list{margin-top:16px;list-style:none;display:flex;flex-direction:column}
+.hero-civic-panel-list li{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:14px 0;border-top:1px solid var(--border);font-size:14px}
+.hero-civic-panel-list li:first-child{border-top:0}
+.hero-civic-panel-list span{color:var(--text-soft)}
+.hero-civic-panel-list strong{font-weight:700;color:var(--green-deep);text-align:right}
 
 /* Reveal */
 .reveal{opacity:0;transform:translateY(32px);transition:opacity .6s ease-out,transform .6s ease-out}
@@ -380,6 +441,16 @@ section{padding-block:64px}
 .news .ex{margin-top:12px;font-size:14px;color:var(--text-soft);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .news .arrow{margin-top:20px}
 
+/* Tarjeta de evento (agenda) — misma base .news, con datebox propio en vez
+   de repetir la fecha completa como "categoría". */
+.event-card{position:relative}
+.event-card .event-datebox{position:absolute;top:16px;left:16px;z-index:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;width:52px;height:52px;border-radius:var(--radius-md);
+  background:var(--bg-pure);box-shadow:var(--shadow-soft);line-height:1.1}
+.event-card .event-datebox strong{font-family:var(--font-display);font-size:20px;font-weight:600;color:var(--green-deep)}
+.event-card .event-datebox span{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted)}
+.event-card.event-past .event-datebox{background:var(--bg-elevated)}
+
 .btn-white{background:#fff;color:var(--green-forest)}
 .btn-white:hover{background:var(--bg-primary)}
 
@@ -387,8 +458,14 @@ section{padding-block:64px}
 .footer{margin-top:96px;border-top:1px solid var(--border);background:var(--bg-elevated)}
 .footer > .weave-rule{opacity:.45;margin-top:12px}
 .footer .container{padding-block:64px}
-.foot-grid{display:grid;grid-template-columns:1fr;gap:48px}
-@media(min-width:768px){.foot-grid{grid-template-columns:1.3fr 1fr 1fr 1.1fr}}
+/* auto-fit en vez de un conteo fijo de columnas: la vista institucional
+   (Ciudad/Servicios/Cultura y turismo/Educación y comunidad/Contacto) y la
+   vista dentro de un ecosistema (Secciones/Institucional/Contacto) tienen
+   distinta cantidad de columnas — este grid se acomoda a ambas sin tocar CSS. */
+.foot-grid{display:grid;grid-template-columns:1fr;gap:40px 32px}
+@media(min-width:560px){.foot-grid{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:900px){.foot-grid{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+  .foot-brand{grid-column:span 2;max-width:360px}}
 .foot-brand .name{font-family:var(--font-display);font-size:30px;font-weight:600;color:var(--green-deep)}
 .foot-brand .tag{margin-top:8px;font-style:italic;color:var(--text-muted);font-size:14px}
 .foot-brand p{margin-top:24px;max-width:280px;font-size:14px;line-height:1.65;color:var(--text-soft)}
@@ -403,7 +480,8 @@ section{padding-block:64px}
 .foot-legal a:hover{color:var(--green-deep)}
 
 /* Interior / Stub */
-.breadcrumb{padding-top:88px}
+.breadcrumb{padding-top:calc(64px + 24px)}
+@media(min-width:768px){.breadcrumb{padding-top:calc(64px + 34px + 24px)}}
 .breadcrumb ol{list-style:none;display:flex;flex-wrap:wrap;gap:6px;font-size:12px;color:var(--text-muted)}
 .breadcrumb a{color:var(--text-muted)}
 .breadcrumb a:hover{color:var(--green-deep)}
@@ -661,6 +739,5 @@ dialog.lightbox[open]{display:flex;align-items:center;justify-content:center}
   html{scroll-behavior:auto}
   .hero-fade > *{animation:none;opacity:1;transform:none}
   .reveal{opacity:1;transform:none;transition:none}
-  .scroll-hint{animation:none}
   .btn,.quiz-opt,.eco-card,.news{transition:none}
 }

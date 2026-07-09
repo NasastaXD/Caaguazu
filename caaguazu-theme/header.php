@@ -6,7 +6,6 @@
  */
 
 $current_slug = caaguazu_current_page_slug();
-$is_home      = caaguazu_is_home();
 $current_eco  = caaguazu_current_ecosystem();
 ?>
 <!DOCTYPE html>
@@ -107,7 +106,21 @@ $elementor_header_done = function_exists( 'elementor_theme_do_location' ) && ele
 <?php elseif ( $current_eco ) : ?>
 	<?php caaguazu_render_ecosystem_header( $current_eco ); ?>
 <?php else : ?>
-	<header class="header <?php echo $is_home ? '' : 'solid'; ?>" id="header">
+	<header class="header solid" id="header">
+		<?php /* Barra de utilidad cívica (solo desde tablet, ver "Header
+		   transformation" del plan V2) — reusa las mismas páginas/URLs que ya
+		   enlaza el footer, así no hay una segunda fuente de verdad para
+		   "dónde está Accesibilidad/Contacto/Mapa del sitio". */ ?>
+		<div class="util-bar">
+			<div class="util-bar-inner">
+				<span class="util-tag"><?php esc_html_e( 'Portal ciudadano de Caaguazú', 'caaguazu' ); ?></span>
+				<nav class="util-links" aria-label="<?php esc_attr_e( 'Enlaces de utilidad', 'caaguazu' ); ?>">
+					<a href="<?php echo esc_url( caaguazu_page_url( 'sobre-caaguazu' ) ); ?>"><?php esc_html_e( 'Accesibilidad', 'caaguazu' ); ?></a>
+					<a href="<?php echo esc_url( caaguazu_page_url( 'contacto' ) ); ?>"><?php esc_html_e( 'Contacto', 'caaguazu' ); ?></a>
+					<a href="<?php echo esc_url( home_url( '/?s=' ) ); ?>"><?php esc_html_e( 'Mapa del sitio', 'caaguazu' ); ?></a>
+				</nav>
+			</div>
+		</div>
 		<div class="header-inner">
 			<a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="logo" aria-label="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?> — <?php esc_attr_e( 'inicio', 'caaguazu' ); ?>">
 				<?php if ( has_custom_logo() ) : ?>

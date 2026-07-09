@@ -6,9 +6,10 @@
  *    y lo anima al entrar en viewport — el contenido de plugins no se toca,
  *    todo pasa acá. Sin JS, todo queda visible como siempre.
  * 2. Ripple al clickear botones/tiles/tabbar.
- * 3. Tilt 3D del hero de la home (mouse, solo desktop con puntero fino).
- * 4. Partículas doradas (aserrín) flotando en los heros.
- * 5. Telón de transición al cruzar entre módulos (Caaguazú ↔ ecosistemas).
+ * 3. Partículas doradas (aserrín) flotando en heros a sangre (hub de
+ *    Turismo, splash de entrada) — el hero institucional (V2, `.hero-civic`)
+ *    es un panel claro sin sangre completa y queda fuera a propósito.
+ * 4. Telón de transición al cruzar entre módulos (Caaguazú ↔ ecosistemas).
  *
  * Todo se apaga con prefers-reduced-motion, y el script entero se desactiva
  * si la página corre dentro de un <iframe> (ver más abajo) — el caso real
@@ -105,45 +106,15 @@
   }
 
   /* ------------------------------------------------------------------
-   * 3. Tilt 3D del hero de la home
-   * ------------------------------------------------------------------ */
-  (function () {
-    if (reducedMotion) { return; }
-    if (!document.body.classList.contains('page-home')) { return; }
-    if (!window.matchMedia('(pointer: fine) and (min-width: 1024px)').matches) { return; }
-    var hero = document.querySelector('.hero');
-    var inner = document.querySelector('.hero-inner');
-    if (!hero || !inner) { return; }
-
-    var raf = null;
-    hero.addEventListener('mousemove', function (e) {
-      if (raf) { return; }
-      raf = requestAnimationFrame(function () {
-        raf = null;
-        var r = hero.getBoundingClientRect();
-        var nx = (e.clientX - r.left) / r.width - 0.5;  // -0.5 .. 0.5
-        var ny = (e.clientY - r.top) / r.height - 0.5;
-        inner.style.setProperty('--tilt-y', (nx * 7).toFixed(2) + 'deg');
-        inner.style.setProperty('--tilt-x', (ny * -5).toFixed(2) + 'deg');
-      });
-    }, { passive: true });
-    hero.addEventListener('mouseleave', function () {
-      inner.style.setProperty('--tilt-x', '0deg');
-      inner.style.setProperty('--tilt-y', '0deg');
-    });
-  })();
-
-  /* ------------------------------------------------------------------
-   * 4. Partículas doradas (aserrín) en heros y en el splash de entrada —
-   *    cualquier superficie a sangre completa que exista en la página
-   *    suma su propia caja de partículas (no es "la primera que
-   *    encuentre": el splash y el hero de la home conviven en la misma
-   *    carga, y ambos deben tener las suyas).
+   * 3. Partículas doradas (aserrín) en heros a sangre y en el splash de
+   *    entrada — cualquier superficie a sangre completa que exista en la
+   *    página suma su propia caja de partículas (no es "la primera que
+   *    encuentre": el splash y el hub de Turismo pueden convivir en la
+   *    misma carga, y ambos deben tener las suyas).
    * ------------------------------------------------------------------ */
   (function () {
     if (reducedMotion) { return; }
     var hosts = [
-      document.querySelector('body.page-home .hero'),
       document.querySelector('.tourism-hero-full'),
       document.getElementById('cgzSplash')
     ].filter(Boolean);
@@ -170,7 +141,7 @@
   })();
 
   /* ------------------------------------------------------------------
-   * 5. Telón de transición entre módulos (Caaguazú ↔ ecosistemas)
+   * 4. Telón de transición entre módulos (Caaguazú ↔ ecosistemas)
    *
    * caaguazuConfig.ecosystems trae un entry por ecosistema registrado
    * ({slug, label, prefixes}); el eco actual sale de la body class
