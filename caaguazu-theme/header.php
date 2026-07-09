@@ -29,24 +29,38 @@ $current_eco  = caaguazu_current_ecosystem();
 <a class="skip-link" href="#main"><?php caaguazu_i18n( 'header.skip', __( 'Saltar al contenido', 'caaguazu' ) ); ?></a>
 
 <?php if ( is_front_page() ) : ?>
-	<?php /* Splash de entrada (estilo intro del sub-portal CEAD): el anillo se
-	   dibuja, el árbol aparece, aparece el wordmark y el telón se levanta. Solo
-	   en la home, una vez por sesión de navegador, clickeable para saltear. El
+	<?php /* Splash de entrada — coreografía en etapas (patrón de intros
+	   tipográficas de sitios de marca): (1) el anillo interior se dibuja
+	   mientras el exterior punteado rota lento, (2) el árbol (🌲, mismo
+	   emoji monocromo que usa Turismo) aparece con rebote sobre un resplandor
+	   dorado, (3) el wordmark sube letra por letra desde una máscara con
+	   stagger, (4) una regla dorada se abre desde el centro, (5) el tagline
+	   entra cerrando su letter-spacing, y (6) el panel entero se levanta en
+	   barrido revelando el hero. La línea de progreso de abajo marca la
+	   duración (y hace de borde dorado del panel al levantarse). Solo en la
+	   home, una vez por sesión de navegador, clickeable para saltear. El
 	   script inline corre ANTES del primer paint (es sincrónico dentro del
-	   body), así no hay flash de contenido ni de splash indebido; sin JS el div
-	   queda hidden y no molesta. Estilos en assets/css/animations.css. Ícono:
-	   emoji de árbol (🌲, el mismo que usa Turismo — inc/ecosystem-shell.php,
-	   caaguazu-turismo/includes/nav-integration.php) en vez de un SVG dibujado
-	   a mano. */ ?>
+	   body), así no hay flash de contenido ni de splash indebido; sin JS el
+	   div queda hidden y no molesta. Estilos en assets/css/animations.css. */
+	$splash_name  = get_bloginfo( 'name' );
+	$splash_chars = preg_split( '//u', $splash_name, -1, PREG_SPLIT_NO_EMPTY );
+	?>
 	<div class="cgz-splash" id="cgzSplash" hidden aria-hidden="true">
-		<div class="cgz-splash-icon">
-			<svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-				<circle class="ring" cx="48" cy="48" r="44" pathLength="100"/>
-			</svg>
-			<span class="emoji">🌲</span>
+		<div class="cgz-splash-inner">
+			<div class="cgz-splash-icon">
+				<svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+					<circle class="ring2" cx="48" cy="48" r="47" stroke-width="1" stroke-dasharray="2 8"/>
+					<circle class="ring" cx="48" cy="48" r="41" stroke-width="2" pathLength="100"/>
+				</svg>
+				<span class="emoji">🌲</span>
+			</div>
+			<span class="name">
+				<?php foreach ( $splash_chars as $i => $ch ) : ?><span class="l" style="--d:<?php echo esc_attr( 1.15 + $i * 0.055 ); ?>s"><?php echo ' ' === $ch ? '&nbsp;' : esc_html( $ch ); ?></span><?php endforeach; ?>
+			</span>
+			<span class="rule" aria-hidden="true"></span>
+			<span class="tag"><?php esc_html_e( 'Sitio web · No oficial', 'caaguazu' ); ?></span>
 		</div>
-		<span class="name"><?php echo esc_html( get_bloginfo( 'name' ) ); ?></span>
-		<span class="tag"><?php esc_html_e( 'Sitio web · No oficial', 'caaguazu' ); ?></span>
+		<span class="cgz-splash-progress" aria-hidden="true"></span>
 	</div>
 	<script>
 	(function () {
@@ -62,10 +76,10 @@ $current_eco  = caaguazu_current_ecosystem();
 			if (!s.parentNode) { return; }
 			document.documentElement.classList.remove('cgz-splashing');
 			s.classList.add('out');
-			setTimeout(function () { s.remove(); }, 500);
+			setTimeout(function () { s.remove(); }, 750);
 		}
 		s.addEventListener('click', out);
-		setTimeout(out, 2600);
+		setTimeout(out, 3400);
 	})();
 	</script>
 <?php endif; ?>
