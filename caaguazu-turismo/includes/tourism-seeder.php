@@ -34,15 +34,25 @@ add_action( 'admin_init', 'caaguazu_seed_tourism_on_activation' );
  * directamente bajo 'turismo' y borra la página puente, que de otro modo
  * quedaría huérfana y duplicada respecto a las páginas nuevas que crea el
  * reseed normal.
+ *
+ * v2→v3: la v2 solo buscaba la página puente anidada bajo turismo/
+ * ('turismo/sabores-de-caaguazu'). En sitios sembrados con versiones más
+ * viejas todavía, esas tres páginas viven en la RAÍZ del sitio
+ * ('sabores-de-caaguazu', sin 'turismo/' delante) — la v2 no las
+ * encontraba, no hacía nada, y aun así marcaba el flag como completo, así
+ * que esos sitios quedaban con las tres páginas puente huérfanas para
+ * siempre (con su contenido viejo pre-migración) y ningún reintento las
+ * iba a volver a tocar. v3 prueba las dos ubicaciones posibles antes de
+ * decidir que una página puente no existe.
  */
 function caaguazu_tourism_flatten_hierarchy() {
-	if ( get_option( 'caaguazu_tourism_flattened_v2' ) ) {
+	if ( get_option( 'caaguazu_tourism_flattened_v3' ) ) {
 		return;
 	}
 
 	$hub = get_page_by_path( 'turismo' );
 	if ( ! $hub ) {
-		update_option( 'caaguazu_tourism_flattened_v2', 1 );
+		update_option( 'caaguazu_tourism_flattened_v3', 1 );
 		return;
 	}
 
@@ -53,20 +63,25 @@ function caaguazu_tourism_flatten_hierarchy() {
 	);
 
 	foreach ( $old_hubs as $old_hub_slug => $children ) {
-		foreach ( $children as $child_slug ) {
-			$child = get_page_by_path( 'turismo/' . $old_hub_slug . '/' . $child_slug );
-			if ( $child && (int) $child->post_parent !== (int) $hub->ID ) {
-				wp_update_post( array( 'ID' => $child->ID, 'post_parent' => $hub->ID ) );
+		// La página puente pudo quedar anidada bajo turismo/ (lo que ya
+		// cubría la v2) o directo en la raíz del sitio (sembrados más
+		// viejos, antes de que existiera esa jerarquía) — probar las dos.
+		foreach ( array( 'turismo/' . $old_hub_slug, $old_hub_slug ) as $old_hub_path ) {
+			foreach ( $children as $child_slug ) {
+				$child = get_page_by_path( $old_hub_path . '/' . $child_slug );
+				if ( $child && (int) $child->post_parent !== (int) $hub->ID ) {
+					wp_update_post( array( 'ID' => $child->ID, 'post_parent' => $hub->ID ) );
+				}
 			}
-		}
 
-		$old_hub = get_page_by_path( 'turismo/' . $old_hub_slug );
-		if ( $old_hub ) {
-			wp_delete_post( $old_hub->ID, true );
+			$old_hub = get_page_by_path( $old_hub_path );
+			if ( $old_hub ) {
+				wp_delete_post( $old_hub->ID, true );
+			}
 		}
 	}
 
-	update_option( 'caaguazu_tourism_flattened_v2', 1 );
+	update_option( 'caaguazu_tourism_flattened_v3', 1 );
 }
 add_action( 'admin_init', 'caaguazu_tourism_flatten_hierarchy' );
 

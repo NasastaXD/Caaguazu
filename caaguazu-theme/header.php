@@ -38,19 +38,21 @@ $current_eco  = caaguazu_current_ecosystem();
 	<div class="cgz-splash" id="cgzSplash" hidden aria-hidden="true">
 		<svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 			<circle class="ring" cx="48" cy="48" r="44" pathLength="100"/>
-			<?php /* Lapacho: copa de tres lóbulos + tronco + floración — mismo
-			   dibujo que el ícono 'tree' de inc/icons.php, redibujado a mano
-			   acá porque necesita el trazado pathLength para la animación de
-			   dibujado (inc/icons.php devuelve el <svg> ya armado, no sirve
-			   para inyectar acá). Si se retoca el ícono, retocar también este. */ ?>
-			<g transform="translate(13.2,12.6) scale(2.9)">
-				<circle class="glyph" cx="8" cy="11" r="4.3" pathLength="100"/>
-				<circle class="glyph" cx="16" cy="11" r="4.3" pathLength="100"/>
-				<circle class="glyph" cx="12" cy="8" r="4.6" pathLength="100"/>
-				<line class="glyph" x1="12" y1="15.2" x2="12" y2="21" pathLength="100"/>
-				<circle class="bloom" cx="8.6" cy="9.2" r=".9" fill="currentColor" stroke="none"/>
-				<circle class="bloom" cx="15.2" cy="8.6" r=".9" fill="currentColor" stroke="none"/>
-				<circle class="bloom" cx="12" cy="12.6" r=".9" fill="currentColor" stroke="none"/>
+			<?php /* Lapacho de verdad, no un ícono genérico de árbol (ese vive
+			   aparte en inc/icons.php, clave 'tree', y puede seguir siendo
+			   simple — se usa en navegación, no necesita ser botánicamente
+			   preciso). Acá sí: tronco que crece primero (trazo con pathLength,
+			   igual que el anillo) y encima una copa de 5 círculos rosados
+			   superpuestos —sin trazo, solo relleno— que "florecen" con un
+			   rebote escalonado. El rosa (no dorado) es lo que la hace leerse
+			   como lapacho en flor y no como una silueta abstracta de rama. */ ?>
+			<g transform="translate(16.8,16.3) scale(2.6)">
+				<line class="glyph" x1="12" y1="15.8" x2="12" y2="21.5" pathLength="100"/>
+				<circle class="canopy" cx="7.5" cy="12" r="4.6"/>
+				<circle class="canopy" cx="16.5" cy="12" r="4.6"/>
+				<circle class="canopy" cx="12" cy="10" r="5.6"/>
+				<circle class="canopy" cx="8.8" cy="6.3" r="3.4"/>
+				<circle class="canopy" cx="15.2" cy="6.3" r="3.4"/>
 			</g>
 		</svg>
 		<span class="name"><?php echo esc_html( get_bloginfo( 'name' ) ); ?></span>
@@ -73,7 +75,7 @@ $current_eco  = caaguazu_current_ecosystem();
 			setTimeout(function () { s.remove(); }, 500);
 		}
 		s.addEventListener('click', out);
-		setTimeout(out, 2300);
+		setTimeout(out, 2600);
 	})();
 	</script>
 <?php endif; ?>
