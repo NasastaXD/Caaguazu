@@ -337,6 +337,26 @@ function caaguazu_educacion_shell_items() {
 	return apply_filters( 'caaguazu_educacion_shell_items', $items );
 }
 
+/**
+ * Imagen de la tarjeta de Educación en el hub Ecosistema — editable desde
+ * Personalizar → Contenido del Home → Educación (imagen), en vez de quedar
+ * fija en el código.
+ */
+function caaguazu_educacion_card_image() {
+	return caaguazu_opt_image( 'educacion_card_image', 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1400&q=80' );
+}
+
+add_action( 'customize_register', function ( $wp_customize ) {
+	if ( ! function_exists( 'caaguazu_add_image' ) ) {
+		return; // el theme activo no expone los helpers genéricos del Customizer.
+	}
+	$wp_customize->add_section( 'caaguazu_educacion_images', array(
+		'title' => __( 'Educación (imagen)', 'caaguazu-modulos' ),
+		'panel' => 'caaguazu_home',
+	) );
+	caaguazu_add_image( $wp_customize, 'educacion_card_image', __( 'Tarjeta de Educación en Ecosistema', 'caaguazu-modulos' ), caaguazu_educacion_card_image(), 'caaguazu_educacion_images' );
+} );
+
 add_filter( 'caaguazu_ecosystems', function ( $ecos ) {
 	$ecos['educacion'] = array(
 		'label'        => __( 'Educación', 'caaguazu-modulos' ),
@@ -349,7 +369,7 @@ add_filter( 'caaguazu_ecosystems', function ( $ecos ) {
 		'items'        => 'caaguazu_educacion_shell_items',
 		'card'         => array(
 			'body'  => __( 'Escuelas, becas municipales, programas y estadísticas educativas del departamento.', 'caaguazu-modulos' ),
-			'image' => 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1400&q=80',
+			'image' => caaguazu_educacion_card_image(),
 		),
 	);
 	return $ecos;

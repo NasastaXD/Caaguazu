@@ -276,6 +276,28 @@ function caaguazu_tourism_hub_url() {
 	return caaguazu_page_url( 'turismo' );
 }
 
+/**
+ * Imagen de portada del hub de Turismo (hero a sangre de `page.php`) y de
+ * su tarjeta en el hub Ecosistema — editables desde Personalizar → Contenido
+ * del Home → Turismo (imágenes), en vez de quedar fijas en el código.
+ */
+function caaguazu_tourism_hub_hero_image() {
+	return caaguazu_opt_image( 'tourism_hub_hero_image', 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Carpenter_in_his_workshop.jpg/1280px-Carpenter_in_his_workshop.jpg' );
+}
+
+function caaguazu_tourism_card_image() {
+	return caaguazu_opt_image( 'tourism_card_image', 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/Iglesia_de_la_Inmaculada_Concepci%C3%B3n_(Caaguaz%C3%BA).jpg/1280px-Iglesia_de_la_Inmaculada_Concepci%C3%B3n_(Caaguaz%C3%BA).jpg' );
+}
+
+add_action( 'customize_register', function ( $wp_customize ) {
+	$wp_customize->add_section( 'caaguazu_turismo_images', array(
+		'title' => __( 'Turismo (imágenes)', 'caaguazu' ),
+		'panel' => 'caaguazu_home',
+	) );
+	caaguazu_add_image( $wp_customize, 'tourism_hub_hero_image', __( 'Portada del hub de Turismo', 'caaguazu' ), caaguazu_tourism_hub_hero_image(), 'caaguazu_turismo_images' );
+	caaguazu_add_image( $wp_customize, 'tourism_card_image', __( 'Tarjeta de Turismo en Ecosistema', 'caaguazu' ), caaguazu_tourism_card_image(), 'caaguazu_turismo_images' );
+} );
+
 add_filter( 'caaguazu_ecosystems', function ( $ecos ) {
 	$ecos['turismo'] = array(
 		'label'        => __( 'Turismo', 'caaguazu' ),
@@ -292,7 +314,7 @@ add_filter( 'caaguazu_ecosystems', function ( $ecos ) {
 		},
 		'card'         => array(
 			'body'  => __( 'Información sobre historia, oficio maderero, gastronomía y cultura guaraní del departamento.', 'caaguazu' ),
-			'image' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/Iglesia_de_la_Inmaculada_Concepci%C3%B3n_(Caaguaz%C3%BA).jpg/1280px-Iglesia_de_la_Inmaculada_Concepci%C3%B3n_(Caaguaz%C3%BA).jpg',
+			'image' => caaguazu_tourism_card_image(),
 		),
 		// Las reglas CSS existentes (tokens madera, anchos del hub) siguen
 		// colgadas de estas clases — se emiten junto a las eco-* genéricas.

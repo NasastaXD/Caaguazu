@@ -83,7 +83,7 @@ while ( have_posts() ) :
 <?php if ( $is_tourism_hub ) : ?>
 	<section class="tourism-hero-full">
 		<div class="img">
-			<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Carpenter_in_his_workshop.jpg/1280px-Carpenter_in_his_workshop.jpg" alt="" loading="eager">
+			<img src="<?php echo esc_url( caaguazu_tourism_hub_hero_image() ); ?>" alt="" loading="eager">
 		</div>
 		<div class="container inner hero-fade">
 			<p class="eyebrow"><?php echo esc_html( $eyebrow ); ?></p>

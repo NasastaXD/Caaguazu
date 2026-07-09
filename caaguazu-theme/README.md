@@ -125,6 +125,7 @@ Las páginas institucionales (Sobre Caaguazú, Contacto, Ecosistema) ya arrancan
 - **Artesanos**: menú lateral **Artesanos** (CPT del theme, no lanzado todavía). Cada perfil tiene oficio, zona y una frase destacada en la sidebar.
 - **Suscriptores**: menú lateral **Suscriptores** — lista de emails del newsletter, no pública.
 - **Logo**: Personalizar → Identidad del sitio → Logotipo.
+- **Imágenes del sitio (fotos de stock por defecto, para ir reemplazando)**: todas las imágenes que no pertenecen al contenido de una Página/Entrada puntual (fondos de hero, tarjetas del hub Ecosistema) están en **Apariencia → Personalizar → Contenido del Home**: `Hero` (imagen del hero), `Identidad (3 bloques)` (una por bloque), `Ecosistema (sub-portales externos)` (CEAD y los 2 slots libres), `Turismo (imágenes)` (portada del hub + tarjeta) y `Educación (imagen)` (tarjeta) — sin tocar código. Las fotos que sí son parte del contenido de una página puntual (p. ej. la galería de "Vivir Caaguazú" o las tarjetas de "Qué hacer" en Turismo) se editan directo en esa página desde **Páginas → Todas las páginas**, como el resto de su texto.
 
 ## Notas
 
