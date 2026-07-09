@@ -35,16 +35,15 @@ $current_eco  = caaguazu_current_ecosystem();
 	   script inline corre ANTES del primer paint (es sincrónico dentro del
 	   body), así no hay flash de contenido ni de splash indebido; sin JS el div
 	   queda hidden y no molesta. Estilos en assets/css/animations.css. Ícono:
-	   emoji de árbol a propósito (no el SVG dibujado a mano de versiones
-	   anteriores) — distinto del emoji de Turismo (inc/ecosystem-shell.php,
-	   caaguazu-turismo/includes/nav-integration.php) para que cada uno se
-	   identifique con el suyo. */ ?>
+	   emoji de árbol (🌲, el mismo que usa Turismo — inc/ecosystem-shell.php,
+	   caaguazu-turismo/includes/nav-integration.php) en vez de un SVG dibujado
+	   a mano. */ ?>
 	<div class="cgz-splash" id="cgzSplash" hidden aria-hidden="true">
 		<div class="cgz-splash-icon">
 			<svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 				<circle class="ring" cx="48" cy="48" r="44" pathLength="100"/>
 			</svg>
-			<span class="emoji">🌳</span>
+			<span class="emoji">🌲</span>
 		</div>
 		<span class="name"><?php echo esc_html( get_bloginfo( 'name' ) ); ?></span>
 		<span class="tag"><?php esc_html_e( 'Sitio web · No oficial', 'caaguazu' ); ?></span>
