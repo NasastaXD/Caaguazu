@@ -123,78 +123,77 @@ body.page-home .hero-inner .lead{transform:translateZ(14px)}
 body.module-enter #main{animation:cgzModuleEnter .5s ease-out both}
 
 /* --- Splash de entrada (home, una vez por sesión) --------------------
-   Coreografía por etapas (ver el comentario del markup en header.php):
-   anillo interior dibujándose (0.15–1s) + anillo exterior punteado rotando
-   lento; árbol con rebote sobre resplandor dorado (0.85s); wordmark letra
-   por letra desde una máscara con stagger (~1.15s, --d por letra viene del
-   PHP); regla dorada abriéndose del centro (2s); tagline cerrando su
-   letter-spacing (2.15s); barrido de luz sobre el wordmark (2.5s); y salida
-   en barrido hacia arriba (3.4s, .out). La línea de progreso de abajo llena
-   en 3.4s y queda como borde dorado del panel al levantarse.
-   El markup + la lógica de mostrar/sacar viven inline en header.php
-   (tienen que correr antes del primer paint). pathLength="100" en el SVG
-   normaliza los trazos, así el dibujado usa dasharray 100 sin importar la
-   geometría real de cada path. */
+   Animación de logo "brote", calcada fotograma a fotograma de una
+   referencia en video (ver el comentario del markup en header.php):
+   0–1.6s ocho hojitas entran en órbita como un spinner y crecen hacia
+   adentro hasta formar una roseta (la roseta entera además se asienta
+   rotando unos grados); 2.3s la roseta se repliega hacia el centro con
+   stagger; 2.55s brotan las DOS hojas grandes del logo final (una de cada
+   tono, con rebote); 3.05s "Caaguazú.net" en cursiva se revela de
+   izquierda a derecha (efecto escritura); 3.9s el tagline entra con
+   tracking-in; 5s el panel se levanta en barrido (.out) revelando el hero.
+   La línea de progreso de abajo llena en 5s y queda como borde dorado del
+   panel al levantarse. El markup + la lógica de mostrar/sacar viven inline
+   en header.php (tienen que correr antes del primer paint). */
 .cgz-splash{position:fixed;inset:0;z-index:300;display:flex;flex-direction:column;
   align-items:center;justify-content:center;cursor:pointer;overflow:hidden;
   background:
     radial-gradient(ellipse 90% 55% at 50% 36%,rgba(197,157,69,.10),transparent 60%),
     linear-gradient(165deg,#0E1912,var(--green-forest))}
 .cgz-splash[hidden]{display:none}
-.cgz-splash-inner{display:flex;flex-direction:column;align-items:center;gap:14px}
-.cgz-splash-icon{position:relative;width:118px;height:118px;
-  animation:cgzSplashSettle 1.4s cubic-bezier(.22,1,.36,1) both}
-/* Resplandor dorado que respira detrás del ícono */
-.cgz-splash-icon::before{content:"";position:absolute;inset:-34px;border-radius:50%;
-  background:radial-gradient(circle,rgba(197,157,69,.28),transparent 62%);
-  opacity:0;animation:cgzGlow 2.6s ease-in-out .7s infinite alternate}
+.cgz-splash-inner{display:flex;flex-direction:column;align-items:center;gap:10px}
+.cgz-splash-bloom{position:relative;width:132px;height:132px}
+.cgz-splash-bloom svg{width:100%;height:100%;overflow:visible}
+/* Resplandor dorado suave que aparece recién con el brote final */
+.cgz-splash-bloom::before{content:"";position:absolute;inset:-30px;border-radius:50%;
+  background:radial-gradient(circle,rgba(197,157,69,.22),transparent 62%);
+  opacity:0;animation:cgzGlow 2.4s ease-in-out 2.7s infinite alternate}
 @keyframes cgzGlow{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1.06)}}
-.cgz-splash-icon svg{position:absolute;inset:0;width:100%;height:100%;color:var(--accent-gold)}
-.cgz-splash .ring{stroke-dasharray:100;stroke-dashoffset:100;fill:none;
-  animation:cgzDraw 1s cubic-bezier(.65,0,.35,1) .15s forwards}
-@keyframes cgzDraw{to{stroke-dashoffset:0}}
-/* Anillo exterior punteado: aparece suave y rota lentísimo — profundidad */
-.cgz-splash .ring2{fill:none;opacity:0;transform-origin:50% 50%;
-  animation:cgzRingIn .8s ease-out .5s forwards,cgzSpin 46s linear infinite}
-@keyframes cgzRingIn{to{opacity:.45}}
-@keyframes cgzSpin{to{transform:rotate(360deg)}}
-/* Emoji de árbol (no un ícono dibujado a mano): aparece con un rebote una
-   vez que el anillo termina de dibujarse. Sin color a propósito (grayscale)
-   — coincide con el resto de los íconos del sitio, que son monocromos. */
-.cgz-splash-icon .emoji{position:absolute;inset:0;display:flex;align-items:center;
-  justify-content:center;font-size:48px;line-height:1;opacity:0;transform:scale(0);
-  filter:grayscale(1) brightness(1.6);
-  animation:cgzCanopyPop .5s cubic-bezier(.34,1.56,.64,1) .85s forwards}
-@keyframes cgzCanopyPop{to{opacity:1;transform:scale(1)}}
-@keyframes cgzSplashSettle{from{opacity:0;transform:rotateY(70deg) scale(.8)}to{opacity:1;transform:none}}
-/* Wordmark letra por letra: cada letra sube desde abajo de la máscara
-   (overflow:hidden del contenedor) con un stagger que fija el PHP vía la
-   variable --d. El barrido de luz de ::after pasa una sola vez al final. */
-.cgz-splash .name{position:relative;overflow:hidden;display:flex;
-  font-family:var(--font-display);font-weight:600;letter-spacing:-.01em;
-  font-size:clamp(38px,9vw,60px);color:#fff;padding:0 .1em .05em}
-.cgz-splash .name .l{display:inline-block;opacity:0;
-  transform:translateY(115%) rotate(5deg);transform-origin:0 100%;
-  animation:cgzLetter .7s cubic-bezier(.22,1,.36,1) var(--d,1.2s) forwards}
-@keyframes cgzLetter{to{opacity:1;transform:none}}
-.cgz-splash .name::after{content:"";position:absolute;top:-20%;bottom:-20%;left:-40%;width:26%;
-  background:linear-gradient(105deg,transparent,rgba(255,255,255,.34),transparent);
-  transform:skewX(-14deg);opacity:0;filter:blur(9px);
-  animation:cgzSheen .9s ease-in-out 2.5s forwards}
-@keyframes cgzSheen{0%{left:-40%;opacity:1}100%{left:110%;opacity:0}}
-/* Regla dorada que se abre desde el centro, entre wordmark y tagline */
-.cgz-splash .rule{width:72px;height:1px;background:var(--accent-gold);
-  transform:scaleX(0);animation:cgzRule .5s cubic-bezier(.65,0,.35,1) 2s forwards}
-@keyframes cgzRule{to{transform:scaleX(1)}}
+/* Dos tonos de verde de la referencia, legibles sobre el fondo oscuro */
+.cgz-splash .leaf.light{fill:#7FAE8B}
+.cgz-splash .leaf.dark{fill:#527F60}
+/* La roseta entera se asienta rotando unos grados (sensación de órbita) */
+.cgz-splash .rosette{transform-box:view-box;transform-origin:50% 50%;
+  animation:cgzOrbit 2s cubic-bezier(.22,1,.36,1) both}
+@keyframes cgzOrbit{from{transform:rotate(-40deg)}to{transform:rotate(0)}}
+/* Cada pétalo: entra chico y separado del centro (spinner), crece hasta
+   tocar el centro (roseta), y a los 2.3s se repliega hacia su base con
+   stagger — dos animaciones encadenadas sobre el mismo path. --i viene
+   del PHP (0..7). */
+.cgz-splash .petal .leaf{transform-box:fill-box;transform-origin:50% 100%;
+  animation:
+    cgzPetalIn .85s cubic-bezier(.22,1,.36,1) both,
+    cgzPetalOut .4s cubic-bezier(.65,0,.35,1) forwards;
+  animation-delay:calc(.12s + var(--i)*.1s),calc(2.3s + var(--i)*.04s)}
+@keyframes cgzPetalIn{
+  0%{opacity:0;transform:translateY(-16px) scale(.3)}
+  45%{opacity:1}
+  100%{opacity:1;transform:none}}
+@keyframes cgzPetalOut{to{opacity:0;transform:scale(.08)}}
+/* Brote final: dos hojas grandes que crecen desde la base con rebote,
+   apenas la roseta termina de replegarse */
+.cgz-splash .sprout .leaf{transform-box:fill-box;transform-origin:50% 100%;
+  opacity:0;transform:scale(0);
+  animation:cgzSproutIn .65s cubic-bezier(.34,1.56,.64,1) forwards}
+.cgz-splash .sprout .sl{animation-delay:2.55s}
+.cgz-splash .sprout .sr{animation-delay:2.67s}
+@keyframes cgzSproutIn{to{opacity:1;transform:scale(1)}}
+/* "Caaguazú.net" en cursiva (Playfair Display italic, ya cargada por el
+   theme) — se revela de izquierda a derecha, como si se escribiera */
+.cgz-splash .script{font-family:var(--font-display);font-style:italic;font-weight:500;
+  font-size:clamp(34px,8vw,50px);color:#fff;letter-spacing:.01em;padding:0 .15em .08em;
+  clip-path:inset(-15% 100% -15% 0);
+  animation:cgzWrite 1.35s cubic-bezier(.65,0,.35,1) 3.05s both}
+@keyframes cgzWrite{to{clip-path:inset(-15% -5% -15% 0)}}
 /* Tagline: entra cerrando su letter-spacing (tracking-in) */
 .cgz-splash .tag{font-size:11px;font-weight:600;text-transform:uppercase;
   color:var(--accent-gold);padding-left:.38em;opacity:0;letter-spacing:.8em;
-  animation:cgzTrackIn .7s cubic-bezier(.22,1,.36,1) 2.15s forwards}
+  animation:cgzTrackIn .7s cubic-bezier(.22,1,.36,1) 3.9s forwards}
 @keyframes cgzTrackIn{from{opacity:0;letter-spacing:.8em}to{opacity:1;letter-spacing:.38em}}
-/* Línea de progreso: llena el ancho en los 3.4s que dura la intro, y de
+/* Línea de progreso: llena el ancho en los 5s que dura la intro, y de
    paso es el borde dorado del panel cuando se levanta */
 .cgz-splash-progress{position:absolute;bottom:0;left:0;height:2px;width:0;
-  background:var(--accent-gold);animation:cgzProgress 3.4s linear forwards}
+  background:var(--accent-gold);animation:cgzProgress 5s linear forwards}
 @keyframes cgzProgress{to{width:100%}}
 /* Salida: el contenido se retira suave y el panel entero se levanta en
    barrido (easing cinematográfico), revelando el hero de abajo */

@@ -29,35 +29,43 @@ $current_eco  = caaguazu_current_ecosystem();
 <a class="skip-link" href="#main"><?php caaguazu_i18n( 'header.skip', __( 'Saltar al contenido', 'caaguazu' ) ); ?></a>
 
 <?php if ( is_front_page() ) : ?>
-	<?php /* Splash de entrada — coreografía en etapas (patrón de intros
-	   tipográficas de sitios de marca): (1) el anillo interior se dibuja
-	   mientras el exterior punteado rota lento, (2) el árbol (🌲, mismo
-	   emoji monocromo que usa Turismo) aparece con rebote sobre un resplandor
-	   dorado, (3) el wordmark sube letra por letra desde una máscara con
-	   stagger, (4) una regla dorada se abre desde el centro, (5) el tagline
-	   entra cerrando su letter-spacing, y (6) el panel entero se levanta en
-	   barrido revelando el hero. La línea de progreso de abajo marca la
+	<?php /* Splash de entrada — animación de logo "brote" (calcada de una
+	   referencia en video aportada por quien encargó el sitio, fotograma a
+	   fotograma): (1) ocho hojitas aparecen chicas en órbita alrededor del
+	   centro, como un spinner, (2) crecen hacia adentro hasta formar una
+	   roseta simétrica en dos tonos de verde, (3) la roseta se repliega y en
+	   su lugar brotan DOS hojas grandes (el brote final, una de cada tono),
+	   (4) debajo se escribe "Caaguazú.net" en cursiva (Playfair Display
+	   italic) con un barrido de revelado izquierda→derecha estilo escritura,
+	   y (5) el tagline aparece suave antes de que el panel entero se levante
+	   en barrido revelando el hero. La línea de progreso de abajo marca la
 	   duración (y hace de borde dorado del panel al levantarse). Solo en la
 	   home, una vez por sesión de navegador, clickeable para saltear. El
 	   script inline corre ANTES del primer paint (es sincrónico dentro del
 	   body), así no hay flash de contenido ni de splash indebido; sin JS el
-	   div queda hidden y no molesta. Estilos en assets/css/animations.css. */
-	$splash_name  = get_bloginfo( 'name' );
-	$splash_chars = preg_split( '//u', $splash_name, -1, PREG_SPLIT_NO_EMPTY );
-	?>
+	   div queda hidden y no molesta. Estilos en assets/css/animations.css. */ ?>
 	<div class="cgz-splash" id="cgzSplash" hidden aria-hidden="true">
 		<div class="cgz-splash-inner">
-			<div class="cgz-splash-icon">
-				<svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-					<circle class="ring2" cx="48" cy="48" r="47" stroke-width="1" stroke-dasharray="2 8"/>
-					<circle class="ring" cx="48" cy="48" r="41" stroke-width="2" pathLength="100"/>
+			<div class="cgz-splash-bloom" aria-hidden="true">
+				<svg viewBox="0 0 120 120">
+					<?php /* Roseta: 8 pétalos-hoja (base en el centro, punta hacia
+					   afuera), alternando dos tonos. --i escalona la entrada. */ ?>
+					<g class="rosette">
+						<?php for ( $i = 0; $i < 8; $i++ ) : ?>
+							<g class="petal" style="--i:<?php echo (int) $i; ?>" transform="rotate(<?php echo (int) ( $i * 45 ); ?> 60 60)">
+								<path class="leaf <?php echo $i % 2 ? 'dark' : 'light'; ?>" d="M60 56 C52 46 52 30 60 22 C68 30 68 46 60 56 Z"/>
+							</g>
+						<?php endfor; ?>
+					</g>
+					<?php /* Brote final: dos hojas grandes (una de cada tono) que
+					   crecen desde la base cuando la roseta se repliega. */ ?>
+					<g class="sprout">
+						<path class="leaf light sl" d="M58 92 C36 84 28 60 40 42 C62 48 70 74 58 92 Z"/>
+						<path class="leaf dark sr" d="M62 92 C84 84 92 60 80 42 C58 48 50 74 62 92 Z"/>
+					</g>
 				</svg>
-				<span class="emoji">🌲</span>
 			</div>
-			<span class="name">
-				<?php foreach ( $splash_chars as $i => $ch ) : ?><span class="l" style="--d:<?php echo esc_attr( 1.15 + $i * 0.055 ); ?>s"><?php echo ' ' === $ch ? '&nbsp;' : esc_html( $ch ); ?></span><?php endforeach; ?>
-			</span>
-			<span class="rule" aria-hidden="true"></span>
+			<span class="script">Caaguazú.net</span>
 			<span class="tag"><?php esc_html_e( 'Sitio web · No oficial', 'caaguazu' ); ?></span>
 		</div>
 		<span class="cgz-splash-progress" aria-hidden="true"></span>
@@ -79,7 +87,7 @@ $current_eco  = caaguazu_current_ecosystem();
 			setTimeout(function () { s.remove(); }, 750);
 		}
 		s.addEventListener('click', out);
-		setTimeout(out, 3400);
+		setTimeout(out, 5000);
 	})();
 	</script>
 <?php endif; ?>
