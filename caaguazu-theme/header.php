@@ -29,32 +29,23 @@ $current_eco  = caaguazu_current_ecosystem();
 <a class="skip-link" href="#main"><?php caaguazu_i18n( 'header.skip', __( 'Saltar al contenido', 'caaguazu' ) ); ?></a>
 
 <?php if ( is_front_page() ) : ?>
-	<?php /* Splash de entrada (estilo intro del sub-portal CEAD): el lapacho se
-	   dibuja, florece, aparece el wordmark y el telón se levanta. Solo en la home,
-	   una vez por sesión de navegador, clickeable para saltear. El script
-	   inline corre ANTES del primer paint (es sincrónico dentro del body),
-	   así no hay flash de contenido ni de splash indebido; sin JS el div
-	   queda hidden y no molesta. Estilos en assets/css/animations.css. */ ?>
+	<?php /* Splash de entrada (estilo intro del sub-portal CEAD): el anillo se
+	   dibuja, el árbol aparece, aparece el wordmark y el telón se levanta. Solo
+	   en la home, una vez por sesión de navegador, clickeable para saltear. El
+	   script inline corre ANTES del primer paint (es sincrónico dentro del
+	   body), así no hay flash de contenido ni de splash indebido; sin JS el div
+	   queda hidden y no molesta. Estilos en assets/css/animations.css. Ícono:
+	   emoji de árbol a propósito (no el SVG dibujado a mano de versiones
+	   anteriores) — distinto del emoji de Turismo (inc/ecosystem-shell.php,
+	   caaguazu-turismo/includes/nav-integration.php) para que cada uno se
+	   identifique con el suyo. */ ?>
 	<div class="cgz-splash" id="cgzSplash" hidden aria-hidden="true">
-		<svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-			<circle class="ring" cx="48" cy="48" r="44" pathLength="100"/>
-			<?php /* Lapacho de verdad, no un ícono genérico de árbol (ese vive
-			   aparte en inc/icons.php, clave 'tree', y puede seguir siendo
-			   simple — se usa en navegación, no necesita ser botánicamente
-			   preciso). Acá sí: tronco que crece primero (trazo con pathLength,
-			   igual que el anillo) y encima una copa de 5 círculos rosados
-			   superpuestos —sin trazo, solo relleno— que "florecen" con un
-			   rebote escalonado. El rosa (no dorado) es lo que la hace leerse
-			   como lapacho en flor y no como una silueta abstracta de rama. */ ?>
-			<g transform="translate(16.8,16.3) scale(2.6)">
-				<line class="glyph" x1="12" y1="15.8" x2="12" y2="21.5" pathLength="100"/>
-				<circle class="canopy" cx="7.5" cy="12" r="4.6"/>
-				<circle class="canopy" cx="16.5" cy="12" r="4.6"/>
-				<circle class="canopy" cx="12" cy="10" r="5.6"/>
-				<circle class="canopy" cx="8.8" cy="6.3" r="3.4"/>
-				<circle class="canopy" cx="15.2" cy="6.3" r="3.4"/>
-			</g>
-		</svg>
+		<div class="cgz-splash-icon">
+			<svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+				<circle class="ring" cx="48" cy="48" r="44" pathLength="100"/>
+			</svg>
+			<span class="emoji">🌳</span>
+		</div>
 		<span class="name"><?php echo esc_html( get_bloginfo( 'name' ) ); ?></span>
 		<span class="tag"><?php esc_html_e( 'Sitio web · No oficial', 'caaguazu' ); ?></span>
 	</div>
