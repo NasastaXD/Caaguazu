@@ -10,12 +10,27 @@
  * 4. Partículas doradas (aserrín) flotando en los heros.
  * 5. Telón de transición al cruzar entre módulos (Caaguazú ↔ ecosistemas).
  *
- * Todo se apaga con prefers-reduced-motion.
+ * Todo se apaga con prefers-reduced-motion, y el script entero se desactiva
+ * si la página corre dentro de un <iframe> (ver más abajo) — el caso real
+ * es el canvas de edición en vivo de un page builder (Elementor, Brizy):
+ * cargan la URL real del sitio dentro de un iframe para editarla, y estas
+ * animaciones no son solo "de más" ahí, activamente rompen la edición —
+ * el telón de transición intercepta cualquier click en un link y tapa la
+ * pantalla, las partículas quedan como overlays absolutos encima del
+ * contenido (bloqueando clicks de selección), y el scroll-trigger deja
+ * contenido en opacity:0 esperando un IntersectionObserver que dentro de
+ * un iframe de builder puede no disparar nunca. Nada de esto es exclusivo
+ * de un builder puntual: cualquiera que cargue el sitio en un iframe entra
+ * en el mismo modo "solo contenido, sin florituras".
  */
 (function () {
   'use strict';
 
   var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var inIframe = false;
+  try { inIframe = window.self !== window.top; } catch (e) { inIframe = true; }
+  if (inIframe) { return; }
 
   /* ------------------------------------------------------------------
    * 1. Scroll-trigger sobre contenido de plugins (auto-tag, sin PHP)

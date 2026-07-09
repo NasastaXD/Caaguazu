@@ -29,9 +29,16 @@ for ( $i = 0; $i < 3; $i++ ) {
 		$eco_subs[] = array( 'url' => $url, 'tag' => $tag );
 	}
 }
+// Igual que en header.php: si Elementor Pro (Theme Builder) tiene un
+// footer propio asignado y activo, se imprime solo y el theme no agrega
+// el suyo. Sin Elementor Pro (el caso normal), esto no cambia nada.
+$elementor_footer_done = function_exists( 'elementor_theme_do_location' ) && elementor_theme_do_location( 'footer' );
 ?>
 </main>
 
+<?php if ( $elementor_footer_done ) : ?>
+	<?php // Footer servido por el Theme Builder de Elementor Pro. ?>
+<?php else : ?>
 <footer class="footer">
 	<div class="weave-rule" aria-hidden="true"></div>
 	<div class="container">
@@ -44,10 +51,10 @@ for ( $i = 0; $i < 3; $i++ ) {
 			</div>
 
 			<div class="foot-col">
-				<?php if ( $in_tourism ) : ?>
+				<?php if ( $current_eco ) : ?>
 					<h4><?php esc_html_e( 'Secciones', 'caaguazu' ); ?></h4>
 					<ul>
-						<?php foreach ( apply_filters( 'caaguazu_tourism_shell_items', array() ) as $s ) : ?>
+						<?php foreach ( caaguazu_ecosystem_items( $current_eco ) as $s ) : ?>
 							<li><a href="<?php echo esc_url( $s['url'] ); ?>"><?php echo esc_html( $s['label'] ); ?></a></li>
 						<?php endforeach; ?>
 					</ul>
@@ -99,6 +106,7 @@ for ( $i = 0; $i < 3; $i++ ) {
 		</div>
 	</div>
 </footer>
+<?php endif; ?>
 
 <?php if ( $is_home ) : ?>
 <script type="application/ld+json">
