@@ -127,6 +127,9 @@ function caaguazu_body_class( $classes ) {
 	if ( is_front_page() ) {
 		$classes[] = 'page-home';
 	}
+	if ( is_page_template( 'page-templates/page-builder.php' ) ) {
+		$classes[] = 'page-builder-canvas';
+	}
 	$eco = caaguazu_current_ecosystem();
 	if ( $eco ) {
 		$classes[] = 'eco-page';
