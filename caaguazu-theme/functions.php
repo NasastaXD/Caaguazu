@@ -107,9 +107,10 @@ function caaguazu_enqueue_assets() {
 		'restSearchUrl' => esc_url_raw( rest_url( 'wp/v2/search' ) ),
 		'ecosystems'    => $eco_config,
 		'i18nHome'      => __( 'Caaguazú', 'caaguazu' ),
-		// Ícono del telón al volver al sitio institucional (lapacho — la
-		// misma marca que ya usa Turismo en su "Inicio" del tabbar).
-		'homeIcon'      => caaguazu_icon( 'tree' ),
+		// Ícono del telón al volver al sitio institucional: el mismo emoji
+		// de árbol del splash de entrada (header.php), no el de Turismo
+		// (que usa su propio emoji distinto en su "Inicio" del tabbar).
+		'homeIcon'      => caaguazu_icon( '🌳' ),
 	) );
 }
 add_action( 'wp_enqueue_scripts', 'caaguazu_enqueue_assets' );

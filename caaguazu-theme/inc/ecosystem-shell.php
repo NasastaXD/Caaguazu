@@ -17,7 +17,7 @@
  *
  *   $ecos['turismo'] = array(
  *     'label'        => 'Turismo',   // wordmark del shell y label del telón
- *     'home_icon'    => 'tree',      // ícono del ítem "Inicio" del tabbar
+ *     'home_icon'    => '🌴',        // ícono del ítem "Inicio" del tabbar — clave de inc/icons.php, o un emoji/HTML literal
  *     'hub_url'      => callable,    // string: URL del hub (página o archive)
  *     'is_context'   => callable,    // bool: ¿la request actual es de este eco?
  *     'is_hub'       => callable,    // bool: header transparente sobre hero propio
@@ -279,7 +279,7 @@ function caaguazu_tourism_hub_url() {
 add_filter( 'caaguazu_ecosystems', function ( $ecos ) {
 	$ecos['turismo'] = array(
 		'label'        => __( 'Turismo', 'caaguazu' ),
-		'home_icon'    => 'tree',
+		'home_icon'    => '🌴', // emoji a propósito (no un ícono SVG dibujado) — distinto del 🌳 del splash de entrada.
 		'hub_url'      => 'caaguazu_tourism_hub_url',
 		'is_context'   => 'caaguazu_is_tourism_context',
 		'is_hub'       => 'caaguazu_is_tourism_hub',
