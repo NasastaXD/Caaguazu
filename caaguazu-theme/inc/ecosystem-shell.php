@@ -111,6 +111,11 @@ function caaguazu_render_ecosystem_header( $eco ) {
 
 			<div class="header-actions">
 				<a href="<?php echo esc_url( get_search_link() ? get_search_link() : home_url( '/?s=' ) ); ?>" class="icon-btn" aria-label="<?php esc_attr_e( 'Buscar', 'caaguazu' ); ?>"><?php echo caaguazu_icon( 'search' ); ?></a>
+				<div class="lang" role="group" aria-label="<?php esc_attr_e( 'Idioma', 'caaguazu' ); ?>">
+					<button class="on" data-lang="ES">ES</button>
+					<button data-lang="GN">GN</button>
+					<button data-lang="EN" disabled title="<?php esc_attr_e( 'Próximamente', 'caaguazu' ); ?>">EN</button>
+				</div>
 				<button class="icon-btn burger" id="burger" aria-label="<?php esc_attr_e( 'Abrir menú', 'caaguazu' ); ?>"><?php echo caaguazu_icon( 'menu' ); ?></button>
 			</div>
 		</div>
@@ -121,6 +126,13 @@ function caaguazu_render_ecosystem_header( $eco ) {
 		<button class="close" id="drawerClose" aria-label="<?php esc_attr_e( 'Cerrar', 'caaguazu' ); ?>">×</button>
 		<a class="eco-back" href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php echo caaguazu_icon( 'back' ); ?> <?php esc_html_e( 'Volver a Caaguazú', 'caaguazu' ); ?></a>
 		<?php caaguazu_render_nav_item_list( $items, $active ); ?>
+		<?php /* Misma copia mobile del selector que en el header institucional
+		   (header.php) — ver ese comentario para el porqué. */ ?>
+		<div class="lang drawer-lang" role="group" aria-label="<?php esc_attr_e( 'Idioma', 'caaguazu' ); ?>">
+			<button class="on" data-lang="ES">ES</button>
+			<button data-lang="GN">GN</button>
+			<button data-lang="EN" disabled title="<?php esc_attr_e( 'Próximamente', 'caaguazu' ); ?>">EN</button>
+		</div>
 	</aside>
 	<?php
 }

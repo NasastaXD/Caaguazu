@@ -127,6 +127,15 @@ address{font-style:normal;margin-top:16px;font-size:14px;line-height:1.7;color:v
 .burger{display:inline-flex}
 @media(min-width:1024px){.nav{display:flex}.burger{display:none}}
 @media(min-width:768px){.lang{display:inline-flex}}
+/* Copia del selector de idioma dentro del drawer móvil: el de la barra
+   (.header-actions .lang) se oculta por falta de espacio bajo los
+   768px de arriba — esta es la forma de llegar a él en celular. Colores
+   claros porque el drawer siempre tiene fondo claro (nunca hereda el
+   estilo "sobre imagen" del header transparente). */
+.drawer-lang{display:inline-flex!important;align-self:flex-start;margin-top:4px;
+  border-color:var(--border)}
+.drawer-lang button{color:var(--text-muted)}
+.drawer-lang button.on{background:var(--green-deep);color:#fff}
 
 /* Mobile drawer */
 .drawer-bg{position:fixed;inset:0;background:rgba(16,26,20,.5);opacity:0;pointer-events:none;transition:opacity var(--t);z-index:60}
