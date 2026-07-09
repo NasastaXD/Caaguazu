@@ -329,6 +329,87 @@ function caaguazu_render_turismo_carousel() {
 }
 
 /**
+ * Grilla de tarjetas del Ecosistema (Turismo, Educación, sub-portales
+ * externos como CEAD) — misma tarjeta que usa front-page.php, extraída acá
+ * para poder reusarla también en la página `ecosistema` (antes esa página,
+ * al visitarla directo en vez de scrollear desde el home, no mostraba
+ * ninguna de estas tarjetas). Recibe el array ya resuelto por
+ * `caaguazu_modulos_ecosystem_cards()` (o el fallback de 3 slots viejo);
+ * no imprime nada si viene vacío.
+ */
+function caaguazu_render_ecosystem_cards( $eco_cards, $section_title = '', $section_body = '' ) {
+	if ( ! $eco_cards ) {
+		return;
+	}
+	$section_title = $section_title ?: caaguazu_opt( 'eco_section_title', __( 'Sub-portales del departamento', 'caaguazu' ) );
+	$section_body  = $section_body ?: caaguazu_opt( 'eco_section_body', __( 'Caaguazu.net centraliza el acceso a los sub-portales especializados del departamento. Cada uno conserva su propio contenido dentro de una misma identidad institucional.', 'caaguazu' ) );
+	?>
+	<section class="eco">
+		<div class="container">
+			<div class="section-head reveal">
+				<p class="eyebrow"><?php esc_html_e( 'Ecosistema', 'caaguazu' ); ?></p>
+				<h2><?php echo esc_html( $section_title ); ?></h2>
+				<p><?php echo esc_html( $section_body ); ?></p>
+			</div>
+			<div class="eco-grid">
+				<?php foreach ( $eco_cards as $card ) :
+					$soon   = empty( $card['url'] );
+					$tag_el = $soon ? 'div' : 'a';
+					if ( $soon ) {
+						$attrs = '';
+					} elseif ( ! empty( $card['external'] ) ) {
+						$attrs = sprintf( 'href="%s" target="_blank" rel="noreferrer"', esc_url( $card['url'] ) );
+					} else {
+						$attrs = sprintf( 'href="%s"', esc_url( $card['url'] ) );
+					}
+				?>
+					<<?php echo $tag_el; ?> class="eco-card reveal <?php echo $soon ? 'soon' : ''; ?>" <?php echo $attrs; ?>>
+						<div class="img"><img src="<?php echo esc_url( $card['image'] ); ?>" alt="" loading="lazy"></div>
+						<div class="body">
+							<span class="eco-tag"><?php echo esc_html( $card['tag'] ); ?></span>
+							<h3><?php echo esc_html( $card['title'] ); ?></h3>
+							<p class="desc"><?php echo esc_html( $card['body'] ); ?></p>
+							<span class="arrow"><?php echo esc_html( $card['cta'] ); ?></span>
+						</div>
+					</<?php echo $tag_el; ?>>
+				<?php endforeach; ?>
+			</div>
+		</div>
+	</section>
+	<?php
+}
+
+/**
+ * Resuelve las tarjetas del Ecosistema (registry de plugins 1.4+, o el
+ * fallback de 3 slots posicionales de un plugin viejo) — mismo cálculo que
+ * antes vivía inline en front-page.php, ahora compartido con la página
+ * `ecosistema` (ver `caaguazu_render_ecosystem_cards()`).
+ */
+function caaguazu_resolve_ecosystem_cards() {
+	if ( function_exists( 'caaguazu_modulos_ecosystem_cards' ) ) {
+		return caaguazu_modulos_ecosystem_cards();
+	}
+	if ( ! function_exists( 'caaguazu_ecosystem_defaults' ) ) {
+		return array();
+	}
+	$eco_cards    = array();
+	$eco_defaults = caaguazu_ecosystem_defaults();
+	for ( $i = 0; $i < 3; $i++ ) {
+		$d           = $eco_defaults[ $i ];
+		$eco_cards[] = array(
+			'tag'      => caaguazu_opt( "eco_{$i}_tag", $d['tag'] ),
+			'title'    => caaguazu_opt( "eco_{$i}_title", $d['title'] ),
+			'body'     => caaguazu_opt( "eco_{$i}_body", $d['body'] ),
+			'cta'      => caaguazu_opt( "eco_{$i}_cta", $d['cta'] ),
+			'url'      => caaguazu_opt( "eco_{$i}_url", $d['url'] ),
+			'image'    => caaguazu_opt_image( "eco_{$i}_image", $d['image'] ),
+			'external' => true,
+		);
+	}
+	return $eco_cards;
+}
+
+/**
  * Tabbar fijo inferior (solo móvil): navegación tipo app, siempre alcanzable
  * con el pulgar, sin importar en qué página esté el usuario.
  */

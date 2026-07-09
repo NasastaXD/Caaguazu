@@ -131,6 +131,15 @@ if ( $content ) : ?>
 <?php endif; ?>
 
 <?php
+// La página `ecosistema` suma la misma grilla de tarjetas que el home,
+// para que visitarla directo (no solo scrollear desde el home) muestre
+// los sub-portales reales — antes esto era exclusivo de front-page.php.
+if ( 'ecosistema' === $slug ) {
+	caaguazu_render_ecosystem_cards( caaguazu_resolve_ecosystem_cards() );
+}
+?>
+
+<?php
 endwhile;
 
 get_footer();
