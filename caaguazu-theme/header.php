@@ -139,6 +139,17 @@ $elementor_header_done = function_exists( 'elementor_theme_do_location' ) && ele
 		<button class="close" id="drawerClose" aria-label="<?php esc_attr_e( 'Cerrar', 'caaguazu' ); ?>">×</button>
 		<?php caaguazu_render_nav( 'mobile', $current_slug ); ?>
 		<a href="<?php echo esc_url( home_url( '/?s=' ) ); ?>"><?php caaguazu_i18n( 'header.buscar', __( 'Buscar', 'caaguazu' ) ); ?></a>
+		<?php /* El selector ES/GN/EN del header (.header-actions .lang) se oculta
+		   en mobile (@media min-width:768px en main.css) por falta de espacio en
+		   la barra — esta copia en el drawer es la forma de llegar a él en
+		   celular, que es donde vive la mayoría de las visitas. Mismo markup
+		   (misma clase .lang y data-lang), así el JS de assets/js/main.js lo
+		   detecta y mantiene ambas copias sincronizadas sin código aparte. */ ?>
+		<div class="lang drawer-lang" role="group" aria-label="<?php esc_attr_e( 'Idioma', 'caaguazu' ); ?>">
+			<button class="on" data-lang="ES">ES</button>
+			<button data-lang="GN">GN</button>
+			<button data-lang="EN" disabled title="<?php esc_attr_e( 'Próximamente', 'caaguazu' ); ?>">EN</button>
+		</div>
 	</aside>
 <?php endif; ?>
 

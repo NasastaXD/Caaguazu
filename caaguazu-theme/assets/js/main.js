@@ -248,20 +248,24 @@
   // Selector de idioma ES/GN funcional: toggle 100% cliente, persistido en
   // localStorage. El HTML servido es siempre el mismo (dual-render en PHP),
   // así que esto no depende de cookies ni rompe ningún cache de página.
-  var isCurrentlyGn = document.documentElement.classList.contains('lang-gn');
-  var current = document.querySelector('.lang button[data-lang="' + (isCurrentlyGn ? 'GN' : 'ES') + '"]');
-  if (current) {
-    document.querySelectorAll('.lang button').forEach(function(x){ x.classList.remove('on'); });
-    current.classList.add('on');
+  // Hay DOS copias del widget en el DOM (header.php: una en la barra
+  // .header-actions, oculta bajo los 768px, y otra en el drawer móvil para
+  // llegar a él en celular) — sincroniza todas las que encuentre, no solo
+  // la primera.
+  function syncLangButtons() {
+    var isGn = document.documentElement.classList.contains('lang-gn');
+    document.querySelectorAll('.lang button[data-lang]').forEach(function(b){
+      b.classList.toggle('on', b.dataset.lang === (isGn ? 'GN' : 'ES'));
+    });
   }
+  syncLangButtons();
   document.querySelectorAll('.lang button[data-lang]').forEach(function(b){
     if (b.disabled) return;
     b.addEventListener('click', function(){
-      b.parentNode.querySelectorAll('button').forEach(function(x){ x.classList.remove('on'); });
-      b.classList.add('on');
       var isGn = b.dataset.lang === 'GN';
       document.documentElement.classList.toggle('lang-gn', isGn);
       try { localStorage.setItem('caaguazuLang', isGn ? 'GN' : 'ES'); } catch (e) {}
+      syncLangButtons();
     });
   });
 })();
