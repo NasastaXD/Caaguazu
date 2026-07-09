@@ -45,6 +45,72 @@ function caaguazu_ecosystem_defaults() {
 }
 
 /**
+ * Defaults de los 3 slots configurables de sub-portales EXTERNOS. Desde el
+ * theme 3.0 las tarjetas de los ecosistemas internos (Turismo, Educación,
+ * los que vengan) se derivan solas del registry `caaguazu_ecosystems` del
+ * theme — los slots del Customizer quedan solo para sitios externos como
+ * el CEAD. El tercer slot arranca vacío (título vacío = no se muestra).
+ *
+ * Nota de migración: los slots son posicionales (`eco_{i}_*`). Un sitio que
+ * haya personalizado el slot 0 cuando el default era Turismo verá esa
+ * tarjeta duplicada junto a la interna — se corrige vaciándola en
+ * Apariencia → Personalizar → Ecosistema.
+ */
+function caaguazu_modulos_external_eco_defaults() {
+	$defaults   = caaguazu_ecosystem_defaults();
+	$empty_slot = array( 'tag' => '', 'title' => '', 'body' => '', 'cta' => '', 'url' => '', 'image' => '' );
+	return array( $defaults[1], $defaults[2], $empty_slot );
+}
+
+/**
+ * Tarjetas finales del hub Ecosistema, ya resueltas: internas (registry del
+ * theme) + externas (slots del Customizer, salteando los vacíos). El theme
+ * 3.0 usa esta función; con un theme viejo (sin registry), front-page.php
+ * sigue cayendo en caaguazu_ecosystem_defaults() y nada cambia.
+ */
+function caaguazu_modulos_ecosystem_cards() {
+	$cards = array();
+
+	if ( function_exists( 'caaguazu_ecosystems' ) ) {
+		foreach ( caaguazu_ecosystems() as $eco ) {
+			$card    = isset( $eco['card'] ) ? $eco['card'] : array();
+			$cards[] = array(
+				'tag'      => $eco['label'],
+				'title'    => $eco['label'],
+				'body'     => isset( $card['body'] ) ? $card['body'] : '',
+				'cta'      => sprintf( __( 'Ver sección de %s', 'caaguazu-modulos' ), $eco['label'] ),
+				'url'      => caaguazu_ecosystem_hub_url( $eco ),
+				'image'    => isset( $card['image'] ) ? $card['image'] : '',
+				'external' => false,
+			);
+		}
+	}
+
+	$defaults = caaguazu_modulos_external_eco_defaults();
+	foreach ( $defaults as $i => $d ) {
+		$title = get_theme_mod( "eco_{$i}_title", $d['title'] );
+		if ( '' === $title ) {
+			continue; // slot vacío: no se muestra.
+		}
+		$image = get_theme_mod( "eco_{$i}_image", $d['image'] );
+		if ( is_numeric( $image ) ) {
+			$image = wp_get_attachment_image_url( (int) $image, 'large' );
+		}
+		$cards[] = array(
+			'tag'      => get_theme_mod( "eco_{$i}_tag", $d['tag'] ),
+			'title'    => $title,
+			'body'     => get_theme_mod( "eco_{$i}_body", $d['body'] ),
+			'cta'      => get_theme_mod( "eco_{$i}_cta", $d['cta'] ),
+			'url'      => get_theme_mod( "eco_{$i}_url", $d['url'] ),
+			'image'    => $image,
+			'external' => true,
+		);
+	}
+
+	return $cards;
+}
+
+/**
  * Registra su propia sección en el panel "Contenido del Home" que el theme
  * ya crea. Si el theme activo no tiene ese panel (u otro theme sin panel
  * "caaguazu_home"), el Customizer igual muestra la sección, solo que sin
@@ -52,7 +118,7 @@ function caaguazu_ecosystem_defaults() {
  */
 function caaguazu_modulos_ecosistema_customize_register( $wp_customize ) {
 	$wp_customize->add_section( 'caaguazu_ecosystem', array(
-		'title' => __( 'Ecosistema (3 sub-portales)', 'caaguazu-modulos' ),
+		'title' => __( 'Ecosistema (sub-portales externos)', 'caaguazu-modulos' ),
 		'panel' => 'caaguazu_home',
 	) );
 
@@ -78,7 +144,7 @@ function caaguazu_modulos_ecosistema_customize_register( $wp_customize ) {
 		return; // el theme activo no expone los helpers genéricos del Customizer.
 	}
 
-	$eco_defaults = caaguazu_ecosystem_defaults();
+	$eco_defaults = caaguazu_modulos_external_eco_defaults();
 	for ( $i = 0; $i < 3; $i++ ) {
 		$d = $eco_defaults[ $i ];
 		caaguazu_add_text(  $wp_customize, "eco_{$i}_tag",   __( 'Tag (subdominio)', 'caaguazu-modulos' ), $d['tag'],   'caaguazu_ecosystem' );

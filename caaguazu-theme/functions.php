@@ -86,13 +86,24 @@ function caaguazu_enqueue_assets() {
 		CAAGUAZU_VERSION,
 		true
 	);
+	// Fronteras de módulos para el telón de transición (animations.js): un
+	// entry por ecosistema registrado, con sus prefijos de URL.
+	$eco_config = array();
+	foreach ( caaguazu_ecosystems() as $slug => $eco ) {
+		$prefixes = empty( $eco['url_prefixes'] ) ? array() : (array) call_user_func( $eco['url_prefixes'] );
+		if ( empty( $prefixes ) ) {
+			continue;
+		}
+		$eco_config[] = array(
+			'slug'     => $slug,
+			'label'    => $eco['label'],
+			'prefixes' => array_map( 'esc_url_raw', $prefixes ),
+		);
+	}
 	wp_localize_script( 'caaguazu-main', 'caaguazuConfig', array(
-		'restSearchUrl'   => esc_url_raw( rest_url( 'wp/v2/search' ) ),
-		// Frontera de módulos para el telón de transición (animations.js):
-		// URLs que pertenecen al ecosistema Turismo (hub + Locales + Portal).
-		'tourismPrefixes' => array_map( 'esc_url_raw', caaguazu_tourism_url_prefixes() ),
-		'i18nTourism'     => __( 'Turismo', 'caaguazu' ),
-		'i18nHome'        => __( 'Caaguazú', 'caaguazu' ),
+		'restSearchUrl' => esc_url_raw( rest_url( 'wp/v2/search' ) ),
+		'ecosystems'    => $eco_config,
+		'i18nHome'      => __( 'Caaguazú', 'caaguazu' ),
 	) );
 }
 add_action( 'wp_enqueue_scripts', 'caaguazu_enqueue_assets' );
@@ -116,11 +127,21 @@ function caaguazu_body_class( $classes ) {
 	if ( is_front_page() ) {
 		$classes[] = 'page-home';
 	}
-	if ( caaguazu_is_tourism_context() ) {
-		$classes[] = 'tourism-page';
-	}
-	if ( caaguazu_is_tourism_hub() ) {
-		$classes[] = 'tourism-hub';
+	$eco = caaguazu_current_ecosystem();
+	if ( $eco ) {
+		$classes[] = 'eco-page';
+		$classes[] = 'eco-' . $eco['slug'];
+		$is_hub = caaguazu_ecosystem_is_hub( $eco );
+		if ( $is_hub ) {
+			$classes[] = 'eco-hub';
+		}
+		// Clases históricas (tourism-page/tourism-hub) que el CSS ya usa.
+		if ( ! empty( $eco['legacy_classes']['context'] ) ) {
+			$classes[] = $eco['legacy_classes']['context'];
+		}
+		if ( $is_hub && ! empty( $eco['legacy_classes']['hub'] ) ) {
+			$classes[] = $eco['legacy_classes']['hub'];
+		}
 	}
 	return $classes;
 }
@@ -133,7 +154,7 @@ add_filter( 'body_class', 'caaguazu_body_class' );
 require get_template_directory() . '/inc/i18n.php';
 require get_template_directory() . '/inc/icons.php';
 require get_template_directory() . '/inc/helpers.php';
-require get_template_directory() . '/inc/tourism-shell.php';
+require get_template_directory() . '/inc/ecosystem-shell.php';
 require get_template_directory() . '/inc/cpt-artisan.php';
 require get_template_directory() . '/inc/demo-artisans.php';
 require get_template_directory() . '/inc/customizer.php';

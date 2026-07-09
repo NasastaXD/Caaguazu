@@ -8,7 +8,7 @@
  * 2. Ripple al clickear botones/tiles/tabbar.
  * 3. Tilt 3D del hero de la home (mouse, solo desktop con puntero fino).
  * 4. Partículas doradas (aserrín) flotando en los heros.
- * 5. Telón de transición al cruzar entre módulos (Caaguazú ↔ Turismo).
+ * 5. Telón de transición al cruzar entre módulos (Caaguazú ↔ ecosistemas).
  *
  * Todo se apaga con prefers-reduced-motion.
  */
@@ -145,7 +145,13 @@
   })();
 
   /* ------------------------------------------------------------------
-   * 5. Telón de transición entre módulos (Caaguazú ↔ Turismo)
+   * 5. Telón de transición entre módulos (Caaguazú ↔ ecosistemas)
+   *
+   * caaguazuConfig.ecosystems trae un entry por ecosistema registrado
+   * ({slug, label, prefixes}); el eco actual sale de la body class
+   * eco-{slug}. Si un link cruza de un eco a otro (o al sitio
+   * institucional), se muestra el telón con el label y el color
+   * (.to-{slug}, ver animations.css) del destino.
    * ------------------------------------------------------------------ */
   (function () {
     // Al llegar desde el otro módulo: entrada suave del contenido.
@@ -158,8 +164,21 @@
 
     if (reducedMotion) { return; }
     var cfg = window.caaguazuConfig || {};
-    var prefixes = cfg.tourismPrefixes || [];
-    if (!prefixes.length) { return; }
+    var ecos = cfg.ecosystems || [];
+    if (!ecos.length) { return; }
+
+    var currentSlug = null;
+    ecos.forEach(function (eco) {
+      if (document.body.classList.contains('eco-' + eco.slug)) { currentSlug = eco.slug; }
+    });
+
+    function ecoForUrl(href) {
+      for (var i = 0; i < ecos.length; i++) {
+        var match = (ecos[i].prefixes || []).some(function (p) { return href.indexOf(p) === 0; });
+        if (match) { return ecos[i]; }
+      }
+      return null;
+    }
 
     var curtain = document.createElement('div');
     curtain.className = 'module-curtain';
@@ -169,7 +188,6 @@
     curtain.appendChild(label);
     document.body.appendChild(curtain);
 
-    var inTourism = document.body.classList.contains('tourism-page');
     var navigating = false;
 
     document.addEventListener('click', function (e) {
@@ -180,13 +198,14 @@
       var href = a.href;
       if (!href || href.indexOf(location.origin) !== 0 || href.indexOf('#') !== -1) { return; }
 
-      var toTourism = prefixes.some(function (p) { return href.indexOf(p) === 0; });
-      if (toTourism === inTourism) { return; } // no cruza la frontera de módulo
+      var target = ecoForUrl(href);
+      var targetSlug = target ? target.slug : null;
+      if (targetSlug === currentSlug) { return; } // no cruza frontera de módulo
 
       e.preventDefault();
       navigating = true;
-      label.textContent = toTourism ? (cfg.i18nTourism || 'Turismo') : (cfg.i18nHome || 'Caaguazú');
-      curtain.classList.add(toTourism ? 'to-turismo' : 'to-caaguazu', 'in');
+      label.textContent = target ? target.label : (cfg.i18nHome || 'Caaguazú');
+      curtain.classList.add(target ? 'to-' + target.slug : 'to-caaguazu', 'in');
       try { sessionStorage.setItem('cgzModuleEnter', '1'); } catch (err) {}
       setTimeout(function () { location.href = href; }, 430);
     });

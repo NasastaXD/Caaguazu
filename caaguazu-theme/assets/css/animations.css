@@ -75,13 +75,18 @@ body.page-home .hero-inner .lead{transform:translateZ(14px)}
   animation:cgzRipple .55s ease-out forwards}
 @keyframes cgzRipple{to{transform:scale(2.6);opacity:0}}
 
-/* --- Telón de transición entre módulos (Caaguazú ↔ Turismo) ---------- */
+/* --- Telón de transición entre módulos (Caaguazú ↔ ecosistemas) ------
+   Un color por ecosistema: .to-{slug} (el JS lo arma desde
+   caaguazuConfig.ecosystems). Sin regla propia, cae en el degradé
+   institucional de .module-curtain. */
 .module-curtain{
   position:fixed;inset:0;z-index:200;pointer-events:none;
   transform:translateY(101%);
   display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(160deg,var(--green-forest),var(--green-deep));
   will-change:transform}
 .module-curtain.to-turismo{background:linear-gradient(160deg,var(--earth-bark),var(--wood-deep))}
+.module-curtain.to-educacion{background:linear-gradient(160deg,#16324D,#27567F)}
 .module-curtain.to-caaguazu{background:linear-gradient(160deg,var(--green-forest),var(--green-deep))}
 .module-curtain.in{transform:translateY(0);transition:transform .42s cubic-bezier(.65,0,.35,1)}
 .module-curtain .label{

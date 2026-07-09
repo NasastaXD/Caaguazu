@@ -205,6 +205,112 @@ function caaguazu_modulos_seed_educacion() {
 }
 
 /**
+ * Ecosistema Educación — registro en el shell genérico del theme
+ * (`caaguazu_ecosystems`, inc/ecosystem-shell.php): mientras se navega
+ * dentro de Educación (archive, singles, tipos), el theme reemplaza el
+ * chrome institucional por el header/tabbar propios del eco, con la
+ * paleta tinta/pizarra (body.eco-educacion en main.css). Si el theme
+ * activo no expone el filtro, nada de esto corre y el módulo sigue
+ * funcionando como contenido común.
+ */
+
+function caaguazu_educacion_is_context() {
+	return is_post_type_archive( 'caaguazu_educacion' )
+		|| is_singular( 'caaguazu_educacion' )
+		|| is_tax( 'caaguazu_edu_tipo' );
+}
+
+function caaguazu_educacion_hub_url() {
+	$archive = get_post_type_archive_link( 'caaguazu_educacion' );
+	return $archive ? $archive : home_url( '/educacion/' );
+}
+
+function caaguazu_educacion_url_prefixes() {
+	$prefixes = array( caaguazu_educacion_hub_url() );
+	$tax      = get_taxonomy( 'caaguazu_edu_tipo' );
+	if ( $tax && ! empty( $tax->rewrite['slug'] ) ) {
+		$prefixes[] = home_url( '/' . $tax->rewrite['slug'] . '/' );
+	}
+	return array_values( array_unique( $prefixes ) );
+}
+
+/**
+ * Sección activa a resaltar en el nav/tabbar del shell: el slug del eco en
+ * su hub (el archive), el término en un archivo de tipo, y el tipo de la
+ * entrada en un single.
+ */
+function caaguazu_educacion_active_slug() {
+	if ( is_post_type_archive( 'caaguazu_educacion' ) ) {
+		return 'educacion';
+	}
+	if ( is_tax( 'caaguazu_edu_tipo' ) ) {
+		$term = get_queried_object();
+		return $term ? $term->slug : '';
+	}
+	if ( is_singular( 'caaguazu_educacion' ) ) {
+		$terms = get_the_terms( get_queried_object_id(), 'caaguazu_edu_tipo' );
+		if ( $terms && ! is_wp_error( $terms ) ) {
+			return $terms[0]->slug;
+		}
+	}
+	return '';
+}
+
+/**
+ * Secciones del shell: un ítem por tipo (Escuelas/Becas/Programas/
+ * Estadísticas), con link al archivo del término. Expuesto vía su propio
+ * filtro (mismo patrón que `caaguazu_tourism_shell_items`) por si otro
+ * plugin quiere sumar secciones al eco.
+ */
+function caaguazu_educacion_shell_items() {
+	$icons = array(
+		'escuelas'     => 'home',
+		'becas'        => 'celebration',
+		'programas'    => 'target',
+		'estadisticas' => 'chart',
+	);
+	$items = array();
+	$terms = get_terms( array(
+		'taxonomy'   => 'caaguazu_edu_tipo',
+		'hide_empty' => false,
+	) );
+	if ( ! is_wp_error( $terms ) ) {
+		foreach ( $terms as $term ) {
+			$url = get_term_link( $term );
+			if ( is_wp_error( $url ) ) {
+				continue;
+			}
+			$items[] = array(
+				'slug'  => $term->slug,
+				'label' => $term->name,
+				'short' => $term->name,
+				'icon'  => isset( $icons[ $term->slug ] ) ? $icons[ $term->slug ] : 'book',
+				'url'   => $url,
+			);
+		}
+	}
+	return apply_filters( 'caaguazu_educacion_shell_items', $items );
+}
+
+add_filter( 'caaguazu_ecosystems', function ( $ecos ) {
+	$ecos['educacion'] = array(
+		'label'        => __( 'Educación', 'caaguazu-modulos' ),
+		'home_icon'    => 'book',
+		'hub_url'      => 'caaguazu_educacion_hub_url',
+		'is_context'   => 'caaguazu_educacion_is_context',
+		'is_hub'       => '__return_false', // sin hero a sangre: header siempre sólido
+		'active_slug'  => 'caaguazu_educacion_active_slug',
+		'url_prefixes' => 'caaguazu_educacion_url_prefixes',
+		'items'        => 'caaguazu_educacion_shell_items',
+		'card'         => array(
+			'body'  => __( 'Escuelas, becas municipales, programas y estadísticas educativas del departamento.', 'caaguazu-modulos' ),
+			'image' => 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1400&q=80',
+		),
+	);
+	return $ecos;
+} );
+
+/**
  * `register_activation_hook` solo corre al activar este plugin; un sitio
  * que ya lo tenga activo y reciba una actualización con este módulo nuevo
  * nunca dispara ese hook. Mismo catch-up que ya usa module-ecosistema.php.
