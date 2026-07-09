@@ -78,7 +78,19 @@ $current_eco  = caaguazu_current_ecosystem();
 	</script>
 <?php endif; ?>
 
-<?php if ( $current_eco ) : ?>
+<?php
+/**
+ * Si Elementor Pro (Theme Builder) tiene un header propio asignado y
+ * activo para esta página, `elementor_theme_do_location()` ya lo imprimió
+ * y devuelve true — el theme no agrega el suyo encima. `function_exists()`
+ * hace que esto no cambie nada si Elementor Pro no está instalado (la
+ * inmensa mayoría de los sitios): sigue exactamente el header de siempre.
+ */
+$elementor_header_done = function_exists( 'elementor_theme_do_location' ) && elementor_theme_do_location( 'header' );
+?>
+<?php if ( $elementor_header_done ) : ?>
+	<?php // Header servido por el Theme Builder de Elementor Pro — nada más que hacer acá. ?>
+<?php elseif ( $current_eco ) : ?>
 	<?php caaguazu_render_ecosystem_header( $current_eco ); ?>
 <?php else : ?>
 	<header class="header <?php echo $is_home ? '' : 'solid'; ?>" id="header">
