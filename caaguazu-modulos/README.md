@@ -17,6 +17,8 @@ Cada módulo se registra solo en el nav y los accesos rápidos del theme vía lo
 
 Las tarjetas del hub Ecosistema del home son dinámicas desde la 1.4 (`caaguazu_modulos_ecosystem_cards()`): las de los ecosistemas internos (Turismo, Educación, los que vengan) salen solas del registry del theme, y los 3 slots del Customizer quedan para sub-portales externos (CEAD; el tercer slot arranca vacío = oculto). Ojo: los slots son posicionales — un sitio que haya personalizado el slot 0 cuando su default era Turismo verá esa tarjeta duplicada; se corrige vaciándola en el Customizer.
 
+Desde la 1.7, la imagen de la tarjeta de Educación (y, del lado del theme, la portada del hub de Turismo + su propia tarjeta) son editables desde **Personalizar → Contenido del Home** en vez de estar fijas en el código — ver "Imágenes del sitio" en `caaguazu-theme/README.md`.
+
 El plugin se auto-actualiza desde los GitHub Releases del repo (`includes/updater.php`), comparando su versión contra el `manifest.json` del release — ver `caaguazu-theme/README.md`, sección "Actualizaciones".
 
 ## Agregar un módulo nuevo
