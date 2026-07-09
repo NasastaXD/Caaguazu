@@ -119,29 +119,39 @@
   })();
 
   /* ------------------------------------------------------------------
-   * 4. Partículas doradas (aserrín) en los heros
+   * 4. Partículas doradas (aserrín) en heros y en el splash de entrada —
+   *    cualquier superficie a sangre completa que exista en la página
+   *    suma su propia caja de partículas (no es "la primera que
+   *    encuentre": el splash y el hero de la home conviven en la misma
+   *    carga, y ambos deben tener las suyas).
    * ------------------------------------------------------------------ */
   (function () {
     if (reducedMotion) { return; }
-    var host = document.querySelector('body.page-home .hero') ||
-               document.querySelector('.tourism-hero-full');
-    if (!host) { return; }
-    var box = document.createElement('div');
-    box.className = 'cgz-particles';
-    box.setAttribute('aria-hidden', 'true');
-    for (var i = 0; i < 14; i++) {
-      var p = document.createElement('span');
-      var size = 2 + Math.random() * 4;
-      p.style.width = p.style.height = size.toFixed(1) + 'px';
-      p.style.left = (Math.random() * 100).toFixed(1) + '%';
-      p.style.setProperty('--p-dur', (9 + Math.random() * 9).toFixed(1) + 's');
-      p.style.setProperty('--p-delay', (Math.random() * -18).toFixed(1) + 's');
-      p.style.setProperty('--p-op', (0.25 + Math.random() * 0.4).toFixed(2));
-      p.style.setProperty('--p-rise', (45 + Math.random() * 45).toFixed(0) + 'vh');
-      p.style.setProperty('--p-drift', ((Math.random() - 0.5) * 90).toFixed(0) + 'px');
-      box.appendChild(p);
-    }
-    host.appendChild(box);
+    var hosts = [
+      document.querySelector('body.page-home .hero'),
+      document.querySelector('.tourism-hero-full'),
+      document.getElementById('cgzSplash')
+    ].filter(Boolean);
+    if (!hosts.length) { return; }
+
+    hosts.forEach(function (host) {
+      var box = document.createElement('div');
+      box.className = 'cgz-particles';
+      box.setAttribute('aria-hidden', 'true');
+      for (var i = 0; i < 14; i++) {
+        var p = document.createElement('span');
+        var size = 2 + Math.random() * 4;
+        p.style.width = p.style.height = size.toFixed(1) + 'px';
+        p.style.left = (Math.random() * 100).toFixed(1) + '%';
+        p.style.setProperty('--p-dur', (9 + Math.random() * 9).toFixed(1) + 's');
+        p.style.setProperty('--p-delay', (Math.random() * -18).toFixed(1) + 's');
+        p.style.setProperty('--p-op', (0.25 + Math.random() * 0.4).toFixed(2));
+        p.style.setProperty('--p-rise', (45 + Math.random() * 45).toFixed(0) + 'vh');
+        p.style.setProperty('--p-drift', ((Math.random() - 0.5) * 90).toFixed(0) + 'px');
+        box.appendChild(p);
+      }
+      host.appendChild(box);
+    });
   })();
 
   /* ------------------------------------------------------------------
@@ -183,10 +193,27 @@
     var curtain = document.createElement('div');
     curtain.className = 'module-curtain';
     curtain.setAttribute('aria-hidden', 'true');
-    var label = document.createElement('span');
-    label.className = 'label';
-    curtain.appendChild(label);
+    curtain.innerHTML = '<span class="burst"></span><span class="icon"></span><span class="label"></span>';
     document.body.appendChild(curtain);
+    var burst = curtain.querySelector('.burst');
+    var icon = curtain.querySelector('.icon');
+    var label = curtain.querySelector('.label');
+
+    // Ráfaga de partículas radiando desde el centro — se arma de nuevo en
+    // cada transición para que la dispersión salga distinta cada vez.
+    function spawnBurst() {
+      burst.innerHTML = '';
+      var count = 12;
+      for (var i = 0; i < count; i++) {
+        var dot = document.createElement('span');
+        var angle = (360 / count) * i + (Math.random() * 18 - 9);
+        var dist = 55 + Math.random() * 55;
+        dot.style.setProperty('--b-angle', angle.toFixed(1) + 'deg');
+        dot.style.setProperty('--b-dist', dist.toFixed(0) + 'px');
+        dot.style.setProperty('--b-delay', (Math.random() * 0.1).toFixed(2) + 's');
+        burst.appendChild(dot);
+      }
+    }
 
     var navigating = false;
 
@@ -205,9 +232,11 @@
       e.preventDefault();
       navigating = true;
       label.textContent = target ? target.label : (cfg.i18nHome || 'Caaguazú');
+      icon.innerHTML = target ? (target.icon || '') : (cfg.homeIcon || '');
+      spawnBurst();
       curtain.classList.add(target ? 'to-' + target.slug : 'to-caaguazu', 'in');
       try { sessionStorage.setItem('cgzModuleEnter', '1'); } catch (err) {}
-      setTimeout(function () { location.href = href; }, 430);
+      setTimeout(function () { location.href = href; }, 520);
     });
   })();
 })();

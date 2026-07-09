@@ -23,7 +23,10 @@ function caaguazu_icon( $key ) {
 		'search'      => '<circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
 		'menu'        => '<line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/>',
 		'news'        => '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><polyline points="14 3 14 8 19 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/>',
-		'tree'        => '<path d="M12 3 7 10h2.8L6 16h3.6L7 21h10l-2.6-5h3.6l-3.8-6H17z"/><line x1="12" y1="21" x2="12" y2="23"/>',
+		// Lapacho, no pino: copa de tres lóbulos redondeados (no un triángulo
+		// tipo conífera) + tronco + 3 puntos de floración — el árbol nacional
+		// del Paraguay, no un genérico "árbol" de clip-art.
+		'tree'        => '<circle cx="8" cy="11" r="4.3"/><circle cx="16" cy="11" r="4.3"/><circle cx="12" cy="8" r="4.6"/><line x1="12" y1="15.2" x2="12" y2="21"/><circle cx="8.6" cy="9.2" r=".9" fill="currentColor" stroke="none"/><circle cx="15.2" cy="8.6" r=".9" fill="currentColor" stroke="none"/><circle cx="12" cy="12.6" r=".9" fill="currentColor" stroke="none"/>',
 		'mail'        => '<path d="M4 4h16a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><polyline points="3 6 12 13 21 6"/>',
 		'calendar'    => '<rect x="3" y="5" width="18" height="16" rx="2"/><line x1="16" y1="3" x2="16" y2="7"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="3" y1="10" x2="21" y2="10"/>',
 		'globe'       => '<circle cx="12" cy="12" r="9"/><line x1="3" y1="12" x2="21" y2="12"/><path d="M12 3a13.5 13.5 0 0 1 3.6 9 13.5 13.5 0 0 1-3.6 9 13.5 13.5 0 0 1-3.6-9A13.5 13.5 0 0 1 12 3z"/>',
