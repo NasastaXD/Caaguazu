@@ -70,7 +70,7 @@ function caaguazu_seo_head() {
 	} else {
 		$url = home_url( esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ?? '/' ) ) );
 	}
-	$type        = is_singular( 'caaguazu_news' ) ? 'article' : 'website';
+	$type        = is_singular( 'post' ) ? 'article' : 'website';
 	?>
 	<meta name="description" content="<?php echo esc_attr( $description ); ?>">
 	<link rel="canonical" href="<?php echo esc_url( $url ); ?>">

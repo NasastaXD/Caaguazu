@@ -183,9 +183,9 @@ if ( function_exists( 'caaguazu_modulos_ecosystem_cards' ) ) {
 $quiz_map = array(
 	'resident' => array(
 		'title'          => caaguazu_i18n_pair( 'quiz.result.resident.title', __( 'Información para residentes', 'caaguazu' ) ),
-		'primary_url'    => get_post_type_archive_link( 'caaguazu_news' ),
+		'primary_url'    => caaguazu_category_url( 'noticias' ),
 		'primary_label'  => caaguazu_i18n_pair( 'quiz.result.resident.primary', __( 'Ver noticias', 'caaguazu' ) ),
-		'secondary_url'  => get_post_type_archive_link( 'caaguazu_event' ),
+		'secondary_url'  => caaguazu_category_url( 'agenda' ),
 		'secondary_label'=> caaguazu_i18n_pair( 'quiz.result.resident.secondary', __( 'Ver agenda', 'caaguazu' ) ),
 	),
 	'visitor' => array(
@@ -245,19 +245,20 @@ if ( function_exists( 'caaguazu_upcoming_events' ) ) :
 endif;
 ?>
 
-<?php if ( post_type_exists( 'caaguazu_news' ) ) : ?>
+<?php if ( function_exists( 'caaguazu_news_primary_term' ) ) : ?>
 <section class="container">
 	<div class="news-head reveal">
 		<div class="section-head">
 			<p class="eyebrow"><?php esc_html_e( 'Noticias', 'caaguazu' ); ?></p>
 			<h2><?php esc_html_e( 'Últimas publicaciones', 'caaguazu' ); ?></h2>
 		</div>
-		<a class="arrow" href="<?php echo esc_url( get_post_type_archive_link( 'caaguazu_news' ) ); ?>"><?php esc_html_e( 'Ver todas', 'caaguazu' ); ?></a>
+		<a class="arrow" href="<?php echo esc_url( caaguazu_category_url( 'noticias' ) ); ?>"><?php esc_html_e( 'Ver todas', 'caaguazu' ); ?></a>
 	</div>
 	<div class="news-grid">
 		<?php
 		$news = new WP_Query( array(
-			'post_type'      => 'caaguazu_news',
+			'post_type'      => 'post',
+			'category_name'  => 'noticias',
 			'posts_per_page' => 3,
 			'no_found_rows'  => true,
 		) );
@@ -313,7 +314,7 @@ endif;
 						<h3><?php echo esc_html( $n[1] ); ?></h3>
 						<p class="meta"><?php echo esc_html( $n[3] ); ?> · <?php echo esc_html( $n[4] ); ?> de lectura</p>
 						<p class="ex"><?php echo esc_html( $n[2] ); ?></p>
-						<a class="arrow" href="<?php echo esc_url( get_post_type_archive_link( 'caaguazu_news' ) ); ?>"><?php esc_html_e( 'Leer más', 'caaguazu' ); ?></a>
+						<a class="arrow" href="<?php echo esc_url( caaguazu_category_url( 'noticias' ) ); ?>"><?php esc_html_e( 'Leer más', 'caaguazu' ); ?></a>
 					</div>
 				</article>
 		<?php
