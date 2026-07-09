@@ -145,6 +145,42 @@ function caaguazu_page_url( $slug ) {
 }
 
 /**
+ * front-page.php y algunos page-templates/ (Contacto, Reportar) arman su
+ * HTML a mano y nunca llaman a `the_content()` — perfecto para el diseño
+ * fijo del sitio, pero le saca a un editor visual (Elementor, Brizy) el
+ * único gancho que necesita para poder reemplazar esa página con un
+ * diseño propio: si nunca se llama a `the_content()`, Elementor no
+ * detecta "área de contenido" y muestra un error en vez de la página.
+ *
+ * Si un admin decide rediseñar una de esas páginas con Elementor (queda
+ * marcada con el post meta `_elementor_edit_mode = 'builder'`), este
+ * helper hace que el template ceda el paso: imprime `the_content()` (que
+ * Elementor ya reemplaza con lo que armó) en vez del diseño fijo del
+ * theme, y devuelve `true` para que el template corte ahí mismo. Si la
+ * página NO fue diseñada con un editor visual, no hace nada y devuelve
+ * `false` — el theme sigue mostrando su diseño de siempre, sin cambios.
+ *
+ * `page.php` no necesita este helper para su caso normal (ya llama a
+ * `the_content()` siempre que hay contenido), pero sí lo usa para el
+ * caso de una página vacía + diseñada con Elementor (ver ese archivo).
+ */
+function caaguazu_maybe_render_builder_content() {
+	if ( ! is_singular() || ! have_posts() ) {
+		return false;
+	}
+	if ( 'builder' !== get_post_meta( get_queried_object_id(), '_elementor_edit_mode', true ) ) {
+		return false;
+	}
+	get_header();
+	while ( have_posts() ) :
+		the_post();
+		the_content();
+	endwhile;
+	get_footer();
+	return true;
+}
+
+/**
  * Accesos rápidos: grid de destinos principales estilo dashboard de app,
  * para que el sitio se navegue como un portal de servicios en vez de un
  * blog. Contacto es lo único hardcodeado acá (y va siempre al final); todo

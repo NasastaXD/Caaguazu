@@ -8,6 +8,10 @@
  * @package Caaguazu
  */
 
+if ( caaguazu_maybe_render_builder_content() ) {
+	return;
+}
+
 get_header();
 
 $identity_defaults = caaguazu_identity_defaults();
