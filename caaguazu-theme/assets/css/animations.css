@@ -78,21 +78,44 @@ body.page-home .hero-inner .lead{transform:translateZ(14px)}
 /* --- Telón de transición entre módulos (Caaguazú ↔ ecosistemas) ------
    Un color por ecosistema: .to-{slug} (el JS lo arma desde
    caaguazuConfig.ecosystems). Sin regla propia, cae en el degradé
-   institucional de .module-curtain. */
+   institucional de .module-curtain. Además del wordmark, ahora trae el
+   ícono del ecosistema destino (dato que el JS recibe ya renderizado de
+   inc/icons.php vía caaguazuConfig) y una ráfaga de partículas doradas
+   detrás, para que la transición se sienta como un momento propio y no
+   solo un cambio de color de fondo. */
 .module-curtain{
   position:fixed;inset:0;z-index:200;pointer-events:none;
   transform:translateY(101%);
-  display:flex;align-items:center;justify-content:center;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
   background:linear-gradient(160deg,var(--green-forest),var(--green-deep));
   will-change:transform}
 .module-curtain.to-turismo{background:linear-gradient(160deg,var(--earth-bark),var(--wood-deep))}
 .module-curtain.to-educacion{background:linear-gradient(160deg,#16324D,#27567F)}
 .module-curtain.to-caaguazu{background:linear-gradient(160deg,var(--green-forest),var(--green-deep))}
 .module-curtain.in{transform:translateY(0);transition:transform .42s cubic-bezier(.65,0,.35,1)}
+.module-curtain .icon{
+  width:52px;height:52px;color:#fff;opacity:0;
+  transform:scale(.4) translateY(6px)}
+.module-curtain .icon svg{width:100%;height:100%}
+.module-curtain.in .icon{opacity:1;transform:none;
+  transition:opacity .38s cubic-bezier(.34,1.56,.64,1) .08s,transform .38s cubic-bezier(.34,1.56,.64,1) .08s}
 .module-curtain .label{
   font-family:var(--font-display);font-size:clamp(28px,5vw,44px);font-weight:600;
   color:#fff;opacity:0;transform:translateY(14px);letter-spacing:.01em}
-.module-curtain.in .label{opacity:1;transform:none;transition:opacity .28s ease-out .16s,transform .28s ease-out .16s}
+.module-curtain.in .label{opacity:1;transform:none;transition:opacity .28s ease-out .22s,transform .28s ease-out .22s}
+
+/* Ráfaga de partículas del telón: unos spans que el JS posiciona con
+   --b-angle/--b-dist/--b-delay (mismo espíritu que .cgz-particles, pero
+   radiando desde el centro en vez de flotar hacia arriba — dura poco
+   porque el telón solo está en pantalla ~500ms antes de navegar). */
+.module-curtain .burst{position:absolute;inset:0;pointer-events:none}
+.module-curtain .burst span{
+  position:absolute;top:50%;left:50%;width:5px;height:5px;border-radius:50%;
+  background:var(--accent-gold);opacity:0;
+  animation:cgzBurst .6s ease-out var(--b-delay,0s) forwards}
+@keyframes cgzBurst{
+  0%{transform:translate(-50%,-50%) rotate(var(--b-angle,0deg)) translateX(0);opacity:1}
+  100%{transform:translate(-50%,-50%) rotate(var(--b-angle,0deg)) translateX(var(--b-dist,80px));opacity:0}}
 
 /* Entrada al llegar al otro módulo: el contenido sube suave */
 @keyframes cgzModuleEnter{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
@@ -114,6 +137,13 @@ body.module-enter #main{animation:cgzModuleEnter .5s ease-out both}
 .cgz-splash .ring{animation:cgzDraw 1s ease-out .15s forwards}
 .cgz-splash .glyph{animation:cgzDraw .8s ease-out .55s forwards}
 @keyframes cgzDraw{to{stroke-dashoffset:0}}
+/* Floración del lapacho: los 3 puntos "abren" después de que la copa
+   termina de dibujarse, con un pequeño rebote. */
+.cgz-splash .bloom{
+  transform-box:fill-box;transform-origin:center;
+  opacity:0;transform:scale(0);
+  animation:cgzBloomPop .4s cubic-bezier(.34,1.56,.64,1) 1.3s forwards}
+@keyframes cgzBloomPop{to{opacity:1;transform:scale(1)}}
 @keyframes cgzSplashSettle{from{opacity:0;transform:rotateY(70deg) scale(.8)}to{opacity:1;transform:none}}
 .cgz-splash .name{font-family:var(--font-display);font-weight:600;letter-spacing:-.01em;
   font-size:clamp(36px,8vw,54px);color:#fff;opacity:0;animation:cgzSplashUp .6s ease-out 1s forwards}

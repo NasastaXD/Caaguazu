@@ -87,7 +87,9 @@ function caaguazu_enqueue_assets() {
 		true
 	);
 	// Fronteras de módulos para el telón de transición (animations.js): un
-	// entry por ecosistema registrado, con sus prefijos de URL.
+	// entry por ecosistema registrado, con sus prefijos de URL y su ícono
+	// ya renderizado (inc/icons.php) — el JS no reimplementa el mapa de
+	// íconos, solo inyecta el <svg> que le llega hecho.
 	$eco_config = array();
 	foreach ( caaguazu_ecosystems() as $slug => $eco ) {
 		$prefixes = empty( $eco['url_prefixes'] ) ? array() : (array) call_user_func( $eco['url_prefixes'] );
@@ -98,12 +100,16 @@ function caaguazu_enqueue_assets() {
 			'slug'     => $slug,
 			'label'    => $eco['label'],
 			'prefixes' => array_map( 'esc_url_raw', $prefixes ),
+			'icon'     => caaguazu_icon( empty( $eco['home_icon'] ) ? 'pin' : $eco['home_icon'] ),
 		);
 	}
 	wp_localize_script( 'caaguazu-main', 'caaguazuConfig', array(
 		'restSearchUrl' => esc_url_raw( rest_url( 'wp/v2/search' ) ),
 		'ecosystems'    => $eco_config,
 		'i18nHome'      => __( 'Caaguazú', 'caaguazu' ),
+		// Ícono del telón al volver al sitio institucional (lapacho — la
+		// misma marca que ya usa Turismo en su "Inicio" del tabbar).
+		'homeIcon'      => caaguazu_icon( 'tree' ),
 	) );
 }
 add_action( 'wp_enqueue_scripts', 'caaguazu_enqueue_assets' );

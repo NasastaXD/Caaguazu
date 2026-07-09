@@ -29,8 +29,8 @@ $current_eco  = caaguazu_current_ecosystem();
 <a class="skip-link" href="#main"><?php caaguazu_i18n( 'header.skip', __( 'Saltar al contenido', 'caaguazu' ) ); ?></a>
 
 <?php if ( is_front_page() ) : ?>
-	<?php /* Splash de entrada (estilo intro del sub-portal CEAD): el pino se
-	   dibuja, aparece el wordmark y el telón se levanta. Solo en la home,
+	<?php /* Splash de entrada (estilo intro del sub-portal CEAD): el lapacho se
+	   dibuja, florece, aparece el wordmark y el telón se levanta. Solo en la home,
 	   una vez por sesión de navegador, clickeable para saltear. El script
 	   inline corre ANTES del primer paint (es sincrónico dentro del body),
 	   así no hay flash de contenido ni de splash indebido; sin JS el div
@@ -38,13 +38,23 @@ $current_eco  = caaguazu_current_ecosystem();
 	<div class="cgz-splash" id="cgzSplash" hidden aria-hidden="true">
 		<svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 			<circle class="ring" cx="48" cy="48" r="44" pathLength="100"/>
-			<g transform="translate(13.2,10.3) scale(2.9)">
-				<path class="glyph" d="M12 3 7 10h2.8L6 16h3.6L7 21h10l-2.6-5h3.6l-3.8-6H17z" pathLength="100"/>
-				<line class="glyph" x1="12" y1="21" x2="12" y2="23" pathLength="100"/>
+			<?php /* Lapacho: copa de tres lóbulos + tronco + floración — mismo
+			   dibujo que el ícono 'tree' de inc/icons.php, redibujado a mano
+			   acá porque necesita el trazado pathLength para la animación de
+			   dibujado (inc/icons.php devuelve el <svg> ya armado, no sirve
+			   para inyectar acá). Si se retoca el ícono, retocar también este. */ ?>
+			<g transform="translate(13.2,12.6) scale(2.9)">
+				<circle class="glyph" cx="8" cy="11" r="4.3" pathLength="100"/>
+				<circle class="glyph" cx="16" cy="11" r="4.3" pathLength="100"/>
+				<circle class="glyph" cx="12" cy="8" r="4.6" pathLength="100"/>
+				<line class="glyph" x1="12" y1="15.2" x2="12" y2="21" pathLength="100"/>
+				<circle class="bloom" cx="8.6" cy="9.2" r=".9" fill="currentColor" stroke="none"/>
+				<circle class="bloom" cx="15.2" cy="8.6" r=".9" fill="currentColor" stroke="none"/>
+				<circle class="bloom" cx="12" cy="12.6" r=".9" fill="currentColor" stroke="none"/>
 			</g>
 		</svg>
 		<span class="name"><?php echo esc_html( get_bloginfo( 'name' ) ); ?></span>
-		<span class="tag"><?php echo esc_html( caaguazu_opt( 'site_tagline_custom', 'Capital de la Madera' ) ); ?></span>
+		<span class="tag"><?php esc_html_e( 'Sitio web · No oficial', 'caaguazu' ); ?></span>
 	</div>
 	<script>
 	(function () {
