@@ -90,6 +90,14 @@ Para publicar una actualización:
 
 Los sitios con el theme instalado lo detectan en su próximo chequeo de WP (cron cada 12h) o al forzarlo a mano: el botón nativo "Volver a comprobar" de **Escritorio → Actualizaciones**, o el atajo **⟳ Buscar actualización** en la barra de admin (visible en cualquier pantalla), fuerzan un chequeo inmediato contra GitHub sin esperar el cache interno de 12h de `inc/updater.php` (antes de esto, el botón nativo no servía de nada porque ese cache seguía sirviendo el release viejo). Ese mismo force-check limpia también el cache de los updaters de los plugins (comparten las claves de transient `caaguazu_github_release`/`caaguazu_release_manifest`, así los tres componentes le pegan a la API de GitHub una sola vez).
 
+## Compatibilidad con editores visuales (Brizy)
+
+El theme no incluye ningún page builder — se instala aparte, gratis, desde **Plugins → Añadir nuevo → Brizy Page Builder**. No hace falta ningún ajuste adicional para que edite Páginas/Entradas: Brizy reemplaza `the_content()` con su propio HTML vía filtro, y todas las plantillas del theme que llaman a `the_content()` (`page.php`, los `page-templates/*`, los singles de cada CPT) ya lo soportan tal cual.
+
+El único roce real de cualquier theme con un builder es que sus propios anchos/tipografía terminan achicando las secciones a sangre completa que arma el builder. Para eso existe la plantilla **"Página en blanco (editor visual)"** (`page-templates/page-builder.php`): sin el hero/breadcrumb que fuerza `page.php`, y sin el tope de 1200px de `.container` ni el de 760px + tipografía propia de `.entry-content` — el contenido cae directo dentro de `#main` (sin padding ni ancho máximo propio), así que lo diseñado en Brizy ocupa el 100% del viewport igual que en su editor. El header/tabbar/footer institucionales se mantienen. Para usarla: en el editor de la página, **Atributos de página → Plantilla**.
+
+Fuera de alcance por ahora: la portada (`front-page.php`) y los templates de single/archive de cada CPT (Noticias, Agenda, Educación, Artesanos, Locales) siguen con su diseño curado propio, no delegan a un builder — son parte de la identidad del sitio, no contenido de redacción libre. Si en algún momento hace falta editar alguno con Brizy, el mismo patrón de la plantilla canvas (sin hero, sin `.container`/`.entry-content`) es el que hay que copiar.
+
 ## Edición de contenido
 
 - **Home** (hero, identidad, números, footer/contacto): **Apariencia → Personalizar → Contenido del Home**. La sección Ecosistema tiene su propio panel ahí mismo, registrado por el plugin `caaguazu-modulos`.
