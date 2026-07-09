@@ -117,7 +117,7 @@ function caaguazu_render_fallback_nav( $current_slug = '' ) {
 /**
  * Pinta una lista de items de nav (`array('slug','label','url','dropdown_cb'?)`)
  * como `.nav-item`/`.nav-link` — extraído de `caaguazu_render_fallback_nav()`
- * para que el shell propio de Turismo (`inc/tourism-shell.php`) pueda
+ * para que el shell de ecosistemas (`inc/ecosystem-shell.php`) pueda
  * reusar exactamente el mismo markup/CSS con su propia lista de items.
  */
 function caaguazu_render_nav_item_list( $items, $current_slug = '' ) {

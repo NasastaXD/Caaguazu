@@ -5,8 +5,8 @@
  * @package Caaguazu
  */
 
-$is_home    = caaguazu_is_home();
-$in_tourism = caaguazu_is_tourism_context();
+$is_home     = caaguazu_is_home();
+$current_eco = caaguazu_current_ecosystem();
 $tagline  = caaguazu_opt( 'site_tagline_custom', 'Capital de la Madera' );
 $about    = caaguazu_opt( 'footer_about', 'Portal oficial del departamento de Caaguazú, Paraguay.' );
 $org      = caaguazu_opt( 'contact_org', 'Gobernación de Caaguazú' );
@@ -17,7 +17,6 @@ $email    = caaguazu_opt( 'contact_email', 'contacto@caaguazu.net' );
 // Para los enlaces del footer — defaults a slugs estándar.
 $eco_url    = caaguazu_page_url( 'ecosistema' );
 $about_url  = caaguazu_page_url( 'sobre-caaguazu' );
-$tourism_url= caaguazu_page_url( 'turismo' );
 $contact_url= caaguazu_page_url( 'contacto' );
 $search_url = home_url( '/?s=' );
 
@@ -67,7 +66,9 @@ for ( $i = 0; $i < 3; $i++ ) {
 				<h4><?php caaguazu_i18n( 'footer.institucional', __( 'Institucional', 'caaguazu' ) ); ?></h4>
 				<ul>
 					<li><a href="<?php echo esc_url( $about_url ); ?>"><?php esc_html_e( 'Sobre Caaguazú', 'caaguazu' ); ?></a></li>
-					<li><a href="<?php echo esc_url( $tourism_url ); ?>"><?php esc_html_e( 'Turismo', 'caaguazu' ); ?></a></li>
+					<?php foreach ( caaguazu_ecosystems() as $eco ) : ?>
+						<li><a href="<?php echo esc_url( caaguazu_ecosystem_hub_url( $eco ) ); ?>"><?php echo esc_html( $eco['label'] ); ?></a></li>
+					<?php endforeach; ?>
 					<?php if ( post_type_exists( 'cgz_local' ) ) : ?>
 						<li><a href="<?php echo esc_url( get_post_type_archive_link( 'cgz_local' ) ); ?>"><?php esc_html_e( 'Locales y reservas', 'caaguazu' ); ?></a></li>
 						<li><a href="<?php echo esc_url( home_url( '/cuenta/' ) ); ?>"><?php esc_html_e( 'Mi cuenta', 'caaguazu' ); ?></a></li>

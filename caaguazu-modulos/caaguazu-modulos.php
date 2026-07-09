@@ -3,18 +3,18 @@
  * Plugin Name:       Caaguazú Módulos
  * Plugin URI:        https://caaguazu.net
  * Description:       Módulos de contenido del portal (Noticias, Agenda, Ecosistema, Educación) como plugin — separados del theme para que el sitio funcione con cualquier apariencia y cada módulo se pueda activar/desactivar sin tocar código de presentación. Se registran solos en el nav y en los accesos rápidos del home vía los filtros `caaguazu_nav_items`/`caaguazu_quick_access_items` del theme.
- * Version:           1.3.0
+ * Version:           1.4.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
- * Author:            Departamento de Caaguazú
- * Author URI:        https://caaguazu.net
+ * Author:            Thiago Juan Manuel Ávalos Crosta
+ * Author URI:        mailto:thiagoavalos900@gmail.com
  * License:           Proprietary
  * Text Domain:       caaguazu-modulos
  */
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'CAAGUAZU_MODULOS_VERSION', '1.3.0' );
+define( 'CAAGUAZU_MODULOS_VERSION', '1.4.0' );
 define( 'CAAGUAZU_MODULOS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'CAAGUAZU_MODULOS_URI', plugin_dir_url( __FILE__ ) );
 
@@ -35,6 +35,11 @@ require_once CAAGUAZU_MODULOS_DIR . 'includes/modules/module-noticias.php';
 require_once CAAGUAZU_MODULOS_DIR . 'includes/modules/module-agenda.php';
 require_once CAAGUAZU_MODULOS_DIR . 'includes/modules/module-ecosistema.php';
 require_once CAAGUAZU_MODULOS_DIR . 'includes/modules/module-educacion.php';
+
+// Auto-update desde los GitHub Releases del repo (mismo release que el
+// theme; la versión propia sale del manifest.json del release).
+require_once CAAGUAZU_MODULOS_DIR . 'includes/updater.php';
+new Caaguazu_Component_Updater( __FILE__, CAAGUAZU_MODULOS_VERSION, 'caaguazu-modulos', 'Caaguazú Módulos' );
 
 register_activation_hook( __FILE__, 'caaguazu_modulos_activate' );
 

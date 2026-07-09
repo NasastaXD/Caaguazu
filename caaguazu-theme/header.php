@@ -7,7 +7,7 @@
 
 $current_slug = caaguazu_current_page_slug();
 $is_home      = caaguazu_is_home();
-$in_tourism   = caaguazu_is_tourism_context();
+$current_eco  = caaguazu_current_ecosystem();
 ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
@@ -68,8 +68,8 @@ $in_tourism   = caaguazu_is_tourism_context();
 	</script>
 <?php endif; ?>
 
-<?php if ( $in_tourism ) : ?>
-	<?php caaguazu_render_tourism_header( $current_slug ); ?>
+<?php if ( $current_eco ) : ?>
+	<?php caaguazu_render_ecosystem_header( $current_eco ); ?>
 <?php else : ?>
 	<header class="header <?php echo $is_home ? '' : 'solid'; ?>" id="header">
 		<div class="header-inner">
@@ -106,8 +106,8 @@ $in_tourism   = caaguazu_is_tourism_context();
 	</aside>
 <?php endif; ?>
 
-<?php if ( $in_tourism ) : ?>
-	<?php caaguazu_render_tourism_tabbar( $current_slug ); ?>
+<?php if ( $current_eco ) : ?>
+	<?php caaguazu_render_ecosystem_tabbar( $current_eco ); ?>
 <?php else : ?>
 	<?php caaguazu_render_tabbar( $current_slug ); ?>
 <?php endif; ?>

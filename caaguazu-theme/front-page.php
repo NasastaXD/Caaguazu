@@ -87,7 +87,32 @@ $hero_poster = caaguazu_opt_image( 'hero_poster', 'https://upload.wikimedia.org/
 	</div>
 </section>
 
-<?php if ( function_exists( 'caaguazu_ecosystem_defaults' ) ) : $eco_defaults = caaguazu_ecosystem_defaults(); ?>
+<?php
+// Tarjetas del Ecosistema. Camino nuevo (plugin 1.4+): internas derivadas
+// del registry de ecosistemas + externas del Customizer, ya resueltas por
+// caaguazu_modulos_ecosystem_cards(). Camino viejo (plugin <1.4): los 3
+// slots posicionales de siempre, para que un plugin sin actualizar no
+// rompa el home.
+$eco_cards = array();
+if ( function_exists( 'caaguazu_modulos_ecosystem_cards' ) ) {
+	$eco_cards = caaguazu_modulos_ecosystem_cards();
+} elseif ( function_exists( 'caaguazu_ecosystem_defaults' ) ) {
+	$eco_defaults = caaguazu_ecosystem_defaults();
+	for ( $i = 0; $i < 3; $i++ ) {
+		$d = $eco_defaults[ $i ];
+		$eco_cards[] = array(
+			'tag'      => caaguazu_opt( "eco_{$i}_tag",   $d['tag'] ),
+			'title'    => caaguazu_opt( "eco_{$i}_title", $d['title'] ),
+			'body'     => caaguazu_opt( "eco_{$i}_body",  $d['body'] ),
+			'cta'      => caaguazu_opt( "eco_{$i}_cta",   $d['cta'] ),
+			'url'      => caaguazu_opt( "eco_{$i}_url",   $d['url'] ),
+			'image'    => caaguazu_opt_image( "eco_{$i}_image", $d['image'] ),
+			'external' => true,
+		);
+	}
+}
+?>
+<?php if ( $eco_cards ) : ?>
 <section class="eco">
 	<div class="container">
 		<div class="section-head reveal">
@@ -96,28 +121,30 @@ $hero_poster = caaguazu_opt_image( 'hero_poster', 'https://upload.wikimedia.org/
 			<p><?php echo esc_html( caaguazu_opt( 'eco_section_body', 'Caaguazu.net centraliza el acceso a los sub-portales especializados del departamento. Cada uno conserva su propio contenido dentro de una misma identidad institucional.' ) ); ?></p>
 		</div>
 		<div class="eco-grid">
-			<?php for ( $i = 0; $i < 3; $i++ ) :
-				$d     = $eco_defaults[ $i ];
-				$tag   = caaguazu_opt( "eco_{$i}_tag",   $d['tag'] );
-				$title = caaguazu_opt( "eco_{$i}_title", $d['title'] );
-				$body  = caaguazu_opt( "eco_{$i}_body",  $d['body'] );
-				$cta   = caaguazu_opt( "eco_{$i}_cta",   $d['cta'] );
-				$url   = caaguazu_opt( "eco_{$i}_url",   $d['url'] );
-				$img   = caaguazu_opt_image( "eco_{$i}_image", $d['image'] );
-				$soon  = empty( $url );
+			<?php foreach ( $eco_cards as $card ) :
+				$soon   = empty( $card['url'] );
 				$tag_el = $soon ? 'div' : 'a';
-				$attrs  = $soon ? '' : sprintf( 'href="%s" target="_blank" rel="noreferrer"', esc_url( $url ) );
+				// Las internas navegan en la misma pestaña (son parte del
+				// sitio, y así el telón de transición entre módulos actúa);
+				// las externas abren aparte, como siempre.
+				if ( $soon ) {
+					$attrs = '';
+				} elseif ( ! empty( $card['external'] ) ) {
+					$attrs = sprintf( 'href="%s" target="_blank" rel="noreferrer"', esc_url( $card['url'] ) );
+				} else {
+					$attrs = sprintf( 'href="%s"', esc_url( $card['url'] ) );
+				}
 			?>
 				<<?php echo $tag_el; ?> class="eco-card reveal <?php echo $soon ? 'soon' : ''; ?>" <?php echo $attrs; ?>>
-					<div class="img"><img src="<?php echo esc_url( $img ); ?>" alt="" loading="lazy"></div>
+					<div class="img"><img src="<?php echo esc_url( $card['image'] ); ?>" alt="" loading="lazy"></div>
 					<div class="body">
-						<span class="eco-tag"><?php echo esc_html( $tag ); ?></span>
-						<h3><?php echo esc_html( $title ); ?></h3>
-						<p class="desc"><?php echo esc_html( $body ); ?></p>
-						<span class="arrow"><?php echo esc_html( $cta ); ?></span>
+						<span class="eco-tag"><?php echo esc_html( $card['tag'] ); ?></span>
+						<h3><?php echo esc_html( $card['title'] ); ?></h3>
+						<p class="desc"><?php echo esc_html( $card['body'] ); ?></p>
+						<span class="arrow"><?php echo esc_html( $card['cta'] ); ?></span>
 					</div>
 				</<?php echo $tag_el; ?>>
-			<?php endfor; ?>
+			<?php endforeach; ?>
 		</div>
 	</div>
 </section>

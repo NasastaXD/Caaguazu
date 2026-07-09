@@ -429,32 +429,40 @@ body.tourism-hub .entry-content > p{max-width:640px}
 body.tourism-hub .stats-grid.tourism-stats{max-width:640px;margin-top:32px}
 
 /* ================================================================
-   Shell propio de Turismo — mismo layout de .header/.nav/.tabbar que el
+   Shell de ecosistemas — mismo layout de .header/.nav/.tabbar que el
    resto del sitio (misma mecánica de drawer/scroll/responsive), reskineado
    vía tokens en vez de clases nuevas por componente: todo lo que ya usa
    var(--green-deep)/var(--green-forest) (links, .arrow, hovers de nav,
-   botones, el punto activo del tabbar) pasa a un tono madera automáticamente
-   dentro de Turismo, sin reescribir cada regla. --accent-gold se mantiene
-   compartido (ya se usa en el hero oscuro del hub) para que siga
-   sintiéndose parte de la misma familia, no un sitio aparte.
+   botones, el punto activo del tabbar) cambia de color automáticamente
+   dentro de cada ecosistema, sin reescribir cada regla. --accent-gold se
+   mantiene compartido para que cada eco se sienta distinto pero de la
+   misma familia, no un sitio aparte. Un ecosistema nuevo = un bloque de
+   tokens como estos dos (ver inc/ecosystem-shell.php).
    ================================================================ */
+/* Turismo: madera */
 body.tourism-page{
   --green-deep:var(--wood-deep);
   --green-forest:var(--earth-bark);
 }
-body.tourism-page .header.solid,
-body.tourism-page .header.scrolled{
+/* Educación: tinta/pizarra */
+body.eco-educacion{
+  --green-deep:#27567F;
+  --green-forest:#16324D;
+  --green-mist:#E2EAF1;
+}
+body.eco-page .header.solid,
+body.eco-page .header.scrolled{
   background:rgba(250,246,240,.92);
 }
-.tourism-logo{display:flex;flex-direction:column;gap:2px;align-items:flex-start}
-.tourism-back{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;
+.eco-logo{display:flex;flex-direction:column;gap:2px;align-items:flex-start}
+.eco-back{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;
   letter-spacing:.04em;color:rgba(255,255,255,.65);transition:color var(--t)}
-.tourism-back svg{width:12px;height:12px}
-.tourism-back:hover{color:#fff}
-.header.solid .tourism-back,.header.scrolled .tourism-back{color:var(--text-muted)}
-.header.solid .tourism-back:hover,.header.scrolled .tourism-back:hover{color:var(--green-deep)}
-.drawer .tourism-back{display:inline-flex;margin-bottom:14px;font-size:13px;color:var(--text-soft)}
-.drawer .tourism-back:hover{color:var(--green-deep)}
+.eco-back svg{width:12px;height:12px}
+.eco-back:hover{color:#fff}
+.header.solid .eco-back,.header.scrolled .eco-back{color:var(--text-muted)}
+.header.solid .eco-back:hover,.header.scrolled .eco-back:hover{color:var(--green-deep)}
+.drawer .eco-back{display:inline-flex;margin-bottom:14px;font-size:13px;color:var(--text-soft)}
+.drawer .eco-back:hover{color:var(--green-deep)}
 
 .wip{max-width:720px;margin:0 auto 96px;padding:40px;border:1px dashed var(--border);
   background:var(--bg-elevated);border-radius:var(--radius-xl);text-align:center}
