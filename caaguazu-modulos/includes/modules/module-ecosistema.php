@@ -158,18 +158,32 @@ function caaguazu_modulos_ecosistema_customize_register( $wp_customize ) {
 add_action( 'customize_register', 'caaguazu_modulos_ecosistema_customize_register' );
 
 /**
- * Siembra la página "Ecosistema" en blanco al activar el plugin (si no
- * existe todavía) — page.php del theme le pinta el hero default.
+ * Redacción institucional de base de la página "Ecosistema" — page.php
+ * del theme la imprime vía the_content() y además suma la grilla de
+ * tarjetas real (caaguazu_render_ecosystem_cards()) a continuación, para
+ * que visitar /ecosistema/ directo muestre lo mismo que scrollear desde
+ * el home, no solo este texto.
+ */
+function caaguazu_modulos_ecosistema_page_content() {
+	return "<p>Caaguazu.net centraliza el acceso a los sub-portales especializados del departamento, cada uno con su propio contenido, identidad visual y equipo editorial, pero dentro de una misma identidad institucional compartida.</p>\n\n<p>Hoy conviven acá el ecosistema de <strong>Turismo</strong> (destinos, gastronomía y cultura guaraní) y el de <strong>Educación</strong> (escuelas, becas municipales y programas educativos), además de sub-portales externos como CEAD. A medida que se sumen nuevos, aparecen solos en la grilla de abajo.</p>";
+}
+
+/**
+ * Siembra la página "Ecosistema" al activar el plugin (si no existe
+ * todavía), con la redacción institucional de base — page.php del theme le
+ * pinta el hero default y, para este slug puntual, además la grilla de
+ * tarjetas real (ver caaguazu_render_ecosystem_cards() en inc/helpers.php).
  */
 function caaguazu_modulos_seed_ecosistema_page() {
 	if ( get_page_by_path( 'ecosistema' ) ) {
 		return;
 	}
 	wp_insert_post( array(
-		'post_type'   => 'page',
-		'post_status' => 'publish',
-		'post_title'  => __( 'Ecosistema', 'caaguazu-modulos' ),
-		'post_name'   => 'ecosistema',
+		'post_type'    => 'page',
+		'post_status'  => 'publish',
+		'post_title'   => __( 'Ecosistema', 'caaguazu-modulos' ),
+		'post_name'    => 'ecosistema',
+		'post_content' => caaguazu_modulos_ecosistema_page_content(),
 	) );
 }
 
@@ -187,6 +201,26 @@ function caaguazu_modulos_catch_up_ecosistema() {
 	update_option( 'caaguazu_modulos_ecosistema_caught_up', 1 );
 }
 add_action( 'admin_init', 'caaguazu_modulos_catch_up_ecosistema' );
+
+/**
+ * Sitios que ya tenían la página "Ecosistema" sembrada en blanco (antes de
+ * que este archivo empezara a cargarla con redacción real) la completan una
+ * sola vez — solo si el admin no escribió ya algo ahí. Flag nuevo (no reusa
+ * `caaguazu_modulos_ecosistema_caught_up`, que ya estaría en 1 en cualquier
+ * sitio con este módulo activo desde antes de esto) — mismo motivo que el
+ * resto de los flags "_v2"/"_v1" nuevos de esta migración.
+ */
+function caaguazu_modulos_backfill_ecosistema_content() {
+	if ( get_option( 'caaguazu_modulos_ecosistema_content_seeded_v1' ) ) {
+		return;
+	}
+	$page = get_page_by_path( 'ecosistema' );
+	if ( $page && '' === trim( $page->post_content ) ) {
+		wp_update_post( array( 'ID' => $page->ID, 'post_content' => caaguazu_modulos_ecosistema_page_content() ) );
+	}
+	update_option( 'caaguazu_modulos_ecosistema_content_seeded_v1', 1 );
+}
+add_action( 'admin_init', 'caaguazu_modulos_backfill_ecosistema_content' );
 
 add_filter( 'caaguazu_quick_access_items', function ( $items ) {
 	$items[] = array(

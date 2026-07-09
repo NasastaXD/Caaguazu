@@ -38,6 +38,16 @@ while ( have_posts() ) :
 		</div>
 	</section>
 
+	<?php
+	$content = trim( wp_strip_all_tags( get_the_content() ) );
+	if ( $content ) : ?>
+		<div class="container page-content">
+			<div class="entry-content">
+				<?php the_content(); ?>
+			</div>
+		</div>
+	<?php endif; ?>
+
 	<div class="container page-content">
 		<div class="contact-grid">
 			<div>
