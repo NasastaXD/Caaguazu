@@ -1,23 +1,30 @@
 <?php
 /**
- * Eco-rail: sidebar derecho colapsable de navegación del ecosistema.
+ * Eco-rail v2: sidebar derecho del sitio (referencia: panel lateral tipo
+ * app — rail de íconos colapsable + panel expandido con etiquetas).
  *
- * Rail flotante de íconos en el borde derecho (escritorio ancho); expandido
- * muestra las etiquetas. En viewports menores esta capa NO se duplica: ahí
- * el "sidebar derecho" es el drawer móvil de siempre (header.php), que en el
- * rework de motion adoptó el mismo lenguaje (panel desde la derecha, entrada
- * escalonada, Escape para cerrar).
+ * UNA sola capa de navegación con dos modos:
+ *  - Escritorio ancho (≥1280px y ≥620px de alto): panel a ALTURA COMPLETA
+ *    pegado al borde derecho, flotante y redondeado. Colapsado = rail de
+ *    íconos con tooltips al hover/foco; expandido = íconos + etiquetas +
+ *    wordmark. Estado persistido en localStorage.
+ *  - Móvil (<1024px): ESTE panel es el drawer del sitio institucional —
+ *    reemplaza al drawer clásico (header.php ya no lo imprime): se abre
+ *    con la hamburguesa del header o el "Menú" del tabbar, entra desde la
+ *    derecha con scrim, siempre en modo expandido (íconos + etiquetas),
+ *    con el selector de idioma en el pie (antes vivía en el drawer viejo).
+ *    En 1024–1279px no hay rail: el nav completo del header cubre todo.
  *
- * Los items salen del mismo filtro que alimenta los accesos rápidos del home
- * (`caaguazu_quick_access_items`: cada módulo/plugin se registra solo, con
- * ícono + etiqueta + URL, y el admin controla qué módulos hay activos — nada
- * hardcodeado acá aparte de Inicio y Buscar). `caaguazu_sidebar_items`
- * permite a un plugin ajustar la lista final del rail sin tocar los accesos
- * rápidos.
+ * Los ecosistemas (Turismo/Educación) conservan su drawer propio del shell
+ * (inc/ecosystem-shell.php, mismos IDs #drawer/#burger): sidebar.js solo
+ * toma la hamburguesa cuando NO existe un #drawer en la página.
+ *
+ * Los items salen del mismo filtro que los accesos rápidos del home
+ * (`caaguazu_quick_access_items`: cada módulo se registra solo, con ícono
+ * + etiqueta + URL) más Inicio, Sobre Caaguazú y Buscar; ajustables con el
+ * filtro `caaguazu_sidebar_items`.
  *
  * CSS en main.css (bloque "Eco-rail"), comportamiento en assets/js/sidebar.js.
- * Sin JS el rail queda colapsado con todos sus links usables (los tooltips
- * son CSS puro); solo expandir/colapsar y el sonido opcional requieren JS.
  *
  * @package Caaguazu
  */
@@ -25,12 +32,13 @@
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 /**
- * Items del rail: Inicio + los accesos del portal (filtro de los módulos)
- * + Buscar al final. Cada item: array( 'icon', 'label', 'url' ).
+ * Items del rail: Inicio + Sobre Caaguazú + los accesos del portal (filtro
+ * de los módulos) + Buscar al final. Cada item: array( 'icon', 'label', 'url' ).
  */
 function caaguazu_sidebar_items() {
 	$items = array(
 		array( 'icon' => 'home', 'label' => __( 'Inicio', 'caaguazu' ), 'url' => home_url( '/' ) ),
+		array( 'icon' => 'pin', 'label' => __( 'Sobre Caaguazú', 'caaguazu' ), 'url' => caaguazu_page_url( 'sobre-caaguazu' ) ),
 	);
 	foreach ( caaguazu_quick_access_items() as $item ) {
 		$items[] = $item;
@@ -62,9 +70,10 @@ function caaguazu_sidebar_item_is_active( $url ) {
 }
 
 /**
- * Pinta el rail. Se llama desde footer.php en todas las páginas (elemento
- * fixed: su posición en el DOM no afecta el layout; al final del documento
- * el teclado recorre primero el contenido y después esta capa).
+ * Pinta el rail (y su scrim para el modo drawer móvil). Se llama desde
+ * footer.php en todas las páginas — elemento fixed: su posición en el DOM
+ * no afecta el layout; al final del documento el teclado recorre primero
+ * el contenido y después esta capa.
  */
 function caaguazu_render_eco_rail() {
 	$items = caaguazu_sidebar_items();
@@ -72,13 +81,18 @@ function caaguazu_render_eco_rail() {
 		return;
 	}
 	?>
+	<div class="eco-rail-bg" id="ecoRailBg"></div>
 	<nav class="eco-rail" id="ecoRail" aria-label="<?php esc_attr_e( 'Navegación del ecosistema', 'caaguazu' ); ?>">
-		<button class="eco-rail-toggle" id="ecoRailToggle" aria-expanded="false" aria-controls="ecoRailNav"
-			aria-label="<?php esc_attr_e( 'Menú del ecosistema', 'caaguazu' ); ?>"
-			data-label="<?php esc_attr_e( 'Abrir menú', 'caaguazu' ); ?>">
-			<span class="eco-rail-burger" aria-hidden="true"><i></i><i></i><i></i></span>
-			<span class="lbl" aria-hidden="true"><?php esc_html_e( 'Colapsar', 'caaguazu' ); ?></span>
-		</button>
+		<div class="eco-rail-head">
+			<button class="eco-rail-toggle" id="ecoRailToggle" aria-expanded="false" aria-controls="ecoRailNav"
+				aria-label="<?php esc_attr_e( 'Menú del ecosistema', 'caaguazu' ); ?>"
+				data-label="<?php esc_attr_e( 'Abrir menú', 'caaguazu' ); ?>">
+				<span class="eco-rail-burger" aria-hidden="true"><i></i><i></i><i></i></span>
+			</button>
+			<a class="eco-rail-brand lbl" href="<?php echo esc_url( home_url( '/' ) ); ?>">
+				<?php bloginfo( 'name' ); ?><span class="tld">.net</span>
+			</a>
+		</div>
 		<div class="eco-rail-nav" id="ecoRailNav">
 			<?php foreach ( $items as $item ) :
 				$active = caaguazu_sidebar_item_is_active( $item['url'] );
@@ -93,11 +107,45 @@ function caaguazu_render_eco_rail() {
 			<?php endforeach; ?>
 		</div>
 		<div class="eco-rail-foot">
+			<?php /* Selector de idioma: misma clase .lang y data-lang que el
+			   header/hero — main.js sincroniza todas las copias solo. En el
+			   drawer viejo esta era la vía de acceso móvil al selector; acá
+			   sigue cumpliendo ese rol (visible solo con el panel expandido). */ ?>
+			<div class="lang eco-rail-lang" role="group" aria-label="<?php esc_attr_e( 'Idioma', 'caaguazu' ); ?>">
+				<button class="on" data-lang="ES">ES</button>
+				<button data-lang="GN">GN</button>
+				<button data-lang="EN" disabled title="<?php esc_attr_e( 'Próximamente', 'caaguazu' ); ?>">EN</button>
+			</div>
 			<button class="eco-rail-item eco-rail-sound" id="ecoRailSound" aria-pressed="false"
 				data-label="<?php esc_attr_e( 'Sonido de interfaz', 'caaguazu' ); ?>">
 				<span class="ico" aria-hidden="true"><?php echo caaguazu_icon( 'sound' ); ?></span>
 				<span class="lbl"><?php esc_html_e( 'Sonido de interfaz', 'caaguazu' ); ?></span>
 			</button>
+			<?php
+			/* Tarjeta de cuenta al pie (como en la referencia: avatar + nombre
+			   + detalle; colapsado queda solo el avatar con tooltip). Enlaza a
+			   /cuenta/ del sistema de cuentas propio (plugin Caaguazú Locales,
+			   repo turismo) — mismo gate que el link "Mi cuenta" del footer: si
+			   Locales no está activo, la tarjeta no existe. El sistema de
+			   cuentas tiene sesión propia (no usuarios de WP), así que desde el
+			   theme no sabemos si hay alguien logueado: la tarjeta es la puerta
+			   genérica; el filtro deja que un plugin la personalice. */
+			$account = apply_filters( 'caaguazu_sidebar_account', post_type_exists( 'cgz_local' ) ? array(
+				'name' => __( 'Mi cuenta', 'caaguazu' ),
+				'sub'  => __( 'Reservas y locales', 'caaguazu' ),
+				'url'  => home_url( '/cuenta/' ),
+			) : null );
+			if ( $account ) :
+			?>
+			<a class="eco-rail-item eco-rail-account" href="<?php echo esc_url( $account['url'] ); ?>"
+				data-label="<?php echo esc_attr( $account['name'] ); ?>">
+				<span class="ico eco-rail-avatar" aria-hidden="true"><?php echo caaguazu_icon( 'user' ); ?></span>
+				<span class="lbl eco-rail-account-txt">
+					<strong><?php echo esc_html( $account['name'] ); ?></strong>
+					<small><?php echo esc_html( $account['sub'] ); ?></small>
+				</span>
+			</a>
+			<?php endif; ?>
 		</div>
 	</nav>
 	<?php

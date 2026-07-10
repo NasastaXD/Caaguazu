@@ -210,9 +210,11 @@ address{font-style:normal;margin-top:16px;font-size:14px;line-height:1.7;color:v
 .drawer-lang button{color:var(--text-muted)}
 .drawer-lang button.on{background:var(--green-deep);color:#fff}
 
-/* Mobile drawer — en móvil ESTE es el "sidebar derecho" del sitio (misma
-   capa de navegación que el rail de escritorio, ver .eco-rail más abajo):
-   panel deslizante desde la derecha, con entrada escalonada de sus items. */
+/* Mobile drawer del SHELL DE ECOSISTEMAS (Turismo/Educación) — el sitio
+   institucional ya no imprime este componente: su drawer móvil es el
+   eco-rail (ver el bloque "Eco-rail v2" más abajo). Estas reglas quedan
+   porque inc/ecosystem-shell.php sigue usando .drawer/.drawer-bg para la
+   navegación interna de cada ecosistema. */
 .drawer-bg{position:fixed;inset:0;background:rgba(16,26,20,.5);opacity:0;pointer-events:none;transition:opacity var(--m-med) var(--ease-in-out);z-index:60}
 .drawer{position:fixed;top:0;right:0;bottom:0;width:min(340px,85vw);background:var(--bg-primary);
   transform:translateX(100%);transition:transform var(--m-med) var(--ease-soft);z-index:61;padding:24px;display:flex;flex-direction:column;gap:8px;overflow-y:auto}
@@ -631,6 +633,13 @@ body:not(.tourism-page) .entry-content > p:first-of-type::first-letter{font-fami
 .entry-content img{width:100%;border-radius:var(--radius-lg);margin-top:24px}
 .entry-content a{color:var(--green-deep);text-decoration:underline;text-underline-offset:2px}
 .entry-content .eco-grid{margin-top:32px}
+/* La página Ecosistema recibe su grilla DENTRO de .entry-content (vía el
+   filtro the_content del plugin, único camino que sobrevive al takeover de
+   un page builder) — se le suelta el ancho de artículo para que la grilla
+   respire como en el home, manteniendo los párrafos de intro a ancho de
+   lectura. */
+body[data-page="ecosistema"] .entry-content{max-width:none}
+body[data-page="ecosistema"] .entry-content > p{max-width:760px;margin-inline:auto}
 .entry-content .eco-tag{background:var(--gold-soft);color:var(--earth-bark)}
 .entry-content a.eco-card{text-decoration:none;color:inherit}
 .entry-content .eco-card h3{margin:16px 0 0}
@@ -772,33 +781,53 @@ dialog.lightbox[open]{display:flex;align-items:center;justify-content:center}
 @media(min-width:640px){.install-banner{left:auto;right:24px;bottom:24px;max-width:340px}}
 
 /* ================================================================
-   Eco-rail — sidebar derecho colapsable (escritorio ancho, ≥1280px).
-   Capa de navegación del ecosistema: un rail flotante de íconos pegado
-   al borde derecho (inspiración: sidebars tipo "rail + panel", adaptado
-   a lenguaje cívico-editorial, no de dashboard). Colapsado = solo íconos
-   con tooltip al hover/focus; expandido = panel con etiquetas, crece
-   hacia la izquierda desde el borde. En viewports menores NO existe: ahí
-   la misma capa es el drawer derecho de siempre (.drawer). Los items
-   salen del mismo filtro que los accesos rápidos (WordPress-editable vía
-   plugins), ver inc/sidebar.php. Sin JS: queda el rail colapsado con sus
-   links usables (tooltips por CSS); solo expandir/colapsar requiere JS.
+   Eco-rail v2 — sidebar derecho del sitio (referencia: panel lateral
+   tipo app, adaptado a lenguaje cívico-editorial). UNA capa, dos modos:
+
+   · Escritorio (≥1280px y ≥620px de alto): panel a ALTURA COMPLETA en el
+     borde derecho, flotante y redondeado. Colapsado = rail de íconos con
+     tooltips; expandido = íconos + etiquetas + wordmark (crece hacia la
+     izquierda). Sin JS queda el rail colapsado con sus links usables.
+   · Móvil (<1024px): este panel ES el drawer institucional (reemplaza al
+     drawer clásico): entra desde la derecha con scrim, siempre expandido.
+   · 1024–1279px: no hay rail (el nav completo del header cubre todo).
+
+   Items desde inc/sidebar.php; comportamiento en assets/js/sidebar.js.
    ================================================================ */
-.eco-rail{display:none}
-/* min-height además del min-width: si la pantalla es ancha pero muy baja,
-   el rail no entra sin scroll interno (que taparía los tooltips) — en ese
-   caso simplemente no está, el nav del header cubre todo igual. */
-@media(min-width:1280px) and (min-height:620px){
-.eco-rail{position:fixed;right:14px;top:50%;transform:translateY(-50%);z-index:45;
-  display:flex;flex-direction:column;gap:4px;width:60px;
-  padding:10px 8px;background:var(--bg-pure);border:1px solid var(--border);
-  border-radius:18px;box-shadow:var(--shadow-soft);
-  transition:width var(--m-med) var(--ease-soft),box-shadow var(--m-med) var(--ease-soft)}
-.eco-rail.open{width:288px;box-shadow:var(--shadow-lift)}
-.eco-rail-toggle{display:flex;align-items:center;gap:12px;height:44px;flex:none;
-  padding:0 10px;border-radius:12px;color:var(--text-soft);transition:background var(--t)}
+/* ================================================================
+   Animación de íconos — estilo de las referencias Lottie (home /
+   search-to-x) pero en CSS puro sobre los SVG del theme: al tocar un
+   ítem con ícono, el trazo se RE-DIBUJA (stroke-draw, posible gracias a
+   pathLength="1" que inc/icons.php pone en cada shape) mientras el ícono
+   hace un pop corto. El JS (sidebar.js) agrega .ico-play al elemento
+   tocado por ~600ms; el ícono activo del tabbar se dibuja solo al cargar
+   la página. Emojis (Turismo) solo hacen el pop, sin trazo que dibujar.
+   ================================================================ */
+@keyframes cgzIcoDraw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@keyframes cgzIcoPop{0%{transform:scale(1)}35%{transform:scale(.86)}70%{transform:scale(1.1)}100%{transform:scale(1)}}
+.ico-play :is(.tabbar-ico,.qa-ico,.ico),.ico-play>svg{
+  animation:cgzIcoPop .45s var(--ease-soft)}
+.ico-play svg :is(path,line,polyline,circle,rect,polygon){
+  stroke-dasharray:1;stroke-dashoffset:1;
+  animation:cgzIcoDraw .55s var(--ease-out) forwards}
+
+/* --- Base compartida (geometría por modo, más abajo) --- */
+.eco-rail-bg{position:fixed;inset:0;z-index:60;background:rgba(16,26,20,.5);
+  opacity:0;pointer-events:none;transition:opacity var(--m-med) var(--ease-in-out)}
+.eco-rail-bg.open{opacity:1;pointer-events:auto}
+.eco-rail{position:fixed;z-index:61;display:flex;flex-direction:column;gap:4px;
+  padding:10px;background:var(--bg-pure);border:1px solid var(--border);
+  border-radius:18px;box-shadow:var(--shadow-soft)}
+.eco-rail-head{display:flex;align-items:center;gap:4px;flex:none}
+.eco-rail-toggle{display:flex;align-items:center;justify-content:center;width:44px;height:44px;flex:none;
+  border-radius:12px;color:var(--text-soft);transition:background var(--t)}
 .eco-rail-toggle:hover{background:var(--bg-elevated)}
+.eco-rail-brand{font-family:var(--font-display);font-weight:600;font-size:19px;
+  color:var(--green-deep);white-space:nowrap}
+.eco-rail-brand .tld{font-family:var(--font-body);font-size:9px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.18em;color:var(--text-muted);margin-left:4px}
 /* Morph hamburguesa→flecha del toggle (referencia Menu V3, hecho en CSS):
-   tres líneas; al expandir, la del medio queda como asta y las otras dos
+   tres líneas; al abrir, la del medio queda como asta y las otras dos
    rotan a punta de flecha apuntando a la derecha ("guardar el panel"). */
 .eco-rail-burger{position:relative;flex:none;width:20px;height:14px}
 .eco-rail-burger i{position:absolute;left:0;height:2px;border-radius:2px;background:currentColor;
@@ -808,11 +837,14 @@ dialog.lightbox[open]{display:flex;align-items:center;justify-content:center}
 .eco-rail-burger i:nth-child(3){top:12px;width:20px}
 .eco-rail.open .eco-rail-burger i:nth-child(1){width:10px;transform:translate(10px,1.5px) rotate(38deg)}
 .eco-rail.open .eco-rail-burger i:nth-child(3){width:10px;transform:translate(10px,-1.5px) rotate(-38deg)}
-.eco-rail-nav{display:flex;flex-direction:column;gap:2px;margin-top:6px}
-.eco-rail-foot{margin-top:6px;padding-top:8px;border-top:1px solid var(--border);
-  display:flex;flex-direction:column;gap:2px}
+.eco-rail-nav{display:flex;flex-direction:column;gap:2px;margin-top:6px;flex:1;min-height:0}
+.eco-rail-foot{margin-top:6px;padding-top:10px;border-top:1px solid var(--border);
+  display:flex;flex-direction:column;gap:6px;flex:none}
+.eco-rail-lang{display:inline-flex!important;align-self:flex-start;margin-left:2px;border-color:var(--border)}
+.eco-rail-lang button{color:var(--text-muted)}
+.eco-rail-lang button.on{background:var(--green-deep);color:#fff}
 .eco-rail-item{position:relative;display:flex;align-items:center;gap:12px;height:44px;flex:none;
-  padding:0 10px;border-radius:12px;color:var(--text-soft);white-space:nowrap;
+  padding:0 11px;border-radius:12px;color:var(--text-soft);white-space:nowrap;
   transition:background var(--t),color var(--t)}
 .eco-rail-item:hover{background:var(--bg-elevated);color:var(--green-deep)}
 .eco-rail-item .ico{flex:none;width:22px;height:22px;display:inline-flex;align-items:center;
@@ -820,23 +852,67 @@ dialog.lightbox[open]{display:flex;align-items:center;justify-content:center}
   transition:transform var(--m-base) var(--ease-soft)}
 .eco-rail-item .ico svg{width:20px;height:20px}
 .eco-rail-item:hover .ico{transform:translateY(-2px)}
-/* Etiquetas: presentes siempre en el DOM (accesibles también colapsado),
-   visualmente entran con fade+corrimiento recién cuando el panel ya empezó
-   a abrirse. pointer-events:none SIEMPRE: colapsadas desbordan el rail de
-   forma invisible y no deben interceptar clicks/hover del contenido de
-   atrás (el área clickeable es el propio item, no su texto). */
-.eco-rail-item .lbl,.eco-rail-toggle .lbl{font-size:13.5px;font-weight:600;opacity:0;
-  pointer-events:none;transform:translateX(8px);
-  transition:opacity var(--m-fast) ease,transform var(--m-fast) ease}
-.eco-rail.open .eco-rail-item .lbl,.eco-rail.open .eco-rail-toggle .lbl{opacity:1;transform:none;
-  transition:opacity var(--m-med) var(--ease-out) 140ms,transform var(--m-med) var(--ease-out) 140ms}
+.eco-rail-item .lbl{font-size:13.5px;font-weight:600;pointer-events:none}
 /* Item activo: píldora suave + barrita de acento a la izquierda */
 .eco-rail-item.active{background:var(--green-mist);color:var(--green-deep);font-weight:700}
 .eco-rail-item.active::before{content:"";position:absolute;left:2px;top:12px;bottom:12px;width:3px;
   border-radius:3px;background:var(--accent-gold)}
+/* Toggle de sonido (capa opcional, apagada por default — ver sidebar.js) */
+.eco-rail-sound[aria-pressed="true"]{color:var(--green-deep)}
+.eco-rail-sound[aria-pressed="true"] .ico{filter:none}
+/* Tarjeta de cuenta al pie (referencia: avatar + nombre + detalle;
+   colapsado queda solo el avatar circular, con tooltip) */
+.eco-rail-account{height:56px;margin-top:2px;padding:0 5px;gap:10px}
+.eco-rail-avatar{width:34px!important;height:34px!important;border-radius:999px;
+  background:var(--grad-forest);color:#fff}
+.eco-rail-avatar svg{width:17px;height:17px}
+.eco-rail-account-txt{display:flex;flex-direction:column;line-height:1.25;min-width:0}
+.eco-rail-account-txt strong{font-size:13.5px;font-weight:700}
+.eco-rail-account-txt small{font-size:11px;font-weight:400;color:var(--text-muted)}
+
+/* --- Modo drawer móvil (<1024px): reemplaza al drawer institucional --- */
+@media(max-width:1023.98px){
+.eco-rail{top:10px;bottom:10px;right:10px;width:min(330px,88vw);overflow-y:auto;
+  transform:translateX(calc(100% + 24px));transition:transform var(--m-med) var(--ease-soft)}
+.eco-rail.open{transform:none;box-shadow:var(--shadow-lift)}
+/* Entrada escalonada de los items al abrir (mismo lenguaje que el resto) */
+.eco-rail .eco-rail-item{opacity:0;transform:translateX(12px);transition:none}
+.eco-rail.open .eco-rail-item{opacity:1;transform:none;
+  transition:opacity var(--m-med) var(--ease-out),transform var(--m-med) var(--ease-out),
+    background var(--t),color var(--t)}
+.eco-rail.open .eco-rail-nav .eco-rail-item:nth-child(2){transition-delay:35ms}
+.eco-rail.open .eco-rail-nav .eco-rail-item:nth-child(3){transition-delay:65ms}
+.eco-rail.open .eco-rail-nav .eco-rail-item:nth-child(4){transition-delay:95ms}
+.eco-rail.open .eco-rail-nav .eco-rail-item:nth-child(5){transition-delay:125ms}
+.eco-rail.open .eco-rail-nav .eco-rail-item:nth-child(6){transition-delay:155ms}
+.eco-rail.open .eco-rail-nav .eco-rail-item:nth-child(n+7){transition-delay:185ms}
+}
+
+/* --- 1024–1279px (o pantallas bajas en escritorio): sin rail --- */
+@media(min-width:1024px){
+.eco-rail,.eco-rail-bg{display:none}
+}
+
+/* --- Modo escritorio (≥1280px y ≥620px de alto): altura completa --- */
+@media(min-width:1280px) and (min-height:620px){
+.eco-rail{display:flex;top:12px;bottom:12px;right:12px;width:66px;z-index:45;
+  transition:width var(--m-med) var(--ease-soft),box-shadow var(--m-med) var(--ease-soft)}
+.eco-rail.open{width:300px;box-shadow:var(--shadow-lift)}
+.eco-rail-bg{display:none}
+/* Etiquetas/wordmark: presentes siempre en el DOM (accesibles también
+   colapsado), visualmente entran con fade+corrimiento recién cuando el
+   panel ya empezó a abrirse. Colapsadas desbordan el rail de forma
+   invisible sin interceptar clicks (los .lbl ya son pointer-events:none;
+   el wordmark sí es link, se apaga colapsado). */
+.eco-rail .lbl{opacity:0;transform:translateX(8px);
+  transition:opacity var(--m-fast) ease,transform var(--m-fast) ease}
+.eco-rail.open .lbl{opacity:1;transform:none;
+  transition:opacity var(--m-med) var(--ease-out) 140ms,transform var(--m-med) var(--ease-out) 140ms}
+.eco-rail:not(.open) .eco-rail-brand{pointer-events:none}
+.eco-rail:not(.open) .eco-rail-lang{display:none!important}
 /* Tooltip en estado colapsado: la etiqueta del item, a la izquierda del rail */
 .eco-rail:not(.open) .eco-rail-item::after,.eco-rail:not(.open) .eco-rail-toggle::after{
-  content:attr(data-label);position:absolute;right:calc(100% + 14px);top:50%;
+  content:attr(data-label);position:absolute;right:calc(100% + 16px);top:50%;
   transform:translateY(-50%) translateX(4px);padding:7px 12px;border-radius:9px;
   background:var(--bg-dark);color:#fff;font-size:12px;font-weight:600;white-space:nowrap;
   opacity:0;visibility:hidden;pointer-events:none;
@@ -844,15 +920,13 @@ dialog.lightbox[open]{display:flex;align-items:center;justify-content:center}
 .eco-rail:not(.open) .eco-rail-item:hover::after,.eco-rail:not(.open) .eco-rail-item:focus-visible::after,
 .eco-rail:not(.open) .eco-rail-toggle:hover::after,.eco-rail:not(.open) .eco-rail-toggle:focus-visible::after{
   opacity:1;visibility:visible;transform:translateY(-50%)}
-/* Toggle de sonido (capa opcional, apagada por default — ver sidebar.js) */
-.eco-rail-sound[aria-pressed="true"]{color:var(--green-deep)}
-.eco-rail-sound[aria-pressed="true"] .ico{filter:none}
 }
 /* Dentro de un ecosistema el rail hereda los tokens del eco (madera en
    Turismo, tinta en Educación) sin reglas extra — mismo mecanismo que el
-   resto del shell. Solo el canvas de un page builder lo esconde: ahí es
-   ruido que tapa la edición. */
-body.page-builder-canvas .eco-rail{display:none}
+   resto del shell. En móvil dentro de un eco, el drawer es el del shell
+   (sidebar.js no toma la hamburguesa si existe #drawer). El canvas de un
+   page builder lo esconde siempre: ahí es ruido que tapa la edición. */
+body.page-builder-canvas .eco-rail,body.page-builder-canvas .eco-rail-bg{display:none!important}
 
 /* Accesibilidad: sin animaciones para quien las desactivó */
 @media (prefers-reduced-motion: reduce){
@@ -863,7 +937,12 @@ body.page-builder-canvas .eco-rail{display:none}
   .eco-card .img img,.news .img img,.move-img img{transition:none}
   .drawer{transition:transform 80ms linear}
   .drawer > *,.drawer.open > *{opacity:1;transform:none;transition:none}
-  .eco-rail{transition:none}
-  .eco-rail-item .lbl,.eco-rail-toggle .lbl,.eco-rail.open .eco-rail-item .lbl,.eco-rail.open .eco-rail-toggle .lbl{transition:none}
+  .eco-rail{transition:transform 80ms linear,width 80ms linear}
+  .eco-rail-bg{transition:none}
+  .eco-rail .eco-rail-item,.eco-rail.open .eco-rail-item{opacity:1;transform:none;transition:none}
+  .eco-rail .lbl,.eco-rail.open .lbl{transition:none}
+  .eco-rail-burger i{transition:none}
+  .ico-play :is(.tabbar-ico,.qa-ico,.ico),.ico-play>svg{animation:none}
+  .ico-play svg :is(path,line,polyline,circle,rect,polygon){animation:none;stroke-dasharray:none;stroke-dashoffset:0}
   .search-suggest,.form-success,.form-error{animation:none}
 }

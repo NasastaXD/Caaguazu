@@ -200,6 +200,34 @@ function caaguazu_modulos_ecosistema_page_content() {
 }
 
 /**
+ * La grilla de tarjetas de la página "Ecosistema" se agrega al contenido
+ * vía el filtro `the_content`, no (solo) desde el template: page.php del
+ * theme tiene un `if ( 'ecosistema' === $slug )` que la pintaba, pero ese
+ * template CEDE el paso completo cuando la página fue guardada alguna vez
+ * con un page builder (Elementor marca `_elementor_edit_mode = builder` y
+ * caaguazu_maybe_render_builder_content() corta antes de llegar a la
+ * grilla) — exactamente lo que pasó en producción: /ecosistema/ quedó como
+ * texto suelto sin las tarjetas ("Ecosistema sigue así", reporte de
+ * usuario, dos veces). Un filtro de contenido corre en las DOS rutas
+ * (template normal y takeover de builder), así la grilla aparece siempre.
+ * El render del theme se de-duplica solo (guard por request en
+ * caaguazu_render_ecosystem_cards()), así el `if` histórico de page.php no
+ * la pinta dos veces en la ruta normal.
+ */
+function caaguazu_modulos_append_eco_grid( $content ) {
+	if ( ! is_page( 'ecosistema' ) || ! in_the_loop() || ! is_main_query() ) {
+		return $content;
+	}
+	if ( ! function_exists( 'caaguazu_render_ecosystem_cards' ) || ! function_exists( 'caaguazu_resolve_ecosystem_cards' ) ) {
+		return $content;
+	}
+	ob_start();
+	caaguazu_render_ecosystem_cards( caaguazu_resolve_ecosystem_cards() );
+	return $content . ob_get_clean();
+}
+add_filter( 'the_content', 'caaguazu_modulos_append_eco_grid', 20 );
+
+/**
  * Siembra la página "Ecosistema" al activar el plugin (si no existe
  * todavía), con la redacción institucional de base — page.php del theme le
  * pinta el hero default y, para este slug puntual, además la grilla de

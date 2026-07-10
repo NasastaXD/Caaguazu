@@ -41,8 +41,31 @@ function caaguazu_icon( $key ) {
 		'sound'       => '<polygon points="11 5 6 9 3 9 3 15 6 15 11 19"/><path d="M15 9.5a4 4 0 0 1 0 5"/><path d="M17.8 7a8 8 0 0 1 0 10"/>',
 	);
 
+	// El brote del logo (las dos hojas del splash de entrada, header.php) —
+	// relleno en vez de trazo, así que no entra en el wrap genérico de
+	// stroke de abajo. Es la marca de "Caaguazú" en el telón de transición
+	// al volver de un ecosistema: antes iba el emoji 🌲 en escala de grises,
+	// que se veía sucio sobre el degradé oscuro (reporte de usuario: la
+	// transición de vuelta era "muy fea").
+	if ( 'brote' === $key ) {
+		return '<svg viewBox="24 18 72 78" fill="currentColor" aria-hidden="true">'
+			. '<path d="M58 92 C36 84 28 60 40 42 C62 48 70 74 58 92 Z" opacity=".65"/>'
+			. '<path d="M62 92 C84 84 92 60 80 42 C58 48 50 74 62 92 Z"/>'
+			. '</svg>';
+	}
+
 	if ( isset( $icons[ $key ] ) ) {
-		return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . $icons[ $key ] . '</svg>';
+		// pathLength="1" normaliza el largo de CADA trazo a 1: así el CSS
+		// puede animar un "dibujado" del ícono (stroke-dasharray/offset de
+		// 0 a 1, ver cgzIcoDraw en main.css) a velocidad pareja sin conocer
+		// la longitud real de cada path — estilo de las referencias Lottie
+		// (home/search-to-x) pero en CSS puro sobre estos mismos SVG.
+		$shapes = preg_replace(
+			'/<(path|line|polyline|circle|rect|polygon)\b/',
+			'<$1 pathLength="1"',
+			$icons[ $key ]
+		);
+		return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . $shapes . '</svg>';
 	}
 
 	return wp_kses_post( $key );
