@@ -83,10 +83,10 @@ $current_eco  = caaguazu_current_ecosystem();
 			if (!s.parentNode) { return; }
 			document.documentElement.classList.remove('cgz-splashing');
 			s.classList.add('out');
-			setTimeout(function () { s.remove(); }, 750);
+			setTimeout(function () { s.remove(); }, 450);
 		}
 		s.addEventListener('click', out);
-		setTimeout(out, 5000);
+		setTimeout(out, 3000);
 	})();
 	</script>
 <?php endif; ?>

@@ -8,6 +8,24 @@
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 /**
+ * Formatea una fecha 'Y-m-d' en español ("21 de julio, 2027") sin depender
+ * de `date_i18n()` — el locale de WordPress puede no tener cargado el
+ * archivo de traducción de nombres de mes en el servidor, y en ese caso
+ * `date_i18n('F', ...)` cae en inglés aunque el resto del sitio esté en
+ * español (bug visto en producción: "21 de June, 2027").
+ */
+function caaguazu_fecha_es( $when, $with_year = true ) {
+	$meses = array(
+		1 => 'enero', 2 => 'febrero', 3 => 'marzo', 4 => 'abril', 5 => 'mayo', 6 => 'junio',
+		7 => 'julio', 8 => 'agosto', 9 => 'setiembre', 10 => 'octubre', 11 => 'noviembre', 12 => 'diciembre',
+	);
+	$ts  = strtotime( $when );
+	$dia = (int) date( 'j', $ts );
+	$mes = $meses[ (int) date( 'n', $ts ) ];
+	return $with_year ? sprintf( '%d de %s, %s', $dia, $mes, date( 'Y', $ts ) ) : sprintf( '%d de %s', $dia, $mes );
+}
+
+/**
  * Noticias, Agenda y Educación viven como Entradas nativas de WordPress
  * (post_type=post) diferenciadas por Categoría — no como custom post types
  * propios — para que el contenido esté donde cualquiera que usó WordPress

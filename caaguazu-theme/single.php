@@ -44,7 +44,7 @@ while ( have_posts() ) :
 				<p class="eyebrow"><?php esc_html_e( 'Evento', 'caaguazu' ); ?></p>
 				<h1><?php the_title(); ?></h1>
 				<p class="sub">
-					<?php if ( $date ) : ?><?php echo esc_html( date_i18n( 'j \d\e F, Y', strtotime( $date ) ) ); ?><?php endif; ?>
+					<?php if ( $date ) : ?><?php echo esc_html( caaguazu_fecha_es( $date ) ); ?><?php endif; ?>
 					<?php if ( $location ) : ?> · <?php echo caaguazu_icon( 'pin' ); ?> <?php echo esc_html( $location ); ?><?php endif; ?>
 				</p>
 			<?php elseif ( 'educacion' === $family ) :
