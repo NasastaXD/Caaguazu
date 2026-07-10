@@ -132,7 +132,10 @@ $elementor_footer_done = function_exists( 'elementor_theme_do_location' ) && ele
 		</div>
 
 		<div class="foot-bottom">
-			<p>© <?php echo esc_html( date_i18n( 'Y' ) ); ?> <?php echo esc_html( $org ); ?></p>
+			<div class="foot-bottom-copy">
+				<p>© <?php echo esc_html( date_i18n( 'Y' ) ); ?> <?php echo esc_html( $org ); ?></p>
+				<p class="pilot-badge"><?php esc_html_e( 'Piloto digital local · Caaguazú', 'caaguazu' ); ?></p>
+			</div>
 			<ul class="foot-legal">
 				<li><a href="<?php echo esc_url( $about_url ); ?>"><?php esc_html_e( 'Accesibilidad', 'caaguazu' ); ?></a></li>
 				<li><a href="<?php echo esc_url( $search_url ); ?>"><?php esc_html_e( 'Mapa del sitio', 'caaguazu' ); ?></a></li>

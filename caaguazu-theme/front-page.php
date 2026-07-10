@@ -103,22 +103,67 @@ caaguazu_render_ecosystem_cards( caaguazu_resolve_ecosystem_cards() );
 	<?php endfor; ?>
 </section>
 
+<?php
+/**
+ * "Caaguazú en números" pasó de estadísticas de la industria maderera
+ * (inventadas, sin fuente citable) a datos operativos del portal mismo:
+ * cuántas secciones hay activas, cuántos eventos reales hay agendados, y
+ * cuándo se actualizó contenido por última vez, todos calculados en cada
+ * carga — no tipeados a mano. Lo que todavía no existe (un directorio de
+ * instituciones, más sub-portales) se etiqueta "En preparación"/
+ * "Próximamente" en vez de inventarle un número.
+ */
+$stats_nav_sections = apply_filters( 'caaguazu_nav_items', array() );
+
+$stats_upcoming_events = 0;
+if ( function_exists( 'caaguazu_upcoming_events' ) ) {
+	$upcoming_q            = caaguazu_upcoming_events( -1 );
+	$stats_upcoming_events = $upcoming_q->found_posts;
+	wp_reset_postdata();
+}
+
+$stats_last_modified = get_lastpostmodified( 'blog' );
+
+$home_stats = array(
+	array(
+		'value'   => count( $stats_nav_sections ) + 2, // + Sobre Caaguazú y Contacto, siempre presentes.
+		'label'   => __( 'secciones activas', 'caaguazu' ),
+		'numeric' => true,
+	),
+	array(
+		'value'   => $stats_upcoming_events,
+		'label'   => __( 'eventos agendados', 'caaguazu' ),
+		'numeric' => true,
+	),
+	array(
+		'value'   => __( 'En preparación', 'caaguazu' ),
+		'label'   => __( 'directorio de instituciones', 'caaguazu' ),
+		'numeric' => false,
+	),
+	array(
+		'value'   => __( 'Próximamente', 'caaguazu' ),
+		'label'   => __( 'nuevos sub-portales', 'caaguazu' ),
+		'numeric' => false,
+	),
+	array(
+		'value'   => $stats_last_modified ? caaguazu_fecha_es( get_date_from_gmt( $stats_last_modified ), false ) : __( 'Sin novedades aún', 'caaguazu' ),
+		'label'   => __( 'última actualización', 'caaguazu' ),
+		'numeric' => false,
+	),
+);
+?>
 <section class="stats-wrap" aria-label="<?php esc_attr_e( 'Caaguazú en números', 'caaguazu' ); ?>">
 	<div class="container">
 		<div class="weave-rule" aria-hidden="true"></div>
 		<div class="stats-grid reveal">
-			<?php foreach ( array(
-				array( 'stat_0', 181,   __( 'años de historia', 'caaguazu' ),    'stats.years' ),
-				array( 'stat_1', 90,    __( 'aserraderos activos', 'caaguazu' ), 'stats.sawmills' ),
-				array( 'stat_2', 5000,  __( 'carpinterías', 'caaguazu' ),        'stats.workshops' ),
-				array( 'stat_3', 10000, __( 'familias madereras', 'caaguazu' ),  'stats.families' ),
-			) as $s ) :
-				$stat_value = (int) caaguazu_opt( $s[0] . '_value', $s[1] );
-				$stat_label = caaguazu_opt( $s[0] . '_label', $s[2] );
-			?>
+			<?php foreach ( $home_stats as $s ) : ?>
 				<div class="stat">
-					<span class="stat-num" data-count="<?php echo esc_attr( $stat_value ); ?>"><?php echo esc_html( number_format_i18n( $stat_value ) ); ?></span>
-					<span class="stat-label"><?php caaguazu_i18n( $s[3], $stat_label ); ?></span>
+					<?php if ( $s['numeric'] ) : ?>
+						<span class="stat-num" data-count="<?php echo esc_attr( $s['value'] ); ?>"><?php echo esc_html( number_format_i18n( $s['value'] ) ); ?></span>
+					<?php else : ?>
+						<span class="stat-num stat-num-text"><?php echo esc_html( $s['value'] ); ?></span>
+					<?php endif; ?>
+					<span class="stat-label"><?php echo esc_html( $s['label'] ); ?></span>
 				</div>
 			<?php endforeach; ?>
 		</div>
@@ -261,37 +306,19 @@ endif;
 			endwhile;
 			wp_reset_postdata();
 		else :
-			// Sin noticias todavía — placeholder que coincide con el layout original.
-			$placeholder_news = array(
-				array( 'Desarrollo', 'Caaguazú lanza programa de reforestación con escuelas rurales',
-					'La iniciativa involucra a más de 40 instituciones educativas en la plantación de especies nativas.',
-					'12 de mayo, 2026', '4 min',
-					'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=1200&q=80' ),
-				array( 'Cultura', 'Festival de la Madera celebra su 15ª edición en Coronel Oviedo',
-					'Tres días de exposiciones, talleres de carpintería tradicional y gastronomía local.',
-					'8 de mayo, 2026', '3 min',
-					'https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=1200&q=80' ),
-				array( 'Gobierno', 'Nuevas plataformas digitales simplifican trámites departamentales',
-					'Más de 30 gestiones ya pueden realizarse en línea desde el portal de servicios.',
-					'2 de mayo, 2026', '5 min',
-					'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1200&q=80' ),
-			);
-			foreach ( $placeholder_news as $n ) :
-		?>
-				<article class="news reveal">
-					<div class="img"><img src="<?php echo esc_url( $n[5] ); ?>" alt="" loading="lazy"></div>
-					<div class="body">
-						<span class="cat"><?php echo esc_html( $n[0] ); ?></span>
-						<h3><?php echo esc_html( $n[1] ); ?></h3>
-						<p class="meta"><?php echo esc_html( $n[3] ); ?> · <?php echo esc_html( $n[4] ); ?> de lectura</p>
-						<p class="ex"><?php echo esc_html( $n[2] ); ?></p>
-						<a class="arrow" href="<?php echo esc_url( caaguazu_category_url( 'noticias' ) ); ?>"><?php esc_html_e( 'Leer más', 'caaguazu' ); ?></a>
+				// Sin noticias todavía: estado vacío honesto, no contenido inventado.
+			?>
+				<div class="wip wip-news">
+					<p class="eyebrow"><?php esc_html_e( 'Sin noticias todavía', 'caaguazu' ); ?></p>
+					<p><?php esc_html_e( 'Todavía no hay noticias publicadas.', 'caaguazu' ); ?></p>
+					<p><?php esc_html_e( 'Pronto se cargarán novedades verificadas de Caaguazú.', 'caaguazu' ); ?></p>
+					<div class="wip-actions">
+						<a class="btn btn-outline" href="<?php echo esc_url( caaguazu_page_url( 'contacto' ) ); ?>"><?php esc_html_e( 'Enviar información', 'caaguazu' ); ?></a>
 					</div>
-				</article>
-		<?php
-			endforeach;
+				</div>
+			<?php
 		endif;
-		?>
+			?>
 	</div>
 </section>
 <?php endif; ?>

@@ -121,18 +121,6 @@ function caaguazu_upcoming_events( $limit = 1 ) {
 }
 
 /**
- * Próxima fecha (Y-m-d) en que ocurre el día/mes dado, hoy o en el futuro.
- */
-function caaguazu_next_occurrence( $month, $day ) {
-	$year = (int) current_time( 'Y' );
-	$date = sprintf( '%04d-%02d-%02d', $year, $month, $day );
-	if ( $date < current_time( 'Y-m-d' ) ) {
-		$date = sprintf( '%04d-%02d-%02d', $year + 1, $month, $day );
-	}
-	return $date;
-}
-
-/**
  * Sitios que ya tenían este módulo activo antes de la 1.5.0 (CPT propio
  * `caaguazu_event`) tienen ese contenido atrapado en un tipo de contenido
  * que ya no se registra. Lo pasa a Entrada + categoría Agenda.
@@ -161,75 +149,18 @@ function caaguazu_modulos_migrate_agenda_from_cpt() {
 }
 
 /**
- * Siembra 4 eventos demo (si no hay ninguno todavía en la categoría
- * Agenda). Las fechas anuales se calculan a la próxima ocurrencia desde
- * hoy, así el evento nunca aparece "vencido" sin importar cuándo se
- * instale el plugin. Migra primero cualquier resto del CPT viejo.
+ * Antes sembraba 4 eventos demo (redacción de relleno, no verificada por
+ * nadie del departamento) la primera vez que la categoría Agenda quedaba
+ * vacía. Se saca a propósito: un portal cívico no debe mostrar contenido
+ * que parece real pero no lo es — mejor un estado vacío honesto hasta que
+ * haya eventos reales cargados por quien administra el sitio. Sigue
+ * asegurando la categoría y migrando el CPT viejo si corresponde; ver
+ * `caaguazu_modulos_trash_legacy_demo_content()` en caaguazu-modulos.php
+ * para la limpieza de sitios que ya tenían los 4 eventos demo publicados.
  */
 function caaguazu_modulos_seed_agenda() {
 	caaguazu_modulos_migrate_agenda_from_cpt();
-
-	$cat_id   = caaguazu_agenda_ensure_category();
-	$existing = get_posts( array(
-		'post_type'      => 'post',
-		'post_status'    => 'any',
-		'posts_per_page' => 1,
-		'fields'         => 'ids',
-		'category__in'   => array( $cat_id ),
-	) );
-	if ( ! empty( $existing ) ) {
-		return;
-	}
-
-	$events = array(
-		array(
-			'date'     => caaguazu_next_occurrence( 12, 8 ),
-			'location' => 'Iglesia Inmaculada Concepción',
-			'title'    => 'Fiesta Patronal de Caaguazú',
-			'excerpt'  => 'Misa patronal, procesión e iluminación monumental de la Inmaculada Concepción.',
-			'content'  => '<p>Cada 8 de diciembre, Caaguazú celebra a su patrona con una misa central en la Iglesia Inmaculada Concepción, seguida de procesión y la iluminación nocturna de los murales de Jorge Aguirre. La plaza se llena de puestos de comida y música hasta la noche.</p>',
-		),
-		array(
-			'date'     => caaguazu_next_occurrence( 5, 8 ),
-			'location' => 'Ykua La Patria',
-			'title'    => 'Aniversario fundacional de Caaguazú',
-			'excerpt'  => 'Acto conmemorativo en Ykua La Patria por un nuevo aniversario de la fundación de la ciudad (1845).',
-			'content'  => '<p>El 8 de mayo se conmemora la fundación de Caaguazú junto al manantial de Ykua La Patria, donde once familias guaireñas se asentaron en 1845. El acto incluye ofrenda floral, palabras de autoridades locales y actividades culturales abiertas a la comunidad.</p>',
-		),
-		array(
-			'date'     => caaguazu_next_occurrence( 9, 20 ),
-			'location' => 'Ruta 7 — Ruta de la Madera',
-			'title'    => 'Feria de Artesanos de la Ruta de la Madera',
-			'excerpt'  => 'Carpinteros, talladores y jugueteros exhiben su trabajo en vivo a lo largo de la Ruta 7.',
-			'content'  => '<p>Talleres abiertos a lo largo de la Ruta de la Madera para que visitantes vean de cerca el oficio maderero: torneado, tallado, ensamblado de muebles y juguetes tradicionales. Venta directa de artesanos a precio de taller.</p>',
-		),
-		array(
-			'date'     => caaguazu_next_occurrence( 6, 21 ),
-			'location' => 'Plaza central',
-			'title'    => 'Ronda de tereré comunitario',
-			'excerpt'  => 'Encuentro vecinal en la plaza: tereré, música y la cultura de la ronda paraguaya.',
-			'content'  => '<p>Vecinos de distintos barrios se juntan en la plaza central para una ronda de tereré abierta a la comunidad, con música en vivo y puestos de comida típica.</p>',
-		),
-	);
-
-	foreach ( $events as $e ) {
-		$post_id = wp_insert_post( array(
-			'post_type'    => 'post',
-			'post_status'  => 'publish',
-			'post_title'   => $e['title'],
-			'post_excerpt' => $e['excerpt'],
-			'post_content' => $e['content'],
-		) );
-
-		if ( ! $post_id || is_wp_error( $post_id ) ) {
-			continue;
-		}
-
-		update_post_meta( $post_id, '_caaguazu_event_date', $e['date'] );
-		update_post_meta( $post_id, '_caaguazu_event_location', $e['location'] );
-		update_post_meta( $post_id, '_caaguazu_demo', 1 );
-		wp_set_post_terms( $post_id, array( $cat_id ), 'category' );
-	}
+	caaguazu_agenda_ensure_category();
 }
 
 /**

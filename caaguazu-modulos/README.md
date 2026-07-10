@@ -8,10 +8,12 @@ Desde la 1.5.0, Noticias, Agenda y Educación **no** son custom post types propi
 
 ## Módulos incluidos
 
-- **Noticias** (`includes/modules/module-noticias.php`) — categoría **Noticias** (+ 5 sub-categorías: Desarrollo/Cultura/Gobierno/Turismo/Comunidad) sobre Entradas nativas, con demo de 5 noticias al activar.
-- **Agenda** (`includes/modules/module-agenda.php`) — categoría **Agenda** sobre Entradas nativas, con fecha/lugar como post meta, con demo de 4 eventos al activar.
+- **Noticias** (`includes/modules/module-noticias.php`) — categoría **Noticias** (+ 5 sub-categorías: Desarrollo/Cultura/Gobierno/Turismo/Comunidad) sobre Entradas nativas.
+- **Agenda** (`includes/modules/module-agenda.php`) — categoría **Agenda** sobre Entradas nativas, con fecha/lugar como post meta.
 - **Ecosistema** (`includes/modules/module-ecosistema.php`) — 3 tarjetas de sub-portales configurables desde **Apariencia → Personalizar → Contenido del Home**, más la página estática `ecosistema`.
-- **Educación** (`includes/modules/module-educacion.php`) — categoría **Educación** (+ 4 sub-categorías: Escuelas/Becas/Programas/Estadísticas) sobre Entradas nativas, con un dato destacado opcional (`_caaguazu_edu_stat`, p. ej. "320 cupos") y demo de 4 entradas (una por tipo) al activar. Desde la 1.4 además se registra como **ecosistema** en el shell genérico del theme 3.0 (filtro `caaguazu_ecosystems`): dentro de Educación el sitio muestra header/tabbar propios con paleta tinta/pizarra, con las 4 sub-categorías como secciones.
+- **Educación** (`includes/modules/module-educacion.php`) — categoría **Educación** (+ 4 sub-categorías: Escuelas/Becas/Programas/Estadísticas) sobre Entradas nativas, con un dato destacado opcional (`_caaguazu_edu_stat`, p. ej. "320 cupos"). Desde la 1.4 además se registra como **ecosistema** en el shell genérico del theme 3.0 (filtro `caaguazu_ecosystems`): dentro de Educación el sitio muestra header/tabbar propios con paleta tinta/pizarra, con las 4 sub-categorías como secciones.
+
+**Desde la 1.9, ningún módulo siembra posts de demostración al activarse** (antes Noticias sembraba 5, Agenda 4, Educación 4) — un portal cívico no debería mostrar contenido inventado como si fuera real. Los tres siguen asegurando que sus categorías existan y migrando contenido de los CPTs viejos si corresponde; un sitio recién instalado arranca con esas categorías vacías, y el theme muestra un estado vacío honesto en vez de un fallback de relleno. Un sitio que ya tenía las demos viejas publicadas las recibe movidas a la Papelera (nunca borrado permanente) en su próxima visita a wp-admin — ver `caaguazu_modulos_trash_legacy_demo_content()` en `caaguazu-modulos.php` y la sección "Contenido honesto: sin posts demo, sin fallbacks inventados" de `caaguazu-theme/README.md`.
 
 Cada módulo se registra solo en el nav y los accesos rápidos del theme vía los filtros `caaguazu_quick_access_items`/`caaguazu_nav_items` — ver `caaguazu-theme/README.md`, sección "Arquitectura de módulos".
 

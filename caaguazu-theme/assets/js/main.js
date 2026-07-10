@@ -55,32 +55,51 @@
 
 (function(){
   // Búsqueda instantánea: sugerencias progresivas vía el endpoint core
-  // /wp-json/wp/v2/search (ya cubre page/caaguazu_news/caaguazu_event/
-  // caaguazu_artisan al ser show_in_rest) — sin endpoint propio.
+  // /wp-json/wp/v2/search (cubre page/post — Noticias, Agenda y Educación
+  // viven como post nativo desde la 1.5 — y caaguazu_artisan, al ser
+  // show_in_rest) — sin endpoint propio.
   var input = document.getElementById('caaguazu-search-input');
   var list = document.getElementById('caaguazu-search-suggest');
   if (!input || !list || !window.fetch) return;
 
-  var typeLabels = { page: 'Página', caaguazu_news: 'Noticia', caaguazu_event: 'Evento', caaguazu_artisan: 'Artesano' };
+  var typeLabels = { page: 'Página', post: 'Publicación', caaguazu_artisan: 'Artesano' };
   var timer = null, activeIndex = -1, items = [];
 
   function close(){
     list.hidden = true;
-    list.innerHTML = '';
+    list.textContent = '';
     items = [];
     activeIndex = -1;
     input.setAttribute('aria-expanded', 'false');
   }
 
+  // Resultados vienen del REST core de WordPress: se arma el DOM a mano
+  // con textContent (nunca innerHTML) para título/etiqueta, y la URL se
+  // usa solo como valor de propiedad/atributo, nunca insertada como HTML.
   function render(results){
     items = results;
     activeIndex = -1;
     if (!results.length){ close(); return; }
-    list.innerHTML = results.map(function(r, i){
+    list.textContent = '';
+    results.forEach(function(r, i){
       var label = typeLabels[r.subtype] || r.subtype;
-      return '<li role="option" id="cg-opt-' + i + '" data-url="' + r.url + '">' +
-        '<span class="s-title">' + r.title + '</span><span class="s-type">' + label + '</span></li>';
-    }).join('');
+      var li = document.createElement('li');
+      li.setAttribute('role', 'option');
+      li.id = 'cg-opt-' + i;
+      li.dataset.url = r.url;
+
+      var titleEl = document.createElement('span');
+      titleEl.className = 's-title';
+      titleEl.textContent = r.title;
+
+      var typeEl = document.createElement('span');
+      typeEl.className = 's-type';
+      typeEl.textContent = label;
+
+      li.appendChild(titleEl);
+      li.appendChild(typeEl);
+      list.appendChild(li);
+    });
     list.hidden = false;
     input.setAttribute('aria-expanded', 'true');
   }
@@ -92,7 +111,7 @@
     clearTimeout(timer);
     if (q.length < 2){ close(); return; }
     timer = setTimeout(function(){
-      fetch(endpoint + '?search=' + encodeURIComponent(q) + '&per_page=6&subtype=page,caaguazu_news,caaguazu_event,caaguazu_artisan')
+      fetch(endpoint + '?search=' + encodeURIComponent(q) + '&per_page=6&subtype=page,post,caaguazu_artisan')
         .then(function(res){ return res.ok ? res.json() : []; })
         .then(render)
         .catch(function(){ close(); });
@@ -215,8 +234,8 @@
 (function(){
   // Drawer móvil (en móvil, el "sidebar derecho" del sitio). Además de
   // abrir/cerrar: Escape cierra, el foco entra al botón de cerrar al abrir
-  // y vuelve a quien lo abrió al cerrar — el teclado nunca queda atrapado
-  // detrás del panel.
+  // y vuelve a quien lo abrió al cerrar, Tab queda atrapado adentro
+  // mientras está abierto, y el body no scrollea detrás del panel.
   var burger=document.getElementById('burger'),
       tabbarMenu=document.getElementById('tabbarMenu'),
       drawer=document.getElementById('drawer'),
@@ -224,16 +243,22 @@
       close=document.getElementById('drawerClose'),
       opener=null;
   if (!drawer) return;
+  function getFocusable(){
+    var els = drawer.querySelectorAll('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])');
+    return Array.prototype.filter.call(els, function(el){ return el.offsetParent !== null; });
+  }
   function open(e){
     opener = e && e.currentTarget ? e.currentTarget : null;
     drawer.classList.add('open'); bg.classList.add('open');
     drawer.setAttribute('aria-hidden','false');
+    document.body.classList.add('drawer-open');
     close && close.focus();
   }
   function shut(){
     if (!drawer.classList.contains('open')) return;
     drawer.classList.remove('open'); bg.classList.remove('open');
     drawer.setAttribute('aria-hidden','true');
+    document.body.classList.remove('drawer-open');
     if (opener){ opener.focus(); opener = null; }
   }
   burger && burger.addEventListener('click', open);
@@ -241,7 +266,17 @@
   close && close.addEventListener('click', shut);
   bg && bg.addEventListener('click', shut);
   document.addEventListener('keydown', function(e){
-    if (e.key === 'Escape') shut();
+    if (e.key === 'Escape') { shut(); return; }
+    if (e.key === 'Tab' && drawer.classList.contains('open')){
+      var focusables = getFocusable();
+      if (!focusables.length) return;
+      var first = focusables[0], last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first){
+        e.preventDefault(); last.focus();
+      } else if (!e.shiftKey && document.activeElement === last){
+        e.preventDefault(); first.focus();
+      }
+    }
   });
 })();
 
