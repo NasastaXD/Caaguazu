@@ -12,6 +12,12 @@ $current_eco  = caaguazu_current_ecosystem();
 <html <?php language_attributes(); ?>>
 <head>
 <script>(function(){try{if(localStorage.getItem('caaguazuLang')==='GN'){document.documentElement.classList.add('lang-gn');}}catch(e){}})();</script>
+<?php /* motion-ready ANTES del primer paint (el CSS que esconde los .reveal
+   está gateado por esta clase): así no hay flash de contenido visible→oculto
+   al cargar main.js. Solo si hay IntersectionObserver, sin reduced-motion y
+   fuera de un iframe (canvas de page builder) — en cualquier otro caso la
+   clase no aparece y nada se esconde ni se mueve. */ ?>
+<script>(function(){try{if('IntersectionObserver' in window&&!matchMedia('(prefers-reduced-motion: reduce)').matches&&window.self===window.top){document.documentElement.classList.add('motion-ready');}}catch(e){}})();</script>
 <meta charset="<?php bloginfo( 'charset' ); ?>">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#1B6B44">
@@ -81,7 +87,12 @@ $current_eco  = caaguazu_current_ecosystem();
 		document.documentElement.classList.add('cgz-splashing'); // pausa el hero-fade de abajo
 		function out() {
 			if (!s.parentNode) { return; }
+			// El swap de clases pasa en el mismo frame: cgz-splashing tenía al
+			// #main esperando (opacity 0, apenas corrido) y cgz-intro-exit lo
+			// transiciona a su lugar mientras el panel se levanta — ver
+			// "Intro → sitio" en animations.css. La intro en sí no cambia.
 			document.documentElement.classList.remove('cgz-splashing');
+			document.documentElement.classList.add('cgz-intro-exit');
 			s.classList.add('out');
 			setTimeout(function () { s.remove(); }, 450);
 		}

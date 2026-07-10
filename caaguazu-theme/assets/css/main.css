@@ -23,7 +23,18 @@
   --radius-sm:4px; --radius-md:8px; --radius-lg:16px; --radius-xl:24px;
   --font-display:'Playfair Display', Georgia, serif;
   --font-body:'Lato', system-ui, -apple-system, sans-serif;
-  --t:300ms cubic-bezier(.4,0,.2,1);
+
+  /* Sistema de motion — "quiet civic motion": duraciones y easings únicos
+     para TODO el sitio (nada de transitions con números sueltos por regla).
+     --t existía desde la v1 como el único token (300ms estándar) y cientos
+     de reglas ya lo usan: ahora es un alias del par base, así toda esa
+     superficie adopta el sistema sin reescribirla. */
+  --m-fast:140ms; --m-base:220ms; --m-med:360ms; --m-slow:560ms; --m-hero:700ms;
+  --ease-standard:cubic-bezier(.2,.8,.2,1);
+  --ease-out:cubic-bezier(.16,1,.3,1);
+  --ease-in-out:cubic-bezier(.65,0,.35,1);
+  --ease-soft:cubic-bezier(.22,1,.36,1);
+  --t:var(--m-base) var(--ease-standard);
   /* Motivo "tejido" (puntada ñandutí) — SVG inline, sin assets externos */
   --weave:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='20' viewBox='0 0 36 20'%3E%3Cpath d='M0 10l9-8 9 8 9-8 9 8M0 10l9 8 9-8 9 8 9-8' fill='none' stroke='%23B88725' stroke-opacity='.8' stroke-width='2'/%3E%3C/svg%3E");
 
@@ -72,6 +83,7 @@ address{font-style:normal;margin-top:16px;font-size:14px;line-height:1.7;color:v
 .btn{display:inline-flex;align-items:center;justify-content:center;height:48px;padding:0 24px;
   border-radius:var(--radius-md);font-weight:600;font-size:14px;
   transition:background var(--t),color var(--t),transform var(--t),box-shadow var(--t),filter var(--t)}
+.btn:active{transform:translateY(0) scale(.985)}
 .btn-primary{background:var(--grad-forest);color:#fff}
 .btn-primary:hover{filter:brightness(1.12);transform:translateY(-1px);box-shadow:var(--shadow-soft)}
 .btn-ghost{border:1px solid rgba(255,255,255,.6);color:#fff}
@@ -198,12 +210,26 @@ address{font-style:normal;margin-top:16px;font-size:14px;line-height:1.7;color:v
 .drawer-lang button{color:var(--text-muted)}
 .drawer-lang button.on{background:var(--green-deep);color:#fff}
 
-/* Mobile drawer */
-.drawer-bg{position:fixed;inset:0;background:rgba(16,26,20,.5);opacity:0;pointer-events:none;transition:opacity var(--t);z-index:60}
+/* Mobile drawer — en móvil ESTE es el "sidebar derecho" del sitio (misma
+   capa de navegación que el rail de escritorio, ver .eco-rail más abajo):
+   panel deslizante desde la derecha, con entrada escalonada de sus items. */
+.drawer-bg{position:fixed;inset:0;background:rgba(16,26,20,.5);opacity:0;pointer-events:none;transition:opacity var(--m-med) var(--ease-in-out);z-index:60}
 .drawer{position:fixed;top:0;right:0;bottom:0;width:min(340px,85vw);background:var(--bg-primary);
-  transform:translateX(100%);transition:transform var(--t);z-index:61;padding:24px;display:flex;flex-direction:column;gap:8px;overflow-y:auto}
+  transform:translateX(100%);transition:transform var(--m-med) var(--ease-soft);z-index:61;padding:24px;display:flex;flex-direction:column;gap:8px;overflow-y:auto}
 .drawer.open{transform:translateX(0)}
 .drawer-bg.open{opacity:1;pointer-events:auto}
+/* Stagger de los items al abrir: cada hijo directo entra con un fade +
+   corrimiento corto, escalonado. Solo transiciona al ABRIR (.open); al
+   cerrar, el panel entero se va y los items no hacen nada por su cuenta. */
+.drawer > *{opacity:0;transform:translateX(14px);transition:none}
+.drawer.open > *{opacity:1;transform:none;
+  transition:opacity var(--m-med) var(--ease-out),transform var(--m-med) var(--ease-out)}
+.drawer.open > :nth-child(2){transition-delay:40ms}
+.drawer.open > :nth-child(3){transition-delay:75ms}
+.drawer.open > :nth-child(4){transition-delay:110ms}
+.drawer.open > :nth-child(5){transition-delay:145ms}
+.drawer.open > :nth-child(6){transition-delay:180ms}
+.drawer.open > :nth-child(n+7){transition-delay:210ms}
 .drawer a{padding:14px 12px;border-radius:8px;font-weight:500;color:var(--text)}
 .drawer a:hover{background:var(--bg-elevated)}
 .drawer .close{align-self:flex-end;width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;border-radius:999px;font-size:24px;color:var(--text-soft)}
@@ -262,8 +288,10 @@ address{font-style:normal;margin-top:16px;font-size:14px;line-height:1.7;color:v
 .qa-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
 .qa-tile{display:flex;flex-direction:column;align-items:center;gap:10px;padding:22px 12px;
   background:var(--bg-pure);border:1px solid var(--border);border-radius:var(--radius-lg);
-  text-align:center;transition:border-color var(--t),box-shadow var(--t)}
-.qa-tile:hover{border-color:var(--green-deep);box-shadow:var(--shadow-soft)}
+  text-align:center;transition:border-color var(--t),box-shadow var(--t),transform var(--m-med) var(--ease-soft)}
+.qa-tile:hover{border-color:var(--green-deep);box-shadow:var(--shadow-soft);transform:translateY(-3px)}
+.qa-tile .qa-ico{transition:transform var(--m-med) var(--ease-soft)}
+.qa-tile:hover .qa-ico{transform:translateY(-2px)}
 .qa-ico{width:52px;height:52px;display:inline-flex;align-items:center;justify-content:center;
   border-radius:var(--radius-md);font-size:22px;background:var(--green-mist);
   filter:grayscale(1)} /* si el ítem trae un emoji literal en vez de una clave SVG, se ve monocromo igual que el resto de los íconos */
@@ -299,9 +327,20 @@ address{font-style:normal;margin-top:16px;font-size:14px;line-height:1.7;color:v
 .hero-civic-panel-list span{color:var(--text-soft)}
 .hero-civic-panel-list strong{font-weight:700;color:var(--green-deep);text-align:right}
 
-/* Reveal */
-.reveal{opacity:0;transform:translateY(32px);transition:opacity .6s ease-out,transform .6s ease-out}
-.reveal.in{opacity:1;transform:none}
+/* Reveal on scroll — un solo sistema para todo el sitio (main.js observa,
+   animations.js auto-marca el contenido de plugins con las mismas clases).
+   `.reveal` es la clase histórica que ya usan los templates; [data-reveal]
+   es el mismo sistema con variantes ("fade", "scale") para quien las
+   necesite. El stagger entre hermanos lo pone el JS como transition-delay
+   inline (agrupado por padre, no por índice global de página). Sin JS,
+   main.js nunca corre y el CSS de abajo tampoco esconde nada: la opacidad
+   inicial la aplica una clase que el propio JS agrega (.motion-ready). */
+html.motion-ready .reveal,html.motion-ready [data-reveal]{
+  opacity:0;transform:translateY(22px);
+  transition:opacity var(--m-slow) var(--ease-out),transform var(--m-slow) var(--ease-out)}
+html.motion-ready [data-reveal="fade"]{transform:none}
+html.motion-ready [data-reveal="scale"]{transform:scale(.965)}
+html.motion-ready .reveal.in,html.motion-ready [data-reveal].in{opacity:1;transform:none}
 
 /* Sections */
 section{padding-block:64px}
@@ -313,8 +352,8 @@ section{padding-block:64px}
 .identity{display:grid;gap:96px}
 .move{display:grid;grid-template-columns:1fr;gap:40px;align-items:center}
 .move-img{border-radius:var(--radius-xl);overflow:hidden;box-shadow:var(--shadow-lift)}
-.move-img img{aspect-ratio:4/3;width:100%;object-fit:cover;transition:transform 1.2s}
-.move-img:hover img{transform:scale(1.03)}
+.move-img img{aspect-ratio:4/3;width:100%;object-fit:cover;transition:transform var(--m-hero) var(--ease-soft)}
+.move-img:hover img{transform:scale(1.025)}
 .move h2{font-size:clamp(32px,4.5vw,48px);margin-top:16px}
 .move p{margin-top:20px;font-size:17px;color:var(--text-soft);line-height:1.7}
 .move .arrow{margin-top:24px}
@@ -327,12 +366,12 @@ section{padding-block:64px}
 .eco-grid{display:grid;grid-template-columns:1fr;gap:32px;margin-top:56px}
 @media(min-width:768px){.eco-grid{grid-template-columns:1fr 1fr}}
 .eco-card{display:block;background:var(--bg-pure);border-radius:var(--radius-xl);overflow:hidden;
-  box-shadow:var(--shadow-soft);transition:transform .5s,box-shadow .5s}
+  box-shadow:var(--shadow-soft);transition:transform var(--m-med) var(--ease-soft),box-shadow var(--m-med) var(--ease-soft)}
 .eco-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lift)}
 .eco-card.soon{opacity:.85;cursor:default}
 .eco-card .img{aspect-ratio:16/10;overflow:hidden}
-.eco-card .img img{width:100%;height:100%;object-fit:cover;transition:transform 1.5s}
-.eco-card:hover .img img{transform:scale(1.05)}
+.eco-card .img img{width:100%;height:100%;object-fit:cover;transition:transform var(--m-hero) var(--ease-soft)}
+.eco-card:hover .img img{transform:scale(1.03)}
 .eco-card .body{padding:32px}
 .eco-tag{display:inline-block;padding:4px 12px;border-radius:999px;background:var(--green-mist);
   color:var(--green-forest);font-size:11px;font-weight:600;letter-spacing:.1em}
@@ -427,14 +466,16 @@ section{padding-block:64px}
 .news-grid{display:grid;grid-template-columns:1fr;gap:32px;margin-top:48px}
 @media(min-width:768px){.news-grid{grid-template-columns:repeat(3,1fr)}}
 .news{display:flex;flex-direction:column;background:var(--bg-pure);border-radius:var(--radius-lg);
-  overflow:hidden;box-shadow:var(--shadow-soft);transition:transform .5s,box-shadow .5s}
+  overflow:hidden;box-shadow:var(--shadow-soft);transition:transform var(--m-med) var(--ease-soft),box-shadow var(--m-med) var(--ease-soft)}
 .news:hover{transform:translateY(-4px);box-shadow:var(--shadow-lift)}
+.news h3 a{transition:color var(--t)}
+.news:hover h3 a{color:var(--green-deep)}
 .news .img{aspect-ratio:16/9;overflow:hidden}
 .news .img:empty{background-image:linear-gradient(rgba(253,253,251,.6),rgba(253,253,251,.6)),var(--weave),
   linear-gradient(135deg,var(--green-mist),var(--earth-beige));
   background-repeat:no-repeat,repeat,no-repeat;background-size:cover,24px 12px,cover}
-.news .img img{width:100%;height:100%;object-fit:cover;transition:transform 1.2s}
-.news:hover .img img{transform:scale(1.04)}
+.news .img img{width:100%;height:100%;object-fit:cover;transition:transform var(--m-hero) var(--ease-soft)}
+.news:hover .img img{transform:scale(1.03)}
 .news .body{padding:24px;flex:1;display:flex;flex-direction:column}
 .news .cat{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--green-forest)}
 .news h3{font-size:20px;margin-top:12px;line-height:1.35}
@@ -558,7 +599,9 @@ body.eco-page .header.scrolled{
 .search-form-wrap{position:relative}
 .search-suggest{position:absolute;top:calc(100% + 8px);left:0;right:0;z-index:15;list-style:none;
   background:var(--bg-pure);border:1px solid var(--border);border-radius:var(--radius-lg);
-  box-shadow:var(--shadow-lift);overflow:hidden}
+  box-shadow:var(--shadow-lift);overflow:hidden;
+  animation:cgzPopIn var(--m-base) var(--ease-out)}
+@keyframes cgzPopIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .search-suggest li{display:flex;align-items:center;justify-content:space-between;gap:12px;
   padding:12px 20px;cursor:pointer;font-size:14px}
 .search-suggest li:not(:last-child){border-bottom:1px solid var(--border)}
@@ -618,8 +661,11 @@ body:not(.tourism-page) .entry-content > p:first-of-type::first-letter{font-fami
 .field{margin-top:20px}
 .field label{display:block;font-weight:600;font-size:14px;margin-bottom:6px}
 .field input,.field select,.field textarea{width:100%;padding:12px 14px;font:inherit;color:var(--text);
-  border:1px solid var(--border);border-radius:var(--radius-md);background:var(--bg-pure);transition:border-color var(--t)}
-.field input:focus,.field select:focus,.field textarea:focus{outline:0;border-color:var(--green-deep)}
+  border:1px solid var(--border);border-radius:var(--radius-md);background:var(--bg-pure);
+  transition:border-color var(--t),box-shadow var(--t)}
+.field input:focus,.field select:focus,.field textarea:focus{outline:0;border-color:var(--green-deep);
+  box-shadow:0 0 0 4px var(--green-mist)}
+.form-success,.form-error{animation:cgzPopIn var(--m-base) var(--ease-out)}
 .field textarea{min-height:140px;resize:vertical}
 .field-row{display:grid;grid-template-columns:1fr;gap:16px}
 @media(min-width:768px){.field-row{grid-template-columns:1fr 1fr}}
@@ -725,10 +771,99 @@ dialog.lightbox[open]{display:flex;align-items:center;justify-content:center}
   font-size:20px;line-height:1;cursor:pointer;padding:0 2px}
 @media(min-width:640px){.install-banner{left:auto;right:24px;bottom:24px;max-width:340px}}
 
+/* ================================================================
+   Eco-rail — sidebar derecho colapsable (escritorio ancho, ≥1280px).
+   Capa de navegación del ecosistema: un rail flotante de íconos pegado
+   al borde derecho (inspiración: sidebars tipo "rail + panel", adaptado
+   a lenguaje cívico-editorial, no de dashboard). Colapsado = solo íconos
+   con tooltip al hover/focus; expandido = panel con etiquetas, crece
+   hacia la izquierda desde el borde. En viewports menores NO existe: ahí
+   la misma capa es el drawer derecho de siempre (.drawer). Los items
+   salen del mismo filtro que los accesos rápidos (WordPress-editable vía
+   plugins), ver inc/sidebar.php. Sin JS: queda el rail colapsado con sus
+   links usables (tooltips por CSS); solo expandir/colapsar requiere JS.
+   ================================================================ */
+.eco-rail{display:none}
+/* min-height además del min-width: si la pantalla es ancha pero muy baja,
+   el rail no entra sin scroll interno (que taparía los tooltips) — en ese
+   caso simplemente no está, el nav del header cubre todo igual. */
+@media(min-width:1280px) and (min-height:620px){
+.eco-rail{position:fixed;right:14px;top:50%;transform:translateY(-50%);z-index:45;
+  display:flex;flex-direction:column;gap:4px;width:60px;
+  padding:10px 8px;background:var(--bg-pure);border:1px solid var(--border);
+  border-radius:18px;box-shadow:var(--shadow-soft);
+  transition:width var(--m-med) var(--ease-soft),box-shadow var(--m-med) var(--ease-soft)}
+.eco-rail.open{width:288px;box-shadow:var(--shadow-lift)}
+.eco-rail-toggle{display:flex;align-items:center;gap:12px;height:44px;flex:none;
+  padding:0 10px;border-radius:12px;color:var(--text-soft);transition:background var(--t)}
+.eco-rail-toggle:hover{background:var(--bg-elevated)}
+/* Morph hamburguesa→flecha del toggle (referencia Menu V3, hecho en CSS):
+   tres líneas; al expandir, la del medio queda como asta y las otras dos
+   rotan a punta de flecha apuntando a la derecha ("guardar el panel"). */
+.eco-rail-burger{position:relative;flex:none;width:20px;height:14px}
+.eco-rail-burger i{position:absolute;left:0;height:2px;border-radius:2px;background:currentColor;
+  transition:transform var(--m-med) var(--ease-soft),width var(--m-med) var(--ease-soft)}
+.eco-rail-burger i:nth-child(1){top:0;width:20px}
+.eco-rail-burger i:nth-child(2){top:6px;width:20px}
+.eco-rail-burger i:nth-child(3){top:12px;width:20px}
+.eco-rail.open .eco-rail-burger i:nth-child(1){width:10px;transform:translate(10px,1.5px) rotate(38deg)}
+.eco-rail.open .eco-rail-burger i:nth-child(3){width:10px;transform:translate(10px,-1.5px) rotate(-38deg)}
+.eco-rail-nav{display:flex;flex-direction:column;gap:2px;margin-top:6px}
+.eco-rail-foot{margin-top:6px;padding-top:8px;border-top:1px solid var(--border);
+  display:flex;flex-direction:column;gap:2px}
+.eco-rail-item{position:relative;display:flex;align-items:center;gap:12px;height:44px;flex:none;
+  padding:0 10px;border-radius:12px;color:var(--text-soft);white-space:nowrap;
+  transition:background var(--t),color var(--t)}
+.eco-rail-item:hover{background:var(--bg-elevated);color:var(--green-deep)}
+.eco-rail-item .ico{flex:none;width:22px;height:22px;display:inline-flex;align-items:center;
+  justify-content:center;font-size:18px;filter:grayscale(1);
+  transition:transform var(--m-base) var(--ease-soft)}
+.eco-rail-item .ico svg{width:20px;height:20px}
+.eco-rail-item:hover .ico{transform:translateY(-2px)}
+/* Etiquetas: presentes siempre en el DOM (accesibles también colapsado),
+   visualmente entran con fade+corrimiento recién cuando el panel ya empezó
+   a abrirse. pointer-events:none SIEMPRE: colapsadas desbordan el rail de
+   forma invisible y no deben interceptar clicks/hover del contenido de
+   atrás (el área clickeable es el propio item, no su texto). */
+.eco-rail-item .lbl,.eco-rail-toggle .lbl{font-size:13.5px;font-weight:600;opacity:0;
+  pointer-events:none;transform:translateX(8px);
+  transition:opacity var(--m-fast) ease,transform var(--m-fast) ease}
+.eco-rail.open .eco-rail-item .lbl,.eco-rail.open .eco-rail-toggle .lbl{opacity:1;transform:none;
+  transition:opacity var(--m-med) var(--ease-out) 140ms,transform var(--m-med) var(--ease-out) 140ms}
+/* Item activo: píldora suave + barrita de acento a la izquierda */
+.eco-rail-item.active{background:var(--green-mist);color:var(--green-deep);font-weight:700}
+.eco-rail-item.active::before{content:"";position:absolute;left:2px;top:12px;bottom:12px;width:3px;
+  border-radius:3px;background:var(--accent-gold)}
+/* Tooltip en estado colapsado: la etiqueta del item, a la izquierda del rail */
+.eco-rail:not(.open) .eco-rail-item::after,.eco-rail:not(.open) .eco-rail-toggle::after{
+  content:attr(data-label);position:absolute;right:calc(100% + 14px);top:50%;
+  transform:translateY(-50%) translateX(4px);padding:7px 12px;border-radius:9px;
+  background:var(--bg-dark);color:#fff;font-size:12px;font-weight:600;white-space:nowrap;
+  opacity:0;visibility:hidden;pointer-events:none;
+  transition:opacity var(--m-base) var(--ease-out),transform var(--m-base) var(--ease-out),visibility var(--m-base)}
+.eco-rail:not(.open) .eco-rail-item:hover::after,.eco-rail:not(.open) .eco-rail-item:focus-visible::after,
+.eco-rail:not(.open) .eco-rail-toggle:hover::after,.eco-rail:not(.open) .eco-rail-toggle:focus-visible::after{
+  opacity:1;visibility:visible;transform:translateY(-50%)}
+/* Toggle de sonido (capa opcional, apagada por default — ver sidebar.js) */
+.eco-rail-sound[aria-pressed="true"]{color:var(--green-deep)}
+.eco-rail-sound[aria-pressed="true"] .ico{filter:none}
+}
+/* Dentro de un ecosistema el rail hereda los tokens del eco (madera en
+   Turismo, tinta en Educación) sin reglas extra — mismo mecanismo que el
+   resto del shell. Solo el canvas de un page builder lo esconde: ahí es
+   ruido que tapa la edición. */
+body.page-builder-canvas .eco-rail{display:none}
+
 /* Accesibilidad: sin animaciones para quien las desactivó */
 @media (prefers-reduced-motion: reduce){
   html{scroll-behavior:auto}
   .hero-fade > *{animation:none;opacity:1;transform:none}
-  .reveal{opacity:1;transform:none;transition:none}
-  .btn,.quiz-opt,.eco-card,.news{transition:none}
+  .reveal,[data-reveal]{opacity:1!important;transform:none!important;transition:none!important}
+  .btn,.quiz-opt,.eco-card,.news,.qa-tile{transition:none}
+  .eco-card .img img,.news .img img,.move-img img{transition:none}
+  .drawer{transition:transform 80ms linear}
+  .drawer > *,.drawer.open > *{opacity:1;transform:none;transition:none}
+  .eco-rail{transition:none}
+  .eco-rail-item .lbl,.eco-rail-toggle .lbl,.eco-rail.open .eco-rail-item .lbl,.eco-rail.open .eco-rail-toggle .lbl{transition:none}
+  .search-suggest,.form-success,.form-error{animation:none}
 }

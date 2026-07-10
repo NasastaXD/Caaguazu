@@ -172,37 +172,77 @@
 })();
 
 (function(){
-  // Reveal on scroll
-  var els = document.querySelectorAll('.reveal');
-  if (!('IntersectionObserver' in window)){
-    els.forEach(function(el){ el.classList.add('in'); });
-    return;
-  }
+  // Reveal on scroll — sistema único del sitio (.reveal y [data-reveal],
+  // estilos en main.css). El CSS que esconde los elementos está gateado
+  // por html.motion-ready, que pone un script inline de header.php ANTES
+  // del primer paint (mismas condiciones que acá): con JS apagado, sin
+  // IntersectionObserver o con prefers-reduced-motion la clase no existe
+  // y ningún contenido queda oculto ni se mueve.
+  var els = document.querySelectorAll('.reveal, [data-reveal]');
+  if (!els.length) return;
+  if (!document.documentElement.classList.contains('motion-ready')) return;
   var io = new IntersectionObserver(function(entries){
     entries.forEach(function(en){
-      if (en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+      if (!en.isIntersecting) return;
+      var el = en.target;
+      el.classList.add('in');
+      io.unobserve(el);
+      // Limpiar el delay del stagger cuando la entrada ya terminó: si
+      // quedara, retrasaría también las transiciones de hover del elemento.
+      setTimeout(function(){ el.style.transitionDelay = ''; }, 1000);
     });
-  }, {threshold:0.2});
-  els.forEach(function(el, i){
-    el.style.transitionDelay = ((i % 3) * 80) + 'ms';
+  }, {threshold:0.15, rootMargin:'0px 0px -40px 0px'});
+  // Stagger por grupo real (hermanos bajo el mismo padre, o el grupo
+  // explícito [data-reveal-group]), no por índice global de página: las
+  // tarjetas de una misma grilla entran en cascada corta y un elemento
+  // suelto entra sin delay, sin importar cuántos reveals hubo antes.
+  var groupCounts = [];
+  els.forEach(function(el){
+    var group = el.closest('[data-reveal-group]') || el.parentNode;
+    var idx = -1;
+    for (var g = 0; g < groupCounts.length; g++){
+      if (groupCounts[g][0] === group){ idx = g; break; }
+    }
+    if (idx === -1){ groupCounts.push([group, 0]); idx = groupCounts.length - 1; }
+    if (!el.style.transitionDelay){
+      el.style.transitionDelay = (Math.min(groupCounts[idx][1], 5) * 70) + 'ms';
+    }
+    groupCounts[idx][1]++;
     io.observe(el);
   });
 })();
 
 (function(){
-  // Drawer móvil
+  // Drawer móvil (en móvil, el "sidebar derecho" del sitio). Además de
+  // abrir/cerrar: Escape cierra, el foco entra al botón de cerrar al abrir
+  // y vuelve a quien lo abrió al cerrar — el teclado nunca queda atrapado
+  // detrás del panel.
   var burger=document.getElementById('burger'),
       tabbarMenu=document.getElementById('tabbarMenu'),
       drawer=document.getElementById('drawer'),
       bg=document.getElementById('drawerBg'),
-      close=document.getElementById('drawerClose');
+      close=document.getElementById('drawerClose'),
+      opener=null;
   if (!drawer) return;
-  function open(){ drawer.classList.add('open'); bg.classList.add('open'); drawer.setAttribute('aria-hidden','false'); }
-  function shut(){ drawer.classList.remove('open'); bg.classList.remove('open'); drawer.setAttribute('aria-hidden','true'); }
+  function open(e){
+    opener = e && e.currentTarget ? e.currentTarget : null;
+    drawer.classList.add('open'); bg.classList.add('open');
+    drawer.setAttribute('aria-hidden','false');
+    close && close.focus();
+  }
+  function shut(){
+    if (!drawer.classList.contains('open')) return;
+    drawer.classList.remove('open'); bg.classList.remove('open');
+    drawer.setAttribute('aria-hidden','true');
+    if (opener){ opener.focus(); opener = null; }
+  }
   burger && burger.addEventListener('click', open);
   tabbarMenu && tabbarMenu.addEventListener('click', open);
   close && close.addEventListener('click', shut);
   bg && bg.addEventListener('click', shut);
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') shut();
+  });
 })();
 
 (function(){

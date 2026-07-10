@@ -86,6 +86,14 @@ function caaguazu_enqueue_assets() {
 		CAAGUAZU_VERSION,
 		true
 	);
+	// Eco-rail (sidebar derecho colapsable) — ver inc/sidebar.php.
+	wp_enqueue_script(
+		'caaguazu-sidebar',
+		get_theme_file_uri( '/assets/js/sidebar.js' ),
+		array( 'caaguazu-main' ),
+		CAAGUAZU_VERSION,
+		true
+	);
 	// Fronteras de módulos para el telón de transición (animations.js): un
 	// entry por ecosistema registrado, con sus prefijos de URL y su ícono
 	// ya renderizado (inc/icons.php) — el JS no reimplementa el mapa de
@@ -163,6 +171,7 @@ add_filter( 'body_class', 'caaguazu_body_class' );
 require get_template_directory() . '/inc/i18n.php';
 require get_template_directory() . '/inc/icons.php';
 require get_template_directory() . '/inc/helpers.php';
+require get_template_directory() . '/inc/sidebar.php';
 require get_template_directory() . '/inc/ecosystem-shell.php';
 require get_template_directory() . '/inc/cpt-artisan.php';
 require get_template_directory() . '/inc/demo-artisans.php';
