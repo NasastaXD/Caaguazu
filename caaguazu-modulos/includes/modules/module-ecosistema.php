@@ -167,9 +167,36 @@ add_action( 'customize_register', 'caaguazu_modulos_ecosistema_customize_registe
  * tarjetas real (caaguazu_render_ecosystem_cards()) a continuación, para
  * que visitar /ecosistema/ directo muestre lo mismo que scrollear desde
  * el home, no solo este texto.
+ *
+ * Los nombres de los ecosistemas (antes "Turismo"/"Educación" en negrita,
+ * fijos) ahora salen del registry (`caaguazu_ecosystems()`) y van
+ * enlazados a su hub real — texto en negrita sin link confundía (reporte
+ * de usuario: "es solo texto sin redirigir a los portales"), y además
+ * quedaba desactualizado apenas cambiaba qué ecosistemas hay (mencionaba
+ * "CEAD" incluso después de sacarlo de los slots por defecto del hub, ver
+ * caaguazu_modulos_external_eco_defaults()). Como CEAD nunca fue un
+ * ecosistema real del registry (era un slot externo del Customizer), ya no
+ * aparece acá tampoco.
  */
 function caaguazu_modulos_ecosistema_page_content() {
-	return "<p>Caaguazu.net centraliza el acceso a los sub-portales especializados del departamento, cada uno con su propio contenido, identidad visual y equipo editorial, pero dentro de una misma identidad institucional compartida.</p>\n\n<p>Hoy conviven acá el ecosistema de <strong>Turismo</strong> (destinos, gastronomía y cultura guaraní) y el de <strong>Educación</strong> (escuelas, becas municipales y programas educativos), además de sub-portales externos como CEAD. A medida que se sumen nuevos, aparecen solos en la grilla de abajo.</p>";
+	$intro = __( 'Caaguazu.net centraliza el acceso a los sub-portales especializados del departamento, cada uno con su propio contenido, identidad visual y equipo editorial, pero dentro de una misma identidad institucional compartida.', 'caaguazu-modulos' );
+
+	$links = array();
+	if ( function_exists( 'caaguazu_ecosystems' ) && function_exists( 'caaguazu_ecosystem_hub_url' ) ) {
+		foreach ( caaguazu_ecosystems() as $eco ) {
+			$links[] = '<a href="' . esc_url( caaguazu_ecosystem_hub_url( $eco ) ) . '">' . esc_html( $eco['label'] ) . '</a>';
+		}
+	}
+
+	$second = $links
+		? sprintf(
+			/* translators: %s: lista de nombres de ecosistemas ya enlazados a su hub, ej. "Turismo, Educación" */
+			__( 'Hoy conviven acá %s. A medida que se sumen nuevos, aparecen solos en la grilla de abajo — no hace falta rediseñar nada para incorporarlos.', 'caaguazu-modulos' ),
+			implode( ', ', $links )
+		)
+		: __( 'A medida que se sumen sub-portales, aparecen solos en la grilla de abajo.', 'caaguazu-modulos' );
+
+	return "<p>{$intro}</p>\n\n<p>{$second}</p>";
 }
 
 /**
@@ -225,6 +252,31 @@ function caaguazu_modulos_backfill_ecosistema_content() {
 	update_option( 'caaguazu_modulos_ecosistema_content_seeded_v1', 1 );
 }
 add_action( 'admin_init', 'caaguazu_modulos_backfill_ecosistema_content' );
+
+/**
+ * Arregla la página "Ecosistema" en sitios que ya la tenían sembrada con la
+ * redacción vieja (previa a este fix): mencionaba "Turismo" y "Educación" en
+ * negrita pero SIN enlazar (texto muerto — clickear ahí no llevaba a ningún
+ * lado, reporte de usuario) y todavía nombraba a "CEAD" aunque ya se había
+ * sacado de la grilla de tarjetas por defecto. Solo pisa el contenido si
+ * sigue siendo exactamente ese texto viejo auto-generado — si un admin ya
+ * lo editó a mano, esta rutina no toca nada (mismo criterio que el resto de
+ * los backfills de contenido de este archivo).
+ */
+function caaguazu_modulos_fix_ecosistema_links() {
+	if ( get_option( 'caaguazu_modulos_ecosistema_links_fixed_v1' ) ) {
+		return;
+	}
+	$page = get_page_by_path( 'ecosistema' );
+	if ( $page ) {
+		$old_text = "<p>Caaguazu.net centraliza el acceso a los sub-portales especializados del departamento, cada uno con su propio contenido, identidad visual y equipo editorial, pero dentro de una misma identidad institucional compartida.</p>\n\n<p>Hoy conviven acá el ecosistema de <strong>Turismo</strong> (destinos, gastronomía y cultura guaraní) y el de <strong>Educación</strong> (escuelas, becas municipales y programas educativos), además de sub-portales externos como CEAD. A medida que se sumen nuevos, aparecen solos en la grilla de abajo.</p>";
+		if ( trim( $page->post_content ) === trim( $old_text ) ) {
+			wp_update_post( array( 'ID' => $page->ID, 'post_content' => caaguazu_modulos_ecosistema_page_content() ) );
+		}
+	}
+	update_option( 'caaguazu_modulos_ecosistema_links_fixed_v1', 1 );
+}
+add_action( 'admin_init', 'caaguazu_modulos_fix_ecosistema_links' );
 
 add_filter( 'caaguazu_quick_access_items', function ( $items ) {
 	$items[] = array(

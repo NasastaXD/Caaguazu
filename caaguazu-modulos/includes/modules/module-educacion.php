@@ -340,10 +340,15 @@ function caaguazu_educacion_shell_items() {
 /**
  * Imagen de la tarjeta de Educación en el hub Ecosistema — editable desde
  * Personalizar → Contenido del Home → Educación (imagen), en vez de quedar
- * fija en el código.
+ * fija en el código. Default: foto real de la UTIC (Universidad Tecnológica
+ * Intercontinental), provista por quien encargó el sitio como reemplazo
+ * provisorio de un placeholder de stock — bundleada en el plugin (en vez de
+ * hotlinkeada a un servicio externo) para no repetir el 404 que tenía la
+ * imagen de Unsplash anterior. Pendiente: reemplazar por una foto del CEIC
+ * (el colegio más grande de la ciudad) cuando esté disponible.
  */
 function caaguazu_educacion_card_image() {
-	return caaguazu_opt_image( 'educacion_card_image', 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1400&q=80' );
+	return caaguazu_opt_image( 'educacion_card_image', CAAGUAZU_MODULOS_URI . 'assets/images/utic-educacion.jpg' );
 }
 
 add_action( 'customize_register', function ( $wp_customize ) {
