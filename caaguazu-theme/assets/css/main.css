@@ -860,6 +860,15 @@ dialog.lightbox[open]{display:flex;align-items:center;justify-content:center}
 /* Toggle de sonido (capa opcional, apagada por default — ver sidebar.js) */
 .eco-rail-sound[aria-pressed="true"]{color:var(--green-deep)}
 .eco-rail-sound[aria-pressed="true"] .ico{filter:none}
+/* Tarjeta de cuenta al pie (referencia: avatar + nombre + detalle;
+   colapsado queda solo el avatar circular, con tooltip) */
+.eco-rail-account{height:56px;margin-top:2px;padding:0 5px;gap:10px}
+.eco-rail-avatar{width:34px!important;height:34px!important;border-radius:999px;
+  background:var(--grad-forest);color:#fff}
+.eco-rail-avatar svg{width:17px;height:17px}
+.eco-rail-account-txt{display:flex;flex-direction:column;line-height:1.25;min-width:0}
+.eco-rail-account-txt strong{font-size:13.5px;font-weight:700}
+.eco-rail-account-txt small{font-size:11px;font-weight:400;color:var(--text-muted)}
 
 /* --- Modo drawer móvil (<1024px): reemplaza al drawer institucional --- */
 @media(max-width:1023.98px){

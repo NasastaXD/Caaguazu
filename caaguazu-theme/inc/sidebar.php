@@ -121,6 +121,31 @@ function caaguazu_render_eco_rail() {
 				<span class="ico" aria-hidden="true"><?php echo caaguazu_icon( 'sound' ); ?></span>
 				<span class="lbl"><?php esc_html_e( 'Sonido de interfaz', 'caaguazu' ); ?></span>
 			</button>
+			<?php
+			/* Tarjeta de cuenta al pie (como en la referencia: avatar + nombre
+			   + detalle; colapsado queda solo el avatar con tooltip). Enlaza a
+			   /cuenta/ del sistema de cuentas propio (plugin Caaguazú Locales,
+			   repo turismo) — mismo gate que el link "Mi cuenta" del footer: si
+			   Locales no está activo, la tarjeta no existe. El sistema de
+			   cuentas tiene sesión propia (no usuarios de WP), así que desde el
+			   theme no sabemos si hay alguien logueado: la tarjeta es la puerta
+			   genérica; el filtro deja que un plugin la personalice. */
+			$account = apply_filters( 'caaguazu_sidebar_account', post_type_exists( 'cgz_local' ) ? array(
+				'name' => __( 'Mi cuenta', 'caaguazu' ),
+				'sub'  => __( 'Reservas y locales', 'caaguazu' ),
+				'url'  => home_url( '/cuenta/' ),
+			) : null );
+			if ( $account ) :
+			?>
+			<a class="eco-rail-item eco-rail-account" href="<?php echo esc_url( $account['url'] ); ?>"
+				data-label="<?php echo esc_attr( $account['name'] ); ?>">
+				<span class="ico eco-rail-avatar" aria-hidden="true"><?php echo caaguazu_icon( 'user' ); ?></span>
+				<span class="lbl eco-rail-account-txt">
+					<strong><?php echo esc_html( $account['name'] ); ?></strong>
+					<small><?php echo esc_html( $account['sub'] ); ?></small>
+				</span>
+			</a>
+			<?php endif; ?>
 		</div>
 	</nav>
 	<?php
