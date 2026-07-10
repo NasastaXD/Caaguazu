@@ -2,8 +2,8 @@
 /**
  * Plugin Name:       Caaguazú Módulos
  * Plugin URI:        https://caaguazu.net
- * Description:       Módulos de contenido del portal (Noticias, Agenda, Ecosistema, Educación) como plugin — separados del theme para que el sitio funcione con cualquier apariencia y cada módulo se pueda activar/desactivar sin tocar código de presentación. Se registran solos en el nav y en los accesos rápidos del home vía los filtros `caaguazu_nav_items`/`caaguazu_quick_access_items` del theme.
- * Version:           1.9.0
+ * Description:       Módulos de contenido del portal (Noticias, Agenda, Ecosistema, Educación, Instituciones, Lugares, Servicios, Proyectos) como plugin — separados del theme para que el sitio funcione con cualquier apariencia y cada módulo se pueda activar/desactivar sin tocar código de presentación. Se registran solos en el nav y en los accesos rápidos del home vía los filtros `caaguazu_nav_items`/`caaguazu_quick_access_items` del theme.
+ * Version:           2.0.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Thiago Juan Manuel Ávalos Crosta
@@ -14,7 +14,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'CAAGUAZU_MODULOS_VERSION', '1.9.0' );
+define( 'CAAGUAZU_MODULOS_VERSION', '2.0.0' );
 define( 'CAAGUAZU_MODULOS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'CAAGUAZU_MODULOS_URI', plugin_dir_url( __FILE__ ) );
 
@@ -42,6 +42,24 @@ function caaguazu_ensure_category( $name, $slug = '', $parent_id = 0 ) {
 }
 
 /**
+ * Crea (si no existen) los términos de una taxonomía propia por nombre —
+ * equivalente a caaguazu_ensure_category() pero para las taxonomías nuevas
+ * de V5 (tipo_institucion, tipo_lugar, categoria_servicio, area_proyecto,
+ * tipo_evento, area_evento). Son etiquetas de clasificación, no contenido —
+ * mismo criterio que ya se usó para las 5 sub-categorías de Noticias desde
+ * el día uno: no es "contenido inventado", es la estructura que un editor
+ * necesita para poder clasificar lo que va a escribir. No pisa nada si el
+ * término ya existe (p. ej. un admin ya lo renombró).
+ */
+function caaguazu_ensure_terms( $taxonomy, $names ) {
+	foreach ( $names as $name ) {
+		if ( ! term_exists( $name, $taxonomy ) ) {
+			wp_insert_term( $name, $taxonomy );
+		}
+	}
+}
+
+/**
  * Cada módulo es un archivo independiente en includes/modules/ que:
  *  1. Registra su propio contenido (categorías nativas + meta, o un CPT
  *     propio si el contenido no es cronológico como Noticias/Agenda/
@@ -60,6 +78,14 @@ require_once CAAGUAZU_MODULOS_DIR . 'includes/modules/module-noticias.php';
 require_once CAAGUAZU_MODULOS_DIR . 'includes/modules/module-agenda.php';
 require_once CAAGUAZU_MODULOS_DIR . 'includes/modules/module-ecosistema.php';
 require_once CAAGUAZU_MODULOS_DIR . 'includes/modules/module-educacion.php';
+// V5 (civic CMS): CPTs cívicos nuevos, cada uno con su propio archivo de
+// módulo siguiendo el mismo patrón (CPT + taxonomía + meta/metabox + nav).
+require_once CAAGUAZU_MODULOS_DIR . 'includes/modules/module-instituciones.php';
+require_once CAAGUAZU_MODULOS_DIR . 'includes/modules/module-lugares.php';
+require_once CAAGUAZU_MODULOS_DIR . 'includes/modules/module-servicios.php';
+require_once CAAGUAZU_MODULOS_DIR . 'includes/modules/module-proyectos.php';
+
+require_once CAAGUAZU_MODULOS_DIR . 'includes/dashboard-widget.php';
 
 // Auto-update desde los GitHub Releases del repo (mismo release que el
 // theme; la versión propia sale del manifest.json del release).

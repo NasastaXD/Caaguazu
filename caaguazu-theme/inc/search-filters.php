@@ -12,8 +12,15 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
+/**
+ * V5 (civic CMS): institucion/lugar/servicio/proyecto se suman a la lista
+ * de tipos filtrables — a diferencia de noticias/agenda, que filtran por
+ * Categoría sobre `post`, estos filtran directo por post_type (son CPTs
+ * reales), así que no necesitan su propia rama en
+ * caaguazu_filter_search_query().
+ */
 function caaguazu_search_type() {
-	$allowed = array( 'any', 'page', 'noticias', 'agenda' );
+	$allowed = array( 'any', 'page', 'noticias', 'agenda', 'institucion', 'lugar', 'servicio', 'proyecto' );
 	$value   = isset( $_GET['tipo'] ) ? sanitize_key( wp_unslash( $_GET['tipo'] ) ) : 'any';
 	return in_array( $value, $allowed, true ) ? $value : 'any';
 }
@@ -51,8 +58,8 @@ function caaguazu_filter_search_query( $query ) {
 	}
 
 	$type = caaguazu_search_type();
-	if ( 'page' === $type ) {
-		$query->set( 'post_type', 'page' );
+	if ( in_array( $type, array( 'page', 'institucion', 'lugar', 'servicio', 'proyecto' ), true ) ) {
+		$query->set( 'post_type', $type );
 		return;
 	}
 	if ( 'noticias' === $type || 'agenda' === $type ) {

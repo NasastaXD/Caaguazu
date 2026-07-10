@@ -119,12 +119,12 @@ if ( $family && $term->slug !== $family ) {
 			<?php endwhile; ?>
 		</div>
 		<?php the_posts_pagination(); ?>
-	<?php else : ?>
-		<div class="wip">
-			<p class="eyebrow"><?php esc_html_e( 'Sin contenido', 'caaguazu' ); ?></p>
-			<p><?php esc_html_e( 'Todavía no se publicó contenido en esta categoría.', 'caaguazu' ); ?></p>
-		</div>
-	<?php endif; ?>
+	<?php else :
+		echo caaguazu_render_empty_state(
+			__( 'Sin contenido', 'caaguazu' ),
+			__( 'Todavía no se publicó contenido en esta categoría.', 'caaguazu' )
+		);
+	endif; ?>
 </div>
 
 <?php get_footer();

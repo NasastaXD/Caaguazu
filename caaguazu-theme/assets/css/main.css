@@ -413,6 +413,36 @@ section{padding-block:64px}
 .share-btn:hover{border-color:var(--green-deep);color:var(--green-deep)}
 .share-copy.copied{border-color:var(--green-deep);background:var(--green-mist);color:var(--green-deep)}
 
+/* Metadatos de confianza (V5): Fuente/Responsable/Estado/Actualizado el */
+.trust-meta{max-width:760px;margin:32px auto 0;padding:20px;border:1px solid var(--border);
+  border-radius:var(--radius-lg);background:var(--bg-elevated)}
+.trust-meta-list{display:grid;grid-template-columns:1fr;gap:12px;margin:0 0 12px}
+@media(min-width:560px){.trust-meta-list{grid-template-columns:repeat(2,1fr)}}
+.trust-meta-item dt{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted)}
+.trust-meta-item dd{margin:2px 0 0;font-size:14px;color:var(--text)}
+.trust-badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;
+  background:var(--green-mist);color:var(--green-deep)}
+.trust-badge--desactualizado{background:#f6e6df;color:#8a3b2c}
+.trust-badge--pendiente{background:var(--bg-primary);color:var(--text-muted)}
+
+/* Ficha de datos estructurados (V5: Instituciones/Lugares/Servicios/Proyectos) */
+.entity-meta{max-width:760px;margin:24px auto 0}
+.entity-meta-list{display:grid;grid-template-columns:1fr;gap:10px;list-style:none;padding:0;margin:0 0 12px}
+@media(min-width:560px){.entity-meta-list{grid-template-columns:repeat(2,1fr)}}
+.entity-meta-list li{font-size:14px;color:var(--text-soft)}
+.entity-meta-list strong{display:block;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:2px}
+.entity-meta .arrow{display:inline-block;margin-top:4px}
+
+/* Tarjetas "directorio" (Instituciones/Servicios): reusan .aud/.aud-grid de
+   Artesanos -- funcional/minimal, sin imagen grande (Fase 11 del pase de
+   pulido: "servicios/instituciones no necesitan imagen pesada"). */
+.aud .aud-meta{margin-top:8px;font-size:13px;color:var(--text-muted)}
+.aud .aud-status{margin-top:8px}
+
+/* Tarjetas de Proyecto (.eco-card reusado): sin imagen configurada, el
+   cuerpo arranca pegado arriba en vez de dejar un hueco. */
+.eco-card:not(:has(.img)) h3{margin-top:0}
+
 /* Newsletter (footer, F10) */
 .screen-reader-text{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
 .newsletter-form{display:flex;gap:8px;margin-top:20px;max-width:320px}

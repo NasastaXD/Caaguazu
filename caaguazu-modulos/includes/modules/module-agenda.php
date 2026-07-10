@@ -23,47 +23,165 @@ function caaguazu_agenda_ensure_category() {
 }
 add_action( 'init', 'caaguazu_agenda_ensure_category', 20 );
 
-function caaguazu_register_event_meta() {
-	register_post_meta( 'post', '_caaguazu_event_date', array(
-		'type'          => 'string',
-		'single'        => true,
-		'show_in_rest'  => true,
-		'auth_callback' => function () { return current_user_can( 'edit_posts' ); },
+/**
+ * V5 (civic CMS): "Tipo" y "Área" del evento — taxonomías propias sobre
+ * post_type=post, además de (no en reemplazo de) la categoría Agenda. Un
+ * evento sigue viviendo como Entrada+Categoría (no se migra a un CPT propio:
+ * ver la nota en caaguazu-theme/README.md sobre por qué Noticias/Agenda/
+ * Educación quedan así), esto sólo suma clasificación cruzada más fina.
+ */
+function caaguazu_register_evento_taxonomies() {
+	register_taxonomy( 'tipo_evento', 'post', array(
+		'labels' => array(
+			'name'          => __( 'Tipos de evento', 'caaguazu-modulos' ),
+			'singular_name' => __( 'Tipo de evento', 'caaguazu-modulos' ),
+		),
+		'hierarchical'      => true,
+		'public'            => true,
+		'show_in_rest'      => true,
+		'show_admin_column' => true,
+		'rewrite'           => array( 'slug' => 'tipo-evento' ),
 	) );
-	register_post_meta( 'post', '_caaguazu_event_location', array(
+	register_taxonomy( 'area_evento', 'post', array(
+		'labels' => array(
+			'name'          => __( 'Áreas de evento', 'caaguazu-modulos' ),
+			'singular_name' => __( 'Área de evento', 'caaguazu-modulos' ),
+		),
+		'hierarchical'      => true,
+		'public'            => true,
+		'show_in_rest'      => true,
+		'show_admin_column' => true,
+		'rewrite'           => array( 'slug' => 'area-evento' ),
+	) );
+}
+add_action( 'init', 'caaguazu_register_evento_taxonomies', 0 );
+
+function caaguazu_evento_ensure_terms() {
+	caaguazu_ensure_terms( 'tipo_evento', array(
+		__( 'Cultural', 'caaguazu-modulos' ),
+		__( 'Educativo', 'caaguazu-modulos' ),
+		__( 'Comunitario', 'caaguazu-modulos' ),
+		__( 'Deportivo', 'caaguazu-modulos' ),
+		__( 'Municipal', 'caaguazu-modulos' ),
+		__( 'Juvenil', 'caaguazu-modulos' ),
+	) );
+	caaguazu_ensure_terms( 'area_evento', array(
+		__( 'Cultura', 'caaguazu-modulos' ),
+		__( 'Educación', 'caaguazu-modulos' ),
+		__( 'Comunidad', 'caaguazu-modulos' ),
+		__( 'Turismo', 'caaguazu-modulos' ),
+		__( 'Juventud', 'caaguazu-modulos' ),
+		__( 'Servicios', 'caaguazu-modulos' ),
+	) );
+}
+add_action( 'init', 'caaguazu_evento_ensure_terms', 20 );
+
+/**
+ * Estado del evento: set cerrado de 4 valores, mismo criterio que
+ * caaguazu_servicio_estado_values() en module-servicios.php.
+ */
+function caaguazu_evento_estado_values() {
+	return array(
+		'proximo'       => __( 'Próximo', 'caaguazu-modulos' ),
+		'realizado'     => __( 'Realizado', 'caaguazu-modulos' ),
+		'cancelado'     => __( 'Cancelado', 'caaguazu-modulos' ),
+		'reprogramado'  => __( 'Reprogramado', 'caaguazu-modulos' ),
+	);
+}
+
+function caaguazu_sanitize_evento_estado( $value ) {
+	return array_key_exists( $value, caaguazu_evento_estado_values() ) ? $value : '';
+}
+
+function caaguazu_register_event_meta() {
+	$text_args = array(
 		'type'          => 'string',
 		'single'        => true,
 		'show_in_rest'  => true,
 		'auth_callback' => function () { return current_user_can( 'edit_posts' ); },
+	);
+	foreach ( array(
+		'_caaguazu_event_date',
+		'_caaguazu_event_location',
+		'_caaguazu_event_hora_inicio',
+		'_caaguazu_event_hora_fin',
+		'_caaguazu_event_organizador',
+		'_caaguazu_event_contacto',
+		'_caaguazu_event_enlace',
+	) as $key ) {
+		register_post_meta( 'post', $key, $text_args );
+	}
+	register_post_meta( 'post', '_caaguazu_event_estado', array(
+		'type'              => 'string',
+		'single'            => true,
+		'show_in_rest'      => true,
+		'sanitize_callback' => 'caaguazu_sanitize_evento_estado',
+		'auth_callback'     => function () { return current_user_can( 'edit_posts' ); },
 	) );
 }
 add_action( 'init', 'caaguazu_register_event_meta' );
 
 /**
- * Metabox de fecha/lugar. Aparece en toda Entrada, igual que el de
- * module-noticias.php — ver comentario ahí sobre por qué no se puede
- * condicionar a la categoría tildada en el mismo formulario.
+ * Metabox de fecha/lugar/horario/organizador/estado. Aparece en toda
+ * Entrada, igual que el de module-noticias.php — ver comentario ahí sobre
+ * por qué no se puede condicionar a la categoría tildada en el mismo
+ * formulario.
  */
 function caaguazu_event_metabox() {
-	add_meta_box( 'caaguazu_event_meta', __( 'Agenda: fecha y lugar', 'caaguazu-modulos' ), 'caaguazu_event_metabox_html', 'post', 'side' );
+	add_meta_box( 'caaguazu_event_meta', __( 'Agenda: datos del evento', 'caaguazu-modulos' ), 'caaguazu_event_metabox_html', 'post', 'side' );
 }
 add_action( 'add_meta_boxes', 'caaguazu_event_metabox' );
 
 function caaguazu_event_metabox_html( $post ) {
 	wp_nonce_field( 'caaguazu_event_meta', 'caaguazu_event_meta_nonce' );
-	$date     = get_post_meta( $post->ID, '_caaguazu_event_date', true );
-	$location = get_post_meta( $post->ID, '_caaguazu_event_location', true );
+	$date         = get_post_meta( $post->ID, '_caaguazu_event_date', true );
+	$location     = get_post_meta( $post->ID, '_caaguazu_event_location', true );
+	$hora_inicio  = get_post_meta( $post->ID, '_caaguazu_event_hora_inicio', true );
+	$hora_fin     = get_post_meta( $post->ID, '_caaguazu_event_hora_fin', true );
+	$organizador  = get_post_meta( $post->ID, '_caaguazu_event_organizador', true );
+	$contacto     = get_post_meta( $post->ID, '_caaguazu_event_contacto', true );
+	$enlace       = get_post_meta( $post->ID, '_caaguazu_event_enlace', true );
+	$estado       = get_post_meta( $post->ID, '_caaguazu_event_estado', true );
 	?>
 	<p>
 		<label for="caaguazu_event_date"><strong><?php esc_html_e( 'Fecha del evento', 'caaguazu-modulos' ); ?></strong></label><br>
 		<input type="date" id="caaguazu_event_date" name="caaguazu_event_date" value="<?php echo esc_attr( $date ); ?>" style="width:100%">
 	</p>
 	<p>
+		<label for="caaguazu_event_hora_inicio"><strong><?php esc_html_e( 'Hora de inicio', 'caaguazu-modulos' ); ?></strong></label><br>
+		<input type="time" id="caaguazu_event_hora_inicio" name="caaguazu_event_hora_inicio" value="<?php echo esc_attr( $hora_inicio ); ?>" style="width:100%">
+	</p>
+	<p>
+		<label for="caaguazu_event_hora_fin"><strong><?php esc_html_e( 'Hora de fin', 'caaguazu-modulos' ); ?></strong></label><br>
+		<input type="time" id="caaguazu_event_hora_fin" name="caaguazu_event_hora_fin" value="<?php echo esc_attr( $hora_fin ); ?>" style="width:100%">
+	</p>
+	<p>
 		<label for="caaguazu_event_location"><strong><?php esc_html_e( 'Lugar', 'caaguazu-modulos' ); ?></strong></label><br>
 		<input type="text" id="caaguazu_event_location" name="caaguazu_event_location" value="<?php echo esc_attr( $location ); ?>" style="width:100%">
 	</p>
+	<p>
+		<label for="caaguazu_event_organizador"><strong><?php esc_html_e( 'Organizador', 'caaguazu-modulos' ); ?></strong></label><br>
+		<input type="text" id="caaguazu_event_organizador" name="caaguazu_event_organizador" value="<?php echo esc_attr( $organizador ); ?>" style="width:100%">
+	</p>
+	<p>
+		<label for="caaguazu_event_contacto"><strong><?php esc_html_e( 'Contacto', 'caaguazu-modulos' ); ?></strong></label><br>
+		<input type="text" id="caaguazu_event_contacto" name="caaguazu_event_contacto" value="<?php echo esc_attr( $contacto ); ?>" style="width:100%">
+	</p>
+	<p>
+		<label for="caaguazu_event_enlace"><strong><?php esc_html_e( 'Enlace', 'caaguazu-modulos' ); ?></strong></label><br>
+		<input type="url" id="caaguazu_event_enlace" name="caaguazu_event_enlace" value="<?php echo esc_attr( $enlace ); ?>" style="width:100%">
+	</p>
+	<p>
+		<label for="caaguazu_event_estado"><strong><?php esc_html_e( 'Estado', 'caaguazu-modulos' ); ?></strong></label><br>
+		<select id="caaguazu_event_estado" name="caaguazu_event_estado" style="width:100%">
+			<option value=""><?php esc_html_e( 'Sin definir', 'caaguazu-modulos' ); ?></option>
+			<?php foreach ( caaguazu_evento_estado_values() as $value => $label ) : ?>
+				<option value="<?php echo esc_attr( $value ); ?>" <?php selected( $estado, $value ); ?>><?php echo esc_html( $label ); ?></option>
+			<?php endforeach; ?>
+		</select>
+	</p>
 	<p style="color:#666;font-size:12px">
-		<?php esc_html_e( 'Solo aplica si la entrada está en la categoría Agenda.', 'caaguazu-modulos' ); ?>
+		<?php esc_html_e( 'Estos campos sólo aplican si la entrada está en la categoría Agenda.', 'caaguazu-modulos' ); ?>
 	</p>
 	<?php
 }
@@ -74,11 +192,24 @@ function caaguazu_event_save_meta( $post_id ) {
 	if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) { return; }
 	if ( ! current_user_can( 'edit_post', $post_id ) ) { return; }
 
-	if ( isset( $_POST['caaguazu_event_date'] ) ) {
-		update_post_meta( $post_id, '_caaguazu_event_date', sanitize_text_field( $_POST['caaguazu_event_date'] ) );
+	$fields = array(
+		'caaguazu_event_date'        => '_caaguazu_event_date',
+		'caaguazu_event_location'    => '_caaguazu_event_location',
+		'caaguazu_event_hora_inicio' => '_caaguazu_event_hora_inicio',
+		'caaguazu_event_hora_fin'    => '_caaguazu_event_hora_fin',
+		'caaguazu_event_organizador' => '_caaguazu_event_organizador',
+		'caaguazu_event_contacto'    => '_caaguazu_event_contacto',
+	);
+	foreach ( $fields as $field => $meta_key ) {
+		if ( isset( $_POST[ $field ] ) ) {
+			update_post_meta( $post_id, $meta_key, sanitize_text_field( $_POST[ $field ] ) );
+		}
 	}
-	if ( isset( $_POST['caaguazu_event_location'] ) ) {
-		update_post_meta( $post_id, '_caaguazu_event_location', sanitize_text_field( $_POST['caaguazu_event_location'] ) );
+	if ( isset( $_POST['caaguazu_event_enlace'] ) ) {
+		update_post_meta( $post_id, '_caaguazu_event_enlace', esc_url_raw( $_POST['caaguazu_event_enlace'] ) );
+	}
+	if ( isset( $_POST['caaguazu_event_estado'] ) ) {
+		update_post_meta( $post_id, '_caaguazu_event_estado', caaguazu_sanitize_evento_estado( $_POST['caaguazu_event_estado'] ) );
 	}
 }
 add_action( 'save_post_post', 'caaguazu_event_save_meta' );

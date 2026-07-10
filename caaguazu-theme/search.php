@@ -23,7 +23,7 @@ get_header(); ?>
 		<form class="search-form" role="search" method="get" action="<?php echo esc_url( home_url( '/' ) ); ?>" autocomplete="off">
 			<span style="margin-left:8px;color:var(--text-muted)">🔍</span>
 			<input type="search" name="s" id="caaguazu-search-input" value="<?php echo esc_attr( get_search_query() ); ?>"
-				placeholder="<?php esc_attr_e( 'Buscar páginas y noticias…', 'caaguazu' ); ?>"
+				placeholder="<?php esc_attr_e( 'Buscar en todo el sitio…', 'caaguazu' ); ?>"
 				aria-label="<?php esc_attr_e( 'Búsqueda', 'caaguazu' ); ?>"
 				role="combobox" aria-expanded="false" aria-controls="caaguazu-search-suggest" aria-autocomplete="list">
 			<button type="submit"><?php esc_html_e( 'Buscar', 'caaguazu' ); ?></button>
@@ -40,6 +40,18 @@ get_header(); ?>
 			'noticias' => array( 'search.chip.noticias', __( 'Noticias', 'caaguazu' ) ),
 			'agenda'   => array( 'search.chip.eventos', __( 'Eventos', 'caaguazu' ) ),
 		);
+		if ( post_type_exists( 'institucion' ) ) {
+			$types['institucion'] = array( 'search.chip.instituciones', __( 'Instituciones', 'caaguazu' ) );
+		}
+		if ( post_type_exists( 'lugar' ) ) {
+			$types['lugar'] = array( 'search.chip.lugares', __( 'Lugares', 'caaguazu' ) );
+		}
+		if ( post_type_exists( 'servicio' ) ) {
+			$types['servicio'] = array( 'search.chip.servicios', __( 'Servicios', 'caaguazu' ) );
+		}
+		if ( post_type_exists( 'proyecto' ) ) {
+			$types['proyecto'] = array( 'search.chip.proyectos', __( 'Proyectos', 'caaguazu' ) );
+		}
 		foreach ( $types as $type => $i18n ) :
 		?>
 			<a class="chip <?php echo $current_type === $type ? 'on' : ''; ?>" href="<?php echo caaguazu_search_filter_url( $type ); ?>"><?php caaguazu_i18n( $i18n[0], $i18n[1] ); ?></a>
