@@ -78,8 +78,8 @@ class CZU_Editor_UX {
 		);
 
 		wp_localize_script( 'czu-editor-plugin', 'czuEditorUX', array(
-			'postType'      => isset( $screen->post_type ) ? $screen->post_type : '',
-			'supportedType' => CZU_POST_TYPE,
+			'postType'       => isset( $screen->post_type ) ? $screen->post_type : '',
+			'supportedTypes' => CZU_POST_TYPES,
 		) );
 
 		wp_set_script_translations( 'czu-editor-plugin', 'caaguazu-editor-ux' );

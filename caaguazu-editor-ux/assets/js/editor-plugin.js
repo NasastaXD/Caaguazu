@@ -23,16 +23,25 @@
 	var useSelect                  = wp.data.useSelect;
 	var useDispatch                = wp.data.useDispatch;
 	var TextControl                = wp.components.TextControl;
+	var SelectControl              = wp.components.SelectControl;
 	var CheckboxControl            = wp.components.CheckboxControl;
 	var Button                     = wp.components.Button;
 
-	var SUPPORTED_POST_TYPE = ( window.czuEditorUX && window.czuEditorUX.supportedType ) || 'post';
+	var SUPPORTED_POST_TYPES = ( window.czuEditorUX && window.czuEditorUX.supportedTypes ) || [ 'post' ];
+
+	var ESTADO_OPTIONS = [
+		{ label: __( 'Sin definir', 'caaguazu-editor-ux' ), value: '' },
+		{ label: __( 'Pendiente', 'caaguazu-editor-ux' ), value: 'pendiente' },
+		{ label: __( 'Revisado', 'caaguazu-editor-ux' ), value: 'revisado' },
+		{ label: __( 'Verificado', 'caaguazu-editor-ux' ), value: 'verificado' },
+		{ label: __( 'Desactualizado', 'caaguazu-editor-ux' ), value: 'desactualizado' },
+	];
 
 	var CHECKLIST_ITEMS = [
 		__( 'Título claro', 'caaguazu-editor-ux' ),
 		__( 'Resumen corto agregado', 'caaguazu-editor-ux' ),
 		__( 'Imagen de portada agregada', 'caaguazu-editor-ux' ),
-		__( 'Categoría seleccionada', 'caaguazu-editor-ux' ),
+		__( 'Categoría o tipo seleccionado', 'caaguazu-editor-ux' ),
 		__( 'Fuente o referencia verificada', 'caaguazu-editor-ux' ),
 		__( 'Contenido escrito o revisado por una persona', 'caaguazu-editor-ux' ),
 	];
@@ -96,6 +105,13 @@
 				help: __( 'Opcional: quién escribió o verificó esta nota.', 'caaguazu-editor-ux' ),
 				value: meta._czu_responsable_contenido || '',
 				onChange: function( value ) { updateMeta( '_czu_responsable_contenido', value ); },
+			} ),
+			el( SelectControl, {
+				label: __( 'Estado de verificación', 'caaguazu-editor-ux' ),
+				help: __( 'Opcional: cuánto se confirmó este contenido con una fuente real.', 'caaguazu-editor-ux' ),
+				value: meta._czu_estado_verificacion || '',
+				options: ESTADO_OPTIONS,
+				onChange: function( value ) { updateMeta( '_czu_estado_verificacion', value ); },
 			} )
 		);
 	}
@@ -108,7 +124,7 @@
 
 	function useIsSupportedPostType() {
 		return useSelect( function( select ) {
-			return select( 'core/editor' ).getCurrentPostType() === SUPPORTED_POST_TYPE;
+			return SUPPORTED_POST_TYPES.indexOf( select( 'core/editor' ).getCurrentPostType() ) > -1;
 		}, [] );
 	}
 

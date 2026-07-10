@@ -41,12 +41,12 @@ get_header(); ?>
 			<?php endwhile; ?>
 		</div>
 		<?php the_posts_pagination(); ?>
-	<?php else : ?>
-		<div class="wip">
-			<p class="eyebrow"><?php esc_html_e( 'Sin perfiles', 'caaguazu' ); ?></p>
-			<p><?php esc_html_e( 'Todavía no hay artesanos cargados en el directorio.', 'caaguazu' ); ?></p>
-		</div>
-	<?php endif; ?>
+	<?php else :
+		echo caaguazu_render_empty_state(
+			__( 'Sin perfiles', 'caaguazu' ),
+			__( 'Todavía no hay artesanos cargados en el directorio.', 'caaguazu' )
+		);
+	endif; ?>
 </div>
 
 <?php get_footer();

@@ -56,13 +56,22 @@
 (function(){
   // Búsqueda instantánea: sugerencias progresivas vía el endpoint core
   // /wp-json/wp/v2/search (cubre page/post — Noticias, Agenda y Educación
-  // viven como post nativo desde la 1.5 — y caaguazu_artisan, al ser
+  // viven como post nativo desde la 1.5 — y los CPTs civicos de V5:
+  // caaguazu_artisan, institucion, lugar, servicio, proyecto — todos
   // show_in_rest) — sin endpoint propio.
   var input = document.getElementById('caaguazu-search-input');
   var list = document.getElementById('caaguazu-search-suggest');
   if (!input || !list || !window.fetch) return;
 
-  var typeLabels = { page: 'Página', post: 'Publicación', caaguazu_artisan: 'Artesano' };
+  var typeLabels = {
+    page: 'Página',
+    post: 'Publicación',
+    caaguazu_artisan: 'Artesano',
+    institucion: 'Institución',
+    lugar: 'Lugar',
+    servicio: 'Servicio',
+    proyecto: 'Proyecto'
+  };
   var timer = null, activeIndex = -1, items = [];
 
   function close(){
@@ -111,7 +120,7 @@
     clearTimeout(timer);
     if (q.length < 2){ close(); return; }
     timer = setTimeout(function(){
-      fetch(endpoint + '?search=' + encodeURIComponent(q) + '&per_page=6&subtype=page,post,caaguazu_artisan')
+      fetch(endpoint + '?search=' + encodeURIComponent(q) + '&per_page=6&subtype=page,post,caaguazu_artisan,institucion,lugar,servicio,proyecto')
         .then(function(res){ return res.ok ? res.json() : []; })
         .then(render)
         .catch(function(){ close(); });

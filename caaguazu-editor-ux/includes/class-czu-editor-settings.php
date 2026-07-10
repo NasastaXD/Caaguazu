@@ -40,19 +40,21 @@ class CZU_Editor_Settings {
 	}
 
 	public function restrict_allowed_blocks( $allowed_blocks, $context ) {
-		if ( isset( $context->post ) && CZU_POST_TYPE === get_post_type( $context->post ) ) {
+		if ( isset( $context->post ) && in_array( get_post_type( $context->post ), CZU_POST_TYPES, true ) ) {
 			return self::ALLOWED_BLOCKS;
 		}
 		return $allowed_blocks;
 	}
 
 	/**
-	 * Template inicial para Entradas nuevas: una guía de estructura (bajada +
+	 * Template inicial para contenido nuevo: una guía de estructura (resumen +
 	 * cuerpo), no una jaula — sin template_lock, se puede agregar, quitar o
-	 * reordenar bloques libremente.
+	 * reordenar bloques libremente. Placeholders neutros a propósito (no
+	 * "nota"): sirven igual para una Noticia que para una Institución/Lugar/
+	 * Servicio/Proyecto.
 	 */
 	public function set_default_template( $args, $post_type ) {
-		if ( CZU_POST_TYPE !== $post_type ) {
+		if ( ! in_array( $post_type, CZU_POST_TYPES, true ) ) {
 			return $args;
 		}
 
@@ -60,13 +62,13 @@ class CZU_Editor_Settings {
 			array(
 				'core/paragraph',
 				array(
-					'placeholder' => __( 'Escribí una bajada breve (1–2 oraciones) que resuma la nota…', 'caaguazu-editor-ux' ),
+					'placeholder' => __( 'Escribí un resumen breve (1–2 oraciones)…', 'caaguazu-editor-ux' ),
 				),
 			),
 			array(
 				'core/paragraph',
 				array(
-					'placeholder' => __( 'Continuá acá con el cuerpo principal de la nota…', 'caaguazu-editor-ux' ),
+					'placeholder' => __( 'Continuá acá con la descripción completa…', 'caaguazu-editor-ux' ),
 				),
 			),
 		);
@@ -77,10 +79,10 @@ class CZU_Editor_Settings {
 	/**
 	 * Menos opciones de color/tipografía sueltas en el sidebar de bloque:
 	 * el editor no usa theme.json, así que esto reemplaza los antiguos
-	 * add_theme_support('disable-custom-*') para Entradas únicamente.
+	 * add_theme_support('disable-custom-*') para el contenido cubierto acá.
 	 */
 	public function calm_editor_settings( $settings, $context ) {
-		if ( ! isset( $context->post ) || CZU_POST_TYPE !== get_post_type( $context->post ) ) {
+		if ( ! isset( $context->post ) || ! in_array( get_post_type( $context->post ), CZU_POST_TYPES, true ) ) {
 			return $settings;
 		}
 
@@ -92,15 +94,17 @@ class CZU_Editor_Settings {
 	}
 
 	/**
-	 * Saca ruido nativo de Entradas:
+	 * Saca ruido nativo del contenido cubierto:
 	 * - Metabox "Campos personalizados" (key/value crudo): no lo usa ningún
 	 *   módulo — caaguazu-modulos agrega sus propios metaboxes con
 	 *   add_meta_box, que no dependen de este 'supports'.
 	 * - Soporte de "core-block-patterns": sin patrones de layout genéricos
-	 *   en el inserter de una nota.
+	 *   en el inserter.
 	 */
 	public function declutter_post_type() {
-		remove_post_type_support( CZU_POST_TYPE, 'custom-fields' );
+		foreach ( CZU_POST_TYPES as $post_type ) {
+			remove_post_type_support( $post_type, 'custom-fields' );
+		}
 		remove_theme_support( 'core-block-patterns' );
 	}
 }

@@ -514,3 +514,133 @@ function caaguazu_share_buttons( $url, $title ) {
 	<?php
 	return ob_get_clean();
 }
+
+/**
+ * Nombre del primer término asignado a $post_id en $taxonomy, o '' si no
+ * tiene ninguno — usado por los singles/archivos de Instituciones/Lugares/
+ * Servicios/Proyectos (V5) para el eyebrow/etiqueta de la tarjeta, mismo
+ * rol que caaguazu_news_primary_term()/caaguazu_educacion_primary_term()
+ * cumplen para Noticias/Educación, pero sobre una taxonomía real en vez de
+ * una categoría.
+ */
+function caaguazu_primary_term_name( $post_id, $taxonomy ) {
+	$terms = get_the_terms( $post_id, $taxonomy );
+	if ( empty( $terms ) || is_wp_error( $terms ) ) {
+		return '';
+	}
+	return $terms[0]->name;
+}
+
+/**
+ * Lista de datos estructurados de una ficha (dirección, horario, teléfono,
+ * etc.) — usado por los singles de Instituciones/Lugares/Servicios/
+ * Proyectos (V5). Recibe `array( 'Etiqueta' => 'valor' )`, salta los
+ * vacíos, y siempre escapa el valor como texto plano — los campos que son
+ * en realidad un link (sitio web, mapa, enlace oficial) se arman aparte
+ * como `<a>` en el template, no acá, para no tener que confiar en HTML
+ * crudo dentro de este helper genérico. Devuelve '' si no queda nada.
+ */
+function caaguazu_render_entity_meta( $pairs ) {
+	$items = array_filter( $pairs, function ( $value ) {
+		return '' !== trim( (string) $value );
+	} );
+	if ( ! $items ) {
+		return '';
+	}
+	ob_start();
+	?>
+	<ul class="entity-meta-list">
+		<?php foreach ( $items as $label => $value ) : ?>
+			<li><strong><?php echo esc_html( $label ); ?></strong><?php echo esc_html( $value ); ?></li>
+		<?php endforeach; ?>
+	</ul>
+	<?php
+	return ob_get_clean();
+}
+
+/**
+ * Estado vacío honesto y reusable — mismo patrón `.wip` que ya usaban
+ * category.php/page.php a mano, ahora en un solo lugar para no repetir el
+ * markup cada vez que se agrega un archivo/sección nueva (V5: Instituciones/
+ * Lugares/Servicios/Proyectos, secciones nuevas del home). $cta es opcional:
+ * array( 'label' => ..., 'url' => ... ).
+ */
+function caaguazu_render_empty_state( $eyebrow, $line1, $line2 = '', $cta = null, $extra_class = '' ) {
+	ob_start();
+	?>
+	<div class="wip<?php echo $extra_class ? ' ' . esc_attr( $extra_class ) : ''; ?>">
+		<p class="eyebrow"><?php echo esc_html( $eyebrow ); ?></p>
+		<p><?php echo esc_html( $line1 ); ?></p>
+		<?php if ( $line2 ) : ?><p><?php echo esc_html( $line2 ); ?></p><?php endif; ?>
+		<?php if ( $cta ) : ?>
+			<div class="wip-actions">
+				<a class="btn btn-outline" href="<?php echo esc_url( $cta['url'] ); ?>"><?php echo esc_html( $cta['label'] ); ?></a>
+			</div>
+		<?php endif; ?>
+	</div>
+	<?php
+	return ob_get_clean();
+}
+
+/**
+ * Metadatos de confianza para el frontend (Fuente/Responsable/Estado de
+ * verificación/Actualizado el) — V5 (civic CMS). Los primeros tres salen de
+ * los meta que registra el plugin caaguazu-editor-ux (`_czu_*`, ver su
+ * README); "Actualizado el" NO es un meta propio, se lee directo de
+ * `post_modified` — WordPress ya lo mantiene solo con cada guardado, así que
+ * nunca puede quedar desactualizado por olvido de un editor. Pensado para
+ * los singles de Instituciones/Lugares/Servicios/Proyectos (y cualquier
+ * Entrada que quiera sumarlo). Devuelve '' si no hay nada de esto cargado
+ * (evita un bloque vacío con sólo la fecha).
+ */
+function caaguazu_render_trust_meta( $post_id ) {
+	$fuente      = get_post_meta( $post_id, '_czu_fuente_referencia', true );
+	$responsable = get_post_meta( $post_id, '_czu_responsable_contenido', true );
+	$estado      = get_post_meta( $post_id, '_czu_estado_verificacion', true );
+	$updated     = get_post_field( 'post_modified', $post_id );
+
+	$estado_labels = array(
+		'pendiente'      => __( 'Pendiente', 'caaguazu' ),
+		'revisado'       => __( 'Revisado', 'caaguazu' ),
+		'verificado'     => __( 'Verificado', 'caaguazu' ),
+		'desactualizado' => __( 'Desactualizado', 'caaguazu' ),
+	);
+
+	if ( ! $fuente && ! $responsable && ! $updated ) {
+		return '';
+	}
+
+	ob_start();
+	?>
+	<div class="trust-meta">
+		<dl class="trust-meta-list">
+			<?php if ( $updated ) : ?>
+				<div class="trust-meta-item">
+					<dt><?php esc_html_e( 'Actualizado el', 'caaguazu' ); ?></dt>
+					<dd><?php echo esc_html( caaguazu_fecha_es( $updated, false ) ); ?></dd>
+				</div>
+			<?php endif; ?>
+			<?php if ( $fuente ) : ?>
+				<div class="trust-meta-item">
+					<dt><?php esc_html_e( 'Fuente', 'caaguazu' ); ?></dt>
+					<dd><?php echo esc_html( $fuente ); ?></dd>
+				</div>
+			<?php endif; ?>
+			<?php if ( $responsable ) : ?>
+				<div class="trust-meta-item">
+					<dt><?php esc_html_e( 'Responsable', 'caaguazu' ); ?></dt>
+					<dd><?php echo esc_html( $responsable ); ?></dd>
+				</div>
+			<?php endif; ?>
+			<?php if ( $estado && isset( $estado_labels[ $estado ] ) ) : ?>
+				<div class="trust-meta-item">
+					<dt><?php esc_html_e( 'Estado', 'caaguazu' ); ?></dt>
+					<dd><span class="trust-badge trust-badge--<?php echo esc_attr( $estado ); ?>"><?php echo esc_html( $estado_labels[ $estado ] ); ?></span></dd>
+				</div>
+			<?php endif; ?>
+		</dl>
+		<a class="arrow" href="<?php echo esc_url( caaguazu_page_url( 'contacto' ) ); ?>"><?php esc_html_e( 'Reportar información desactualizada', 'caaguazu' ); ?></a>
+	</div>
+	<?php
+	return ob_get_clean();
+}

@@ -39,6 +39,11 @@ function caaguazu_icon( $key ) {
 		'back'        => '<line x1="19" y1="12" x2="5" y2="12"/><polyline points="11 18 5 12 11 6"/>',
 		'close'       => '<line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>',
 		'sound'       => '<polygon points="11 5 6 9 3 9 3 15 6 15 11 19"/><path d="M15 9.5a4 4 0 0 1 0 5"/><path d="M17.8 7a8 8 0 0 1 0 10"/>',
+		// V5: Instituciones/Servicios/Proyectos (module-instituciones.php,
+		// module-servicios.php, module-proyectos.php en caaguazu-modulos).
+		'building'    => '<rect x="4" y="3" width="16" height="18" rx="1"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="15" y2="16"/>',
+		'tool'        => '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
+		'flag'        => '<path d="M5 21V4"/><path d="M5 4h13l-3 4 3 4H5z"/>',
 	);
 
 	// El brote del logo (las dos hojas del splash de entrada, header.php) —
