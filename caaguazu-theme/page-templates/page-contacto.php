@@ -16,10 +16,11 @@ get_header();
 while ( have_posts() ) :
 	the_post();
 
-	$org   = caaguazu_opt( 'contact_org', 'Gobernación de Caaguazú' );
-	$city  = caaguazu_opt( 'contact_city', 'Coronel Oviedo, Paraguay' );
-	$phone = caaguazu_opt( 'contact_phone', '+595 (0) 000 000 000' );
-	$email = caaguazu_opt( 'contact_email', 'contacto@caaguazu.net' );
+	$org        = caaguazu_opt( 'contact_org', 'Thiago Juan Manuel Ávalos Crosta' );
+	$disclaimer = caaguazu_opt( 'contact_disclaimer', __( 'Sitio sin afiliación gubernamental', 'caaguazu' ) );
+	$city       = caaguazu_opt( 'contact_city', 'Ciudad de Caaguazú, Paraguay' );
+	$phone      = caaguazu_opt( 'contact_phone', '' );
+	$email      = caaguazu_opt( 'contact_email', 'thiagojuanma5@gmail.com' );
 	?>
 
 	<nav class="container breadcrumb" aria-label="<?php esc_attr_e( 'Migas de pan', 'caaguazu' ); ?>">
@@ -34,7 +35,7 @@ while ( have_posts() ) :
 		<div>
 			<p class="eyebrow"><?php esc_html_e( 'Contacto', 'caaguazu' ); ?></p>
 			<h1><?php the_title(); ?></h1>
-			<p class="sub"><?php esc_html_e( 'Canales oficiales para ciudadanos, prensa, empresas y otros gobiernos.', 'caaguazu' ); ?></p>
+			<p class="sub"><?php esc_html_e( 'Datos de contacto y formulario para consultas.', 'caaguazu' ); ?></p>
 		</div>
 	</section>
 
@@ -52,8 +53,9 @@ while ( have_posts() ) :
 		<div class="contact-grid">
 			<div>
 				<p><strong><?php echo esc_html( $org ); ?></strong></p>
+				<?php if ( $disclaimer ) : ?><p><em><?php echo esc_html( $disclaimer ); ?></em></p><?php endif; ?>
 				<p><?php echo esc_html( $city ); ?></p>
-				<p><a href="tel:<?php echo esc_attr( preg_replace( '/[^0-9+]/', '', $phone ) ); ?>"><?php echo esc_html( $phone ); ?></a></p>
+				<?php if ( $phone ) : ?><p><a href="tel:<?php echo esc_attr( preg_replace( '/[^0-9+]/', '', $phone ) ); ?>"><?php echo esc_html( $phone ); ?></a></p><?php endif; ?>
 				<p><a href="mailto:<?php echo esc_attr( $email ); ?>"><?php echo esc_html( $email ); ?></a></p>
 			</div>
 			<div>

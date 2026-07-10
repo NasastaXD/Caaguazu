@@ -138,8 +138,14 @@ function caaguazu_render_ecosystem_header( $eco ) {
 }
 
 /**
- * Tabbar del shell: Inicio del eco + sus primeras 3 secciones + salida a
- * Caaguazú — reemplaza al tabbar institucional mientras se navega adentro.
+ * Tabbar del shell: Inicio del eco + sus primeras 3 secciones + el mismo
+ * botón "Menú" que el tabbar institucional (abre este drawer del shell,
+ * #drawer — ya cableado en main.js) — reemplaza al tabbar institucional
+ * mientras se navega adentro. Antes el último ítem era un link directo
+ * "Caaguazú" con flecha, una acción distinta a "Menú" que rompía la
+ * consistencia con el resto del sitio (reporte de usuario: "cambia el
+ * 'Caaguazu' por la barra"); el drawer ya trae "Volver a Caaguazú" como
+ * primer link, así que la salida sigue a un toque de distancia.
  */
 function caaguazu_render_ecosystem_tabbar( $eco ) {
 	$hub_url  = caaguazu_ecosystem_hub_url( $eco );
@@ -174,10 +180,9 @@ function caaguazu_render_ecosystem_tabbar( $eco ) {
 		);
 	}
 	printf(
-		'<a class="tabbar-link" href="%s"><span class="tabbar-ico" aria-hidden="true">%s</span><span>%s</span></a>',
-		esc_url( home_url( '/' ) ),
-		caaguazu_icon( 'back' ),
-		esc_html__( 'Caaguazú', 'caaguazu' )
+		'<button type="button" class="tabbar-link" id="tabbarMenu"><span class="tabbar-ico" aria-hidden="true">%s</span><span>%s</span></button>',
+		caaguazu_icon( 'menu' ),
+		esc_html__( 'Menú', 'caaguazu' )
 	);
 	echo '</nav>';
 }

@@ -12,12 +12,20 @@
  *   página: dentro de un ecosistema (Turismo/Educación) el drawer del
  *   shell sigue siendo el dueño de la hamburguesa (main.js lo maneja).
  *
- * Además: capa de sonido de interfaz OPT-IN (apagada por default, botón
- * aria-pressed en el pie del rail, recordada en localStorage) — un tick
- * corto y suave por Web Audio solo al abrir/cerrar el rail o el drawer
- * del shell. Nunca en hover, nunca antes de una interacción del usuario,
- * nunca con prefers-reduced-motion. Nada corre dentro de un <iframe>
- * (canvas de un page builder), mismo criterio que animations.js.
+ * Además: capa de sonido de interfaz — encendida por default (pedido de
+ * usuario), con botón opt-OUT (aria-pressed) en el pie del rail, recordado
+ * en localStorage. Tres timbres distintos por Web Audio, todos cortos y
+ * suaves ("quiet civic motion" también en audio, nunca un beep de UI
+ * genérico): `tick()` para clicks/toggles, `chime()` para el cierre del
+ * splash de entrada (un acorde breve, no un tick más) y `whoosh()` para el
+ * telón de transición entre ecosistemas (un barrido tonal, sensación de
+ * "cruzar una puerta"). Nunca en hover, nunca con prefers-reduced-motion.
+ * El primer sonido de la página SIEMPRE requiere que el navegador ya haya
+ * visto una interacción del usuario (autoplay policy de Web Audio) — si el
+ * splash termina antes de cualquier click/tap, ese primer chime puede no
+ * sonar; es una limitación del navegador, no un bug, y no bloquea nada
+ * visual. Nada corre dentro de un <iframe> (canvas de un page builder),
+ * mismo criterio que animations.js.
  */
 (function () {
   'use strict';
@@ -28,31 +36,93 @@
 
   var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* --- Sonido de interfaz (opt-in, compartido rail + drawer del shell) -- */
+  /* --- Sonido de interfaz (ON por default, opt-out; compartido con el
+     drawer del shell, el telón de transición y el splash) --- */
   var SOUND_KEY = 'cgzSound';
-  var soundOn = false;
-  try { soundOn = localStorage.getItem(SOUND_KEY) === '1'; } catch (e) {}
+  var soundOn = true;
+  try { soundOn = localStorage.getItem(SOUND_KEY) !== '0'; } catch (e) {}
   var audioCtx = null;
+
+  function ctx() {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    // El navegador puede arrancar el contexto "suspended" hasta la primera
+    // interacción real (autoplay policy) — pedir resume() no hace daño si
+    // ya está corriendo, y deja el audio listo apenas haya un gesto.
+    if (audioCtx.state === 'suspended') { audioCtx.resume().catch(function () {}); }
+    return audioCtx;
+  }
+
+  function tone(c, t, freq, type, peak, dur) {
+    var osc = c.createOscillator();
+    var gain = c.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(peak, t + dur * 0.18);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    osc.connect(gain);
+    gain.connect(c.destination);
+    osc.start(t);
+    osc.stop(t + dur + 0.02);
+    return osc;
+  }
 
   function tick(freq) {
     if (!soundOn || reducedMotion) { return; }
     try {
-      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-      var t = audioCtx.currentTime;
-      var osc = audioCtx.createOscillator();
-      var gain = audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = freq || 620;
+      var c = ctx(), t = c.currentTime;
       // Envolvente corta y muy baja: "tick de papel", no beep.
-      gain.gain.setValueAtTime(0.0001, t);
-      gain.gain.exponentialRampToValueAtTime(0.045, t + 0.012);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.085);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start(t);
-      osc.stop(t + 0.1);
+      tone(c, t, freq || 620, 'sine', 0.045, 0.085);
     } catch (e) {}
   }
+
+  /* Chime de cierre del splash: acorde breve de dos notas (5ª justa,
+     mismo intervalo "cívico/institucional" que un carillón de plaza), no
+     un tick más — marca el único momento de la sesión que lo amerita. */
+  function chime() {
+    if (!soundOn || reducedMotion) { return; }
+    try {
+      var c = ctx(), t = c.currentTime;
+      tone(c, t, 523.25, 'sine', 0.07, 0.5);        // Do5
+      tone(c, t + 0.09, 784.0, 'sine', 0.055, 0.55); // Sol5, entra un pelo después
+    } catch (e) {}
+  }
+
+  /* Whoosh del telón de transición: barrido tonal corto (glissando +
+     lowpass que se abre), sensación de "cruzar una puerta" — distinto del
+     tick de UI y del chime del splash, pensado para acompañar un slide
+     lateral en vez de un click puntual. */
+  function whoosh() {
+    if (!soundOn || reducedMotion) { return; }
+    try {
+      var c = ctx(), t = c.currentTime, dur = 0.42;
+      var osc = c.createOscillator();
+      var filter = c.createBiquadFilter();
+      var gain = c.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(260, t);
+      osc.frequency.exponentialRampToValueAtTime(120, t + dur);
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(300, t);
+      filter.frequency.exponentialRampToValueAtTime(2200, t + dur * 0.5);
+      filter.frequency.exponentialRampToValueAtTime(200, t + dur);
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.05, t + dur * 0.35);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(c.destination);
+      osc.start(t);
+      osc.stop(t + dur + 0.02);
+    } catch (e) {}
+  }
+
+  // Expuesto para header.php (chime al cerrar el splash, script inline
+  // que corre antes de que este archivo termine de cargar) y
+  // animations.js (whoosh del telón) — ambos lo llaman de forma
+  // defensiva (`window.caaguazuSound && ...`) por si este script todavía
+  // no corrió cuando se dispara el evento.
+  window.caaguazuSound = { tick: tick, chime: chime, whoosh: whoosh, isOn: function () { return soundOn; } };
 
   /* --- Rail ------------------------------------------------------------ */
   var rail = document.getElementById('ecoRail');

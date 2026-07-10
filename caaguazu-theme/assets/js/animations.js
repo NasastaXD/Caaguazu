@@ -210,8 +210,15 @@
       var rawIcon = target ? (target.icon || '') : (cfg.homeIcon || '');
       icon.innerHTML = rawIcon.charAt(0) === '<' ? rawIcon : '<span class="emoji">' + rawIcon + '</span>';
       curtain.classList.add(target ? 'to-' + target.slug : 'to-caaguazu', 'in');
+      try { window.caaguazuSound && window.caaguazuSound.whoosh && window.caaguazuSound.whoosh(); } catch (err) {}
       try { sessionStorage.setItem('cgzModuleEnter', '1'); } catch (err) {}
-      setTimeout(function () { location.href = href; }, 560);
+      // Entra deslizando, se lee el nombre un instante, y SALE deslizando
+      // (.out) antes de navegar — nunca queda parado como una pared opaca.
+      setTimeout(function () {
+        curtain.classList.remove('in');
+        curtain.classList.add('out');
+      }, 480);
+      setTimeout(function () { location.href = href; }, 480 + 230);
     });
   })();
 })();

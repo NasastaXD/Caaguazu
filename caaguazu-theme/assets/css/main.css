@@ -870,11 +870,20 @@ dialog.lightbox[open]{display:flex;align-items:center;justify-content:center}
 .eco-rail-account-txt strong{font-size:13.5px;font-weight:700}
 .eco-rail-account-txt small{font-size:11px;font-weight:400;color:var(--text-muted)}
 
-/* --- Modo drawer móvil (<1024px): reemplaza al drawer institucional --- */
+/* --- Modo drawer móvil (<1024px): reemplaza al drawer institucional ---
+   El panel entero NO scrollea (era el bug: con overflow-y:auto en todo el
+   flex column, el swipe hacía rebotar header/pie completos — "el scroll
+   está activado en la barra, eso es raro", reporte de usuario). Ahora solo
+   .eco-rail-nav (el listado del medio) puede scrollear si algún día hay
+   más ítems de los que entran; wordmark y pie quedan siempre fijos. */
 @media(max-width:1023.98px){
-.eco-rail{top:10px;bottom:10px;right:10px;width:min(330px,88vw);overflow-y:auto;
+.eco-rail{top:10px;bottom:10px;right:10px;width:min(330px,88vw);overflow:hidden;
   transform:translateX(calc(100% + 24px));transition:transform var(--m-med) var(--ease-soft)}
 .eco-rail.open{transform:none;box-shadow:var(--shadow-lift)}
+/* Solo el listado del medio scrollea si hay más ítems de los que entran —
+   nunca la horizontal (sin tooltips acá, no hace falta overflow-x visible
+   como en desktop), así que overflow-y:auto no tiene contraindicación. */
+.eco-rail-nav{overflow-y:auto;overscroll-behavior:contain}
 /* Entrada escalonada de los items al abrir (mismo lenguaje que el resto) */
 .eco-rail .eco-rail-item{opacity:0;transform:translateX(12px);transition:none}
 .eco-rail.open .eco-rail-item{opacity:1;transform:none;

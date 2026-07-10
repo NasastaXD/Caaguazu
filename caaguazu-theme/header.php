@@ -94,6 +94,10 @@ $current_eco  = caaguazu_current_ecosystem();
 			document.documentElement.classList.remove('cgz-splashing');
 			document.documentElement.classList.add('cgz-intro-exit');
 			s.classList.add('out');
+			// El chime vive en assets/js/sidebar.js (footer) — llamada
+			// defensiva por si ese script todavía no cargó (p. ej. clic
+			// muy rápido para saltear la intro).
+			try { window.caaguazuSound && window.caaguazuSound.chime && window.caaguazuSound.chime(); } catch (e) {}
 			setTimeout(function () { s.remove(); }, 450);
 		}
 		s.addEventListener('click', out);
