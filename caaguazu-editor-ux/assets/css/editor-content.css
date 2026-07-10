@@ -1,0 +1,121 @@
+/**
+ * Caaguazú Editor UX — aproximación visual del canvas al frontend.
+ *
+ * Mismos tokens y reglas que .entry-content en caaguazu-theme/assets/css/main.css
+ * (subconjunto tipográfico), aplicados a .editor-styles-wrapper — el
+ * contenedor que WordPress agrega alrededor del canvas cuando el theme
+ * support 'editor-styles' está activo (ver class-czu-editor-ux.php).
+ * No pretende ser un pixel-perfect del frontend: alcanza con una fuerte
+ * aproximación visual sin volverse frágil ante cambios de WP.
+ */
+
+.editor-styles-wrapper {
+	--czu-bg-primary: #FBFAF6;
+	--czu-text: #151A17;
+	--czu-text-soft: #46524A;
+	--czu-green-deep: #145A3A;
+	--czu-border: #DDE3DB;
+	--czu-gold-soft: rgba( 184, 135, 37, .12 );
+	--czu-accent-gold: #B88725;
+	--czu-font-display: 'Playfair Display', Georgia, serif;
+	--czu-font-body: 'Lato', system-ui, -apple-system, sans-serif;
+
+	background: var( --czu-bg-primary );
+	font-family: var( --czu-font-body );
+	color: var( --czu-text-soft );
+	font-size: 17px;
+	line-height: 1.75;
+}
+
+.editor-styles-wrapper .editor-post-title__input {
+	font-family: var( --czu-font-display );
+	color: var( --czu-text );
+	font-weight: 600;
+}
+
+.editor-styles-wrapper .block-editor-block-list__layout.is-root-container {
+	max-width: 760px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.editor-styles-wrapper h2 {
+	font-family: var( --czu-font-display );
+	font-size: clamp( 24px, 3vw, 32px );
+	color: var( --czu-text );
+	margin-top: 48px;
+	line-height: 1.2;
+}
+
+.editor-styles-wrapper h3 {
+	font-family: var( --czu-font-display );
+	font-size: clamp( 19px, 2.2vw, 23px );
+	color: var( --czu-text );
+	margin-top: 32px;
+	line-height: 1.2;
+}
+
+.editor-styles-wrapper p {
+	margin-top: 16px;
+	color: var( --czu-text-soft );
+}
+
+.editor-styles-wrapper ul,
+.editor-styles-wrapper ol {
+	margin-top: 16px;
+	padding-left: 1.4em;
+}
+
+.editor-styles-wrapper li {
+	margin-top: 8px;
+}
+
+.editor-styles-wrapper blockquote.wp-block-quote {
+	margin: 32px 0;
+	padding: 20px 28px;
+	border-left: 3px solid var( --czu-accent-gold );
+	background: var( --czu-gold-soft );
+	border-radius: 0 8px 8px 0;
+	font-style: italic;
+	color: var( --czu-text );
+	font-family: var( --czu-font-display );
+	font-size: 1.1em;
+}
+
+.editor-styles-wrapper .wp-block-quote cite {
+	color: var( --czu-text-soft );
+	font-family: var( --czu-font-body );
+	font-style: normal;
+}
+
+.editor-styles-wrapper .wp-block-image img,
+.editor-styles-wrapper .wp-block-gallery img {
+	border-radius: 16px;
+}
+
+.editor-styles-wrapper .wp-block-image figcaption,
+.editor-styles-wrapper .wp-block-gallery figcaption {
+	color: var( --czu-text-soft );
+	font-size: 13px;
+	text-align: center;
+	margin-top: 8px;
+}
+
+.editor-styles-wrapper .wp-block-separator {
+	border-top-color: var( --czu-border );
+	margin: 40px auto;
+}
+
+.editor-styles-wrapper a {
+	color: var( --czu-green-deep );
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
+
+/* Móvil: no angostar de más el canvas (Fase 8) */
+@media ( max-width: 600px ) {
+	.editor-styles-wrapper .block-editor-block-list__layout.is-root-container {
+		max-width: 100%;
+		padding: 0 16px;
+	}
+}
