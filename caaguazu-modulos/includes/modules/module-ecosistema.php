@@ -262,6 +262,23 @@ function caaguazu_modulos_catch_up_ecosistema() {
 add_action( 'admin_init', 'caaguazu_modulos_catch_up_ecosistema' );
 
 /**
+ * Regeneración puntual: el admin borró la página "Ecosistema" en WP porque,
+ * antes del fix de caaguazu_modulos_append_eco_grid(), un guardado con
+ * Elementor la dejaba mostrando solo texto sin la grilla de tarjetas — la
+ * sacó en vez de dejarla rota. El catch-up de arriba no la vuelve a
+ * sembrar porque su flag ya está en 1 desde mucho antes de que la
+ * borraran — esta rutina, con un flag nuevo, reintenta la siembra una vez.
+ */
+function caaguazu_modulos_reseed_ecosistema_page() {
+	if ( get_option( 'caaguazu_modulos_ecosistema_reseed_v1' ) ) {
+		return;
+	}
+	caaguazu_modulos_seed_ecosistema_page(); // ya chequea get_page_by_path() adentro.
+	update_option( 'caaguazu_modulos_ecosistema_reseed_v1', 1 );
+}
+add_action( 'admin_init', 'caaguazu_modulos_reseed_ecosistema_page' );
+
+/**
  * Sitios que ya tenían la página "Ecosistema" sembrada en blanco (antes de
  * que este archivo empezara a cargarla con redacción real) la completan una
  * sola vez — solo si el admin no escribió ya algo ahí. Flag nuevo (no reusa

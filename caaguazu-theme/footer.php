@@ -9,10 +9,11 @@ $is_home     = caaguazu_is_home();
 $current_eco = caaguazu_current_ecosystem();
 $tagline  = caaguazu_opt( 'site_tagline_custom', 'Capital de la Madera' );
 $about    = caaguazu_opt( 'footer_about', 'Portal oficial del departamento de Caaguazú, Paraguay.' );
-$org      = caaguazu_opt( 'contact_org', 'Gobernación de Caaguazú' );
-$city     = caaguazu_opt( 'contact_city', 'Coronel Oviedo, Paraguay' );
-$phone    = caaguazu_opt( 'contact_phone', '+595 (0) 000 000 000' );
-$email    = caaguazu_opt( 'contact_email', 'contacto@caaguazu.net' );
+$org         = caaguazu_opt( 'contact_org', 'Thiago Juan Manuel Ávalos Crosta' );
+$disclaimer  = caaguazu_opt( 'contact_disclaimer', __( 'Sitio sin afiliación gubernamental', 'caaguazu' ) );
+$city        = caaguazu_opt( 'contact_city', 'Ciudad de Caaguazú, Paraguay' );
+$phone       = caaguazu_opt( 'contact_phone', '' );
+$email       = caaguazu_opt( 'contact_email', 'thiagojuanma5@gmail.com' );
 
 // Para los enlaces del footer — defaults a slugs estándar.
 $eco_url    = caaguazu_page_url( 'ecosistema' );
@@ -122,15 +123,16 @@ $elementor_footer_done = function_exists( 'elementor_theme_do_location' ) && ele
 				<h4><?php caaguazu_i18n( 'footer.contacto', __( 'Contacto', 'caaguazu' ) ); ?></h4>
 				<address>
 					<?php echo esc_html( $org ); ?><br>
+					<?php if ( $disclaimer ) : ?><em><?php echo esc_html( $disclaimer ); ?></em><br><?php endif; ?>
 					<?php echo esc_html( $city ); ?><br>
-					<a href="tel:<?php echo esc_attr( preg_replace( '/[^+0-9]/', '', $phone ) ); ?>"><?php echo esc_html( $phone ); ?></a><br>
+					<?php if ( $phone ) : ?><a href="tel:<?php echo esc_attr( preg_replace( '/[^+0-9]/', '', $phone ) ); ?>"><?php echo esc_html( $phone ); ?></a><br><?php endif; ?>
 					<a href="mailto:<?php echo esc_attr( $email ); ?>"><?php echo esc_html( $email ); ?></a>
 				</address>
 			</div>
 		</div>
 
 		<div class="foot-bottom">
-			<p>© <?php echo esc_html( date_i18n( 'Y' ) ); ?> <?php echo esc_html( $org ); ?> · <?php esc_html_e( 'Gobierno de la República del Paraguay', 'caaguazu' ); ?></p>
+			<p>© <?php echo esc_html( date_i18n( 'Y' ) ); ?> <?php echo esc_html( $org ); ?></p>
 			<ul class="foot-legal">
 				<li><a href="<?php echo esc_url( $about_url ); ?>"><?php esc_html_e( 'Accesibilidad', 'caaguazu' ); ?></a></li>
 				<li><a href="<?php echo esc_url( $search_url ); ?>"><?php esc_html_e( 'Mapa del sitio', 'caaguazu' ); ?></a></li>
@@ -152,7 +154,7 @@ caaguazu_render_eco_rail();
 
 <?php if ( $is_home ) : ?>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"GovernmentOrganization","name":"<?php echo esc_js( get_bloginfo( 'name' ) ); ?>","alternateName":"Ka'aguasu","url":"<?php echo esc_js( home_url( '/' ) ); ?>","areaServed":{"@type":"AdministrativeArea","name":"Caaguazú, Paraguay"},"slogan":"<?php echo esc_js( $tagline ); ?>"}
+{"@context":"https://schema.org","@type":"WebSite","name":"<?php echo esc_js( get_bloginfo( 'name' ) ); ?>","alternateName":"Ka'aguasu","url":"<?php echo esc_js( home_url( '/' ) ); ?>","about":{"@type":"AdministrativeArea","name":"Caaguazú, Paraguay"},"slogan":"<?php echo esc_js( $tagline ); ?>"}
 </script>
 <?php endif; ?>
 

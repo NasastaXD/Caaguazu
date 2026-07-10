@@ -107,10 +107,11 @@ function caaguazu_customize_register( $wp_customize ) {
 	caaguazu_add_text( $wp_customize, 'footer_about',  __( 'Texto del footer', 'caaguazu' ),
 		'Portal oficial del departamento de Caaguazú, Paraguay. Información, servicios y acceso al ecosistema digital regional.',
 		'caaguazu_footer', true );
-	caaguazu_add_text( $wp_customize, 'contact_org',   __( 'Organización', 'caaguazu' ), 'Gobernación de Caaguazú', 'caaguazu_footer' );
-	caaguazu_add_text( $wp_customize, 'contact_city',  __( 'Ciudad', 'caaguazu' ),       'Coronel Oviedo, Paraguay', 'caaguazu_footer' );
-	caaguazu_add_text( $wp_customize, 'contact_phone', __( 'Teléfono', 'caaguazu' ),     '+595 (0) 000 000 000',     'caaguazu_footer' );
-	caaguazu_add_text( $wp_customize, 'contact_email', __( 'Email', 'caaguazu' ),        'contacto@caaguazu.net',    'caaguazu_footer' );
+	caaguazu_add_text( $wp_customize, 'contact_org',        __( 'Organización / responsable', 'caaguazu' ), 'Thiago Juan Manuel Ávalos Crosta', 'caaguazu_footer' );
+	caaguazu_add_text( $wp_customize, 'contact_disclaimer', __( 'Aclaración (vacío = ninguna)', 'caaguazu' ), __( 'Sitio sin afiliación gubernamental', 'caaguazu' ), 'caaguazu_footer' );
+	caaguazu_add_text( $wp_customize, 'contact_city',       __( 'Ciudad', 'caaguazu' ),       'Ciudad de Caaguazú, Paraguay', 'caaguazu_footer' );
+	caaguazu_add_text( $wp_customize, 'contact_phone',      __( 'Teléfono (vacío = no se muestra)', 'caaguazu' ), '', 'caaguazu_footer' );
+	caaguazu_add_text( $wp_customize, 'contact_email',      __( 'Email', 'caaguazu' ),        'thiagojuanma5@gmail.com',    'caaguazu_footer' );
 }
 add_action( 'customize_register', 'caaguazu_customize_register' );
 

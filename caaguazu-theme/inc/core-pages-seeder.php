@@ -43,7 +43,7 @@ function caaguazu_core_pages_content() {
 	return array(
 		'sobre-caaguazu' => "<p>Caaguazú es un departamento del centro-este de Paraguay, con capital en Coronel Oviedo. Su nombre en guaraní significa \"monte grande\", en referencia a la selva que originalmente cubría la región.</p>\n\n<p>Fundada el 8 de mayo de 1845 junto al manantial de Ykua La Patria, la ciudad de Caaguazú nació del asentamiento de once familias guaireñas. Desde entonces, el departamento se consolidó como un cruce de caminos entre Asunción y Ciudad del Este, y como uno de los principales polos madereros del país — de ahí su identidad como \"Capital de la Madera\", con la Ruta 7 como columna vertebral de talleres, carpinteros y artesanos a lo largo de toda la Ruta de la Madera.</p>\n\n<p>Además de la actividad maderera, la economía departamental se apoya en la agricultura familiar, la ganadería y un turismo rural en crecimiento. La cultura guaraní sigue viva en el habla cotidiana, la gastronomía y las festividades locales, como la Fiesta Patronal del 8 de diciembre y el Festival de la Madera.</p>",
 		'ecosistema'     => "<p>Caaguazu.net centraliza el acceso a los sub-portales especializados del departamento, cada uno con su propio contenido, identidad visual y equipo editorial, pero dentro de una misma identidad institucional compartida.</p>\n\n<p>Hoy conviven acá el ecosistema de <strong>Turismo</strong> (destinos, gastronomía y cultura guaraní) y el de <strong>Educación</strong> (escuelas, becas municipales y programas educativos), además de sub-portales externos como CEAD. A medida que se sumen nuevos, aparecen solos en la grilla de abajo — no hace falta rediseñar nada para incorporarlos.</p>",
-		'contacto'       => '<p>' . __( 'Estos son los canales oficiales del departamento. Para trámites y consultas específicas, usá el formulario — para prensa o gestiones institucionales, escribí directamente a los contactos de la Gobernación.', 'caaguazu' ) . '</p>',
+		'contacto'       => '<p>' . __( 'Estos son los canales de contacto del sitio. Para consultas específicas, usá el formulario — para cualquier otra gestión, escribí directamente por email.', 'caaguazu' ) . '</p>',
 	);
 }
 
@@ -95,6 +95,26 @@ function caaguazu_backfill_core_pages_content() {
 	}
 	update_option( 'caaguazu_core_pages_content_seeded_v1', 1 );
 }
+
+/**
+ * Regeneración puntual: el admin borró "Sobre Caaguazú" en WP porque un
+ * guardado con Elementor la había dejado con contenido raro (mismo origen
+ * que el bug de la página Ecosistema, ver
+ * caaguazu_modulos_append_eco_grid() en caaguazu-modulos) y prefirió
+ * sacarla antes que dejarla rota. El catch-up normal
+ * (caaguazu_catch_up_core_pages()) no la vuelve a sembrar porque su flag
+ * ya está en 1 desde mucho antes de que la borraran — esta rutina, con un
+ * flag nuevo, reintenta la siembra una vez; `caaguazu_seed_core_pages()`
+ * ya solo inserta lo que falte (saltea 'contacto' si sigue existiendo).
+ */
+function caaguazu_reseed_sobre_caaguazu() {
+	if ( get_option( 'caaguazu_sobre_caaguazu_reseed_v1' ) ) {
+		return;
+	}
+	caaguazu_seed_core_pages();
+	update_option( 'caaguazu_sobre_caaguazu_reseed_v1', 1 );
+}
+add_action( 'admin_init', 'caaguazu_reseed_sobre_caaguazu' );
 
 function caaguazu_seed_front_page() {
 	if ( 'page' === get_option( 'show_on_front' ) && get_option( 'page_on_front' ) ) {

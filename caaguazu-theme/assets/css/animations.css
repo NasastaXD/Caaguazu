@@ -60,21 +60,27 @@
 /* --- Telón de transición entre módulos (Caaguazú ↔ ecosistemas) ------
    Un color por ecosistema: .to-{slug} (el JS lo arma desde
    caaguazuConfig.ecosystems). Sin regla propia, cae en el degradé
-   institucional de .module-curtain. Rediseño "quiet civic motion": el
-   telón ya no SUBE como cortina con ráfaga de partículas (se sentía
-   brusco, sobre todo al volver de un eco al sitio institucional — "muy
-   feas", reporte de usuario) — ahora es un velo que FUNDE (fade) con el
-   ícono del destino y su nombre entrando suaves. Mismos ganchos de JS
-   (.in, .to-{slug}), sin partículas. */
+   institucional de .module-curtain.
+
+   Segundo rediseño (reporte de usuario: "en vez de tapar la pantalla con
+   transiciones del título, añade un efecto de slide al final en vez de un
+   fade"): el panel ya no aparece con un fade estático que se queda quieto
+   tapando todo hasta el hard-navigate — ahora ENTRA deslizando desde la
+   derecha (.in) y, un instante después de mostrar ícono+nombre, SALE
+   deslizando hacia la izquierda (.out) antes de navegar — la pantalla
+   nunca queda "parada" en un bloque opaco, siempre está en movimiento de
+   paso, como una cortina que cruza en vez de una pared que aparece. */
 .module-curtain{
-  position:fixed;inset:0;z-index:200;pointer-events:none;opacity:0;
+  position:fixed;inset:0;z-index:200;pointer-events:none;
+  transform:translateX(105%);
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
   background:linear-gradient(160deg,var(--green-forest),var(--green-deep));
-  will-change:opacity}
+  will-change:transform}
 .module-curtain.to-turismo{background:linear-gradient(160deg,var(--earth-bark),var(--wood-deep))}
 .module-curtain.to-educacion{background:linear-gradient(160deg,#16324D,#27567F)}
 .module-curtain.to-caaguazu{background:linear-gradient(160deg,#0E1912,var(--green-forest))}
-.module-curtain.in{opacity:1;transition:opacity var(--m-med) var(--ease-in-out)}
+.module-curtain.in{transform:translateX(0);transition:transform var(--m-hero) var(--ease-in-out)}
+.module-curtain.out{transform:translateX(-105%);transition:transform var(--m-med) var(--ease-in-out)}
 .module-curtain .icon{
   width:56px;height:56px;color:#fff;opacity:0;font-size:44px;line-height:56px;text-align:center;
   transform:scale(.8) translateY(8px)}
@@ -83,12 +89,15 @@
    los SVG del theme ya heredan currentColor y el filtro los ensuciaba. */
 .module-curtain .icon .emoji{filter:grayscale(1) brightness(1.6)}
 .module-curtain.in .icon{opacity:1;transform:none;
-  transition:opacity var(--m-med) var(--ease-soft) 100ms,transform var(--m-med) var(--ease-soft) 100ms}
+  transition:opacity var(--m-med) var(--ease-soft) 200ms,transform var(--m-med) var(--ease-soft) 200ms}
 .module-curtain .label{
   font-family:var(--font-display);font-style:italic;font-weight:500;
   font-size:clamp(26px,4.5vw,40px);color:#fff;opacity:0;transform:translateY(10px);letter-spacing:.01em}
 .module-curtain.in .label{opacity:1;transform:none;
-  transition:opacity var(--m-med) var(--ease-soft) 180ms,transform var(--m-med) var(--ease-soft) 180ms}
+  transition:opacity var(--m-med) var(--ease-soft) 280ms,transform var(--m-med) var(--ease-soft) 280ms}
+/* Al salir, ícono/label se apagan rápido para no quedar "flotando" sobre
+   el slide — el panel ya se está yendo, no hace falta que se lean más. */
+.module-curtain.out .icon,.module-curtain.out .label{opacity:0;transition:opacity 120ms ease}
 
 /* Entrada al llegar al otro módulo: el contenido sube suave */
 @keyframes cgzModuleEnter{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
