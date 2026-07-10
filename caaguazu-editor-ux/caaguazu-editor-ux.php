@@ -26,6 +26,9 @@ define( 'CZU_POST_TYPE', 'post' );
 require_once CZU_DIR . 'includes/class-czu-editor-ux.php';
 require_once CZU_DIR . 'includes/class-czu-editor-settings.php';
 require_once CZU_DIR . 'includes/class-czu-editor-meta.php';
+require_once CZU_DIR . 'includes/updater.php';
+
+new Caaguazu_Component_Updater( __FILE__, CZU_VERSION, 'caaguazu-editor-ux', 'Caaguazú Editor UX' );
 
 function czu_editor_ux_init() {
 	new CZU_Editor_UX();
