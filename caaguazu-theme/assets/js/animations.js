@@ -182,27 +182,10 @@
     var curtain = document.createElement('div');
     curtain.className = 'module-curtain';
     curtain.setAttribute('aria-hidden', 'true');
-    curtain.innerHTML = '<span class="burst"></span><span class="icon"></span><span class="label"></span>';
+    curtain.innerHTML = '<span class="icon"></span><span class="label"></span>';
     document.body.appendChild(curtain);
-    var burst = curtain.querySelector('.burst');
     var icon = curtain.querySelector('.icon');
     var label = curtain.querySelector('.label');
-
-    // Ráfaga de partículas radiando desde el centro — se arma de nuevo en
-    // cada transición para que la dispersión salga distinta cada vez.
-    function spawnBurst() {
-      burst.innerHTML = '';
-      var count = 12;
-      for (var i = 0; i < count; i++) {
-        var dot = document.createElement('span');
-        var angle = (360 / count) * i + (Math.random() * 18 - 9);
-        var dist = 55 + Math.random() * 55;
-        dot.style.setProperty('--b-angle', angle.toFixed(1) + 'deg');
-        dot.style.setProperty('--b-dist', dist.toFixed(0) + 'px');
-        dot.style.setProperty('--b-delay', (Math.random() * 0.1).toFixed(2) + 's');
-        burst.appendChild(dot);
-      }
-    }
 
     var navigating = false;
 
@@ -221,11 +204,14 @@
       e.preventDefault();
       navigating = true;
       label.textContent = target ? target.label : (cfg.i18nHome || 'Caaguazú');
-      icon.innerHTML = target ? (target.icon || '') : (cfg.homeIcon || '');
-      spawnBurst();
+      // Un emoji literal (fallback de compatibilidad) se envuelve para que
+      // el CSS lo pase a monocromo; los SVG del theme llegan con '<' y se
+      // inyectan tal cual (heredan currentColor, sin filtros encima).
+      var rawIcon = target ? (target.icon || '') : (cfg.homeIcon || '');
+      icon.innerHTML = rawIcon.charAt(0) === '<' ? rawIcon : '<span class="emoji">' + rawIcon + '</span>';
       curtain.classList.add(target ? 'to-' + target.slug : 'to-caaguazu', 'in');
       try { sessionStorage.setItem('cgzModuleEnter', '1'); } catch (err) {}
-      setTimeout(function () { location.href = href; }, 520);
+      setTimeout(function () { location.href = href; }, 560);
     });
   })();
 })();

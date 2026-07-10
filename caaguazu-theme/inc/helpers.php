@@ -356,9 +356,16 @@ function caaguazu_render_turismo_carousel() {
  * no imprime nada si viene vacío.
  */
 function caaguazu_render_ecosystem_cards( $eco_cards, $section_title = '', $section_body = '' ) {
-	if ( ! $eco_cards ) {
+	// Una sola vez por request: en la página `ecosistema` la grilla llega
+	// por DOS caminos a la vez — el filtro the_content del plugin (que
+	// funciona incluso cuando un page builder tomó la página, ver
+	// caaguazu_modulos_append_eco_grid()) y el `if` histórico de page.php.
+	// El primero que llama gana; el segundo no imprime nada.
+	static $rendered = false;
+	if ( $rendered || ! $eco_cards ) {
 		return;
 	}
+	$rendered = true;
 	$section_title = $section_title ?: caaguazu_opt( 'eco_section_title', __( 'Sub-portales del departamento', 'caaguazu' ) );
 	$section_body  = $section_body ?: caaguazu_opt( 'eco_section_body', __( 'Caaguazu.net centraliza el acceso a los sub-portales especializados del departamento. Cada uno conserva su propio contenido dentro de una misma identidad institucional.', 'caaguazu' ) );
 	?>

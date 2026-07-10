@@ -3,7 +3,7 @@
  * Plugin Name:       Caaguazú Módulos
  * Plugin URI:        https://caaguazu.net
  * Description:       Módulos de contenido del portal (Noticias, Agenda, Ecosistema, Educación) como plugin — separados del theme para que el sitio funcione con cualquier apariencia y cada módulo se pueda activar/desactivar sin tocar código de presentación. Se registran solos en el nav y en los accesos rápidos del home vía los filtros `caaguazu_nav_items`/`caaguazu_quick_access_items` del theme.
- * Version:           1.7.2
+ * Version:           1.8.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Thiago Juan Manuel Ávalos Crosta
@@ -14,7 +14,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'CAAGUAZU_MODULOS_VERSION', '1.7.2' );
+define( 'CAAGUAZU_MODULOS_VERSION', '1.8.0' );
 define( 'CAAGUAZU_MODULOS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'CAAGUAZU_MODULOS_URI', plugin_dir_url( __FILE__ ) );
 
