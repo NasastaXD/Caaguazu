@@ -43,7 +43,7 @@ $elementor_footer_done = function_exists( 'elementor_theme_do_location' ) && ele
 	<div class="weave-rule" aria-hidden="true"></div>
 	<div class="container">
 		<div class="foot-grid">
-			<div class="foot-brand" id="newsletter">
+			<div class="foot-brand reveal" id="newsletter">
 				<a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="name"><?php bloginfo( 'name' ); ?></a>
 				<p class="tag"><?php echo esc_html( $tagline ); ?></p>
 				<p><?php echo esc_html( $about ); ?></p>
@@ -51,7 +51,7 @@ $elementor_footer_done = function_exists( 'elementor_theme_do_location' ) && ele
 			</div>
 
 			<?php if ( $current_eco ) : ?>
-				<div class="foot-col">
+				<div class="foot-col reveal">
 					<h4><?php esc_html_e( 'Secciones', 'caaguazu' ); ?></h4>
 					<ul>
 						<?php foreach ( caaguazu_ecosystem_items( $current_eco ) as $s ) : ?>
@@ -59,7 +59,7 @@ $elementor_footer_done = function_exists( 'elementor_theme_do_location' ) && ele
 						<?php endforeach; ?>
 					</ul>
 				</div>
-				<div class="foot-col">
+				<div class="foot-col reveal">
 					<h4><?php caaguazu_i18n( 'footer.institucional', __( 'Institucional', 'caaguazu' ) ); ?></h4>
 					<ul>
 						<li><a href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php esc_html_e( 'Ir a caaguazu.net', 'caaguazu' ); ?></a></li>
@@ -75,7 +75,7 @@ $elementor_footer_done = function_exists( 'elementor_theme_do_location' ) && ele
 				   propia (CPT/página) más allá del hub de Ecosistema, así que por
 				   ahora ese concepto vive dentro de "Ciudad" (enlace "Ver ecosistema
 				   completo") en vez de fabricar una columna con enlaces falsos. */ ?>
-				<div class="foot-col">
+				<div class="foot-col reveal">
 					<h4><?php esc_html_e( 'Ciudad', 'caaguazu' ); ?></h4>
 					<ul>
 						<li><a href="<?php echo esc_url( $about_url ); ?>"><?php esc_html_e( 'Sobre Caaguazú', 'caaguazu' ); ?></a></li>
@@ -85,7 +85,7 @@ $elementor_footer_done = function_exists( 'elementor_theme_do_location' ) && ele
 					</ul>
 				</div>
 
-				<div class="foot-col">
+				<div class="foot-col reveal">
 					<h4><?php esc_html_e( 'Servicios', 'caaguazu' ); ?></h4>
 					<ul>
 						<li><a href="<?php echo esc_url( $search_url ); ?>"><?php esc_html_e( 'Buscar información', 'caaguazu' ); ?></a></li>
@@ -97,7 +97,7 @@ $elementor_footer_done = function_exists( 'elementor_theme_do_location' ) && ele
 					</ul>
 				</div>
 
-				<div class="foot-col">
+				<div class="foot-col reveal">
 					<h4><?php esc_html_e( 'Cultura y turismo', 'caaguazu' ); ?></h4>
 					<ul>
 						<?php foreach ( caaguazu_ecosystems() as $eco ) : ?>
@@ -109,7 +109,7 @@ $elementor_footer_done = function_exists( 'elementor_theme_do_location' ) && ele
 					</ul>
 				</div>
 
-				<div class="foot-col">
+				<div class="foot-col reveal">
 					<h4><?php esc_html_e( 'Educación y comunidad', 'caaguazu' ); ?></h4>
 					<ul>
 						<li><a href="<?php echo esc_url( caaguazu_category_url( 'educacion' ) ); ?>"><?php esc_html_e( 'Escuelas, becas y programas', 'caaguazu' ); ?></a></li>
@@ -118,7 +118,7 @@ $elementor_footer_done = function_exists( 'elementor_theme_do_location' ) && ele
 				</div>
 			<?php endif; ?>
 
-			<div class="foot-col">
+			<div class="foot-col reveal">
 				<h4><?php caaguazu_i18n( 'footer.contacto', __( 'Contacto', 'caaguazu' ) ); ?></h4>
 				<address>
 					<?php echo esc_html( $org ); ?><br>
@@ -141,6 +141,14 @@ $elementor_footer_done = function_exists( 'elementor_theme_do_location' ) && ele
 	</div>
 </footer>
 <?php endif; ?>
+
+<?php
+// Eco-rail: sidebar derecho colapsable (ver inc/sidebar.php). Elemento
+// fixed — al final del documento para que el teclado recorra primero el
+// contenido; se pinta también si Elementor sirve su propio footer (es una
+// capa de navegación del sitio, no parte del footer).
+caaguazu_render_eco_rail();
+?>
 
 <?php if ( $is_home ) : ?>
 <script type="application/ld+json">

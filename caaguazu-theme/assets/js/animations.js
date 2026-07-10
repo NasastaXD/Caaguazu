@@ -34,52 +34,52 @@
   if (inIframe) { return; }
 
   /* ------------------------------------------------------------------
-   * 1. Scroll-trigger sobre contenido de plugins (auto-tag, sin PHP)
+   * 1. Auto-tag de contenido de plugins (sin PHP): marca tarjetas/stats
+   *    sembradas por los módulos con el MISMO sistema de reveal que usa
+   *    el resto del sitio (.reveal/[data-reveal] + .in, ver main.css) —
+   *    main.js corre antes (este script depende de él) así que estos
+   *    elementos se observan acá con la misma mecánica. Sin JS, nada se
+   *    marca y todo queda visible (la opacidad inicial la aplica la
+   *    clase html.motion-ready, que también pone el JS).
    * ------------------------------------------------------------------ */
-  if ('IntersectionObserver' in window) {
-    // [selector, animación, threshold] — los selectores apuntan solo a
+  if ('IntersectionObserver' in window && !reducedMotion) {
+    // [selector, variante, threshold] — los selectores apuntan solo a
     // contenido below-the-fold; lo above-the-fold ya tiene .hero-fade/.reveal.
     var autoTargets = [
-      ['.entry-content .eco-card',        'fadeInUp', 0.15],
-      ['.entry-content .info-card',       'fadeInUp', 0.15],
-      ['.entry-content .glossary-item',   'fadeInLeft', 0.15],
-      ['.entry-content .gallery-grid img','zoomIn',   0.15],
-      ['.entry-content .stats-grid .stat','fadeInUp', 0.5],
-      ['.entry-content .cta-row .btn',    'fadeInUp', 0.5],
-      ['.cgz-card',                       'fadeInUp', 0.15],
-      ['.promotur-vitrina__card',         'fadeInUp', 0.15]
+      ['.entry-content .eco-card',        'up',    0.15],
+      ['.entry-content .info-card',       'up',    0.15],
+      ['.entry-content .glossary-item',   'up',    0.15],
+      ['.entry-content .gallery-grid img','scale', 0.15],
+      ['.entry-content .stats-grid .stat','up',    0.5],
+      ['.entry-content .cta-row .btn',    'up',    0.5],
+      ['.cgz-card',                       'up',    0.15],
+      ['.promotur-vitrina__card',         'up',    0.15]
     ];
 
+    var autoTagged = [];
     autoTargets.forEach(function (t) {
-      var els = document.querySelectorAll(t[0]);
-      els.forEach(function (el, i) {
-        if (el.dataset.animate) { return; } // no re-marcar
-        el.dataset.animate = t[1];
-        el.dataset.threshold = t[2];
+      document.querySelectorAll(t[0]).forEach(function (el, i) {
+        if (el.hasAttribute('data-reveal') || el.classList.contains('reveal')) { return; }
+        el.setAttribute('data-reveal', t[1] === 'up' ? '' : t[1]);
         // Stagger entre hermanos del mismo grupo, con tope para que los
         // últimos de una grilla larga no tarden una eternidad.
-        el.dataset.delay = Math.min(i % 6, 4) * 110;
-        el.classList.add('scroll-animate');
-        if (!reducedMotion) { el.style.opacity = 0; }
+        el.style.transitionDelay = (Math.min(i % 6, 4) * 70) + 'ms';
+        autoTagged.push([el, t[2]]);
       });
     });
 
-    document.querySelectorAll('.scroll-animate').forEach(function (el) {
-      var threshold = parseFloat(el.dataset.threshold || 0.15);
+    autoTagged.forEach(function (pair) {
+      var el = pair[0];
       var observer = new IntersectionObserver(function (entries) {
         entries.forEach(function (entry) {
           if (!entry.isIntersecting) { return; }
-          if (reducedMotion) {
-            el.style.opacity = 1;
-          } else {
-            setTimeout(function () {
-              el.style.opacity = '';
-              el.classList.add('animate__animated', 'animate__' + el.dataset.animate, 'animate__fast');
-            }, parseInt(el.dataset.delay || 0, 10));
-          }
+          el.classList.add('in');
           observer.unobserve(el);
+          // Igual que en main.js: el delay del stagger se limpia al
+          // terminar la entrada para no retrasar los hovers del elemento.
+          setTimeout(function () { el.style.transitionDelay = ''; }, 1000);
         });
-      }, { threshold: threshold });
+      }, { threshold: pair[1] });
       observer.observe(el);
     });
   }
@@ -124,14 +124,17 @@
       var box = document.createElement('div');
       box.className = 'cgz-particles';
       box.setAttribute('aria-hidden', 'true');
-      for (var i = 0; i < 14; i++) {
+      // 9 partículas más tenues (antes 14 y más opacas): el aserrín tiene
+      // que percibirse como textura ambiente, no como efecto en sí mismo
+      // ("quiet civic motion" — el rework de motion bajó todo lo ambiental).
+      for (var i = 0; i < 9; i++) {
         var p = document.createElement('span');
         var size = 2 + Math.random() * 4;
         p.style.width = p.style.height = size.toFixed(1) + 'px';
         p.style.left = (Math.random() * 100).toFixed(1) + '%';
         p.style.setProperty('--p-dur', (9 + Math.random() * 9).toFixed(1) + 's');
         p.style.setProperty('--p-delay', (Math.random() * -18).toFixed(1) + 's');
-        p.style.setProperty('--p-op', (0.25 + Math.random() * 0.4).toFixed(2));
+        p.style.setProperty('--p-op', (0.18 + Math.random() * 0.3).toFixed(2));
         p.style.setProperty('--p-rise', (45 + Math.random() * 45).toFixed(0) + 'vh');
         p.style.setProperty('--p-drift', ((Math.random() - 0.5) * 90).toFixed(0) + 'px');
         box.appendChild(p);

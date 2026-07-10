@@ -38,6 +38,7 @@ function caaguazu_icon( $key ) {
 		'book'        => '<path d="M12 6.2c-2.1-1.5-5-2.2-8-2.2v13.4c3 0 5.9.7 8 2.2 2.1-1.5 5-2.2 8-2.2V4c-3 0-5.9.7-8 2.2z"/><line x1="12" y1="6.2" x2="12" y2="19.6"/>',
 		'back'        => '<line x1="19" y1="12" x2="5" y2="12"/><polyline points="11 18 5 12 11 6"/>',
 		'close'       => '<line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>',
+		'sound'       => '<polygon points="11 5 6 9 3 9 3 15 6 15 11 19"/><path d="M15 9.5a4 4 0 0 1 0 5"/><path d="M17.8 7a8 8 0 0 1 0 10"/>',
 	);
 
 	if ( isset( $icons[ $key ] ) ) {
