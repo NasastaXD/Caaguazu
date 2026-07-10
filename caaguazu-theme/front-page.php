@@ -16,35 +16,60 @@ get_header();
 
 $identity_defaults = caaguazu_identity_defaults();
 
-$hero_video  = caaguazu_opt( 'hero_video_url', '' );
-$hero_poster = caaguazu_opt_image( 'hero_poster', 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Puente_Madera_Caaguaz%C3%BA_-_panoramio.jpg/1920px-Puente_Madera_Caaguaz%C3%BA_-_panoramio.jpg' );
+/**
+ * Panel de accesos destacados del hero — datos reales del sitio (no una
+ * maqueta estática): próximo evento real de Agenda, si hay noticias
+ * publicadas, y los dos ecosistemas siempre disponibles. Nada de esto se
+ * hardcodea como "activo"/"próximamente" a mano — sale de una consulta.
+ */
+$hero_access = array();
+if ( function_exists( 'caaguazu_upcoming_events' ) ) {
+	$next = caaguazu_upcoming_events( 1 );
+	$hero_access[] = array(
+		'label'  => __( 'Agenda de la ciudad', 'caaguazu' ),
+		'status' => $next->have_posts() ? get_the_date( 'j \d\e M', $next->posts[0]->ID ) : __( 'Sin eventos', 'caaguazu' ),
+	);
+	wp_reset_postdata();
+}
+$latest_news = new WP_Query( array( 'post_type' => 'post', 'category_name' => 'noticias', 'posts_per_page' => 1, 'no_found_rows' => true, 'fields' => 'ids' ) );
+$hero_access[] = array(
+	'label'  => __( 'Noticias locales', 'caaguazu' ),
+	'status' => $latest_news->have_posts() ? __( 'Actualizado', 'caaguazu' ) : __( 'Próximamente', 'caaguazu' ),
+);
+$hero_access[] = array( 'label' => __( 'Turismo', 'caaguazu' ), 'status' => __( 'Disponible', 'caaguazu' ) );
+$hero_access[] = array( 'label' => __( 'Educación', 'caaguazu' ), 'status' => __( 'Disponible', 'caaguazu' ) );
 ?>
 
-<section class="hero" aria-label="<?php esc_attr_e( 'Caaguazú, Capital de la Madera', 'caaguazu' ); ?>">
-	<div class="hero-media" id="heroMedia">
-		<?php if ( $hero_video ) : ?>
-			<video id="heroVideo" autoplay muted loop playsinline preload="metadata"
-				poster="<?php echo esc_url( $hero_poster ); ?>">
-				<source src="<?php echo esc_url( $hero_video ); ?>" type="video/mp4">
-			</video>
-		<?php else : ?>
-			<img src="<?php echo esc_url( $hero_poster ); ?>" alt="">
-		<?php endif; ?>
+<section class="hero-civic" aria-label="<?php esc_attr_e( 'Todo Caaguazú, en un solo lugar', 'caaguazu' ); ?>">
+	<div class="container hero-civic-grid">
+		<div class="hero-civic-copy reveal">
+			<p class="eyebrow"><?php echo esc_html( caaguazu_opt( 'hero_eyebrow', __( 'Portal cívico de Caaguazú', 'caaguazu' ) ) ); ?></p>
+			<h1><?php echo esc_html( caaguazu_opt( 'hero_title', __( 'Todo Caaguazú, en un solo lugar', 'caaguazu' ) ) ); ?></h1>
+			<p class="sub"><?php echo esc_html( caaguazu_opt( 'hero_lead', __( 'Servicios, cultura, educación, turismo, noticias y participación ciudadana reunidos en una plataforma digital clara y accesible.', 'caaguazu' ) ) ); ?></p>
+			<div class="hero-civic-cta">
+				<a class="btn btn-primary" href="<?php echo esc_url( caaguazu_page_url( 'ecosistema' ) ); ?>"><?php esc_html_e( 'Explorar la ciudad', 'caaguazu' ); ?></a>
+				<a class="btn btn-outline" href="#accesos-rapidos"><?php esc_html_e( 'Ver servicios', 'caaguazu' ); ?></a>
+			</div>
+		</div>
+		<div class="hero-civic-panel reveal">
+			<p class="hero-civic-panel-label"><?php esc_html_e( 'Accesos destacados', 'caaguazu' ); ?></p>
+			<ul class="hero-civic-panel-list">
+				<?php foreach ( $hero_access as $a ) : ?>
+					<li><span><?php echo esc_html( $a['label'] ); ?></span><strong><?php echo esc_html( $a['status'] ); ?></strong></li>
+				<?php endforeach; ?>
+			</ul>
+		</div>
 	</div>
-	<div class="hero-overlay"></div>
-	<div class="hero-inner hero-fade">
-		<p class="eyebrow"><?php echo esc_html( caaguazu_opt( 'hero_eyebrow', 'Departamento de Paraguay' ) ); ?></p>
-		<h1><?php echo esc_html( caaguazu_opt( 'hero_title', 'Caaguazú' ) ); ?></h1>
-		<p class="sub"><?php echo esc_html( caaguazu_opt( 'hero_sub', 'Capital de la Madera' ) ); ?></p>
-		<p class="lead"><?php echo esc_html( caaguazu_opt( 'hero_lead', 'Portal oficial del departamento de Caaguazú. Información institucional, servicios, noticias y turismo en un mismo sitio.' ) ); ?></p>
-	</div>
-	<span class="scroll-hint" aria-hidden="true"></span>
-	<?php if ( $hero_video ) : ?>
-		<button class="video-toggle" id="videoToggle" aria-label="<?php esc_attr_e( 'Pausar video', 'caaguazu' ); ?>">❚❚</button>
-	<?php endif; ?>
 </section>
 
-<?php caaguazu_render_quick_access(); ?>
+<div id="accesos-rapidos"><?php caaguazu_render_quick_access(); ?></div>
+
+<?php
+// Tarjetas del Ecosistema — mismo cálculo y markup que la página `ecosistema`,
+// compartidos vía inc/helpers.php (caaguazu_resolve_ecosystem_cards()/
+// caaguazu_render_ecosystem_cards()) para no mantener dos copias.
+caaguazu_render_ecosystem_cards( caaguazu_resolve_ecosystem_cards() );
+?>
 
 <?php caaguazu_render_turismo_carousel(); ?>
 
@@ -90,13 +115,6 @@ $hero_poster = caaguazu_opt_image( 'hero_poster', 'https://upload.wikimedia.org/
 		</div>
 	</div>
 </section>
-
-<?php
-// Tarjetas del Ecosistema — mismo cálculo y markup que la página `ecosistema`,
-// compartidos vía inc/helpers.php (caaguazu_resolve_ecosystem_cards()/
-// caaguazu_render_ecosystem_cards()) para no mantener dos copias.
-caaguazu_render_ecosystem_cards( caaguazu_resolve_ecosystem_cards() );
-?>
 
 <section class="quiz-wrap">
 	<div class="container">

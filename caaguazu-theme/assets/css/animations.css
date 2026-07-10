@@ -6,7 +6,7 @@
    zoomIn), no la librería completa (92KB → ~2KB).
    Parte 2: efectos propios del sitio — partículas doradas de aserrín
    en los heros, ripple al clickear, telón de transición entre módulos
-   (Caaguazú ↔ Turismo), Ken Burns en heros, y la base del tilt 3D.
+   (Caaguazú ↔ Turismo), y Ken Burns en el hero fotográfico de Turismo.
 
    Todo respeta prefers-reduced-motion (acá y en el JS).
    ============================================================ */
@@ -36,23 +36,13 @@
 .scroll-animate.animate__animated{opacity:1}
 
 /* --- Ken Burns: zoom lentísimo en las fotos de hero ------------------ */
+/* El hero institucional (V2, .hero-civic) es un panel claro sin foto a
+   sangre — el efecto queda solo para el hub de Turismo, que conserva su
+   tratamiento fotográfico original. */
 @keyframes cgzKenburns{from{transform:scale(1)}to{transform:scale(1.08)}}
-body.page-home .hero-media img,
 .tourism-hero-full .img img{
   animation:cgzKenburns 22s ease-in-out infinite alternate;
   will-change:transform}
-
-/* --- Tilt 3D del hero principal (el JS mueve las variables) ---------- */
-body.page-home .hero{perspective:1100px}
-body.page-home .hero-inner{
-  transform:rotateX(var(--tilt-x,0deg)) rotateY(var(--tilt-y,0deg));
-  transform-style:preserve-3d;
-  transition:transform .18s ease-out;
-  will-change:transform}
-body.page-home .hero-inner h1{transform:translateZ(46px)}
-body.page-home .hero-inner .sub{transform:translateZ(28px)}
-body.page-home .hero-inner .eyebrow,
-body.page-home .hero-inner .lead{transform:translateZ(14px)}
 
 /* --- Partículas: aserrín dorado flotando en los heros ---------------- */
 .cgz-particles{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:1}
@@ -206,9 +196,7 @@ body.module-enter #main{animation:cgzModuleEnter .5s ease-out both}
 
 /* --- Accesibilidad: sin movimiento para quien lo desactivó ----------- */
 @media (prefers-reduced-motion: reduce){
-  body.page-home .hero-media img,
   .tourism-hero-full .img img{animation:none}
-  body.page-home .hero-inner{transform:none;transition:none}
   .cgz-particles{display:none}
   .fx-ripple-wave{animation:none;opacity:0}
   .module-curtain{display:none}

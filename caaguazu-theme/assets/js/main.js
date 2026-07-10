@@ -172,27 +172,6 @@
 })();
 
 (function(){
-  // Parallax hero
-  var m = document.getElementById('heroMedia');
-  if (!m) return;
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  window.addEventListener('scroll', function(){
-    m.style.transform = 'translate3d(0,' + (window.scrollY * 0.4) + 'px,0)';
-  }, {passive:true});
-})();
-
-(function(){
-  // Video toggle
-  var v = document.getElementById('heroVideo'),
-      b = document.getElementById('videoToggle');
-  if (!v || !b) return;
-  b.addEventListener('click', function(){
-    if (v.paused){ v.play(); b.textContent='❚❚'; b.setAttribute('aria-label','Pausar video'); }
-    else { v.pause(); b.textContent='▶'; b.setAttribute('aria-label','Reproducir video'); }
-  });
-})();
-
-(function(){
   // Reveal on scroll
   var els = document.querySelectorAll('.reveal');
   if (!('IntersectionObserver' in window)){
