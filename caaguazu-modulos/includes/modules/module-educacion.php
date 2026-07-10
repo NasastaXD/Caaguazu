@@ -343,7 +343,7 @@ function caaguazu_educacion_shell_items() {
  * fija en el código.
  */
 function caaguazu_educacion_card_image() {
-	return caaguazu_opt_image( 'educacion_card_image', 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1400&q=80' );
+	return caaguazu_opt_image( 'educacion_card_image', 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1400&q=80' );
 }
 
 add_action( 'customize_register', function ( $wp_customize ) {

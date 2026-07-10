@@ -48,18 +48,22 @@ function caaguazu_ecosystem_defaults() {
  * Defaults de los 3 slots configurables de sub-portales EXTERNOS. Desde el
  * theme 3.0 las tarjetas de los ecosistemas internos (Turismo, Educación,
  * los que vengan) se derivan solas del registry `caaguazu_ecosystems` del
- * theme — los slots del Customizer quedan solo para sitios externos como
- * el CEAD. El tercer slot arranca vacío (título vacío = no se muestra).
+ * theme — los slots del Customizer quedan solo para sitios externos.
+ *
+ * Los 3 arrancan vacíos (título vacío = no se muestra): el CEAD
+ * (cead.caaguazu.net) que ocupaba el slot 0 no corresponde acá — no es un
+ * sub-portal real del departamento — así que se sacó del default. Un
+ * admin puede seguir cargando cualquier sub-portal externo real a mano
+ * desde Apariencia → Personalizar → Ecosistema.
  *
  * Nota de migración: los slots son posicionales (`eco_{i}_*`). Un sitio que
- * haya personalizado el slot 0 cuando el default era Turismo verá esa
- * tarjeta duplicada junto a la interna — se corrige vaciándola en
- * Apariencia → Personalizar → Ecosistema.
+ * haya personalizado el slot 0 cuando el default era Turismo (o CEAD) verá
+ * esa tarjeta vieja — se corrige vaciándola en Apariencia → Personalizar →
+ * Ecosistema.
  */
 function caaguazu_modulos_external_eco_defaults() {
-	$defaults   = caaguazu_ecosystem_defaults();
 	$empty_slot = array( 'tag' => '', 'title' => '', 'body' => '', 'cta' => '', 'url' => '', 'image' => '' );
-	return array( $defaults[1], $defaults[2], $empty_slot );
+	return array( $empty_slot, $empty_slot, $empty_slot );
 }
 
 /**

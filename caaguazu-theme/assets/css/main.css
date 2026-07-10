@@ -25,7 +25,7 @@
   --font-body:'Lato', system-ui, -apple-system, sans-serif;
   --t:300ms cubic-bezier(.4,0,.2,1);
   /* Motivo "tejido" (puntada ñandutí) — SVG inline, sin assets externos */
-  --weave:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='12' viewBox='0 0 24 12'%3E%3Cpath d='M0 6l6-5 6 5 6-5 6 5M0 6l6 5 6-5 6 5 6-5' fill='none' stroke='%23B88725' stroke-opacity='.6' stroke-width='1'/%3E%3C/svg%3E");
+  --weave:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='20' viewBox='0 0 36 20'%3E%3Cpath d='M0 10l9-8 9 8 9-8 9 8M0 10l9 8 9-8 9 8 9-8' fill='none' stroke='%23B88725' stroke-opacity='.8' stroke-width='2'/%3E%3C/svg%3E");
 
   /* Vocabulario V2 para los nuevos componentes (familias de tarjetas) —
      alias de los tokens de arriba, no valores nuevos: una sola fuente de
@@ -68,7 +68,7 @@ address{font-style:normal;margin-top:16px;font-size:14px;line-height:1.7;color:v
 .container{max-width:1200px;margin:0 auto;padding:0 24px}
 .eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:12px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--green-forest)}
 .eyebrow::before{content:"";width:22px;height:1px;background:var(--accent-gold);flex:none}
-.weave-rule{height:12px;background:var(--weave) repeat-x center;opacity:.75}
+.weave-rule{height:20px;background:var(--weave) repeat-x center;opacity:.9}
 .btn{display:inline-flex;align-items:center;justify-content:center;height:48px;padding:0 24px;
   border-radius:var(--radius-md);font-weight:600;font-size:14px;
   transition:background var(--t),color var(--t),transform var(--t),box-shadow var(--t),filter var(--t)}
@@ -285,6 +285,7 @@ address{font-style:normal;margin-top:16px;font-size:14px;line-height:1.7;color:v
 @media(min-width:768px){.hero-civic{padding-top:calc(64px + 34px + 48px)}}
 .hero-civic-grid{display:grid;grid-template-columns:1fr;gap:40px;align-items:center}
 @media(min-width:960px){.hero-civic-grid{grid-template-columns:1.2fr 1fr;gap:56px}}
+.hero-civic-lang{display:inline-flex;margin-bottom:20px}
 .hero-civic-copy h1{margin-top:16px;font-size:clamp(34px,5.2vw,58px);line-height:1.08}
 .hero-civic-copy .sub{margin-top:20px;max-width:52ch;font-size:18px;line-height:1.65;color:var(--text-soft);font-style:normal}
 .hero-civic-cta{margin-top:32px;display:flex;flex-wrap:wrap;gap:12px}
@@ -441,22 +442,12 @@ section{padding-block:64px}
 .news .ex{margin-top:12px;font-size:14px;color:var(--text-soft);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .news .arrow{margin-top:20px}
 
-/* Tarjeta de evento (agenda) — misma base .news, con datebox propio en vez
-   de repetir la fecha completa como "categoría". */
-.event-card{position:relative}
-.event-card .event-datebox{position:absolute;top:16px;left:16px;z-index:1;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;width:52px;height:52px;border-radius:var(--radius-md);
-  background:var(--bg-pure);box-shadow:var(--shadow-soft);line-height:1.1}
-.event-card .event-datebox strong{font-family:var(--font-display);font-size:20px;font-weight:600;color:var(--green-deep)}
-.event-card .event-datebox span{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted)}
-.event-card.event-past .event-datebox{background:var(--bg-elevated)}
-
 .btn-white{background:#fff;color:var(--green-forest)}
 .btn-white:hover{background:var(--bg-primary)}
 
 /* Footer */
 .footer{margin-top:96px;border-top:1px solid var(--border);background:var(--bg-elevated)}
-.footer > .weave-rule{opacity:.45;margin-top:12px}
+.footer > .weave-rule{opacity:.6;margin-top:12px}
 .footer .container{padding-block:64px}
 /* auto-fit en vez de un conteo fijo de columnas: la vista institucional
    (Ciudad/Servicios/Cultura y turismo/Educación y comunidad/Contacto) y la

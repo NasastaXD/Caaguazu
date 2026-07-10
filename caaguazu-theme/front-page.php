@@ -43,6 +43,15 @@ $hero_access[] = array( 'label' => __( 'Educación', 'caaguazu' ), 'status' => _
 <section class="hero-civic" aria-label="<?php esc_attr_e( 'Todo Caaguazú, en un solo lugar', 'caaguazu' ); ?>">
 	<div class="container hero-civic-grid">
 		<div class="hero-civic-copy reveal">
+			<?php /* Mismo componente que header.php/drawer (misma clase .lang y
+			   data-lang: el JS de assets/js/main.js sincroniza las tres copias
+			   solo) — acá siempre visible, incluso en mobile, donde el header
+			   lo esconde y lo manda al drawer. */ ?>
+			<div class="lang hero-civic-lang" role="group" aria-label="<?php esc_attr_e( 'Idioma', 'caaguazu' ); ?>">
+				<button class="on" data-lang="ES">ES</button>
+				<button data-lang="GN">GN</button>
+				<button data-lang="EN" disabled title="<?php esc_attr_e( 'Próximamente', 'caaguazu' ); ?>">EN</button>
+			</div>
 			<p class="eyebrow"><?php echo esc_html( caaguazu_opt( 'hero_eyebrow', __( 'Portal cívico de Caaguazú', 'caaguazu' ) ) ); ?></p>
 			<h1><?php echo esc_html( caaguazu_opt( 'hero_title', __( 'Todo Caaguazú, en un solo lugar', 'caaguazu' ) ) ); ?></h1>
 			<p class="sub"><?php echo esc_html( caaguazu_opt( 'hero_lead', __( 'Servicios, cultura, educación, turismo, noticias y participación ciudadana reunidos en una plataforma digital clara y accesible.', 'caaguazu' ) ) ); ?></p>
@@ -195,7 +204,7 @@ if ( function_exists( 'caaguazu_upcoming_events' ) ) :
 		<span class="eyebrow"><?php esc_html_e( 'Próximo evento', 'caaguazu' ); ?></span>
 		<h3><?php the_title(); ?></h3>
 		<p class="meta">
-			<?php echo esc_html( date_i18n( 'j \d\e F', strtotime( $event_date ) ) ); ?>
+			<?php echo esc_html( caaguazu_fecha_es( $event_date, false ) ); ?>
 			<?php if ( $event_location ) : ?> · 📍 <?php echo esc_html( $event_location ); ?><?php endif; ?>
 		</p>
 		<span class="arrow"><?php esc_html_e( 'Ver en la agenda', 'caaguazu' ); ?></span>

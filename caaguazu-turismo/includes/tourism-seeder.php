@@ -86,6 +86,26 @@ function caaguazu_tourism_flatten_hierarchy() {
 add_action( 'admin_init', 'caaguazu_tourism_flatten_hierarchy' );
 
 /**
+ * Limpieza de un sitio residual: la página "Contacto" que vivía bajo Turismo
+ * (Secretaría de Turismo) duplicaba la página institucional /contacto/ que
+ * ya existe — se sacó de caaguazu_tourism_pages() para dejar de sembrarse en
+ * sitios nuevos, y esto borra la copia en sitios que ya la tenían. Sólo
+ * apunta a 'turismo/contacto' (la anidada bajo el hub) — nunca a la página
+ * raíz 'contacto', que es la institucional y no se toca.
+ */
+function caaguazu_tourism_remove_contacto_page() {
+	if ( get_option( 'caaguazu_tourism_contacto_removed_v1' ) ) {
+		return;
+	}
+	$page = get_page_by_path( 'turismo/contacto' );
+	if ( $page ) {
+		wp_delete_post( $page->ID, true );
+	}
+	update_option( 'caaguazu_tourism_contacto_removed_v1', 1 );
+}
+add_action( 'admin_init', 'caaguazu_tourism_remove_contacto_page' );
+
+/**
  * Devuelve el path completo (padre/hijo/nieto) de un slug de turismo,
  * caminando la cadena de 'parent' definida en caaguazu_tourism_pages().
  */

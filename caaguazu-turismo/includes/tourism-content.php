@@ -2,7 +2,12 @@
 /**
  * Contenido de la sección Turismo, migrado desde el sitio de turismo aparte.
  * Texto real extraído y limpiado (sin Tailwind/React); jerarquía: 'turismo' es la
- * página raíz, luego las 6 secciones, luego sus subpáginas. Usado por inc/tourism-seeder.php.
+ * página raíz, luego las 5 secciones, luego sus subpáginas. Usado por inc/tourism-seeder.php.
+ *
+ * La sección "Contacto" que existía acá (Secretaría de Turismo) se sacó: era
+ * un sitio residual que duplicaba la página institucional /contacto/ ya
+ * existente — ver caaguazu_tourism_remove_contacto_page() en tourism-seeder.php
+ * para la limpieza en sitios que ya la tenían sembrada.
  *
  * @package Caaguazu
  */
@@ -31,7 +36,6 @@ function caaguazu_tourism_pages() {
 <a class="eco-card" href="#tourism-link:platos-tipicos#"><div class="body"><span class="eco-tag">Gastronomía</span><h3>Sabores de Caaguazú</h3><p class="desc">Platos típicos, dónde comer y la cultura del mate y tereré.</p><span class="arrow">Ver sección</span></div></a>
 <a class="eco-card" href="#tourism-link:festividades#"><div class="body"><span class="eco-tag">Cultura</span><h3>Vivir Caaguazú</h3><p class="desc">Festividades, galería de imágenes y glosario de guaraní.</p><span class="arrow">Ver sección</span></div></a>
 <a class="eco-card" href="#tourism-link:como-llegar#"><div class="body"><span class="eco-tag">Info práctica</span><h3>Planificá tu visita</h3><p class="desc">Cómo llegar, dónde alojarte y la mejor época para venir.</p><span class="arrow">Ver sección</span></div></a>
-<a class="eco-card" href="#tourism-link:contacto#"><div class="body"><span class="eco-tag">Turismo</span><h3>Contacto</h3><p class="desc">Secretaría de Turismo de la Municipalidad de Caaguazú.</p><span class="arrow">Ver sección</span></div></a>
 </div>',
   ),
   'la-capital-de-la-madera' =>
@@ -226,14 +230,6 @@ function caaguazu_tourism_pages() {
     'title' => 'Mapa de Caaguazú',
     'excerpt' => 'Mapa interactivo de la ciudad: atracciones, hoteles y servicios.',
     'body' => '<h2>Locales y negocios</h2>[caaguazu_mapa alto="480px"]<h2>Puntos históricos</h2>[caaguazu_mapa_puntos]<p class="map-credit">Mapa base: OpenStreetMap contributors.</p><ul><li>Ykua La Patria — centro</li><li>Iglesia Inmaculada Concepción — plaza central</li><li>Mercado de Abasto — a 4 cuadras del centro</li><li>Techapyrã — a 1 km del centro</li><li>Ruta de la Madera — Ruta 7, km 175–185</li></ul>',
-  ),
-  'contacto' =>
-  array (
-    'old_slug' => 'contacto',
-    'parent' => 'turismo',
-    'title' => 'Contacto — Turismo Caaguazú',
-    'excerpt' => 'Datos de contacto de la Secretaría de Turismo de la Municipalidad de Caaguazú.',
-    'body' => '<h2>Secretaría de Turismo · Municipalidad de Caaguazú</h2><ul><li><strong>Dirección:</strong> Palacio Municipal, centro de Caaguazú</li><li><strong>Email:</strong><a>turismo@caaguazu.net</a></li><li><strong>Teléfono:</strong> +595 522 432 000</li><li><strong>Horario:</strong> lunes a viernes, 7:30 a 13:30</li></ul><a href="#tourism-link:home#">← Volver al inicio</a>',
   ),
 );
 }
