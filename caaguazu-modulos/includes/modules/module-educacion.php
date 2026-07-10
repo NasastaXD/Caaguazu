@@ -163,82 +163,19 @@ function caaguazu_modulos_migrate_educacion_from_cpt() {
 }
 
 /**
- * Siembra 4 entradas demo (una por tipo) si no hay ninguna todavía en la
- * categoría Educación. Migra primero cualquier resto del CPT viejo.
+ * Antes sembraba 4 entradas demo (redacción de relleno, no verificada por
+ * nadie del departamento) la primera vez que la categoría Educación
+ * quedaba vacía. Se saca a propósito: un portal cívico no debe mostrar
+ * contenido que parece real pero no lo es — mejor un estado vacío
+ * honesto hasta que haya entradas reales cargadas por quien administra
+ * el sitio. Sigue asegurando las categorías y migrando el CPT viejo si
+ * corresponde; ver `caaguazu_modulos_trash_legacy_demo_content()` en
+ * caaguazu-modulos.php para la limpieza de sitios que ya tenían las 4
+ * entradas demo publicadas.
  */
 function caaguazu_modulos_seed_educacion() {
 	caaguazu_modulos_migrate_educacion_from_cpt();
-
-	$cats    = caaguazu_educacion_ensure_categories();
-	$all_ids = array_merge( array( $cats['parent'] ), array_values( $cats['children'] ) );
-
-	$existing = get_posts( array(
-		'post_type'      => 'post',
-		'post_status'    => 'any',
-		'posts_per_page' => 1,
-		'fields'         => 'ids',
-		'category__in'   => $all_ids,
-	) );
-	if ( ! empty( $existing ) ) {
-		return;
-	}
-
-	$entradas = array(
-		array(
-			'tipo'     => 'Escuelas',
-			'days_ago' => 5,
-			'stat'     => '18 aulas nuevas',
-			'title'    => 'Colegio Nacional de Caaguazú suma nuevo laboratorio de informática',
-			'excerpt'  => 'El establecimiento incorporó 18 aulas equipadas con conectividad, gracias a un convenio entre la Gobernación y el Ministerio de Educación.',
-			'content'  => '<p>El Colegio Nacional de Caaguazú habilitó un nuevo laboratorio de informática con 18 aulas equipadas, fruto de un convenio entre la Gobernación departamental y el Ministerio de Educación y Ciencias.</p><p>La inversión busca acercar herramientas digitales a estudiantes de nivel medio en instituciones públicas del departamento, priorizando establecimientos con mayor matrícula rural.</p>',
-		),
-		array(
-			'tipo'     => 'Becas',
-			'days_ago' => 12,
-			'stat'     => '320 cupos',
-			'title'    => 'Becas municipales 2026 abren inscripciones para estudiantes de la Ruta de la Madera',
-			'excerpt'  => 'El programa ofrece 320 cupos para estudiantes secundarios y terciarios de familias de bajos ingresos en los distritos de la Ruta de la Madera.',
-			'content'  => '<p>La Municipalidad de Caaguazú, junto a las intendencias de la Ruta de la Madera, lanzó la convocatoria 2026 de becas estudiantiles. El programa cubre matrícula y materiales para 320 estudiantes de nivel secundario y terciario.</p><p>Las inscripciones se reciben en las oficinas de Acción Social de cada municipio hasta agotar cupos.</p>',
-		),
-		array(
-			'tipo'     => 'Programas',
-			'days_ago' => 20,
-			'stat'     => '12 comunidades',
-			'title'    => 'Programa "Escuela Va al Campo" lleva educación agrícola a comunidades rurales',
-			'excerpt'  => 'La iniciativa combina huertas escolares con clases de agricultura familiar en 12 comunidades del interior del departamento.',
-			'content'  => '<p>"Escuela Va al Campo" es un programa conjunto entre la Secretaría de Desarrollo y escuelas rurales que combina huertas escolares con formación práctica en agricultura familiar.</p><p>Ya alcanza a 12 comunidades del interior de Caaguazú, con foco en seguridad alimentaria y arraigo rural.</p>',
-		),
-		array(
-			'tipo'     => 'Estadísticas',
-			'days_ago' => 28,
-			'stat'     => '94% cobertura',
-			'title'    => 'Caaguazú alcanza el 94% de cobertura educativa en nivel primario',
-			'excerpt'  => 'El último relevamiento del Ministerio de Educación ubica al departamento entre los de mejor cobertura en nivel primario del país.',
-			'content'  => '<p>Según el último relevamiento del Ministerio de Educación y Ciencias, Caaguazú alcanzó una cobertura del 94% en nivel primario, por encima del promedio nacional.</p><p>El dato se atribuye a la ampliación de infraestructura escolar rural de los últimos años y a los programas de becas y transporte estudiantil.</p>',
-		),
-	);
-
-	foreach ( $entradas as $e ) {
-		$post_id = wp_insert_post( array(
-			'post_type'    => 'post',
-			'post_status'  => 'publish',
-			'post_title'   => $e['title'],
-			'post_excerpt' => $e['excerpt'],
-			'post_content' => $e['content'],
-			'post_date'    => date( 'Y-m-d H:i:s', strtotime( '-' . $e['days_ago'] . ' days' ) ),
-		) );
-
-		if ( ! $post_id || is_wp_error( $post_id ) ) {
-			continue;
-		}
-
-		update_post_meta( $post_id, '_caaguazu_edu_stat', $e['stat'] );
-		update_post_meta( $post_id, '_caaguazu_demo', 1 );
-
-		if ( isset( $cats['children'][ $e['tipo'] ] ) ) {
-			wp_set_post_terms( $post_id, array( (int) $cats['children'][ $e['tipo'] ] ), 'category' );
-		}
-	}
+	caaguazu_educacion_ensure_categories();
 }
 
 /**

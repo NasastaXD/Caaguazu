@@ -57,6 +57,9 @@
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
 body{font-family:var(--font-body);background:var(--bg-primary);color:var(--text);
   -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;line-height:1.55}
+/* El body no scrollea detrás de un drawer/rail móvil abierto (eco-rail o
+   el drawer del shell de ecosistemas) — ver assets/js/sidebar.js/main.js. */
+body.drawer-open{overflow:hidden}
 /* Tipografía V2: "la serif da identidad, la sans da sistema" — por default
    TODOS los títulos son sans (UI, nav, cards, formularios, agenda,
    noticias); la serif (var(--font-display)) se reserva explícitamente para
@@ -461,6 +464,7 @@ section{padding-block:64px}
 .stat::before{content:"";display:block;width:28px;height:2px;background:var(--accent-gold);margin:0 auto 20px}
 .stat-num{display:block;font-family:var(--font-display);font-weight:600;font-variant-numeric:tabular-nums;
   font-size:clamp(40px,6vw,64px);line-height:1;color:var(--green-deep)}
+.stat-num-text{font-size:clamp(18px,2.2vw,24px);line-height:1.2}
 .stat-label{display:block;margin-top:12px;font-size:12px;font-weight:600;letter-spacing:.12em;
   text-transform:uppercase;color:var(--text-muted)}
 
@@ -472,6 +476,9 @@ section{padding-block:64px}
 .news:hover{transform:translateY(-4px);box-shadow:var(--shadow-lift)}
 .news h3 a{transition:color var(--t)}
 .news:hover h3 a{color:var(--green-deep)}
+
+.news-grid .wip-news{grid-column:1/-1;margin-bottom:0}
+.wip-actions{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:20px}
 .news .img{aspect-ratio:16/9;overflow:hidden}
 .news .img:empty{background-image:linear-gradient(rgba(253,253,251,.6),rgba(253,253,251,.6)),var(--weave),
   linear-gradient(135deg,var(--green-mist),var(--earth-beige));
@@ -510,6 +517,10 @@ section{padding-block:64px}
 .foot-bottom{margin-top:48px;padding-top:24px;border-top:1px solid var(--border);
   display:flex;flex-direction:column;gap:12px;font-size:12px;color:var(--text-muted)}
 @media(min-width:768px){.foot-bottom{flex-direction:row;justify-content:space-between;align-items:center}}
+.foot-bottom-copy{display:flex;flex-direction:column;gap:4px}
+@media(min-width:768px){.foot-bottom-copy{flex-direction:row;gap:12px;align-items:center}}
+.pilot-badge{display:inline-flex;width:fit-content;padding:2px 10px;border-radius:999px;
+  border:1px solid var(--border);font-size:11px;letter-spacing:.02em;color:var(--text-muted)}
 .foot-legal{display:flex;flex-wrap:wrap;gap:20px;list-style:none}
 .foot-legal a:hover{color:var(--green-deep)}
 
@@ -904,7 +915,7 @@ dialog.lightbox[open]{display:flex;align-items:center;justify-content:center}
 
 /* --- Modo escritorio (≥1280px y ≥620px de alto): altura completa --- */
 @media(min-width:1280px) and (min-height:620px){
-.eco-rail{display:flex;top:12px;bottom:12px;right:12px;width:66px;z-index:45;
+.eco-rail{display:flex;top:88px;bottom:12px;right:12px;width:66px;z-index:45;
   transition:width var(--m-med) var(--ease-soft),box-shadow var(--m-med) var(--ease-soft)}
 .eco-rail.open{width:300px;box-shadow:var(--shadow-lift)}
 .eco-rail-bg{display:none}

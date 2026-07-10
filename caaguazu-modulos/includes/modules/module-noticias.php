@@ -168,90 +168,20 @@ function caaguazu_modulos_migrate_noticias_from_cpt() {
 }
 
 /**
- * Siembra 5 noticias demo (si no hay ninguna todavía en la categoría
- * Noticias). Migra primero cualquier resto del CPT viejo.
+ * Antes sembraba 5 noticias demo (redacción de relleno, no verificada por
+ * nadie del departamento) la primera vez que la categoría Noticias
+ * quedaba vacía. Se saca a propósito: un portal cívico no debe mostrar
+ * contenido que parece real pero no lo es — mejor un estado vacío
+ * honesto (ver el `else` en front-page.php) hasta que haya noticias
+ * reales cargadas por quien administra el sitio. Sigue asegurando las
+ * categorías (hace falta que existan para que un editor las use) y
+ * migrando el CPT viejo si corresponde; ver
+ * `caaguazu_modulos_trash_legacy_demo_content()` en caaguazu-modulos.php
+ * para la limpieza de sitios que ya tenían las 5 noticias demo publicadas.
  */
 function caaguazu_modulos_seed_noticias() {
 	caaguazu_modulos_migrate_noticias_from_cpt();
-
-	$cats    = caaguazu_noticias_ensure_categories();
-	$all_ids = array_merge( array( $cats['parent'] ), array_values( $cats['children'] ) );
-
-	$existing = get_posts( array(
-		'post_type'      => 'post',
-		'post_status'    => 'any',
-		'posts_per_page' => 1,
-		'fields'         => 'ids',
-		'category__in'   => $all_ids,
-	) );
-	if ( ! empty( $existing ) ) {
-		return;
-	}
-
-	$news = array(
-		array(
-			'cat'      => 'Desarrollo',
-			'days_ago' => 3,
-			'minutes'  => 4,
-			'title'    => 'Caaguazú lanza programa de reforestación con escuelas rurales',
-			'excerpt'  => 'La iniciativa involucra a más de 40 instituciones educativas en la plantación de especies nativas y eucalipto de ciclo corto.',
-			'content'  => '<p>La Secretaría de Desarrollo del departamento presentó un programa de reforestación que involucra a escuelas rurales de todo Caaguazú. Durante los próximos seis meses, estudiantes y docentes participarán de jornadas de plantación en terrenos linderos a los establecimientos educativos.</p><p>El proyecto busca recuperar superficie forestal nativa y, al mismo tiempo, dar continuidad al ciclo productivo del eucalipto que sostiene buena parte de la industria maderera local.</p>',
-		),
-		array(
-			'cat'      => 'Cultura',
-			'days_ago' => 9,
-			'minutes'  => 3,
-			'title'    => 'Festival de la Madera celebra su 15ª edición',
-			'excerpt'  => 'Tres días de exposiciones, talleres de carpintería tradicional y gastronomía local en el centro de la ciudad.',
-			'content'  => '<p>Con la participación de carpinteros, talladores y artesanos de toda la Ruta de la Madera, el Festival de la Madera llega a su 15ª edición. La agenda incluye demostraciones en vivo, una feria de productos terminados y espacios gastronómicos con platos típicos.</p><p>La actividad, organizada junto a la Asociación de Madereros, se realiza en la plaza central y es de entrada libre.</p>',
-		),
-		array(
-			'cat'      => 'Gobierno',
-			'days_ago' => 16,
-			'minutes'  => 5,
-			'title'    => 'Nuevas plataformas digitales simplifican trámites departamentales',
-			'excerpt'  => 'Más de 30 gestiones ya pueden iniciarse en línea desde el portal de servicios, reduciendo tiempos de espera presencial.',
-			'content'  => '<p>El departamento avanza en la digitalización de sus trámites más solicitados. Certificados, habilitaciones y consultas que antes requerían presencia física ahora pueden iniciarse desde el portal de Servicios.</p><p>La mesa de entrada seguirá disponible para quienes prefieran hacer el trámite en persona.</p>',
-		),
-		array(
-			'cat'      => 'Turismo',
-			'days_ago' => 23,
-			'minutes'  => 4,
-			'title'    => 'Ykua La Patria suma señalética histórica renovada',
-			'excerpt'  => 'El parque fundacional de Caaguazú estrena cartelería con la historia del manantial y su rol durante la Guerra de la Triple Alianza.',
-			'content'  => '<p>El sitio donde nació Caaguazú en 1845 renovó su señalética para visitantes. Los nuevos carteles narran la historia del manantial, su vínculo con la fundación de la ciudad y el episodio de la Guerra de la Triple Alianza.</p><p>La actualización es parte de un plan más amplio para poner en valor los atractivos turísticos del departamento.</p>',
-		),
-		array(
-			'cat'      => 'Comunidad',
-			'days_ago' => 30,
-			'minutes'  => 3,
-			'title'    => 'Mercado de Abasto amplía su horario los fines de semana',
-			'excerpt'  => 'Productores locales pidieron más horas de venta los sábados y domingos; el municipio respondió ampliando el horario habitual.',
-			'content'  => '<p>A pedido de los feriantes del Mercado de Abasto, el municipio extendió el horario de atención los fines de semana. La medida busca dar más previsibilidad a los productores que llegan desde zonas rurales del departamento.</p><p>El mercado sigue siendo uno de los puntos de encuentro más concurridos del centro de Caaguazú.</p>',
-		),
-	);
-
-	foreach ( $news as $n ) {
-		$post_id = wp_insert_post( array(
-			'post_type'    => 'post',
-			'post_status'  => 'publish',
-			'post_title'   => $n['title'],
-			'post_excerpt' => $n['excerpt'],
-			'post_content' => $n['content'],
-			'post_date'    => date( 'Y-m-d H:i:s', strtotime( '-' . $n['days_ago'] . ' days' ) ),
-		) );
-
-		if ( ! $post_id || is_wp_error( $post_id ) ) {
-			continue;
-		}
-
-		update_post_meta( $post_id, '_caaguazu_read_minutes', $n['minutes'] );
-		update_post_meta( $post_id, '_caaguazu_demo', 1 );
-
-		if ( isset( $cats['children'][ $n['cat'] ] ) ) {
-			wp_set_post_terms( $post_id, array( (int) $cats['children'][ $n['cat'] ] ), 'category' );
-		}
-	}
+	caaguazu_noticias_ensure_categories();
 }
 
 /**

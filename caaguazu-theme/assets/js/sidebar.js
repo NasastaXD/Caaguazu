@@ -12,9 +12,10 @@
  *   página: dentro de un ecosistema (Turismo/Educación) el drawer del
  *   shell sigue siendo el dueño de la hamburguesa (main.js lo maneja).
  *
- * Además: capa de sonido de interfaz — encendida por default (pedido de
- * usuario), con botón opt-OUT (aria-pressed) en el pie del rail, recordado
- * en localStorage. Tres timbres distintos por Web Audio, todos cortos y
+ * Además: capa de sonido de interfaz — apagada por default (opt-IN: un
+ * portal cívico no debe sonar antes de que alguien lo pida), con botón
+ * aria-pressed en el pie del rail para prenderla, recordado en localStorage.
+ * Tres timbres distintos por Web Audio, todos cortos y
  * suaves ("quiet civic motion" también en audio, nunca un beep de UI
  * genérico): `tick()` para clicks/toggles, `chime()` para el cierre del
  * splash de entrada (un acorde breve, no un tick más) y `whoosh()` para el
@@ -36,11 +37,12 @@
 
   var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* --- Sonido de interfaz (ON por default, opt-out; compartido con el
+  /* --- Sonido de interfaz (OFF por default, opt-in: un portal cívico no
+     arranca haciendo ruido sin que nadie lo haya pedido; compartido con el
      drawer del shell, el telón de transición y el splash) --- */
   var SOUND_KEY = 'cgzSound';
-  var soundOn = true;
-  try { soundOn = localStorage.getItem(SOUND_KEY) !== '0'; } catch (e) {}
+  var soundOn = false;
+  try { soundOn = localStorage.getItem(SOUND_KEY) === '1'; } catch (e) {}
   var audioCtx = null;
 
   function ctx() {
@@ -137,12 +139,22 @@
 
     var isOpen = function () { return rail.classList.contains('open'); };
 
+    // Focosables visibles dentro del rail — usado por el focus trap del
+    // drawer móvil (Tab/Shift+Tab no debe poder escaparse hacia contenido
+    // tapado detrás del scrim).
+    var getFocusable = function () {
+      var els = rail.querySelectorAll('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])');
+      return Array.prototype.filter.call(els, function (el) { return el.offsetParent !== null; });
+    };
+
     var setOpen = function (open, silent) {
       rail.classList.toggle('open', open);
       toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
       if (mqMobile.matches) {
         scrim && scrim.classList.toggle('open', open);
         rail.setAttribute('aria-hidden', open ? 'false' : 'true');
+        // Bloquea el scroll del body detrás del drawer mientras está abierto.
+        document.body.classList.toggle('drawer-open', open);
         if (open) {
           toggle.focus();
         } else if (opener) {
@@ -158,6 +170,7 @@
     // Estado inicial por modo: en escritorio se restaura lo persistido;
     // en móvil arranca cerrado y oculto para el lector de pantalla.
     var syncMode = function () {
+      document.body.classList.remove('drawer-open');
       if (mqMobile.matches) {
         rail.classList.remove('open');
         scrim && scrim.classList.remove('open');
@@ -197,6 +210,21 @@
       if (e.key === 'Escape' && isOpen()) {
         setOpen(false);
         if (!mqMobile.matches) { toggle.focus(); }
+        return;
+      }
+      // Focus trap: en el drawer móvil, Tab no debe poder salir hacia
+      // contenido tapado detrás del scrim.
+      if (e.key === 'Tab' && mqMobile.matches && isOpen()) {
+        var focusables = getFocusable();
+        if (!focusables.length) { return; }
+        var first = focusables[0], last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
       }
     });
     document.addEventListener('click', function (e) {

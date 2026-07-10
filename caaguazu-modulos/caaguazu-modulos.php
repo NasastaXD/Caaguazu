@@ -3,7 +3,7 @@
  * Plugin Name:       Caaguazú Módulos
  * Plugin URI:        https://caaguazu.net
  * Description:       Módulos de contenido del portal (Noticias, Agenda, Ecosistema, Educación) como plugin — separados del theme para que el sitio funcione con cualquier apariencia y cada módulo se pueda activar/desactivar sin tocar código de presentación. Se registran solos en el nav y en los accesos rápidos del home vía los filtros `caaguazu_nav_items`/`caaguazu_quick_access_items` del theme.
- * Version:           1.8.1
+ * Version:           1.9.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Thiago Juan Manuel Ávalos Crosta
@@ -14,7 +14,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'CAAGUAZU_MODULOS_VERSION', '1.8.1' );
+define( 'CAAGUAZU_MODULOS_VERSION', '1.9.0' );
 define( 'CAAGUAZU_MODULOS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'CAAGUAZU_MODULOS_URI', plugin_dir_url( __FILE__ ) );
 
@@ -91,3 +91,37 @@ function caaguazu_modulos_flatten_category_base() {
 	}
 }
 add_action( 'admin_init', 'caaguazu_modulos_flatten_category_base' );
+
+/**
+ * Los seeders de Noticias/Agenda/Educación (y el seeder de artesanos del
+ * theme) marcaban cada post que inventaban con meta `_caaguazu_demo = 1`.
+ * Un sitio que ya venía de una versión anterior de este plugin puede tener
+ * esas 13 entradas demo publicadas — dejaron de sembrarse, pero lo ya
+ * publicado no se borra solo. Esta migración las manda a la Papelera (nunca
+ * borrado permanente: `wp_trash_post()`, no `wp_delete_post( $id, true )`)
+ * la primera vez que un admin entra a wp-admin después de actualizar,
+ * mismo patrón catch-up que el resto de este archivo. Si alguien ya las
+ * había editado a mano hasta volverlas contenido real, siguen recuperables
+ * desde la Papelera — no se pierde nada de forma irreversible.
+ */
+function caaguazu_modulos_trash_legacy_demo_content() {
+	if ( get_option( 'caaguazu_modulos_demo_content_trashed_v1' ) ) {
+		return;
+	}
+
+	$demo_ids = get_posts( array(
+		'post_type'      => array( 'post', 'caaguazu_artisan' ),
+		'post_status'    => 'any',
+		'posts_per_page' => -1,
+		'fields'         => 'ids',
+		'meta_key'       => '_caaguazu_demo',
+		'meta_value'     => '1',
+	) );
+
+	foreach ( $demo_ids as $post_id ) {
+		wp_trash_post( $post_id );
+	}
+
+	update_option( 'caaguazu_modulos_demo_content_trashed_v1', 1 );
+}
+add_action( 'admin_init', 'caaguazu_modulos_trash_legacy_demo_content' );
