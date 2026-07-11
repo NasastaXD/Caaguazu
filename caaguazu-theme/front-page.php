@@ -89,7 +89,7 @@ $necesito_items = array(
 	array( 'icon' => 'building', 'label' => __( 'Encontrar una institución', 'caaguazu' ),   'url' => post_type_exists( 'institucion' ) ? get_post_type_archive_link( 'institucion' ) : caaguazu_page_url( 'contacto' ) ),
 	array( 'icon' => 'pin',      'label' => __( 'Descubrir lugares', 'caaguazu' ),           'url' => post_type_exists( 'lugar' ) ? get_post_type_archive_link( 'lugar' ) : caaguazu_page_url( 'turismo' ) ),
 	array( 'icon' => 'news',     'label' => __( 'Leer noticias', 'caaguazu' ),               'url' => caaguazu_category_url( 'noticias' ) ),
-	array( 'icon' => 'mail',     'label' => __( 'Enviar información', 'caaguazu' ),          'url' => caaguazu_page_url( 'contacto' ) ),
+	array( 'icon' => 'mail',     'label' => __( 'Enviar información', 'caaguazu' ),          'url' => caaguazu_proposal_url() ),
 	array( 'icon' => 'target',   'label' => __( 'Reportar información desactualizada', 'caaguazu' ), 'url' => caaguazu_page_url( 'contacto' ) ),
 );
 ?>

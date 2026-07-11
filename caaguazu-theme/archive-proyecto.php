@@ -55,7 +55,7 @@ get_header(); ?>
 			__( 'En preparación', 'caaguazu' ),
 			__( 'Los proyectos digitales se irán incorporando progresivamente.', 'caaguazu' ),
 			__( 'Esta sección reunirá iniciativas reales vinculadas a la ciudad.', 'caaguazu' ),
-			array( 'label' => __( 'Proponer proyecto', 'caaguazu' ), 'url' => caaguazu_page_url( 'contacto' ) )
+			array( 'label' => __( 'Proponer proyecto', 'caaguazu' ), 'url' => caaguazu_proposal_url( 'proyecto' ) )
 		);
 	endif; ?>
 </div>

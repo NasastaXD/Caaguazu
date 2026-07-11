@@ -55,7 +55,7 @@ get_header(); ?>
 			__( 'Sin instituciones todavía', 'caaguazu' ),
 			__( 'Todavía no hay instituciones registradas.', 'caaguazu' ),
 			__( 'Esta sección reunirá información verificada de instituciones locales.', 'caaguazu' ),
-			array( 'label' => __( 'Proponer institución', 'caaguazu' ), 'url' => caaguazu_page_url( 'contacto' ) )
+			array( 'label' => __( 'Proponer institución', 'caaguazu' ), 'url' => caaguazu_proposal_url( 'institucion' ) )
 		);
 	endif; ?>
 </div>

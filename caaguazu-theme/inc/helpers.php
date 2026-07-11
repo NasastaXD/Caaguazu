@@ -245,6 +245,16 @@ function caaguazu_page_url( $slug ) {
 }
 
 /**
+ * URL de la página "Proponer" (inc/proposal-form.php), con el tipo
+ * preseleccionado vía `?tipo=` si se pasa uno — usado por los CTA
+ * "Proponer institución"/"Proponer un lugar"/etc. de los archivos de V5.
+ */
+function caaguazu_proposal_url( $tipo = '' ) {
+	$url = caaguazu_page_url( 'proponer' );
+	return $tipo ? add_query_arg( 'tipo', $tipo, $url ) : $url;
+}
+
+/**
  * front-page.php y algunos page-templates/ (Contacto, Reportar) arman su
  * HTML a mano y nunca llaman a `the_content()` — perfecto para el diseño
  * fijo del sitio, pero le saca a un editor visual (Elementor, Brizy) el

@@ -47,19 +47,35 @@
 	];
 
 	/**
-	 * Checklist puramente mental: no persiste en post meta (no hay campo
-	 * para esto en el MVP), se reinicia al recargar. Es un recordatorio,
-	 * no un dato — evita sobre-construir el panel.
+	 * Estado del checklist en post meta: "0,2,4" (índices marcados,
+	 * separados por coma) <-> { 0: true, 2: true, 4: true }. Persiste entre
+	 * sesiones de edición — antes era puramente mental (useState local, se
+	 * perdía al recargar); pedido explícito del equipo editorial.
 	 */
-	function EditorialChecklist() {
-		var state    = useState( {} );
-		var checked  = state[ 0 ];
-		var setChecked = state[ 1 ];
+	function parseChecklistState( raw ) {
+		var checked = {};
+		( raw || '' ).split( ',' ).forEach( function( piece ) {
+			if ( piece !== '' ) { checked[ piece ] = true; }
+		} );
+		return checked;
+	}
+
+	function serializeChecklistState( checked ) {
+		return Object.keys( checked ).filter( function( key ) { return checked[ key ]; } ).join( ',' );
+	}
+
+	/**
+	 * Recibe meta/updateMeta ya resueltos por CaaguazuPanel (una sola
+	 * lectura/escritura de post meta compartida con MetaFields, en vez de
+	 * que cada sub-componente tenga su propio useSelect/useDispatch).
+	 */
+	function EditorialChecklist( props ) {
+		var checked = parseChecklistState( props.meta._czu_checklist_state );
 
 		function toggle( index ) {
 			var next = Object.assign( {}, checked );
 			next[ index ] = ! next[ index ];
-			setChecked( next );
+			props.updateMeta( '_czu_checklist_state', serializeChecklistState( next ) );
 		}
 
 		return el(
@@ -79,17 +95,9 @@
 		);
 	}
 
-	function MetaFields() {
-		var meta = useSelect( function( select ) {
-			return select( 'core/editor' ).getEditedPostAttribute( 'meta' ) || {};
-		}, [] );
-		var editPost = useDispatch( 'core/editor' ).editPost;
-
-		function updateMeta( key, value ) {
-			var next = {};
-			next[ key ] = value;
-			editPost( { meta: next } );
-		}
+	function MetaFields( props ) {
+		var meta = props.meta;
+		var updateMeta = props.updateMeta;
 
 		return el(
 			Fragment,
@@ -129,8 +137,20 @@
 	}
 
 	function CaaguazuPanel() {
-		if ( ! useIsSupportedPostType() ) {
+		var isSupported = useIsSupportedPostType();
+		var meta = useSelect( function( select ) {
+			return select( 'core/editor' ).getEditedPostAttribute( 'meta' ) || {};
+		}, [] );
+		var editPost = useDispatch( 'core/editor' ).editPost;
+
+		if ( ! isSupported ) {
 			return null;
+		}
+
+		function updateMeta( key, value ) {
+			var next = {};
+			next[ key ] = value;
+			editPost( { meta: next } );
 		}
 
 		return el(
@@ -141,14 +161,14 @@
 				className: 'czu-panel',
 			},
 			el( 'p', { className: 'czu-panel-intro' }, __( 'Antes de publicar:', 'caaguazu-editor-ux' ) ),
-			el( EditorialChecklist ),
+			el( EditorialChecklist, { meta: meta, updateMeta: updateMeta } ),
 			el(
 				'p',
 				{ className: 'czu-panel-note' },
 				__( 'Escribí con tus palabras y verificá los datos con una fuente real: nada de contenido inventado o copiado.', 'caaguazu-editor-ux' )
 			),
 			el( 'hr', { className: 'czu-panel-sep' } ),
-			el( MetaFields ),
+			el( MetaFields, { meta: meta, updateMeta: updateMeta } ),
 			el( 'hr', { className: 'czu-panel-sep' } ),
 			el( Button, {
 				variant: 'secondary',
