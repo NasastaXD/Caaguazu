@@ -184,6 +184,8 @@ require get_template_directory() . '/inc/spam-guard.php';
 require get_template_directory() . '/inc/mailer.php';
 require get_template_directory() . '/inc/cpt-report.php';
 require get_template_directory() . '/inc/report-form.php';
+require get_template_directory() . '/inc/cpt-proposal.php';
+require get_template_directory() . '/inc/proposal-form.php';
 require get_template_directory() . '/inc/contact-form.php';
 require get_template_directory() . '/inc/glossary.php';
 require get_template_directory() . '/inc/seo.php';

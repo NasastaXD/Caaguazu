@@ -3,7 +3,7 @@
  * Plugin Name:       Caaguazú Editor UX
  * Plugin URI:        https://caaguazu.net
  * Description:       Simplifica el editor de bloques (Gutenberg) para el contenido cívico del portal: menos bloques, menos ruido visual, vista previa más cómoda y un panel editorial propio con metadatos de confianza. Gutenberg sigue siendo el motor — este plugin sólo reordena la experiencia alrededor.
- * Version:           1.1.0
+ * Version:           1.2.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Thiago Juan Manuel Ávalos Crosta
@@ -14,7 +14,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'CZU_VERSION', '1.1.0' );
+define( 'CZU_VERSION', '1.2.0' );
 define( 'CZU_DIR', plugin_dir_path( __FILE__ ) );
 define( 'CZU_URI', plugin_dir_url( __FILE__ ) );
 

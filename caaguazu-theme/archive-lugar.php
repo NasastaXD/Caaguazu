@@ -56,7 +56,7 @@ get_header(); ?>
 			__( 'Contenido en preparación', 'caaguazu' ),
 			__( 'Contenido en preparación.', 'caaguazu' ),
 			__( 'Pronto se incorporarán lugares, historias y referencias locales revisadas.', 'caaguazu' ),
-			array( 'label' => __( 'Enviar información', 'caaguazu' ), 'url' => caaguazu_page_url( 'contacto' ) )
+			array( 'label' => __( 'Proponer un lugar', 'caaguazu' ), 'url' => caaguazu_proposal_url( 'lugar' ) )
 		);
 	endif; ?>
 </div>

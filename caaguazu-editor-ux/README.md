@@ -84,7 +84,7 @@ de mostrar contenido viejo. Funciona igual para cualquier post type de
 
 ## Meta fields agregados
 
-Los tres registrados en cada post type de `CZU_POST_TYPES`, con
+Los cuatro registrados en cada post type de `CZU_POST_TYPES`, con
 `show_in_rest`, `auth_callback` limitado a `current_user_can('edit_posts')`,
 y sanitización propia:
 
@@ -93,26 +93,29 @@ y sanitización propia:
 | `_czu_fuente_referencia`       | "Fuente / referencia"         | `sanitize_text_field` |
 | `_czu_responsable_contenido`   | "Responsable del contenido"   | `sanitize_text_field` |
 | `_czu_estado_verificacion`     | "Estado de verificación" (select: Pendiente/Revisado/Verificado/Desactualizado) | whitelist propia — cualquier otro valor cae al vacío |
+| `_czu_checklist_state`         | Checklist editorial (6 checkboxes) | sólo dígitos y comas (`^[0-9]+(,[0-9]+)*$`) — cualquier otra cosa cae al vacío |
 
-Los tres opcionales. "Actualizado el" **no** es un meta propio: se lee
-directo de `post_modified` (WordPress ya lo mantiene solo) — ver
+Los tres primeros opcionales y editoriales (se muestran en el frontend). El
+cuarto (`_czu_checklist_state`) es interno: guarda qué casillas del
+checklist quedaron marcadas (índices posicionales separados por coma, p.
+ej. `"0,2,4"`) para que no se reinicie cada vez que se recarga el editor —
+no se muestra en el frontend, no bloquea publicar, es sólo memoria del
+checklist.
+
+"Actualizado el" **no** es un meta propio: se lee directo de
+`post_modified` (WordPress ya lo mantiene solo) — ver
 `caaguazu_render_trust_meta()` en `caaguazu-theme/inc/helpers.php`, que
-combina estos tres campos con esa fecha nativa para mostrarlos en el
-frontend de Instituciones/Lugares/Servicios/Proyectos (y, si se suma ahí,
-también en Noticias/Agenda/Educación).
-
-El checklist editorial del panel (título claro, resumen agregado, imagen de
-portada, categoría/tipo, fuente verificada, contenido humano) es un
-recordatorio visual y **no se guarda** como dato — se reinicia al recargar
-el editor a propósito, para no sobre-construir el MVP con otro campo de post
-meta.
+combina Fuente/Responsable/Estado con esa fecha nativa para mostrarlos en
+el frontend de Instituciones/Lugares/Servicios/Proyectos (y, si se suma
+ahí, también en Noticias/Agenda/Educación).
 
 ## Limitaciones conocidas
 
 - Sólo cubre lo listado en `CZU_POST_TYPES`. Otros post types del sitio
   (p. ej. Artesanos) siguen con el editor de bloques estándar de WordPress.
-- El checklist no persiste ni bloquea la publicación (es guía, no
-  validación).
+- El checklist persiste (ver tabla arriba) pero no bloquea la publicación —
+  sigue siendo guía, no validación; se puede publicar con casillas sin
+  marcar a propósito.
 - La aproximación visual del canvas no es pixel-perfect al frontend (evita
   fragilidad ante cambios de WordPress/tema).
 - Sin build step: los archivos JS son planos contra los globals `wp.*`
@@ -120,7 +123,5 @@ meta.
 
 ## Próximos pasos posibles
 
-- Sumar un checklist con estado persistido (post meta) si el equipo
-  editorial lo pide explícitamente.
 - Vista previa con selector de ancho custom (tablet) si Escritorio/Celular
   no alcanza.
