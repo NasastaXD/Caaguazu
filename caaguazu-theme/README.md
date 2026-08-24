@@ -129,7 +129,7 @@ Integración ya resuelta:
 
 Cosas a tener en cuenta al instalar ambos plugins en el sitio:
 
-- El plugin Portal redirige `wp-login.php` a `/login` para usuarios no-admin (afecta a todo el sitio, no solo a sus rutas) y reserva los slugs `/login`, `/registro`, `/recuperar`, `/salir`, `/i/{token}`, `/panel(/...)` — evitar crear páginas con esos slugs.
+- El plugin Portal redirige `wp-login.php` a `/czu-login` para usuarios no-admin (afecta a todo el sitio, no solo a sus rutas; el slug no es `/login` a secas para no chocar con el login nativo de wp-admin) y reserva los slugs `/czu-login`, `/registro`, `/recuperar`, `/salir`, `/i/{token}`, `/panel(/...)` — evitar crear páginas con esos slugs.
 - El plugin Locales crea sus propias páginas `/cuenta/` y `/panel-de-mi-local/` al activarse — no hace falta crearlas a mano.
 - Ambos plugins traen su propio auto-updater apuntando a `nasastaxd/turismo` (independiente del `inc/updater.php` de este theme, que apunta a este repo).
 
