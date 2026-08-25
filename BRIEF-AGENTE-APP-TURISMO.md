@@ -1,111 +1,241 @@
 # Brief — Turismo App Czu
 
 **Para:** el agente que construye el APK.
-**De:** el lado del panel (`caaguazu-portal` + `caaguazu-cuentas`, WordPress en `caaguazu.net`).
-**Estado:** contrato propuesto. Del lado del panel todavía no hay API — ver §4.
+**De:** el lado del panel (WordPress en `caaguazu.net`).
 
-Las referencias visuales (`Style`, `Inventario-UI`, `Recorrido-UI`, `Main-bar`, `Articulos`, `Mapa`, `AI`) te las pasa el dueño del proyecto en un zip aparte. Este documento no cubre UI.
-
----
-
-## 1. División de trabajo
-
-| | Lado panel (yo) | Lado app (vos) |
-|---|---|---|
-| Identidad, cuentas, sesiones | ✅ Construyo | ❌ No construyas |
-| Roles y permisos | ✅ Construyo | Consumís |
-| Flujo de revisión editorial | ✅ Construyo | Consumís |
-| Contenido (fichas, eventos, recorridos, artículos) | ✅ Construyo el CRUD y el almacenamiento | Consumís |
-| API REST | ✅ Construyo | Consumís |
-| Tiles del mapa | ✅ Genero y sirvo | Renderizás |
-| Textos e imágenes de UI | ✅ Sirvo por endpoint | Consumís |
-| **La app entera** | ❌ | ✅ **Tuyo** |
-
-**Punto de contacto único: la API de §4.** Nada de acceso directo a la base de datos ni de replicar lógica de permisos del lado de la app.
+Las referencias visuales las pasa el dueño del proyecto en un zip aparte. Acá no hay UI: esto es qué existe, cómo funciona, y qué necesito de vos.
 
 ---
 
-## 2. Qué es el panel (lo que ya existe y vas a consumir)
+# PARTE 1 — Qué tenemos hoy
 
-WordPress con plugins propios. Lo relevante para vos:
+## 1.1 El contexto
 
-**Sistema de identidad propio, separado de los usuarios de WordPress.** Tres tablas: `caaguazu_accounts` (email + hash), `caaguazu_sessions` (guarda solo el hash SHA-256 del token), `caaguazu_grants` (permisos por panel).
+`caaguazu.net` es el portal oficial del departamento de Caaguazú, Paraguay. Tiene varios "ecosistemas" (Turismo, Educación, Noticias, Agenda). **Turismo es uno de ellos, y ya está construido y funcionando en web.**
 
-**Contenido ya modelado.** El CPT `promotur_destino` es la ficha turística, y ya trae los campos que vas a mostrar:
+El sistema de turismo son cinco plugins de WordPress repartidos en dos repositorios:
 
-`gancho` · `portada` · `credito_fotos` · `video` · `lat` · `lng` · `referencia` · `como_llegar` · `estado_camino` · `accesibilidad` · `horario` · `temporada` · `costo` · `servicios` · `duracion` · `contacto` · `fuentes`
-
-**Flujo editorial de 8 estados** — `borrador → enviado → en_revision → necesita_cambios → aprobado → publicado → despublicado → archivado`. Solo `publicado` es visible al público. **La app nunca ve nada que no esté publicado**, salvo el contenido propio de un promotor autenticado.
-
-**Taxonomías:** `promotur_categoria`, `promotur_zona`, `promotur_etiqueta`.
-
----
-
-## 3. Los tres tipos de usuario
-
-Ya existen como roles del panel. No inventes un sistema paralelo.
-
-| Tipo | Qué puede en la app |
+| Plugin | Qué es |
 |---|---|
-| **Usuario** | Leer todo lo publicado. Crear sus propios recorridos. Sin cuenta obligatoria para navegar. |
-| **Promotor** | Lo anterior + crear y editar fichas, que van a la cola de revisión. **No publica.** |
-| **Staff** | Todo, incluido publicar y crear categorías. |
+| `caaguazu-portal` | **El panel.** Panel de promotores turísticos. Es el que te importa. |
+| `caaguazu-cuentas` | Sistema de identidad propio (no usa usuarios de WordPress) |
+| `caaguazu-locales` | Directorio de comercios: reservas por WhatsApp, reseñas, mapa |
+| `caaguazu-sso-cead` | Entrada de un clic desde el colegio CEAD |
+| `caaguazu-turismo` | 21 páginas estáticas de contenido turístico (historia, gastronomía, cultura) |
 
-El rol viene en la respuesta del login. **Gateá la UI por lo que devuelve el servidor, nunca por lógica local** — el servidor revalida cada escritura de todos modos.
+La app es **un cliente nuevo sobre ese sistema que ya existe**, no un reemplazo.
+
+## 1.2 El panel no es una pantalla de wp-admin
+
+Esto es lo primero que hay que entender: `caaguazu-portal` **no es un plugin que agrega pantallas al escritorio de WordPress**. Es una aplicación completa montada sobre rutas propias:
+
+```
+/czu-login              login propio
+/registro               alta, solo por invitación
+/recuperar              recuperación de contraseña
+/salir                  cerrar sesión
+/i/{token}              link de invitación
+/turismo/panel/...      el panel
+/promotur-manifest.webmanifest, /promotur-sw.js, /promotur-offline   PWA
+```
+
+Tiene **su propio shell visual** —sidebar + topbar + contenido, modo claro/oscuro— y deliberadamente **no usa el theme del sitio**. Es instalable como PWA. Un promotor nunca ve wp-admin: entra a `/czu-login`, cae en `/turismo/panel` y trabaja ahí adentro.
+
+O sea: **ya existe una "app" de gestión, en web.** Lo que vas a construir es la app de consumo (y parcialmente de carga) en Android.
+
+## 1.3 Cómo se usa hoy, paso a paso
+
+Este es el flujo real, no una idealización:
+
+1. **Un promotor entra** a `/czu-login` con email y contraseña. No es un usuario de WordPress (§1.4).
+2. **Cae en el panel**, sección Inicio: su pulso — sus fichas por estado, tareas asignadas, qué falta revisar.
+3. **Crea una ficha** en "Nueva ficha". El editor es guiado: campos estructurados por grupo (Identidad, Ubicación, Datos prácticos, Editorial), no un campo de texto libre.
+4. **Un checklist en vivo** le muestra qué falta. Los campos obligatorios son: gancho, foto de portada, crédito de fotos, latitud, longitud, cómo llegar, horario y costo. **El checklist bloquea el envío** hasta que estén todos.
+5. **Pone el pin en el mapa** haciendo clic, y lo arrastra para ajustar. No hay geocodificación automática — se decidió así porque falla con direcciones paraguayas.
+6. **Envía a revisión.** La ficha pasa de `borrador` a `enviado`.
+7. **Aparece en la "Cola de revisión"** de quien tenga permiso de revisar. Ese revisor se la asigna ("asignarme"), la abre en vista lado a lado, y la aprueba o la devuelve con feedback escrito.
+8. **Devuelta** → estado `necesita_cambios`, vuelve al promotor con el comentario. **Aprobada** → `aprobado` → `publicado`, y recién ahí es visible al público.
+
+Hay además un **modo "Salida de campo"**: captura rápida de foto + nota + GPS que **se guarda offline y se sincroniza como borrador cuando vuelve la conexión**. Ya está resuelto ese problema del lado del panel — tenelo en cuenta porque la app probablemente deba hacer lo mismo, mejor.
+
+## 1.4 La identidad es propia, no de WordPress
+
+Decisión de seguridad, tomada a propósito: **las personas del panel no son usuarios de WordPress.** El objetivo fue eliminar la superficie de ataque de wp-admin y XML-RPC para las cuentas de gente real.
+
+Tres tablas propias:
+
+| Tabla | Qué guarda |
+|---|---|
+| `caaguazu_accounts` | email (único), hash de contraseña, nombre, teléfono, estado |
+| `caaguazu_sessions` | **solo el hash SHA-256 del token** — nunca el token en claro |
+| `caaguazu_grants` | permisos: `(cuenta × panel × rol)`, con override de capabilities por cuenta |
+
+Detalles que importan:
+
+- **Sesión:** cookie firmada con HMAC usando las sales de WordPress, `HttpOnly` + `Secure` + `SameSite=Lax`. Una cookie manipulada se descarta antes de tocar la base.
+- **Contraseñas:** bcrypt. Verifica también hashes phpass heredados y los regraba solo, para no obligar a nadie a resetear.
+- **Usuario de servicio:** WordPress exige un autor válido en cada entrada, pero nadie del panel es usuario de WP. La solución fue un único usuario bloqueado (`caaguazu-servicio`) que figura como autor técnico; el dueño real va en un meta.
+- **Modelo de paneles:** `caaguazu_grants` está diseñado para que una cuenta tenga rol en **varios paneles**. Hoy existe el panel `promotor`; el sistema se pensó desde el principio para admitir otros. Por eso la app encaja sin inventar nada.
+
+## 1.5 Permisos: dos ejes, no uno
+
+Acá está la parte que se suele pasar por alto. Los permisos **no dependen solo del rol**.
+
+**Eje 1 — Rol en el panel:**
+
+| Rol | Qué puede |
+|---|---|
+| **Promotor** | Todo: crear, editar, revisar, publicar, asignar tareas, curar destacados, moderar, gestionar equipo, ver reportes, biblioteca, estructura |
+| **Mini Promotor** | Crear borradores, editar sus fichas, ver sus tareas, editar su perfil |
+| **Visitante** | Ver el panel y editar su perfil |
+
+**Eje 2 — Nivel de confianza** (meta de cuenta, sube con el trabajo hecho):
+
+| Nivel | Desbloquea |
+|---|---|
+| **Aprendiz** | — |
+| **Promotor Jr** | Editar fichas ya publicadas |
+| **De confianza** | **Publicar directo, sin pasar por revisión** |
+
+O sea: un Mini Promotor que llega a "De confianza" puede publicar sin revisión. **La app tiene que gatear por lo que le diga el servidor, no por el rol solo.**
+
+Toda la UI del panel se gatea por capability, nunca por rol hardcodeado. Seguí ese criterio.
+
+## 1.6 Qué más hay en el ecosistema
+
+**`caaguazu-locales`** — directorio de comercios. CPT `cgz_local` con cuatro tipos (restaurante, hotel, comercio, atracción), **con coordenadas propias**, reservas por WhatsApp (arma el mensaje y abre la app, sin pasarela de pago), y un sistema de reseñas con estrellas, fotos, votos y respuestas del dueño.
+
+> **Esto te importa:** hay **dos entidades distintas con coordenadas** — `promotur_destino` (ficha turística) y `cgz_local` (comercio). Ambas son pines en el mapa. Ver §5.1.
+
+**`caaguazu-turismo`** — 21 páginas estáticas ya sembradas (historia, ruta de la madera, artesanos, platos típicos, festividades, glosario guaraní, cómo llegar…). Contenido humano, escrito. Hoy son páginas web; está sin decidir si entran a la app.
+
+**`caaguazu-sso-cead`** — el colegio CEAD tiene un curso de Servicios Turísticos. Sus alumnos y docentes entran al panel con un clic desde el panel del colegio, sin registrarse de nuevo, vía un código opaco de un solo uso canjeado servidor a servidor. Los alumnos entran como Mini Promotor. *(El código está listo; el endpoint del colegio todavía no existe.)*
+
+**Auditoría** — cada cambio de estado editorial y cada login queda registrado en `promotur_audit_log`.
+
+**Idiomas** — el panel ya tiene selector ES / EN / GN.
+
+## 1.7 Por qué está construido así
+
+Un principio que conviene respetar: **el theme no sabe nada de turismo.** Expone filtros genéricos (`caaguazu_nav_items`, `caaguazu_tourism_shell_items`) y cada plugin se registra solo. Si desactivás un plugin, el sitio no se rompe: desaparece su sección y nada más.
+
+La misma lógica aplica a la app: **es un cliente más de un backend que ya existe**, no un sistema paralelo.
 
 ---
 
-## 4. El contrato: la API
+# PARTE 2 — Qué quiero
 
-> **Importante para tu planificación: hoy esta API no existe.** El panel corre sobre `admin-ajax` y templates renderizados en servidor, con cero `register_rest_route`. Además, los metadatos propios (lat, lng, horario, costo, estado) están marcados `show_in_rest: false`, así que tampoco salen por los endpoints nativos de WordPress.
->
-> La voy a construir contra este contrato. **Vos arrancá contra mocks** (§5) — no esperes.
+## 2.1 El objetivo
+
+Una app Android para turistas y visitantes de Caaguazú, con cinco piezas:
+
+| Pieza | Qué es |
+|---|---|
+| **Inventario de Atractivos** | Lista navegable de las atracciones, ordenada por categorías con icono y color |
+| **Mapa** | Pines de todo el inventario. Pieza central. |
+| **Recorridos** | El usuario arma su propia ruta (o toma una prehecha) y la manda a Google Maps |
+| **Artículos** | Noticias, datos curiosos, historias |
+| **IA** | Al final del desarrollo. Deja la arquitectura preparada. |
+
+## 2.2 Y lo que quiero de vos, concretamente
+
+**Que construyas la app entera, contra la API del panel, sin duplicar nada de lo que el panel ya resuelve.**
+
+Eso significa:
+
+1. **No construyas identidad.** Ni login propio, ni almacenamiento de contraseñas, ni tabla de usuarios. Consumís `/auth/login` y guardás un token.
+2. **No construyas permisos.** El servidor te dice qué puede hacer la cuenta. Gateás la UI con eso.
+3. **No construyas flujo de revisión.** Ya existe, con ocho estados y cola de revisión. Si un promotor carga desde la app, la ficha entra a ese mismo flujo.
+4. **No construyas una base de contenido.** Caché local sí, descartable por definición. Fuente de verdad, no.
+5. **Sí construí** todo lo demás: navegación, mapa con tiles, armador de recorridos, lector de artículos, caché offline, i18n, y la carga de contenido desde el teléfono.
+
+Y una cosa más: **decime si el contrato no te sirve.** Está propuesto, no grabado en piedra. Cambiarlo antes de que yo lo implemente es barato.
+
+## 2.3 División de trabajo
+
+| | Panel (yo) | App (vos) |
+|---|---|---|
+| Identidad, sesiones, roles, niveles | ✅ | Consumís |
+| Flujo de revisión editorial | ✅ | Consumís |
+| Almacenamiento de contenido + CRUD del panel | ✅ | Consumís |
+| API REST | ✅ | Consumís |
+| Tiles del mapa | ✅ genero y sirvo | Renderizás |
+| Textos e imágenes de UI | ✅ sirvo por endpoint | Consumís |
+| **La app** | ❌ | ✅ |
+
+Punto de contacto único: **la API.** Nada de acceso directo a la base.
+
+---
+
+# PARTE 3 — El contrato
+
+## 3.1 Aviso importante
+
+**Hoy esta API no existe.** El panel corre sobre `admin-ajax` y templates renderizados en servidor: cero `register_rest_route`. Y aunque los CPTs tienen `show_in_rest: true`, **todos los metadatos propios están en `show_in_rest: false`** — lat, lng, horario, costo y el estado editorial no salen por los endpoints nativos de WordPress.
+
+Construirla es mi parte del trabajo. **Vos arrancá contra mocks** (§3.5).
 
 Namespace: `/wp-json/czu-app/v1/`
 
-### 4.1 Autenticación
+## 3.2 Autenticación
 
-Las sesiones actuales son cookie firmada con HMAC (`HttpOnly`, `SameSite=Lax`) — sirve para navegador, no para app nativa. Voy a agregar modo **bearer** sobre la misma tabla de sesiones.
+Las sesiones de hoy son cookie firmada — sirve para navegador, no para app nativa. Voy a agregar modo **bearer** sobre la misma tabla (que ya guarda tokens hasheados, así que es una extensión chica, no un sistema paralelo).
 
 ```http
 POST /auth/login
 { "email": "…", "password": "…" }
 
-200 → { "token": "…", "expires_at": "2026-09-08T…Z",
-        "cuenta": { "id": 41, "nombre": "…", "email": "…", "rol": "promotor" } }
+200 → {
+  "token": "…",
+  "expires_at": "2026-09-08T…Z",
+  "cuenta": {
+    "id": 41, "nombre": "…", "email": "…",
+    "rol": "promotur_mini",
+    "nivel": "jr",
+    "permisos": [
+      "promotur_view_panel",
+      "promotur_create_draft",
+      "promotur_edit_destino",
+      "promotur_edit_published",
+      "promotur_view_own_tasks",
+      "promotur_edit_profile"
+    ]
+  }
+}
 ```
 
-Después: `Authorization: Bearer <token>` en cada request autenticado.
+Usá **`permisos`** para gatear la UI, no `rol` ni `nivel` — ese array ya resuelve la combinación de los dos ejes de §1.5. Son los nombres reales de capability que usa el panel, así los dos lados hablan el mismo vocabulario.
 
-- `401` → token inválido o vencido. Borrá el token local y mandá al login.
-- `403` → autenticado pero sin permiso. No reintentes.
-- Guardá el token en almacenamiento seguro del sistema, no en preferencias planas.
-- `POST /auth/logout` invalida el token del lado servidor.
+El set completo posible: `promotur_view_panel` · `promotur_create_draft` · `promotur_edit_destino` · `promotur_edit_published` · `promotur_publish_destino` · `promotur_review_content` · `promotur_assign_tasks` · `promotur_view_own_tasks` · `promotur_curate_featured` · `promotur_moderate` · `promotur_manage_team` · `promotur_manage_users` · `promotur_view_reports` · `promotur_manage_media` · `promotur_manage_structure` · `promotur_edit_profile`
 
-**Navegar no requiere cuenta.** Solo escribir y sincronizar recorridos propios.
+Los dos que salen del nivel de confianza y no del rol son `promotur_edit_published` (nivel Jr) y `promotur_publish_destino` (nivel De confianza) — por eso no alcanza con mirar el rol.
 
-### 4.2 Endpoints
+- `401` → token vencido o inválido. Borrá el token y mandá al login.
+- `403` → autenticado sin permiso. No reintentes.
+- Guardá el token en almacenamiento seguro del sistema.
+- **Navegar no requiere cuenta.** Solo escribir y sincronizar recorridos propios.
+
+## 3.3 Endpoints
 
 | Método | Ruta | Auth | Para qué |
 |---|---|---|---|
 | `POST` | `/auth/login` | — | Token |
 | `POST` | `/auth/logout` | bearer | Cerrar sesión |
 | `GET` | `/categorias` | — | Categorías con icono y color |
-| `GET` | `/inventario` | — | Fichas publicadas. Filtros: `categoria`, `zona`, `bbox`, `page` |
+| `GET` | `/inventario` | — | Filtros: `categoria`, `zona`, `bbox`, `page` |
 | `GET` | `/inventario/{id}` | — | Ficha completa |
 | `GET` | `/eventos` | — | Filtros: `desde`, `hasta` |
 | `GET` | `/mapa/markers` | — | Payload liviano para el mapa |
 | `GET` | `/recorridos` | — | Prehechos publicados |
 | `GET` | `/recorridos/{id}` | — | Con bloque de historia |
 | `GET·POST·PUT·DELETE` | `/mis-recorridos` | bearer | Recorridos del usuario |
-| `GET` | `/articulos` | — | Listado paginado |
-| `GET` | `/articulos/{id}` | — | Artículo completo |
-| `GET` | `/strings/{locale}` | — | Textos de UI (§7) |
-| `GET` | `/media-manifest` | — | Imágenes de UI (§7) |
-| `POST·PUT` | `/contenido` | bearer + promotor | Alta y edición de fichas desde la app |
+| `GET` | `/articulos`, `/articulos/{id}` | — | Artículos |
+| `GET` | `/strings/{locale}` | — | Textos de UI |
+| `GET` | `/media-manifest` | — | Imágenes de UI |
+| `POST·PUT` | `/contenido` | bearer + permiso | Alta y edición de fichas desde la app |
 | `GET` | `/sync?since={iso8601}` | — | Delta para caché offline |
 
-### 4.3 Payloads
+## 3.4 Payloads
 
 **`GET /categorias`**
 
@@ -117,7 +247,7 @@ Después: `Authorization: Bearer <token>` en cada request autenticado.
 ]
 ```
 
-`marker` es un PNG pre-renderizado del pin. **No compongas el pin en el cliente** — el color y el icono se resuelven del lado servidor al guardar la categoría.
+`marker` es un PNG pre-renderizado. **No compongas el pin en el cliente.**
 
 **`GET /mapa/markers`** — separado de `/inventario` a propósito: el mapa necesita muchos pines livianos, no fichas completas.
 
@@ -132,28 +262,23 @@ Después: `Authorization: Bearer <token>` en cada request autenticado.
 
 ```json
 {
-  "id": 41,
-  "tipo": "destino",
-  "titulo": "…",
-  "gancho": "…",
+  "id": 41, "tipo": "destino", "titulo": "…", "gancho": "…",
   "categoria": { "id": 12, "nombre": "Paisaje Natural", "color": "#2E7D32" },
   "zona": { "id": 3, "nombre": "…" },
   "coordenadas": { "lat": -25.4669, "lng": -56.0175 },
   "portada": { "url": "…", "credito": "…" },
   "galeria": [ { "url": "…" } ],
   "video": null,
-  "practicos": {
-    "horario": "…", "costo": "…", "duracion": "…",
-    "servicios": "…", "temporada": "…", "contacto": "…"
-  },
-  "acceso": {
-    "como_llegar": "…", "referencia": "…",
-    "estado_camino": "asfalto", "accesibilidad": "…"
-  },
+  "practicos": { "horario": "…", "costo": "…", "duracion": "…",
+                 "servicios": "…", "temporada": "…", "contacto": "…" },
+  "acceso": { "como_llegar": "…", "referencia": "…",
+              "estado_camino": "asfalto", "accesibilidad": "…" },
   "articulo_html": "…",
   "actualizado": "2026-08-20T14:00:00Z"
 }
 ```
+
+Los campos salen tal cual del modelo que ya existe (§1.3, paso 3).
 
 **`GET /eventos`**
 
@@ -173,137 +298,105 @@ Después: `Authorization: Bearer <token>` en cada request autenticado.
 
 ```json
 {
-  "id": 88,
-  "tipo": "prehecho",
-  "titulo": "…",
-  "duracion_estimada": "4h",
+  "id": 88, "tipo": "prehecho", "titulo": "…", "duracion_estimada": "4h",
   "paradas": [
     { "orden": 1, "ref_tipo": "destino", "ref_id": 41, "nota": "" },
     { "orden": 2, "ref_tipo": "evento",  "ref_id": 12, "nota": "" }
   ],
-  "historia": {
-    "introduccion": "…",
-    "correlacion": "…",
-    "personas": [],
-    "curiosidades": [],
-    "articulos_ref": [ 55 ]
-  }
+  "historia": { "introduccion": "…", "correlacion": "…",
+                "personas": [], "curiosidades": [], "articulos_ref": [ 55 ] }
 }
 ```
 
 `historia` viene vacío en los recorridos de usuario y completo en los prehechos.
 
-**`POST /mis-recorridos`** — mandá solo `titulo` y `paradas`. `costo_total` y compatibilidad de fechas **se calculan**, no se envían ni se guardan.
+En `POST /mis-recorridos` mandá solo `titulo` y `paradas`. Costo total y compatibilidad de fechas **se calculan** de las paradas — no se envían ni se guardan.
+
+Export a Google Maps, del lado del cliente:
+`https://www.google.com/maps/dir/?api=1&waypoints=lat,lng|lat,lng…`
+
+## 3.5 Arrancá sin esperarme
+
+1. Mock server con los JSON de §3.4.
+2. URL base en configuración, no hardcodeada.
+3. Todo el acceso a red aislado en una capa: cuando llegue la API real, cambiás una implementación.
+4. Avisá cuando tengas los mocks andando y validamos endpoint por endpoint.
 
 ---
 
-## 5. Cómo arrancar sin esperar la API
+# PARTE 4 — Definiciones
 
-No te bloquees. Los payloads de §4.3 son el contrato:
+## 4.1 Mapa
 
-1. Levantá un mock server con esos JSON fijos.
-2. Poné la URL base en configuración, no hardcodeada.
-3. Aislá todo el acceso a red en una capa: cuando la API real esté, cambiás una implementación y nada más.
-4. Cuando la tengas, avisame y validamos contra los payloads reales.
+Decidido: **tiles, no mapa live** (para ahorrar recursos).
 
-Si algo del contrato no te cierra para la app, **decilo antes de que yo lo implemente** — es mucho más barato cambiar el contrato ahora.
+| Pieza | Quién |
+|---|---|
+| Tiles (pirámide raster, zoom ~10–17) | Yo genero y sirvo |
+| Renderizado | Vos |
+| Markers, desde `/mapa/markers` | Vos — **nunca quemados en los tiles** |
+| Icono del pin (PNG por categoría) | Yo |
+| Tap → abre la ficha | Vos |
 
----
+Separar markers de tiles es lo que hace el mapa **retroactivo**: el staff registra un lugar y el pin aparece sin regenerar ni redistribuir nada.
 
-## 6. Mapa
+Pendiente: extensión geográfica y zoom máximo — define si los tiles van embebidos en el APK o se descargan.
 
-Decidido: **tiles, no mapa live.**
+## 4.2 Textos e imágenes: nada hardcodeado
 
-| Pieza | Quién | Qué |
-|---|---|---|
-| Tiles | Yo | Pirámide raster del área de Caaguazú, zoom ~10–17 |
-| Renderizado | Vos | Librería de tiles offline-capable |
-| Markers | Vos | Overlay desde `/mapa/markers` — **nunca quemados en los tiles** |
-| Icono del pin | Yo | Viene en `/categorias` como PNG |
-| Tap en pin | Vos | Abre la ficha (`/inventario/{id}` o `/eventos/{id}`) |
-
-Que los markers vayan **separados** de los tiles es lo que hace el mapa "retroactivo": el staff registra un lugar y el pin aparece sin regenerar ni redistribuir nada.
-
-Pendiente de definir con el dueño del proyecto: extensión geográfica exacta y zoom máximo — determina si los tiles van embebidos en el APK o se descargan.
-
----
-
-## 7. Textos e imágenes: nada hardcodeado
-
-Requisito del proyecto: **cualquier texto o imagen de la interfaz debe poder cambiarse sin publicar una versión nueva del APK.**
+Requisito: **cualquier texto o imagen de interfaz debe cambiarse sin publicar un APK nuevo.**
 
 ```json
 GET /strings/es
-{
-  "nav.inventario": "Inventario",
-  "nav.mapa": "Mapa",
-  "nav.recorridos": "Recorridos",
-  "empty.recorridos": "…"
-}
+{ "nav.inventario": "Inventario", "nav.mapa": "Mapa",
+  "nav.recorridos": "Recorridos", "empty.recorridos": "…" }
 ```
 
 ```json
 GET /media-manifest
-{
-  "splash.fondo": { "url": "…", "alt": "" },
-  "home.hero":    { "url": "…", "alt": "" }
-}
+{ "splash.fondo": { "url": "…", "alt": "" },
+  "home.hero":    { "url": "…", "alt": "" } }
 ```
 
-- Locales disponibles: `es`, `en`, `gn`.
-- Cacheá con `ETag`; refrescá al abrir la app y seguí con la copia local si falla.
-- Embebé una copia de `es` como fallback de primer arranque sin red.
+- Locales: `es`, `en`, `gn`.
+- Cacheá con `ETag`; si falla el refresco, seguí con la copia local.
+- Embebé `es` como fallback de primer arranque sin red.
 - **No aplica** a fichas, eventos, recorridos ni artículos: eso es contenido humano y viene de la base.
 
----
+## 4.3 Restricciones de producto
 
-## 8. Restricciones de producto
+Vienen del dueño del proyecto:
 
-Vienen del dueño del proyecto y condicionan cómo construís:
+1. **El público es mayormente gente mayor que no lee párrafos largos.** Explicaciones animadas antes que texto. Claridad y concisión por encima de todo. Es un requisito, no una preferencia estética.
+2. **No escribas contenido.** Ni artículos, ni descripciones, ni copy de relleno, ni textos de ejemplo que queden en producción. Todo texto de producto lo escribe una persona. Si necesitás placeholder para maquetar, marcalo inequívocamente.
+3. **No inventes bocetos visuales.** Vienen en el zip.
 
-1. **Público mayor.** Explicaciones animadas antes que párrafos. Todo claro y directo. Esto es un requisito, no una preferencia estética.
-2. **No escribas contenido.** Ni artículos, ni descripciones, ni copy de relleno, ni textos de ejemplo que después queden en producción. Todo texto de producto lo escribe una persona. Si necesitás un placeholder para maquetar, marcalo inequívocamente como tal.
-3. **No inventes bocetos visuales.** Las referencias vienen en el zip.
+## 4.4 IA — no la construyas todavía
 
----
+Va al final. Tres cosas a respetar desde ahora, porque después salen caras:
 
-## 9. IA — no la construyas todavía
-
-Va al final del desarrollo. Lo que sí tenés que respetar desde ahora, porque después sale caro:
-
-1. **Toda lectura de datos pasa por la API.** Si la app arma estado propio que no existe del lado servidor, la IA no lo va a poder ver.
-2. **El acceso de la IA a datos del usuario es con permiso explícito.** Modelalo como un permiso más, revocable, no como un flag global.
-3. **La IA va a consumir la misma API** con su propio token y alcance acotado. No abras un canal aparte.
+1. **Toda lectura pasa por la API.** Si la app arma estado propio que el servidor no conoce, la IA no lo va a poder ver.
+2. **El acceso a datos del usuario es con permiso explícito y revocable.** Modelalo como un permiso más, no como un flag global.
+3. **La IA consume la misma API**, con su propio token y alcance acotado. No abras un canal aparte.
 
 ---
 
-## 10. Lo que NO construís
+# PARTE 5 — Abierto
 
-- Sistema de cuentas, login propio o almacenamiento de contraseñas
-- Lógica de roles o permisos que no venga del servidor
-- Flujo de revisión editorial
-- Panel de administración (existe en web)
-- Base de datos propia de contenido — solo caché local, que es descartable por definición
+## 5.1 Decisiones que no son tuyas pero te afectan
 
----
-
-## 11. Decisiones abiertas que te afectan
-
-Las resuelve el dueño del proyecto. Te las paso porque cambian tu trabajo:
-
-| # | Pregunta | Te afecta en |
+| # | Pregunta | Te cambia |
 |---|---|---|
-| 1 | Hay dos entidades "lugar con coordenadas" en el sistema (`promotur_destino` y `cgz_local`, este último de un plugin de comercios con reservas y reseñas). ¿Se unifican, coexisten o se separan por rol? | Si `/inventario` devuelve uno o varios `tipo` |
-| 2 | Recorridos de usuario: ¿se guardan en el servidor o solo en el teléfono? | Si el usuario necesita cuenta; si existe `/mis-recorridos` |
+| 1 | Hay dos entidades "lugar con coordenadas": `promotur_destino` (ficha turística) y `cgz_local` (comercio, con reservas y reseñas). ¿Se unifican, coexisten, o se separan por rol? | Si `/inventario` devuelve uno o varios `tipo` |
+| 2 | Recorridos de usuario: ¿servidor o solo teléfono? | Si el usuario necesita cuenta |
 | 3 | Extensión y zoom del mapa | Peso del APK |
-| 4 | ¿Los alumnos del CEAD (que entran por SSO) son Promotores de la app? | Volumen de la cola de revisión |
+| 4 | Las 21 páginas estáticas de turismo: ¿entran a la app? | Alcance del contenido |
+| 5 | ¿Los alumnos del CEAD son promotores de la app? | Volumen de la cola de revisión |
 
-Mi recomendación en la 1 es separar por rol —Atractivo, Evento, Comercio— y que `/inventario` devuelva el campo `tipo`. **Programá asumiendo que `tipo` existe**; así ninguna de las tres salidas te rompe el cliente.
+**Sobre la 1:** mi recomendación es separar por rol (Atractivo / Evento / Comercio) y que `/inventario` devuelva `tipo`. **Programá asumiendo que `tipo` existe** — así ninguna de las tres salidas te rompe el cliente.
 
----
+## 5.2 Coordinación
 
-## 12. Coordinación
-
-- El contrato de §4 es la fuente de verdad compartida. Cambios de un lado se avisan antes de implementar.
+- El contrato de la Parte 3 es la fuente de verdad compartida. Cambios de un lado se avisan antes de implementar.
 - Si un endpoint no te alcanza, pedí el cambio en vez de compensarlo con parches en el cliente.
-- Cuando tengas los mocks andando, avisá y arrancamos la integración real endpoint por endpoint.
+- Cuando tengas mocks andando, avisá y arrancamos la integración real.
