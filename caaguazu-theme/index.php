@@ -1,46 +1,64 @@
 <?php
 /**
- * Plantilla de fallback. WordPress la usa cuando no hay otra más específica.
+ * Plantilla única del theme.
+ *
+ * El theme no tiene ninguna otra plantilla, así que la jerarquía de
+ * WordPress cae acá para cualquier URL del sitio (home, entradas, páginas,
+ * archivos, búsqueda, 404): mientras dure la obra, todo el frontend muestra
+ * esta misma página.
  *
  * @package Caaguazu
  */
 
-get_header(); ?>
+if ( ! defined( 'ABSPATH' ) ) { exit; }
+?>
+<!DOCTYPE html>
+<html <?php language_attributes(); ?>>
+<head>
+	<meta charset="<?php bloginfo( 'charset' ); ?>">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#e9ecfb">
+	<?php wp_head(); ?>
+</head>
+<body <?php body_class(); ?>>
 
-<section class="container page-hero">
-	<div>
-		<p class="eyebrow"><?php esc_html_e( 'Caaguazú', 'caaguazu' ); ?></p>
-		<h1><?php
-			if ( is_home() ) {
-				single_post_title();
-			} else {
-				the_archive_title();
-			}
-		?></h1>
-	</div>
-</section>
+	<main class="obra">
 
-<div class="container">
-	<?php if ( have_posts() ) : ?>
-		<div class="news-grid">
-			<?php while ( have_posts() ) : the_post(); ?>
-				<article class="news">
-					<?php if ( has_post_thumbnail() ) : ?>
-						<div class="img"><?php the_post_thumbnail( 'caaguazu-card', array( 'loading' => 'lazy' ) ); ?></div>
-					<?php endif; ?>
-					<div class="body">
-						<h3><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h3>
-						<p class="meta"><?php echo esc_html( get_the_date() ); ?></p>
-						<p class="ex"><?php echo esc_html( wp_trim_words( get_the_excerpt(), 25 ) ); ?></p>
-						<a class="arrow" href="<?php the_permalink(); ?>"><?php esc_html_e( 'Leer más', 'caaguazu' ); ?></a>
-					</div>
-				</article>
-			<?php endwhile; ?>
+		<div class="tarjeta">
+
+			<header class="tarjeta__cabecera">
+				<span class="marca">
+					<?php caaguazu_marca(); ?>
+					caaguazu.net
+				</span>
+				<span class="estado"><?php esc_html_e( 'En construcción', 'caaguazu' ); ?></span>
+			</header>
+
+			<div class="tarjeta__cuerpo">
+
+				<div class="tarjeta__texto">
+					<h1 class="titulo">
+						caaguazu.net
+						<span><?php esc_html_e( 'está siendo construida', 'caaguazu' ); ?></span>
+					</h1>
+
+					<p class="texto">
+						<?php esc_html_e( 'Estamos rehaciendo el portal desde cero: más simple, más rápido y sin relleno. Lo primero en volver va a ser el panel de promotores turísticos.', 'caaguazu' ); ?>
+					</p>
+				</div>
+
+				<div class="ilustracion">
+					<?php caaguazu_ilustracion(); ?>
+				</div>
+
+			</div>
+
 		</div>
-		<?php the_posts_pagination(); ?>
-	<?php else : ?>
-		<p><?php esc_html_e( 'No hay contenido para mostrar todavía.', 'caaguazu' ); ?></p>
-	<?php endif; ?>
-</div>
 
-<?php get_footer();
+		<p class="pie"><?php esc_html_e( 'Portal del Departamento de Caaguazú · Paraguay', 'caaguazu' ); ?></p>
+
+	</main>
+
+	<?php wp_footer(); ?>
+</body>
+</html>
