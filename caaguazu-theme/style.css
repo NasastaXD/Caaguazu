@@ -2,16 +2,205 @@
 Theme Name: Caaguazú
 Theme URI: https://caaguazu.net
 Author: Thiago Juan Manuel Ávalos Crosta
-Author URI: mailto:thiagoavalos900@gmail.com
-Description: Portal oficial del departamento de Caaguazú, Paraguay. Theme classic con Customizer. Sin dependencias.
-Version: 4.5.1
+Description: Portal de Caaguazú — página única de obra mientras el sitio se reconstruye desde cero. Sin dependencias, sin JavaScript, sin pedidos externos.
+Version: 5.0.0
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
 License: Proprietary
 Text Domain: caaguazu
-Tags: government, custom-logo, custom-menu, featured-images, threaded-comments, translation-ready, rtl-language-support
 */
 
-/* Los estilos reales del sitio están en assets/css/main.css, encolados desde functions.php.
-   Este archivo existe sólo para cumplir el requisito de cabecera del tema. */
+/* ---------------------------------------------------------------------------
+ * Paleta: azul/lila plano con acento amarillo — igual a la referencia.
+ * ------------------------------------------------------------------------ */
+
+:root {
+	--azul:       #2a3fbf;
+	--azul-tinta: #1b2559;
+	--azul-suave: #5568d6;
+	--azul-claro: #b9c3f5;
+	--lila:       #e9ecfb;
+	--lila-claro: #f2f4fe;
+	--amarillo:   #ffc93c;
+	--texto:      #949dc0;
+	--blanco:     #ffffff;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+	margin: 0;
+	background-color: var(--lila);
+	color: var(--azul-tinta);
+	font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+	font-size: 16px;
+	line-height: 1.6;
+	-webkit-font-smoothing: antialiased;
+}
+
+/* Aros finos de fondo, como los trazos sueltos de la referencia. Gradientes
+   CSS: cero imágenes, cero pedidos de red. */
+body::before {
+	content: "";
+	position: fixed;
+	inset: 0;
+	z-index: 0;
+	pointer-events: none;
+	background-image:
+		radial-gradient(circle at -4% 14%, transparent 168px, rgba(120, 138, 224, .22) 168px 170px, transparent 171px),
+		radial-gradient(circle at 104% 88%, transparent 210px, rgba(120, 138, 224, .18) 210px 212px, transparent 213px),
+		radial-gradient(circle at 88% 6%,  transparent 96px,  rgba(120, 138, 224, .16) 96px 98px,   transparent 99px);
+}
+
+/* ---------------------------------------------------------------------------
+ * Tarjeta
+ * ------------------------------------------------------------------------ */
+
+.obra {
+	position: relative;
+	z-index: 1;
+	min-height: 100vh;
+	min-height: 100svh;
+	display: grid;
+	align-content: center;
+	justify-items: center;
+	gap: 1.4rem;
+	padding: clamp(1.25rem, 4vw, 3.5rem) clamp(1rem, 4vw, 3rem);
+}
+
+.tarjeta {
+	width: min(1120px, 100%);
+	background: var(--blanco);
+	border-radius: 22px;
+	box-shadow: 0 34px 70px rgba(27, 37, 89, .10);
+	padding: clamp(1.4rem, 3vw, 2.4rem) clamp(1.4rem, 4vw, 3.4rem) clamp(1.4rem, 3vw, 2.2rem);
+}
+
+/* Cabecera de la tarjeta: isotipo + estado */
+
+.tarjeta__cabecera {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: .8rem 1.5rem;
+	padding-bottom: clamp(1rem, 3vw, 2rem);
+}
+
+.marca {
+	display: flex;
+	align-items: center;
+	gap: .6rem;
+	font-weight: 700;
+	font-size: .98rem;
+	letter-spacing: -.01em;
+}
+
+.marca svg { display: block; width: 30px; height: 30px; }
+
+.estado {
+	display: inline-flex;
+	align-items: center;
+	gap: .5rem;
+	padding: .42rem .95rem;
+	border-radius: 999px;
+	background: var(--lila-claro);
+	color: var(--azul);
+	font-size: .78rem;
+	font-weight: 700;
+	letter-spacing: .04em;
+	text-transform: uppercase;
+}
+
+.estado::before {
+	content: "";
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--amarillo);
+	animation: obra-latido 2.2s ease-in-out infinite;
+}
+
+@keyframes obra-latido {
+	0%, 100% { opacity: 1; transform: scale(1); }
+	50%      { opacity: .45; transform: scale(.8); }
+}
+
+/* Cuerpo: texto a la izquierda, ilustración a la derecha */
+
+.tarjeta__cuerpo {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
+	align-items: center;
+	gap: clamp(1.5rem, 4vw, 3rem);
+}
+
+.titulo {
+	margin: 0;
+	font-size: clamp(2.3rem, 5.6vw, 3.9rem);
+	font-weight: 800;
+	line-height: 1.04;
+	letter-spacing: -.035em;
+	color: var(--azul-tinta);
+}
+
+.titulo span {
+	display: block;
+	margin-top: .12em;
+	font-size: .58em;
+	font-weight: 600;
+	letter-spacing: -.02em;
+	color: var(--azul-suave);
+}
+
+.texto {
+	margin: 1.4rem 0 0;
+	max-width: 38ch;
+	color: var(--texto);
+	font-size: 1rem;
+	line-height: 1.75;
+}
+
+.ilustracion {
+	width: 100%;
+	max-width: 620px;
+	margin-inline: auto;
+}
+
+.ilustracion svg {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+
+/* Pie, fuera de la tarjeta */
+
+.pie {
+	margin: 0;
+	color: var(--azul-suave);
+	font-size: .82rem;
+	opacity: .85;
+	text-align: center;
+}
+
+/* ---------------------------------------------------------------------------
+ * Angosto
+ * ------------------------------------------------------------------------ */
+
+@media (max-width: 860px) {
+	.tarjeta__cuerpo {
+		grid-template-columns: 1fr;
+		gap: 1.6rem;
+	}
+
+	.tarjeta__cuerpo .ilustracion { order: -1; }
+
+	.texto { max-width: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.estado::before { animation: none; }
+}
