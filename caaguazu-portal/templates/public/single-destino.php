@@ -63,7 +63,7 @@ while ( have_posts() ) :
 			<div class="promotur-qrmodal__box">
 				<button type="button" class="promotur-qrmodal__close" data-qr-close aria-label="<?php esc_attr_e( 'Cerrar', 'caaguazu-portal' ); ?>">×</button>
 				<div data-qr-canvas></div>
-				<p class="promotur-muted"><?php esc_html_e( 'Escaneá para abrir esta ficha en el celular.', 'caaguazu-portal' ); ?></p>
+				<p class="promotur-muted"><?php esc_html_e( 'Escaneá este código para abrir la ficha en tu celular.', 'caaguazu-portal' ); ?></p>
 			</div>
 		</div>
 
@@ -111,7 +111,7 @@ while ( have_posts() ) :
 		<section class="promotur-report">
 			<button type="button" class="promotur-link-btn" data-report-toggle>⚠️ <?php esc_html_e( 'Reportar información desactualizada', 'caaguazu-portal' ); ?></button>
 			<form class="promotur-form promotur-report-form" data-reporte-form data-post="<?php echo esc_attr( $id ); ?>" hidden>
-				<label class="promotur-field"><span><?php esc_html_e( '¿Qué está desactualizado?', 'caaguazu-portal' ); ?></span><textarea name="content" rows="2" required></textarea></label>
+				<label class="promotur-field"><span><?php esc_html_e( '¿Qué información está desactualizada?', 'caaguazu-portal' ); ?></span><textarea name="content" rows="2" required></textarea></label>
 				<button type="submit" class="promotur-btn promotur-btn--ghost promotur-btn--small"><?php esc_html_e( 'Enviar reporte', 'caaguazu-portal' ); ?></button>
 				<span class="promotur-form-msg" data-form-msg aria-live="polite"></span>
 			</form>
@@ -128,7 +128,7 @@ while ( have_posts() ) :
 				? promotur_account_display_name( PROMOTUR_Destinos::owner_account_id( $id ), '' )
 				: '';
 			/* translators: %s = autor */
-			printf( esc_html__( 'Ficha producida por %s — Promotores Turísticos del Bachiller técnico de servicios.', 'caaguazu-portal' ), esc_html( $author_name ) );
+			printf( esc_html__( 'Ficha producida por %s — Promotores Turísticos del Bachiller Técnico de Servicios.', 'caaguazu-portal' ), esc_html( $author_name ) );
 			?>
 		</p>
 	</article>

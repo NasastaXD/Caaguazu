@@ -60,13 +60,13 @@ $en_home  = 'home' === promotur_current_route();
 						<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 							<?php wp_nonce_field( 'promotur_mark_read' ); ?>
 							<input type="hidden" name="action" value="promotur_mark_read">
-							<button type="submit" class="promotur-link-btn"><?php esc_html_e( 'Marcar todo leído', 'caaguazu-portal' ); ?></button>
+							<button type="submit" class="promotur-link-btn"><?php esc_html_e( 'Marcar todo como leído', 'caaguazu-portal' ); ?></button>
 						</form>
 					<?php endif; ?>
 				</div>
 				<div class="promotur-dropdown__body">
 					<?php if ( empty( $items ) ) : ?>
-						<p class="promotur-empty"><?php esc_html_e( 'Sin novedades por ahora. ✨', 'caaguazu-portal' ); ?></p>
+						<p class="promotur-empty"><?php esc_html_e( 'No hay novedades por ahora. ✨', 'caaguazu-portal' ); ?></p>
 					<?php else : ?>
 						<?php foreach ( $items as $it ) : ?>
 							<a class="promotur-notif" href="<?php echo esc_url( $it['url'] ); ?>">

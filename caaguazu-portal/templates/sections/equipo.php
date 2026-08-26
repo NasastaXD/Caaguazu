@@ -13,7 +13,7 @@ $body = function () use ( $roles, $levels ) {
 
 	<div class="promotur-card promotur-invite">
 		<h3 class="promotur-h3"><?php esc_html_e( 'Invitar a alguien', 'caaguazu-portal' ); ?></h3>
-		<p class="promotur-muted"><?php esc_html_e( 'Generá un enlace de invitación con el rol que elijas (válido 14 días).', 'caaguazu-portal' ); ?></p>
+		<p class="promotur-muted"><?php esc_html_e( 'Generá un enlace de invitación con el rol que quieras. El enlace es válido durante 14 días.', 'caaguazu-portal' ); ?></p>
 		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="promotur-inline-form">
 			<?php wp_nonce_field( 'promotur_invite' ); ?>
 			<input type="hidden" name="action" value="promotur_invite">

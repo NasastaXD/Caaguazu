@@ -46,11 +46,11 @@ $body = function () use ( $identity, $uid, $pub, $total_views, $is_mini ) {
 			<p class="promotur-muted">
 				<?php
 				if ( 'confianza' === $cur ) {
-					esc_html_e( 'Nivel máximo: publicás directo, con auditoría posterior. ¡Gracias por tu compromiso!', 'caaguazu-portal' );
+					esc_html_e( 'Nivel máximo: publicás directamente y después se hace una auditoría. Gracias por tu compromiso.', 'caaguazu-portal' );
 				} elseif ( 'jr' === $cur ) {
-					esc_html_e( 'Promotor Jr: editás fichas publicadas sin re-revisión. Seguí sumando aprobaciones para llegar a "De confianza".', 'caaguazu-portal' );
+					esc_html_e( 'Promotor Jr: podés editar fichas publicadas sin pasar por una nueva revisión. Seguí sumando aprobaciones para llegar a «De confianza».', 'caaguazu-portal' );
 				} else {
-					esc_html_e( 'Aprendiz: todo tu contenido pasa por revisión. Con más aprobaciones desbloqueás autonomía.', 'caaguazu-portal' );
+					esc_html_e( 'Aprendiz: todo tu contenido pasa por revisión. A medida que sumás aprobaciones, vas ganando autonomía.', 'caaguazu-portal' );
 				}
 				?>
 			</p>

@@ -25,10 +25,10 @@ class PROMOTUR_Gestion_Ajax {
 
 	private function guard( $cap ) {
 		if ( ! check_ajax_referer( 'promotur', 'nonce', false ) ) {
-			wp_send_json_error( array( 'message' => __( 'Sesión expirada. Recargá la página.', 'caaguazu-portal' ) ), 403 );
+			wp_send_json_error( array( 'message' => __( 'Tu sesión venció. Recargá la página.', 'caaguazu-portal' ) ), 403 );
 		}
 		if ( $cap && ! caaguazu_account_can( 'promotor', $cap ) ) {
-			wp_send_json_error( array( 'message' => __( 'No tenés permiso.', 'caaguazu-portal' ) ), 403 );
+			wp_send_json_error( array( 'message' => __( 'No tenés permiso para hacer esto.', 'caaguazu-portal' ) ), 403 );
 		}
 	}
 
@@ -52,21 +52,21 @@ class PROMOTUR_Gestion_Ajax {
 		$this->guard( 'promotur_view_panel' );
 		$id = (int) ( $_POST['id'] ?? 0 );
 		if ( ! $id || PROMOTUR_Tareas::CPT !== get_post_type( $id ) ) {
-			wp_send_json_error( array( 'message' => __( 'Tarea inválida.', 'caaguazu-portal' ) ) );
+			wp_send_json_error( array( 'message' => __( 'La tarea no es válida.', 'caaguazu-portal' ) ) );
 		}
 		PROMOTUR_Tareas::claim( $id, caaguazu_account_id() );
-		wp_send_json_success( array( 'message' => __( 'Reclamaste esta tarea. ¡A producir!', 'caaguazu-portal' ), 'reload' => true ) );
+		wp_send_json_success( array( 'message' => __( 'Reclamaste esta tarea. Ya podés trabajar en ella.', 'caaguazu-portal' ), 'reload' => true ) );
 	}
 
 	public function complete_tarea() {
 		$this->guard( 'promotur_view_panel' );
 		$id = (int) ( $_POST['id'] ?? 0 );
 		if ( ! $id || PROMOTUR_Tareas::CPT !== get_post_type( $id ) ) {
-			wp_send_json_error( array( 'message' => __( 'Tarea inválida.', 'caaguazu-portal' ) ) );
+			wp_send_json_error( array( 'message' => __( 'La tarea no es válida.', 'caaguazu-portal' ) ) );
 		}
 		// Solo el asignado o quien puede asignar.
 		if ( ! PROMOTUR_Tareas::is_assigned( $id, caaguazu_account_id() ) && ! caaguazu_account_can( 'promotor', 'promotur_assign_tasks' ) ) {
-			wp_send_json_error( array( 'message' => __( 'No tenés permiso.', 'caaguazu-portal' ) ), 403 );
+			wp_send_json_error( array( 'message' => __( 'No tenés permiso para hacer esto.', 'caaguazu-portal' ) ), 403 );
 		}
 		PROMOTUR_Tareas::complete( $id );
 		wp_send_json_success( array( 'message' => __( 'Tarea completada. 🎉', 'caaguazu-portal' ), 'reload' => true ) );
@@ -77,7 +77,7 @@ class PROMOTUR_Gestion_Ajax {
 		$user  = (int) ( $_POST['user_id'] ?? 0 );
 		$level = sanitize_key( wp_unslash( $_POST['level'] ?? '' ) );
 		if ( ! $user ) {
-			wp_send_json_error( array( 'message' => __( 'Usuario inválido.', 'caaguazu-portal' ) ) );
+			wp_send_json_error( array( 'message' => __( 'El usuario no es válido.', 'caaguazu-portal' ) ) );
 		}
 		PROMOTUR_Stats::set_level( $user, $level );
 		wp_send_json_success( array( 'message' => __( 'Nivel actualizado.', 'caaguazu-portal' ) ) );

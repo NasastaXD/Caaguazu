@@ -35,13 +35,13 @@ class PROMOTUR_Ajax {
 	 */
 	private function guard( $cap ) {
 		if ( ! check_ajax_referer( 'promotur', 'nonce', false ) ) {
-			wp_send_json_error( array( 'message' => __( 'Sesión expirada. Recargá la página.', 'caaguazu-portal' ) ), 403 );
+			wp_send_json_error( array( 'message' => __( 'Tu sesión venció. Recargá la página.', 'caaguazu-portal' ) ), 403 );
 		}
 		if ( ! caaguazu_is_logged_in() && ! caaguazu_wp_admin_bypass() ) {
 			wp_send_json_error( array( 'message' => __( 'Necesitás iniciar sesión.', 'caaguazu-portal' ) ), 401 );
 		}
 		if ( $cap && ! caaguazu_account_can( 'promotor', $cap ) ) {
-			wp_send_json_error( array( 'message' => __( 'No tenés permiso para esto.', 'caaguazu-portal' ) ), 403 );
+			wp_send_json_error( array( 'message' => __( 'No tenés permiso para hacer esto.', 'caaguazu-portal' ) ), 403 );
 		}
 	}
 
@@ -132,7 +132,7 @@ class PROMOTUR_Ajax {
 			&& ! PROMOTUR_Stats::can_edit_published( $mine ) ) {
 			update_post_meta( $post_id, '_promotur_estado', 'en_revision' ); // sigue público (post_status intacto)
 			update_post_meta( $post_id, '_promotur_reedit', 1 );
-			$message = __( 'Guardado. Como editaste una ficha publicada, queda en re-revisión.', 'caaguazu-portal' );
+			$message = __( 'Guardado. Como editaste una ficha publicada, tendrá que pasar por una nueva revisión.', 'caaguazu-portal' );
 		}
 
 		$checklist = PROMOTUR_Editorial::checklist( $post_id );
@@ -149,22 +149,22 @@ class PROMOTUR_Ajax {
 		$this->guard( 'promotur_create_draft' );
 		$post_id = (int) ( $_POST['post_id'] ?? 0 );
 		if ( ! $post_id || ! $this->can_edit_post( $post_id ) ) {
-			wp_send_json_error( array( 'message' => __( 'Ficha inválida.', 'caaguazu-portal' ) ), 403 );
+			wp_send_json_error( array( 'message' => __( 'La ficha no es válida.', 'caaguazu-portal' ) ), 403 );
 		}
 		if ( ! PROMOTUR_Editorial::is_complete( $post_id ) ) {
 			wp_send_json_error( array(
-				'message'   => __( 'Faltan datos obligatorios. Completá el checklist antes de enviar.', 'caaguazu-portal' ),
+				'message'   => __( 'Faltan datos obligatorios. Completá el checklist antes de enviarla.', 'caaguazu-portal' ),
 				'checklist' => PROMOTUR_Editorial::checklist( $post_id ),
 			) );
 		}
 		// Confianza progresiva: nivel "De confianza" publica directo (con auditoría).
 		if ( PROMOTUR_Stats::can_publish_directly( caaguazu_account_id() ) ) {
 			PROMOTUR_Editorial::set_estado( $post_id, 'publicado' );
-			PROMOTUR_Editorial::add_feedback( $post_id, caaguazu_account_id(), __( 'Publicación directa por nivel de confianza (auditoría posterior).', 'caaguazu-portal' ) );
-			wp_send_json_success( array( 'message' => __( '¡Publicado! (nivel de confianza)', 'caaguazu-portal' ), 'redirect' => promotur_url( 'panel/mis-contenidos' ) ) );
+			PROMOTUR_Editorial::add_feedback( $post_id, caaguazu_account_id(), __( 'Publicación directa por nivel de confianza. Se hará una auditoría posterior.', 'caaguazu-portal' ) );
+			wp_send_json_success( array( 'message' => __( '¡Publicado! Se aplicó tu nivel de confianza.', 'caaguazu-portal' ), 'redirect' => promotur_url( 'panel/mis-contenidos' ) ) );
 		}
 		PROMOTUR_Editorial::set_estado( $post_id, 'enviado' );
-		wp_send_json_success( array( 'message' => __( '¡Enviado a revisión!', 'caaguazu-portal' ), 'redirect' => promotur_url( 'panel/mis-contenidos' ) ) );
+		wp_send_json_success( array( 'message' => __( '¡Ficha enviada a revisión!', 'caaguazu-portal' ), 'redirect' => promotur_url( 'panel/mis-contenidos' ) ) );
 	}
 
 	/* ------------------------------------------------------------------ */
@@ -172,7 +172,7 @@ class PROMOTUR_Ajax {
 		$this->guard( 'promotur_review_content' );
 		$post_id = (int) ( $_POST['post_id'] ?? 0 );
 		if ( ! $post_id || PROMOTUR_Destinos::CPT !== get_post_type( $post_id ) ) {
-			wp_send_json_error( array( 'message' => __( 'Ficha inválida.', 'caaguazu-portal' ) ) );
+			wp_send_json_error( array( 'message' => __( 'La ficha no es válida.', 'caaguazu-portal' ) ) );
 		}
 		PROMOTUR_Editorial::set_estado( $post_id, 'en_revision', caaguazu_account_id() );
 		wp_send_json_success( array( 'message' => __( 'Te asignaste la revisión.', 'caaguazu-portal' ) ) );
@@ -183,7 +183,7 @@ class PROMOTUR_Ajax {
 		$this->guard( 'promotur_publish_destino' );
 		$post_id = (int) ( $_POST['post_id'] ?? 0 );
 		if ( ! $post_id || PROMOTUR_Destinos::CPT !== get_post_type( $post_id ) ) {
-			wp_send_json_error( array( 'message' => __( 'Ficha inválida.', 'caaguazu-portal' ) ) );
+			wp_send_json_error( array( 'message' => __( 'La ficha no es válida.', 'caaguazu-portal' ) ) );
 		}
 		$comment = sanitize_textarea_field( wp_unslash( $_POST['comment'] ?? '' ) );
 		if ( $comment ) {
@@ -199,25 +199,25 @@ class PROMOTUR_Ajax {
 		$post_id = (int) ( $_POST['post_id'] ?? 0 );
 		$comment = sanitize_textarea_field( wp_unslash( $_POST['comment'] ?? '' ) );
 		if ( ! $post_id || PROMOTUR_Destinos::CPT !== get_post_type( $post_id ) ) {
-			wp_send_json_error( array( 'message' => __( 'Ficha inválida.', 'caaguazu-portal' ) ) );
+			wp_send_json_error( array( 'message' => __( 'La ficha no es válida.', 'caaguazu-portal' ) ) );
 		}
 		if ( '' === $comment ) {
-			wp_send_json_error( array( 'message' => __( 'Escribí el feedback para el autor.', 'caaguazu-portal' ) ) );
+			wp_send_json_error( array( 'message' => __( 'Escribí los comentarios para el autor.', 'caaguazu-portal' ) ) );
 		}
 		PROMOTUR_Editorial::add_feedback( $post_id, caaguazu_account_id(), $comment );
 		PROMOTUR_Editorial::set_estado( $post_id, 'necesita_cambios' );
-		wp_send_json_success( array( 'message' => __( 'Devuelto al autor con feedback.', 'caaguazu-portal' ), 'redirect' => promotur_url( 'panel/revision' ) ) );
+		wp_send_json_success( array( 'message' => __( 'Ficha devuelta al autor con comentarios.', 'caaguazu-portal' ), 'redirect' => promotur_url( 'panel/revision' ) ) );
 	}
 
 	/* ------------------------------------------------------------------ */
 	public function upload_media() {
 		$this->guard( 'upload_files' );
 		if ( empty( $_FILES['file'] ) ) {
-			wp_send_json_error( array( 'message' => __( 'No llegó ninguna imagen.', 'caaguazu-portal' ) ) );
+			wp_send_json_error( array( 'message' => __( 'No recibimos ninguna imagen.', 'caaguazu-portal' ) ) );
 		}
 		$check = wp_check_filetype( $_FILES['file']['name'] );
 		if ( ! in_array( $check['ext'], array( 'jpg', 'jpeg', 'png', 'webp', 'gif' ), true ) ) {
-			wp_send_json_error( array( 'message' => __( 'Solo se permiten imágenes.', 'caaguazu-portal' ) ) );
+			wp_send_json_error( array( 'message' => __( 'Solo podés subir imágenes.', 'caaguazu-portal' ) ) );
 		}
 		require_once ABSPATH . 'wp-admin/includes/image.php';
 		require_once ABSPATH . 'wp-admin/includes/file.php';

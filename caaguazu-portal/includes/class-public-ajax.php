@@ -31,13 +31,13 @@ class PROMOTUR_Public_Ajax {
 
 	private function check_pub() {
 		if ( ! check_ajax_referer( 'promotur_pub', 'nonce', false ) ) {
-			wp_send_json_error( array( 'message' => __( 'Sesión expirada. Recargá la página.', 'caaguazu-portal' ) ), 403 );
+			wp_send_json_error( array( 'message' => __( 'Tu sesión venció. Recargá la página.', 'caaguazu-portal' ) ), 403 );
 		}
 	}
 
 	private function check_mod() {
 		if ( ! check_ajax_referer( 'promotur', 'nonce', false ) || ! caaguazu_account_can( 'promotor', 'promotur_moderate' ) ) {
-			wp_send_json_error( array( 'message' => __( 'No autorizado.', 'caaguazu-portal' ) ), 403 );
+			wp_send_json_error( array( 'message' => __( 'No tenés autorización para hacer esto.', 'caaguazu-portal' ) ), 403 );
 		}
 	}
 
@@ -56,7 +56,7 @@ class PROMOTUR_Public_Ajax {
 		if ( is_wp_error( $res ) ) {
 			wp_send_json_error( array( 'message' => $res->get_error_message() ) );
 		}
-		wp_send_json_success( array( 'message' => __( '¡Gracias! Tu reseña se publicará tras una breve moderación.', 'caaguazu-portal' ) ) );
+		wp_send_json_success( array( 'message' => __( '¡Gracias! Tu reseña se publicará después de una breve moderación.', 'caaguazu-portal' ) ) );
 	}
 
 	public function submit_consulta() {
@@ -85,7 +85,7 @@ class PROMOTUR_Public_Ajax {
 		if ( is_wp_error( $res ) ) {
 			wp_send_json_error( array( 'message' => $res->get_error_message() ) );
 		}
-		wp_send_json_success( array( 'message' => __( '¡Gracias por avisar! Un Promotor lo va a revisar.', 'caaguazu-portal' ) ) );
+		wp_send_json_success( array( 'message' => __( '¡Gracias por avisar! Un Promotor va a revisarlo.', 'caaguazu-portal' ) ) );
 	}
 
 	/* ----- Moderación / bandeja ----- */
@@ -99,7 +99,7 @@ class PROMOTUR_Public_Ajax {
 		} elseif ( 'trash' === $action ) {
 			wp_trash_comment( $id );
 		} else {
-			wp_send_json_error( array( 'message' => __( 'Acción inválida.', 'caaguazu-portal' ) ) );
+			wp_send_json_error( array( 'message' => __( 'La acción no es válida.', 'caaguazu-portal' ) ) );
 		}
 		wp_send_json_success();
 	}
@@ -109,7 +109,7 @@ class PROMOTUR_Public_Ajax {
 		$id   = (int) ( $_POST['id'] ?? 0 );
 		$user = (int) ( $_POST['user_id'] ?? 0 );
 		if ( ! $id || ! $user ) {
-			wp_send_json_error( array( 'message' => __( 'Faltan datos.', 'caaguazu-portal' ) ) );
+			wp_send_json_error( array( 'message' => __( 'Faltan algunos datos.', 'caaguazu-portal' ) ) );
 		}
 		PROMOTUR_Consultas::assign( $id, $user );
 		wp_send_json_success( array( 'message' => __( 'Consulta derivada.', 'caaguazu-portal' ) ) );

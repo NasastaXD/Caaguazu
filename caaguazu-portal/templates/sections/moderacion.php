@@ -37,7 +37,7 @@ $body = function () use ( $resenas, $consultas, $reportes, $minis ) {
 
 	<h3 class="promotur-h3"><?php esc_html_e( 'Bandeja de consultas', 'caaguazu-portal' ); ?></h3>
 	<?php if ( empty( $consultas ) ) : ?>
-		<p class="promotur-muted"><?php esc_html_e( 'No hay consultas.', 'caaguazu-portal' ); ?></p>
+		<p class="promotur-muted"><?php esc_html_e( 'No hay consultas pendientes.', 'caaguazu-portal' ); ?></p>
 	<?php else : ?>
 		<div class="promotur-list">
 			<?php foreach ( $consultas as $cons ) :
@@ -61,7 +61,7 @@ $body = function () use ( $resenas, $consultas, $reportes, $minis ) {
 							<button type="button" class="promotur-btn promotur-btn--ghost promotur-btn--small" data-op="assign"><?php esc_html_e( 'Derivar', 'caaguazu-portal' ); ?></button>
 						<?php endif; ?>
 						<?php if ( 'resuelta' !== $estado ) : ?>
-							<button type="button" class="promotur-btn promotur-btn--primary promotur-btn--small" data-op="resolve"><?php esc_html_e( 'Marcar resuelta', 'caaguazu-portal' ); ?></button>
+							<button type="button" class="promotur-btn promotur-btn--primary promotur-btn--small" data-op="resolve"><?php esc_html_e( 'Marcar como resuelta', 'caaguazu-portal' ); ?></button>
 						<?php endif; ?>
 					</div>
 				</div>
@@ -69,9 +69,9 @@ $body = function () use ( $resenas, $consultas, $reportes, $minis ) {
 		</div>
 	<?php endif; ?>
 
-	<h3 class="promotur-h3"><?php esc_html_e( 'Reportes de info desactualizada', 'caaguazu-portal' ); ?> <span class="promotur-muted">(<?php echo count( $reportes ); ?>)</span></h3>
+	<h3 class="promotur-h3"><?php esc_html_e( 'Reportes de información desactualizada', 'caaguazu-portal' ); ?> <span class="promotur-muted">(<?php echo count( $reportes ); ?>)</span></h3>
 	<?php if ( empty( $reportes ) ) : ?>
-		<p class="promotur-muted"><?php esc_html_e( 'Sin reportes abiertos.', 'caaguazu-portal' ); ?></p>
+		<p class="promotur-muted"><?php esc_html_e( 'No hay reportes abiertos.', 'caaguazu-portal' ); ?></p>
 	<?php else : ?>
 		<div class="promotur-list">
 			<?php foreach ( $reportes as $r ) : ?>
@@ -80,7 +80,7 @@ $body = function () use ( $resenas, $consultas, $reportes, $minis ) {
 						<a href="<?php echo esc_url( promotur_url( 'panel/editor/' . $r->comment_post_ID ) ); ?>"><?php echo esc_html( get_the_title( $r->comment_post_ID ) ); ?></a>
 					</div>
 					<p><?php echo esc_html( $r->comment_content ); ?></p>
-					<button type="button" class="promotur-btn promotur-btn--primary promotur-btn--small" data-op="resolve"><?php esc_html_e( 'Marcar resuelto', 'caaguazu-portal' ); ?></button>
+					<button type="button" class="promotur-btn promotur-btn--primary promotur-btn--small" data-op="resolve"><?php esc_html_e( 'Marcar como resuelto', 'caaguazu-portal' ); ?></button>
 				</div>
 			<?php endforeach; ?>
 		</div>

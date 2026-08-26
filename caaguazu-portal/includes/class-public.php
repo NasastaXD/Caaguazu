@@ -40,7 +40,7 @@ class PROMOTUR_Public {
 			'nonce'   => wp_create_nonce( 'promotur_pub' ),
 			'i18n'    => array(
 				'sending' => __( 'Enviando…', 'caaguazu-portal' ),
-				'error'   => __( 'Ocurrió un error. Probá de nuevo.', 'caaguazu-portal' ),
+				'error'   => __( 'Algo salió mal. Probá de nuevo.', 'caaguazu-portal' ),
 				'added'   => __( 'Agregado a tu viaje', 'caaguazu-portal' ),
 				'copied'  => __( 'Enlace copiado', 'caaguazu-portal' ),
 				'empty'   => __( 'Tu viaje está vacío. Agregá destinos desde sus fichas.', 'caaguazu-portal' ),
@@ -388,7 +388,7 @@ JS;
 
 		// Resto de destacados.
 		if ( ! empty( $destacados ) ) {
-			echo '<h2 class="text-h3">' . esc_html__( 'Qué no te podés perder', 'caaguazu-portal' ) . '</h2>';
+			echo '<h2 class="text-h3">' . esc_html__( 'Lo que no te podés perder', 'caaguazu-portal' ) . '</h2>';
 			echo '<div class="promotur-grid promotur-grid--3 promotur-vitrina">';
 			foreach ( $destacados as $id ) { echo self::card( $id ); } // phpcs:ignore WordPress.Security.EscapeOutput
 			echo '</div>';

@@ -40,13 +40,13 @@ class PROMOTUR_Auth {
 	 */
 	public function handle_create_invite() {
 		if ( ! caaguazu_account_can( 'promotor', 'promotur_manage_team' ) || ! check_admin_referer( 'promotur_invite' ) ) {
-			wp_die( esc_html__( 'No autorizado.', 'caaguazu-portal' ) );
+			wp_die( esc_html__( 'No tenés autorización para hacer esto.', 'caaguazu-portal' ) );
 		}
 		$role = isset( $_POST['role'] ) ? sanitize_key( wp_unslash( $_POST['role'] ) ) : 'promotur_mini';
 		$tokens = PROMOTUR_Invitations::create( array( 'role' => $role, 'expires_days' => 14, 'count' => 1 ) );
 		$link   = PROMOTUR_Invitations::registration_url( $tokens[0] );
 		/* translators: %s = enlace de invitación */
-		promotur_flash( sprintf( __( 'Enlace de invitación creado (válido 14 días): %s', 'caaguazu-portal' ), $link ), 'success' );
+		promotur_flash( sprintf( __( 'Enlace de invitación creado. Es válido durante 14 días: %s', 'caaguazu-portal' ), $link ), 'success' );
 		wp_safe_redirect( promotur_url( 'panel/equipo' ) );
 		exit;
 	}
@@ -133,7 +133,7 @@ class PROMOTUR_Auth {
 			return $vars;
 		}
 		if ( ! $this->verify( 'promotur_login' ) ) {
-			$vars['error'] = __( 'Sesión expirada. Recargá la página.', 'caaguazu-portal' );
+			$vars['error'] = __( 'Tu sesión venció. Recargá la página.', 'caaguazu-portal' );
 			return $vars;
 		}
 		$email    = sanitize_email( wp_unslash( $_POST['user_login'] ?? '' ) );
@@ -167,7 +167,7 @@ class PROMOTUR_Auth {
 			return $vars;
 		}
 		if ( ! $this->verify( 'promotur_registro' ) ) {
-			$vars['error'] = __( 'Sesión expirada. Recargá la página.', 'caaguazu-portal' );
+			$vars['error'] = __( 'Tu sesión venció. Recargá la página.', 'caaguazu-portal' );
 			return $vars;
 		}
 		// Sólo con invitación válida (invite-only).
@@ -182,11 +182,11 @@ class PROMOTUR_Auth {
 		$pass         = (string) ( $_POST['user_pass'] ?? '' );
 
 		if ( ! $display_name || ! is_email( $email ) || '' === $phone || ! Caaguazu_Cuentas_Passwords::is_valid( $pass ) ) {
-			$vars['error'] = __( 'Completá usuario, email, teléfono y una contraseña de 6+ caracteres.', 'caaguazu-portal' );
+			$vars['error'] = __( 'Completá usuario, email, teléfono y una contraseña de al menos 6 caracteres.', 'caaguazu-portal' );
 			return $vars;
 		}
 		if ( Caaguazu_Cuentas_Accounts::email_exists( $email ) ) {
-			$vars['error'] = __( 'Ese email ya tiene una cuenta.', 'caaguazu-portal' );
+			$vars['error'] = __( 'Ese email ya está registrado.', 'caaguazu-portal' );
 			return $vars;
 		}
 
@@ -219,7 +219,7 @@ class PROMOTUR_Auth {
 			return $vars;
 		}
 		if ( ! $this->verify( 'promotur_recuperar' ) ) {
-			$vars['error'] = __( 'Sesión expirada. Recargá la página.', 'caaguazu-portal' );
+			$vars['error'] = __( 'Tu sesión venció. Recargá la página.', 'caaguazu-portal' );
 			return $vars;
 		}
 		$email = sanitize_email( wp_unslash( $_POST['user_login'] ?? '' ) );
@@ -231,7 +231,7 @@ class PROMOTUR_Auth {
 			);
 		} );
 		// No revelamos si el email existe: mensaje siempre genérico.
-		$vars['notice'] = __( 'Si la cuenta existe, te enviamos un email con instrucciones.', 'caaguazu-portal' );
+		$vars['notice'] = __( 'Si la cuenta existe, te enviamos un email con las instrucciones.', 'caaguazu-portal' );
 		return $vars;
 	}
 
@@ -249,12 +249,12 @@ class PROMOTUR_Auth {
 
 		if ( empty( $_POST['promotur_auth'] ) || 'restablecer' !== $_POST['promotur_auth'] ) {
 			if ( $email && $token && is_wp_error( $check ) ) {
-				$vars['error'] = __( 'El enlace de restablecimiento venció o no es válido.', 'caaguazu-portal' );
+				$vars['error'] = __( 'El enlace para restablecer la contraseña venció o no es válido.', 'caaguazu-portal' );
 			}
 			return $vars;
 		}
 		if ( ! $this->verify( 'promotur_restablecer' ) ) {
-			$vars['error'] = __( 'Sesión expirada. Recargá la página.', 'caaguazu-portal' );
+			$vars['error'] = __( 'Tu sesión venció. Recargá la página.', 'caaguazu-portal' );
 			return $vars;
 		}
 		$pass1  = (string) ( $_POST['pass1'] ?? '' );

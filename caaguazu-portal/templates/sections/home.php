@@ -57,7 +57,7 @@ $body = function () use ( $identity, $pulse, $serie, $tope, $can_draft, $can_rev
 	?>
 	<div class="promotur-pagehead">
 		<div>
-			<div class="promotur-eyebrow"><?php esc_html_e( 'Tu pulso de hoy', 'caaguazu-portal' ); ?></div>
+			<div class="promotur-eyebrow"><?php esc_html_e( 'Tu actividad de hoy', 'caaguazu-portal' ); ?></div>
 			<h2 class="promotur-h2"><?php
 				/* translators: %s = nombre */
 				printf( esc_html__( 'Hola, %s 👋', 'caaguazu-portal' ), esc_html( $identity['display_name'] ) );
@@ -82,8 +82,7 @@ $body = function () use ( $identity, $pulse, $serie, $tope, $can_draft, $can_rev
 	<div class="promotur-card promotur-mt">
 		<div class="promotur-card__head">
 			<?php echo promotur_icon( 'chart' ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
-			<?php /* El rótulo lo escribe una persona: ver promotur_nav_grupos(). */ ?>
-			<span>[FALTA: título del gráfico de actividad]</span>
+			<span><?php esc_html_e( 'Actividad reciente', 'caaguazu-portal' ); ?></span>
 		</div>
 		<div class="promotur-stat__foot">
 			<span class="promotur-stat__n"><?php echo esc_html( number_format_i18n( $serie['total'] ) ); ?></span>

@@ -120,11 +120,11 @@ class PROMOTUR_Editorial {
 	 */
 	public static function quick_feedback() {
 		return array(
-			__( 'Faltan fuentes / referencias.', 'caaguazu-portal' ),
-			__( 'Mejorá las fotos (luz, encuadre, portada).', 'caaguazu-portal' ),
-			__( 'Verificá horarios y costos.', 'caaguazu-portal' ),
-			__( 'Revisá ortografía y redacción.', 'caaguazu-portal' ),
-			__( 'Precisá el “cómo llegar”.', 'caaguazu-portal' ),
+			__( 'Faltan fuentes o referencias.', 'caaguazu-portal' ),
+			__( 'Mejorá las fotos: cuidá la luz, el encuadre y la portada.', 'caaguazu-portal' ),
+			__( 'Verificá los horarios y los costos.', 'caaguazu-portal' ),
+			__( 'Revisá la ortografía y la redacción.', 'caaguazu-portal' ),
+			__( 'Precisá cómo llegar.', 'caaguazu-portal' ),
 		);
 	}
 

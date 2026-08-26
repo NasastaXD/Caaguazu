@@ -11,7 +11,7 @@ $page_title = __( 'Recuperar contraseña', 'caaguazu-portal' );
 $body = function () use ( $error, $notice ) {
 	?>
 	<h1 class="promotur-auth__title"><?php esc_html_e( 'Recuperar contraseña', 'caaguazu-portal' ); ?></h1>
-	<p class="promotur-auth__sub"><?php esc_html_e( 'Te enviamos un enlace para restablecerla.', 'caaguazu-portal' ); ?></p>
+	<p class="promotur-auth__sub"><?php esc_html_e( 'Te enviamos un enlace para restablecer tu contraseña.', 'caaguazu-portal' ); ?></p>
 
 	<?php if ( $error ) : ?>
 		<div class="promotur-notice promotur-notice--error"><?php echo esc_html( $error ); ?></div>

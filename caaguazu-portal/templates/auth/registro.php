@@ -24,15 +24,15 @@ $body = function () use ( $error, $next, $token, $invite_status, $invite_role, $
 		<div class="promotur-notice promotur-notice--info">
 			<?php
 			switch ( $invite_status ) {
-				case 'used':    esc_html_e( 'Esa invitación ya fue usada.', 'caaguazu-portal' ); break;
-				case 'expired': esc_html_e( 'Esa invitación expiró. Pedí una nueva al equipo.', 'caaguazu-portal' ); break;
-				case 'revoked': esc_html_e( 'Esa invitación fue revocada.', 'caaguazu-portal' ); break;
+				case 'used':    esc_html_e( 'Esta invitación ya fue usada.', 'caaguazu-portal' ); break;
+				case 'expired': esc_html_e( 'Esta invitación venció. Pedí una nueva al equipo.', 'caaguazu-portal' ); break;
+				case 'revoked': esc_html_e( 'Esta invitación fue revocada.', 'caaguazu-portal' ); break;
 				default:        esc_html_e( 'El registro es solo por invitación. Pedí tu enlace al equipo de Turismo.', 'caaguazu-portal' );
 			}
 			?>
 		</div>
 		<div class="promotur-auth__links">
-			<a href="<?php echo esc_url( promotur_url( 'login' ) ); ?>"><?php esc_html_e( 'Ya tengo cuenta', 'caaguazu-portal' ); ?></a>
+			<a href="<?php echo esc_url( promotur_url( 'login' ) ); ?>"><?php esc_html_e( 'Ya tengo una cuenta', 'caaguazu-portal' ); ?></a>
 		</div>
 		<?php
 		return;
@@ -61,10 +61,10 @@ $body = function () use ( $error, $next, $token, $invite_status, $invite_role, $
 		</label>
 		<label class="promotur-field">
 			<span><?php esc_html_e( 'Teléfono', 'caaguazu-portal' ); ?></span>
-			<input type="tel" name="phone" autocomplete="tel" inputmode="tel" required placeholder="<?php esc_attr_e( 'Ej: 0981 123 456', 'caaguazu-portal' ); ?>">
+			<input type="tel" name="phone" autocomplete="tel" inputmode="tel" required placeholder="<?php esc_attr_e( 'Ej.: 0981 123 456', 'caaguazu-portal' ); ?>">
 		</label>
 		<label class="promotur-field">
-			<span><?php esc_html_e( 'Contraseña (6+ caracteres)', 'caaguazu-portal' ); ?></span>
+			<span><?php esc_html_e( 'Contraseña (6 o más caracteres)', 'caaguazu-portal' ); ?></span>
 			<input type="password" name="user_pass" autocomplete="new-password" minlength="6" required>
 		</label>
 
@@ -72,7 +72,7 @@ $body = function () use ( $error, $next, $token, $invite_status, $invite_role, $
 	</form>
 
 	<div class="promotur-auth__links">
-		<a href="<?php echo esc_url( promotur_url( 'login' ) ); ?>"><?php esc_html_e( 'Ya tengo cuenta', 'caaguazu-portal' ); ?></a>
+		<a href="<?php echo esc_url( promotur_url( 'login' ) ); ?>"><?php esc_html_e( 'Ya tengo una cuenta', 'caaguazu-portal' ); ?></a>
 	</div>
 	<?php
 };

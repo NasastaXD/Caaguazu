@@ -10,7 +10,7 @@ if ( $detail_id ) {
 	/* ----- Detalle de revisión ----- */
 	$post = get_post( $detail_id );
 	if ( ! $post || PROMOTUR_Destinos::CPT !== $post->post_type ) {
-		wp_die( esc_html__( 'Ficha no encontrada.', 'caaguazu-portal' ), '', array( 'response' => 404 ) );
+		wp_die( esc_html__( 'No encontramos esta ficha.', 'caaguazu-portal' ), '', array( 'response' => 404 ) );
 	}
 	$estado   = PROMOTUR_Editorial::get_estado( $detail_id );
 	$author_name = promotur_account_display_name( PROMOTUR_Destinos::owner_account_id( $detail_id ) );
@@ -65,8 +65,8 @@ if ( $detail_id ) {
 					<?php endif; ?>
 
 					<label class="promotur-field">
-						<span><?php esc_html_e( 'Feedback para el autor', 'caaguazu-portal' ); ?></span>
-						<textarea data-review-comment rows="4" placeholder="<?php esc_attr_e( 'Qué corregir, qué mejorar…', 'caaguazu-portal' ); ?>"></textarea>
+						<span><?php esc_html_e( 'Comentarios para el autor', 'caaguazu-portal' ); ?></span>
+						<textarea data-review-comment rows="4" placeholder="<?php esc_attr_e( 'Qué corregir o mejorar…', 'caaguazu-portal' ); ?>"></textarea>
 					</label>
 					<div class="promotur-quickfb">
 						<?php foreach ( PROMOTUR_Editorial::quick_feedback() as $qf ) : ?>

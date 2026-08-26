@@ -11,7 +11,7 @@ $page_title = __( 'Reportes', 'caaguazu-portal' );
 $body = function () use ( $top, $empties, $health, $autores ) {
 	?>
 	<div class="promotur-eyebrow"><?php esc_html_e( 'Métricas', 'caaguazu-portal' ); ?></div>
-	<h2 class="promotur-h2"><?php esc_html_e( 'Pulso del portal', 'caaguazu-portal' ); ?></h2>
+	<h2 class="promotur-h2"><?php esc_html_e( 'Actividad del portal', 'caaguazu-portal' ); ?></h2>
 
 	<h3 class="promotur-h3"><?php esc_html_e( 'Producción por autor', 'caaguazu-portal' ); ?></h3>
 	<div class="promotur-list">
@@ -47,7 +47,7 @@ $body = function () use ( $top, $empties, $health, $autores ) {
 
 	<h3 class="promotur-h3"><?php esc_html_e( 'Búsquedas sin resultado', 'caaguazu-portal' ); ?> <span class="promotur-muted"><?php esc_html_e( '(huecos de contenido)', 'caaguazu-portal' ); ?></span></h3>
 	<?php if ( empty( $empties ) ) : ?>
-		<p class="promotur-muted"><?php esc_html_e( 'Sin búsquedas fallidas registradas.', 'caaguazu-portal' ); ?></p>
+		<p class="promotur-muted"><?php esc_html_e( 'Todavía no hay búsquedas sin resultado.', 'caaguazu-portal' ); ?></p>
 	<?php else : ?>
 		<div class="promotur-list">
 			<?php $i = 0; foreach ( $empties as $e ) { if ( $i++ >= 15 ) { break; } ?>
@@ -59,7 +59,7 @@ $body = function () use ( $top, $empties, $health, $autores ) {
 		</div>
 	<?php endif; ?>
 
-	<h3 class="promotur-h3"><?php esc_html_e( 'Salud del contenido', 'caaguazu-portal' ); ?></h3>
+	<h3 class="promotur-h3"><?php esc_html_e( 'Estado del contenido', 'caaguazu-portal' ); ?></h3>
 	<div class="promotur-grid promotur-grid--2">
 		<div class="promotur-card">
 			<strong><?php echo esc_html( count( $health['sin_foto'] ) ); ?></strong> <?php esc_html_e( 'fichas publicadas sin portada', 'caaguazu-portal' ); ?>

@@ -8,7 +8,7 @@ $body = function () {
 	<div class="promotur-eyebrow"><?php esc_html_e( 'Organización', 'caaguazu-portal' ); ?></div>
 	<h2 class="promotur-h2"><?php esc_html_e( 'Estructura del sitio', 'caaguazu-portal' ); ?></h2>
 	<div class="promotur-card promotur-empty-box">
-		<p><?php esc_html_e( 'Categorías, zonas y etiquetas de los destinos. La edición completa llega en la siguiente fase; mientras tanto, gestionalas desde WordPress.', 'caaguazu-portal' ); ?></p>
+		<p><?php esc_html_e( 'Acá se organizan las categorías, zonas y etiquetas de los destinos. La edición completa llegará en la próxima fase; por ahora, gestioná estos elementos desde WordPress.', 'caaguazu-portal' ); ?></p>
 		<div class="promotur-inline-form">
 			<a class="promotur-btn promotur-btn--ghost" href="<?php echo esc_url( admin_url( 'edit-tags.php?taxonomy=promotur_categoria&post_type=' . $cpt ) ); ?>"><?php esc_html_e( 'Categorías', 'caaguazu-portal' ); ?></a>
 			<a class="promotur-btn promotur-btn--ghost" href="<?php echo esc_url( admin_url( 'edit-tags.php?taxonomy=promotur_zona&post_type=' . $cpt ) ); ?>"><?php esc_html_e( 'Zonas', 'caaguazu-portal' ); ?></a>

@@ -10,7 +10,7 @@ $body = function () {
 	?>
 	<div class="promotur-eyebrow"><?php esc_html_e( 'Captura en el lugar', 'caaguazu-portal' ); ?></div>
 	<h2 class="promotur-h2"><?php esc_html_e( 'Salida de campo', 'caaguazu-portal' ); ?></h2>
-	<p class="promotur-muted"><?php esc_html_e( 'Capturá foto, nota y ubicación aunque no tengas señal. Se guarda en tu dispositivo y lo sincronizás como borrador cuando vuelva la conexión.', 'caaguazu-portal' ); ?></p>
+	<p class="promotur-muted"><?php esc_html_e( 'Sacá una foto, anotá lo importante y guardá la ubicación, incluso si no tenés señal. Todo queda guardado en tu dispositivo y podés sincronizarlo como borrador cuando vuelva la conexión.', 'caaguazu-portal' ); ?></p>
 
 	<div class="promotur-card" data-captura>
 		<form class="promotur-form" data-captura-form>

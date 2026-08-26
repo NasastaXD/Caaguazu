@@ -36,7 +36,7 @@ $body = function () use ( $post, $post_id, $estado, $checklist, $feedback, $grou
 	?>
 	<div class="promotur-pagehead">
 		<div>
-			<div class="promotur-eyebrow"><?php esc_html_e( 'Ficha de destino', 'caaguazu-portal' ); ?></div>
+			<div class="promotur-eyebrow"><?php esc_html_e( 'Ficha del destino', 'caaguazu-portal' ); ?></div>
 			<h2 class="promotur-h2"><?php echo esc_html( $post_id ? $post->post_title : __( 'Nueva ficha', 'caaguazu-portal' ) ); ?></h2>
 		</div>
 		<span class="promotur-pill <?php echo esc_attr( PROMOTUR_Editorial::estado_class( $estado ) ); ?>"><?php echo esc_html( PROMOTUR_Editorial::estado_label( $estado ) ); ?></span>
@@ -44,7 +44,7 @@ $body = function () use ( $post, $post_id, $estado, $checklist, $feedback, $grou
 
 	<?php if ( ! empty( $feedback ) ) : ?>
 		<div class="promotur-card promotur-feedback">
-			<h3 class="promotur-h3"><?php esc_html_e( 'Feedback del revisor', 'caaguazu-portal' ); ?></h3>
+			<h3 class="promotur-h3"><?php esc_html_e( 'Comentarios del revisor', 'caaguazu-portal' ); ?></h3>
 			<?php foreach ( $feedback as $c ) : ?>
 				<div class="promotur-feedback__item">
 					<strong><?php echo esc_html( $c->comment_author ); ?></strong>
@@ -130,7 +130,7 @@ $body = function () use ( $post, $post_id, $estado, $checklist, $feedback, $grou
 		<aside class="promotur-editor__side">
 			<div class="promotur-card promotur-checklist" data-checklist>
 				<h3 class="promotur-h3"><?php esc_html_e( 'Checklist de mínimos', 'caaguazu-portal' ); ?></h3>
-				<p class="promotur-muted"><?php esc_html_e( 'Completá estos puntos para poder enviar a revisión.', 'caaguazu-portal' ); ?></p>
+				<p class="promotur-muted"><?php esc_html_e( 'Completá estos puntos antes de enviar la ficha a revisión.', 'caaguazu-portal' ); ?></p>
 				<ul>
 					<?php foreach ( $checklist as $item ) : ?>
 						<li class="promotur-checklist__item<?php echo $item['done'] ? ' is-done' : ''; ?>" data-checklist-key="<?php echo esc_attr( $item['key'] ); ?>">

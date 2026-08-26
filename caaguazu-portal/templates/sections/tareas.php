@@ -12,7 +12,7 @@ $page_title = __( 'Tareas', 'caaguazu-portal' );
 $body = function () use ( $uid, $tareas, $can_assign, $minis, $destinos ) {
 	?>
 	<div class="promotur-eyebrow"><?php esc_html_e( 'Asignaciones', 'caaguazu-portal' ); ?></div>
-	<h2 class="promotur-h2"><?php esc_html_e( 'Tareas y lo que falta cubrir', 'caaguazu-portal' ); ?></h2>
+	<h2 class="promotur-h2"><?php esc_html_e( 'Tareas y pendientes por cubrir', 'caaguazu-portal' ); ?></h2>
 
 	<?php if ( $can_assign ) : ?>
 		<details class="promotur-card promotur-newtask">
@@ -24,7 +24,7 @@ $body = function () use ( $uid, $tareas, $can_assign, $minis, $destinos ) {
 					<label class="promotur-field"><span><?php esc_html_e( 'Tipo', 'caaguazu-portal' ); ?></span>
 						<select name="tipo">
 							<option value="tarea"><?php esc_html_e( 'Tarea asignada', 'caaguazu-portal' ); ?></option>
-							<option value="hueco"><?php esc_html_e( 'Hueco (reclamable)', 'caaguazu-portal' ); ?></option>
+							<option value="hueco"><?php esc_html_e( 'Hueco disponible', 'caaguazu-portal' ); ?></option>
 						</select>
 					</label>
 					<label class="promotur-field"><span><?php esc_html_e( 'Vence', 'caaguazu-portal' ); ?></span><input type="date" name="vence"></label>
@@ -69,7 +69,7 @@ $body = function () use ( $uid, $tareas, $can_assign, $minis, $destinos ) {
 							<button type="button" class="promotur-btn promotur-btn--ghost promotur-btn--small" data-op="claim"><?php esc_html_e( 'Reclamar', 'caaguazu-portal' ); ?></button>
 						<?php endif; ?>
 						<?php if ( 'completada' !== $estado && ( $mine || $can_assign ) ) : ?>
-							<button type="button" class="promotur-btn promotur-btn--primary promotur-btn--small" data-op="complete"><?php esc_html_e( 'Marcar completada', 'caaguazu-portal' ); ?></button>
+							<button type="button" class="promotur-btn promotur-btn--primary promotur-btn--small" data-op="complete"><?php esc_html_e( 'Marcar como completada', 'caaguazu-portal' ); ?></button>
 						<?php endif; ?>
 					</div>
 				</div>

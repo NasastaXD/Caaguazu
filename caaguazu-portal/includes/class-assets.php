@@ -69,10 +69,10 @@ class PROMOTUR_Assets {
 			'i18n'      => array(
 				'install'  => __( 'Instalar app', 'caaguazu-portal' ),
 				'sending'  => __( 'Enviando…', 'caaguazu-portal' ),
-				'error'    => __( 'Ocurrió un error. Probá de nuevo.', 'caaguazu-portal' ),
+				'error'    => __( 'Algo salió mal. Probá de nuevo.', 'caaguazu-portal' ),
 				'saved'    => __( 'Guardado', 'caaguazu-portal' ),
-				'confirm'  => __( '¿Confirmás esta acción?', 'caaguazu-portal' ),
-				'missing'  => __( 'Faltan datos obligatorios', 'caaguazu-portal' ),
+				'confirm'  => __( '¿Querés confirmar esta acción?', 'caaguazu-portal' ),
+				'missing'  => __( 'Faltan algunos datos obligatorios.', 'caaguazu-portal' ),
 			),
 		) );
 	}

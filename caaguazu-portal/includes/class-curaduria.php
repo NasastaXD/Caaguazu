@@ -52,7 +52,7 @@ class PROMOTUR_Curaduria {
 	 */
 	public function handle_save() {
 		if ( ! caaguazu_account_can( 'promotor', 'promotur_curate_featured' ) || ! check_admin_referer( 'promotur_curaduria' ) ) {
-			wp_die( esc_html__( 'No autorizado.', 'caaguazu-portal' ) );
+			wp_die( esc_html__( 'No tenés autorización para hacer esto.', 'caaguazu-portal' ) );
 		}
 
 		// Destacados: pares id => orden; nos quedamos con los marcados, ordenados.
@@ -73,7 +73,7 @@ class PROMOTUR_Curaduria {
 			'hasta' => sanitize_text_field( wp_unslash( $_POST['banner_hasta'] ?? '' ) ),
 		) );
 
-		promotur_flash( __( 'Curaduría guardada. La home ya refleja los cambios.', 'caaguazu-portal' ), 'success' );
+		promotur_flash( __( 'Curaduría guardada. La portada ya refleja los cambios.', 'caaguazu-portal' ), 'success' );
 		wp_safe_redirect( promotur_url( 'panel/curaduria' ) );
 		exit;
 	}

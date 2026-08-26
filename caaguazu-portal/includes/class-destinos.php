@@ -112,7 +112,7 @@ class PROMOTUR_Destinos {
 				'fields' => array(
 					'_promotur_gancho'        => array( 'label' => __( 'Gancho (una línea)', 'caaguazu-portal' ), 'type' => 'text', 'req' => true ),
 					'_promotur_portada'       => array( 'label' => __( 'Foto de portada', 'caaguazu-portal' ), 'type' => 'image', 'req' => true ),
-					'_promotur_credito_fotos' => array( 'label' => __( 'Crédito de fotos', 'caaguazu-portal' ), 'type' => 'text', 'req' => true ),
+					'_promotur_credito_fotos' => array( 'label' => __( 'Crédito de las fotos', 'caaguazu-portal' ), 'type' => 'text', 'req' => true ),
 					'_promotur_video'         => array( 'label' => __( 'Video (URL, opcional)', 'caaguazu-portal' ), 'type' => 'url', 'req' => false ),
 				),
 			),
@@ -121,7 +121,7 @@ class PROMOTUR_Destinos {
 				'fields' => array(
 					'_promotur_lat'         => array( 'label' => __( 'Latitud (pin)', 'caaguazu-portal' ), 'type' => 'coord', 'req' => true ),
 					'_promotur_lng'         => array( 'label' => __( 'Longitud (pin)', 'caaguazu-portal' ), 'type' => 'coord', 'req' => true ),
-					'_promotur_referencia'  => array( 'label' => __( 'Referencia (“a 3 km de…”)', 'caaguazu-portal' ), 'type' => 'text', 'req' => false ),
+					'_promotur_referencia'  => array( 'label' => __( 'Referencia («a 3 km de…»)', 'caaguazu-portal' ), 'type' => 'text', 'req' => false ),
 					'_promotur_como_llegar' => array( 'label' => __( 'Cómo llegar (auto / colectivo / a pie)', 'caaguazu-portal' ), 'type' => 'textarea', 'req' => true ),
 					'_promotur_estado_camino' => array( 'label' => __( 'Estado del camino', 'caaguazu-portal' ), 'type' => 'select', 'req' => false, 'options' => array( 'asfalto' => 'Asfalto', 'ripio' => 'Ripio', 'tierra' => 'Tierra' ) ),
 					'_promotur_accesibilidad' => array( 'label' => __( 'Accesibilidad', 'caaguazu-portal' ), 'type' => 'text', 'req' => false ),
@@ -130,7 +130,7 @@ class PROMOTUR_Destinos {
 			'practicos' => array(
 				'label'  => __( 'Datos prácticos', 'caaguazu-portal' ),
 				'fields' => array(
-					'_promotur_horario'   => array( 'label' => __( 'Horario y mejor momento', 'caaguazu-portal' ), 'type' => 'text', 'req' => true ),
+					'_promotur_horario'   => array( 'label' => __( 'Horario y mejor momento para visitar', 'caaguazu-portal' ), 'type' => 'text', 'req' => true ),
 					'_promotur_temporada' => array( 'label' => __( 'Temporada ideal / cuándo evitar', 'caaguazu-portal' ), 'type' => 'text', 'req' => false ),
 					'_promotur_costo'     => array( 'label' => __( 'Costo / entrada', 'caaguazu-portal' ), 'type' => 'text', 'req' => true ),
 					// Rango de precio como número, ADEMÁS del texto libre de
@@ -158,7 +158,7 @@ class PROMOTUR_Destinos {
 				),
 			),
 			'editorial' => array(
-				'label'  => __( 'Editorial / fuentes', 'caaguazu-portal' ),
+				'label'  => __( 'Fuentes y referencias', 'caaguazu-portal' ),
 				'fields' => array(
 					'_promotur_fuentes' => array( 'label' => __( 'Fuentes / referencias', 'caaguazu-portal' ), 'type' => 'textarea', 'req' => false ),
 				),

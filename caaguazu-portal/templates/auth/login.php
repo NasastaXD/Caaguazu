@@ -16,7 +16,7 @@ $body = function () use ( $error, $notice, $next, $reset ) {
 	<p class="promotur-auth__sub"><?php esc_html_e( 'Entrá al panel de Promotores Turísticos.', 'caaguazu-portal' ); ?></p>
 
 	<?php if ( $reset ) : ?>
-		<div class="promotur-notice promotur-notice--success"><?php esc_html_e( 'Tu contraseña fue actualizada. Ya podés entrar.', 'caaguazu-portal' ); ?></div>
+		<div class="promotur-notice promotur-notice--success"><?php esc_html_e( 'Tu contraseña se actualizó. Ya podés iniciar sesión.', 'caaguazu-portal' ); ?></div>
 	<?php endif; ?>
 	<?php if ( $error ) : ?>
 		<div class="promotur-notice promotur-notice--error"><?php echo esc_html( $error ); ?></div>
@@ -39,7 +39,7 @@ $body = function () use ( $error, $notice, $next, $reset ) {
 			<input type="password" name="user_pass" autocomplete="current-password" required>
 		</label>
 		<label class="promotur-check">
-			<input type="checkbox" name="remember" value="1"> <?php esc_html_e( 'Mantener sesión', 'caaguazu-portal' ); ?>
+			<input type="checkbox" name="remember" value="1"> <?php esc_html_e( 'Mantener la sesión iniciada', 'caaguazu-portal' ); ?>
 		</label>
 
 		<button type="submit" class="promotur-btn promotur-btn--primary promotur-btn--block"><?php esc_html_e( 'Entrar', 'caaguazu-portal' ); ?></button>

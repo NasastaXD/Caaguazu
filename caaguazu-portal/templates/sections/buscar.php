@@ -29,7 +29,7 @@ $body = function () use ( $q, $results ) {
 			?>
 		</p>
 		<?php if ( empty( $results ) ) : ?>
-			<div class="promotur-card promotur-empty-box"><p><?php esc_html_e( 'Sin resultados. Probá con otras palabras.', 'caaguazu-portal' ); ?></p></div>
+			<div class="promotur-card promotur-empty-box"><p><?php esc_html_e( 'No encontramos resultados. Probá con otras palabras.', 'caaguazu-portal' ); ?></p></div>
 		<?php else : ?>
 			<div class="promotur-list">
 				<?php foreach ( $results as $p ) :

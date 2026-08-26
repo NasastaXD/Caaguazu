@@ -87,7 +87,7 @@ function promotur_cuentas_active() {
 function promotur_missing_cuentas_notice() {
 	if ( promotur_cuentas_active() ) { return; }
 	echo '<div class="notice notice-error"><p>' .
-		esc_html__( 'Caaguazú Portal necesita el plugin "Caaguazú Cuentas" activo para funcionar — el login de los promotores ya no usa usuarios de WordPress. Activalo desde Plugins para que el panel vuelva a andar.', 'caaguazu-portal' ) .
+		esc_html__( 'Caaguazú Portal necesita tener activo el plugin «Caaguazú Cuentas» para funcionar. El inicio de sesión de los Promotores ya no usa los usuarios de WordPress. Activá el plugin desde Plugins para volver a usar el panel.', 'caaguazu-portal' ) .
 		'</p></div>';
 }
 add_action( 'admin_notices', 'promotur_missing_cuentas_notice' );

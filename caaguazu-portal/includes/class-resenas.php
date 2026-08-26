@@ -41,7 +41,7 @@ class PROMOTUR_Resenas {
 		$user_id = (int) ( $data['user_id'] ?? 0 );
 
 		if ( ! $post_id || PROMOTUR_Destinos::CPT !== get_post_type( $post_id ) ) {
-			return new WP_Error( 'bad_post', __( 'Destino inválido.', 'caaguazu-portal' ) );
+			return new WP_Error( 'bad_post', __( 'El destino no es válido.', 'caaguazu-portal' ) );
 		}
 		if ( '' === $content ) {
 			return new WP_Error( 'empty', __( 'Escribí tu reseña.', 'caaguazu-portal' ) );
@@ -71,7 +71,7 @@ class PROMOTUR_Resenas {
 		if ( $comment_id ) {
 			add_comment_meta( $comment_id, 'promotur_rating', $rating );
 		}
-		return $comment_id ? (int) $comment_id : new WP_Error( 'fail', __( 'No se pudo guardar.', 'caaguazu-portal' ) );
+		return $comment_id ? (int) $comment_id : new WP_Error( 'fail', __( 'No pudimos guardar la reseña.', 'caaguazu-portal' ) );
 	}
 
 	/**
@@ -209,7 +209,7 @@ class PROMOTUR_Resenas {
 				<label class="promotur-field"><span><?php esc_html_e( 'Tu experiencia', 'caaguazu-portal' ); ?></span><textarea name="content" rows="3" required></textarea></label>
 				<button type="submit" class="promotur-btn promotur-btn--primary"><?php esc_html_e( 'Enviar reseña', 'caaguazu-portal' ); ?></button>
 				<span class="promotur-form-msg" data-form-msg aria-live="polite"></span>
-				<p class="promotur-muted"><?php esc_html_e( 'Tu reseña se publica luego de una breve moderación.', 'caaguazu-portal' ); ?></p>
+				<p class="promotur-muted"><?php esc_html_e( 'Tu reseña se publicará después de una breve moderación.', 'caaguazu-portal' ); ?></p>
 			</form>
 		</section>
 		<?php

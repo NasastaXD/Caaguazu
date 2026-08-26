@@ -275,17 +275,15 @@ function promotur_icon( $name ) {
  * (misma forma). Se filtran por capability en el sidebar: un item cuyo cap no
  * tiene la cuenta no se dibuja, y un grupo sin items visibles tampoco.
  *
- * OJO — los dos rótulos de grupo son los únicos textos que el diseño nuevo
- * pide y que no existían antes. Van marcados como [FALTA: …] a propósito: los
- * escribe una persona, no el código. `tools/verificar-diseno.php` los lista
- * mientras sigan puestos.
+ * Los rótulos de grupo se muestran en mayúsculas por CSS
+ * (`.promotur-nav__group`), no por cómo estén escritos acá.
  *
  * @return array[] grupos: { label, items }
  */
 function promotur_nav_grupos() {
 	$grupos = array(
 		array(
-			'label' => '[FALTA: rótulo del grupo 1]',
+			'label' => __( 'GESTIÓN', 'caaguazu-portal' ),
 			'items' => array(
 				array( 'route' => 'panel',                'label' => __( 'Inicio', 'caaguazu-portal' ),           'icon' => 'home',  'cap' => 'promotur_view_panel' ),
 				array(
@@ -303,7 +301,7 @@ function promotur_nav_grupos() {
 			),
 		),
 		array(
-			'label' => '[FALTA: rótulo del grupo 2]',
+			'label' => __( 'PORTAL', 'caaguazu-portal' ),
 			'items' => array(
 				array( 'route' => 'panel/curaduria',  'label' => __( 'Curaduría', 'caaguazu-portal' ),  'icon' => 'star',   'cap' => 'promotur_curate_featured' ),
 				array( 'route' => 'panel/moderacion', 'label' => __( 'Moderación', 'caaguazu-portal' ), 'icon' => 'shield', 'cap' => 'promotur_moderate' ),

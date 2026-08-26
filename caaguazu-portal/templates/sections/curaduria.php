@@ -11,8 +11,8 @@ $page_title = __( 'Curaduría', 'caaguazu-portal' );
 $body = function () use ( $destacados, $orden_map, $banner, $publicados ) {
 	?>
 	<div class="promotur-eyebrow"><?php esc_html_e( 'Portada', 'caaguazu-portal' ); ?></div>
-	<h2 class="promotur-h2"><?php esc_html_e( 'Curaduría de la home', 'caaguazu-portal' ); ?></h2>
-	<p class="promotur-muted"><?php esc_html_e( 'Elegí los destinos destacados y un banner de temporada. La home pública (shortcode [promotur_home]) refleja esto sin tocar código.', 'caaguazu-portal' ); ?></p>
+	<h2 class="promotur-h2"><?php esc_html_e( 'Curaduría de la portada', 'caaguazu-portal' ); ?></h2>
+	<p class="promotur-muted"><?php esc_html_e( 'Elegí los destinos destacados y el banner de temporada. La portada pública se actualiza sola, sin tocar el código.', 'caaguazu-portal' ); ?></p>
 
 	<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 		<?php wp_nonce_field( 'promotur_curaduria' ); ?>
@@ -20,7 +20,7 @@ $body = function () use ( $destacados, $orden_map, $banner, $publicados ) {
 
 		<div class="promotur-card">
 			<h3 class="promotur-h3"><?php esc_html_e( 'Banner de temporada', 'caaguazu-portal' ); ?></h3>
-			<label class="promotur-field"><span><?php esc_html_e( 'Título (vacío = sin banner)', 'caaguazu-portal' ); ?></span><input type="text" name="banner_title" value="<?php echo esc_attr( $banner['title'] ); ?>"></label>
+			<label class="promotur-field"><span><?php esc_html_e( 'Título (dejalo vacío para no mostrar el banner)', 'caaguazu-portal' ); ?></span><input type="text" name="banner_title" value="<?php echo esc_attr( $banner['title'] ); ?>"></label>
 			<label class="promotur-field"><span><?php esc_html_e( 'Texto', 'caaguazu-portal' ); ?></span><input type="text" name="banner_text" value="<?php echo esc_attr( $banner['text'] ); ?>"></label>
 			<div class="promotur-grid promotur-grid--3">
 				<label class="promotur-field"><span><?php esc_html_e( 'Enlace (URL)', 'caaguazu-portal' ); ?></span><input type="url" name="banner_url" value="<?php echo esc_attr( $banner['url'] ); ?>"></label>
@@ -51,7 +51,7 @@ $body = function () use ( $destacados, $orden_map, $banner, $publicados ) {
 			</div>
 		<?php endif; ?>
 
-		<p class="promotur-mt"><button type="submit" class="promotur-btn promotur-btn--primary"><?php esc_html_e( 'Guardar curaduría', 'caaguazu-portal' ); ?></button></p>
+		<p class="promotur-mt"><button type="submit" class="promotur-btn promotur-btn--primary"><?php esc_html_e( 'Guardar cambios', 'caaguazu-portal' ); ?></button></p>
 	</form>
 	<?php
 };

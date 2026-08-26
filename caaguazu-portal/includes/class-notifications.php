@@ -45,7 +45,7 @@ class PROMOTUR_Notifications {
 			foreach ( $pending as $pid ) {
 				$items[] = array(
 					'icon'  => 'inbox',
-					'title' => sprintf( __( '«%s» espera revisión', 'caaguazu-portal' ), get_the_title( $pid ) ),
+					'title' => sprintf( __( '«%s» está esperando revisión', 'caaguazu-portal' ), get_the_title( $pid ) ),
 					'time'  => (int) get_post_time( 'U', true, $pid ),
 					'when'  => human_time_diff( (int) get_post_time( 'U', true, $pid ) ) . ' ' . __( 'atrás', 'caaguazu-portal' ),
 					'url'   => promotur_url( 'panel/revision/' . $pid ),
@@ -69,7 +69,7 @@ class PROMOTUR_Notifications {
 		foreach ( $mine as $pid ) {
 			$items[] = array(
 				'icon'  => 'edit',
-				'title' => sprintf( __( '«%s» necesita cambios', 'caaguazu-portal' ), get_the_title( $pid ) ),
+				'title' => sprintf( __( '«%s» necesita algunos cambios', 'caaguazu-portal' ), get_the_title( $pid ) ),
 				'time'  => (int) get_post_modified_time( 'U', true, $pid ),
 				'when'  => human_time_diff( (int) get_post_modified_time( 'U', true, $pid ) ) . ' ' . __( 'atrás', 'caaguazu-portal' ),
 				'url'   => promotur_url( 'panel/editor/' . $pid ),
@@ -126,7 +126,7 @@ class PROMOTUR_Notifications {
 	 */
 	public function handle_mark_read() {
 		if ( ( ! caaguazu_is_logged_in() && ! caaguazu_wp_admin_bypass() ) || ! check_admin_referer( 'promotur_mark_read' ) ) {
-			wp_die( esc_html__( 'No autorizado.', 'caaguazu-portal' ) );
+			wp_die( esc_html__( 'No tenés autorización para hacer esto.', 'caaguazu-portal' ) );
 		}
 		$uid = caaguazu_account_id();
 		if ( $uid > 0 ) {

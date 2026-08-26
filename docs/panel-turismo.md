@@ -219,12 +219,11 @@ El `.zip` es **OneUI 5.12** (pixelcave): Bootstrap 5, jQuery y 40 dependencias, 
 
 Está acá para que sea una decisión y no una sorpresa.
 
-1. **Tres textos sin escribir.** Los dos rótulos de grupo del menú y el título del gráfico de actividad aparecen como `[FALTA: …]`. Son los únicos textos que el diseño nuevo pide y que no existían antes, y **los escribe una persona**. `verificar-diseno.php` los lista mientras sigan puestos.
-2. **El texto sigue viviendo en el código.** Hay 311 cadenas `__()` en plantillas y clases: cambiar "Cola de revisión" hoy exige publicar el plugin. El mecanismo correcto ya existe en el ecosistema (`caaguazu-app-api` sirve textos por clave desde opciones, con fusión sobre el respaldo local y sin pisar con vacíos), pero no tiene editor y el panel no lo consume. Es un trabajo aparte, y grande.
-3. **Leaflet por CDN** en la vitrina pública (`class-public.php`, `unpkg.com`). Está fuera del panel, pero es la misma regla. Se arregla vendorizándolo. El verificador lo reporta como aviso, no como falla, para no dejar la suite en rojo por deuda declarada.
-4. **Los cuatro estados, a medias.** Hay vacío y éxito; el error es un mensaje genérico sin "reintentar" y no hay estado de carga salvo el "Enviando…". Sin conexión sólo sobrevive la cola de capturas.
-5. **Sólo hay una serie temporal.** La actividad editorial sale del log de auditoría, que es lo único con timestamp. No hay serie de fichas publicadas por día, ni de visitas: por eso las tarjetas de cifras no tienen variación "vs. la semana pasada" como la referencia. Antes que inventar el número, no está.
-6. **Colapsar el menú lateral** (el ícono de la referencia que reduce el panel a íconos) no está hecho.
+1. **El texto sigue viviendo en el código.** Hay 311 cadenas `__()` en plantillas y clases: cambiar "Cola de revisión" hoy exige publicar el plugin. El mecanismo correcto ya existe en el ecosistema (`caaguazu-app-api` sirve textos por clave desde opciones, con fusión sobre el respaldo local y sin pisar con vacíos), pero no tiene editor y el panel no lo consume. Es un trabajo aparte, y grande.
+2. **Leaflet por CDN** en la vitrina pública (`class-public.php`, `unpkg.com`). Está fuera del panel, pero es la misma regla. Se arregla vendorizándolo. El verificador lo reporta como aviso, no como falla, para no dejar la suite en rojo por deuda declarada.
+3. **Los cuatro estados, a medias.** Hay vacío y éxito; el error es un mensaje genérico sin "reintentar" y no hay estado de carga salvo el "Enviando…". Sin conexión sólo sobrevive la cola de capturas.
+4. **Sólo hay una serie temporal.** La actividad editorial sale del log de auditoría, que es lo único con timestamp. No hay serie de fichas publicadas por día, ni de visitas: por eso las tarjetas de cifras no tienen variación "vs. la semana pasada" como la referencia. Antes que inventar el número, no está.
+5. **Colapsar el menú lateral** (el ícono de la referencia que reduce el panel a íconos) no está hecho.
 
 ---
 
@@ -262,4 +261,6 @@ Todos los textos que se ven en el panel están inventariados en [`textos-del-pan
 php tools/textos-del-panel.php > docs/textos-del-panel.md
 ```
 
-Ahí están marcados los tres huecos `[FALTA: …]` y los catorce textos que arrancan en minúscula (casi todos son fragmentos pensados para leerse después de un número: *"4 esperan revisión"*).
+Los 569 fueron revisados y reescritos por una persona: el panel no tiene hoy ningún texto pendiente, y `verificar-diseno.php` lo comprueba (falla si vuelve a aparecer un `[FALTA: …]`).
+
+Quedan a propósito catorce textos que arrancan en minúscula: son fragmentos pensados para leerse dentro de una frase o después de un número — *"4 esperan revisión"*. El inventario los marca con 🔡 para que se vean de un vistazo.

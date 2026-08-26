@@ -27,7 +27,7 @@ $body = function () use ( $posts ) {
 
 	<?php if ( empty( $posts ) ) : ?>
 		<div class="promotur-card promotur-empty-box">
-			<p><?php esc_html_e( 'Todavía no creaste ninguna ficha. ¡Empezá por una!', 'caaguazu-portal' ); ?></p>
+			<p><?php esc_html_e( 'Todavía no creaste ninguna ficha. Empezá con una nueva.', 'caaguazu-portal' ); ?></p>
 			<a class="promotur-btn promotur-btn--primary" href="<?php echo esc_url( promotur_url( 'panel/editor' ) ); ?>"><?php esc_html_e( 'Crear mi primera ficha', 'caaguazu-portal' ); ?></a>
 		</div>
 	<?php else : ?>

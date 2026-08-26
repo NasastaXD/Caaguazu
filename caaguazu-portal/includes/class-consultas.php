@@ -58,7 +58,7 @@ class PROMOTUR_Consultas {
 		$destino = (int) ( $data['destino'] ?? 0 );
 
 		if ( '' === $nombre || ! is_email( $email ) || '' === $mensaje ) {
-			return new WP_Error( 'incompleto', __( 'Completá nombre, email y mensaje.', 'caaguazu-portal' ) );
+			return new WP_Error( 'incompleto', __( 'Completá tu nombre, email y mensaje.', 'caaguazu-portal' ) );
 		}
 
 		$title = $destino ? sprintf( __( 'Consulta sobre %s', 'caaguazu-portal' ), get_the_title( $destino ) ) : __( 'Consulta general', 'caaguazu-portal' );
@@ -136,10 +136,10 @@ class PROMOTUR_Consultas {
 		$post_id = (int) $post_id;
 		$content = sanitize_textarea_field( $content );
 		if ( ! $post_id || PROMOTUR_Destinos::CPT !== get_post_type( $post_id ) ) {
-			return new WP_Error( 'bad_post', __( 'Destino inválido.', 'caaguazu-portal' ) );
+			return new WP_Error( 'bad_post', __( 'El destino no es válido.', 'caaguazu-portal' ) );
 		}
 		if ( '' === $content ) {
-			return new WP_Error( 'empty', __( 'Contanos qué está desactualizado.', 'caaguazu-portal' ) );
+			return new WP_Error( 'empty', __( 'Contanos qué información está desactualizada.', 'caaguazu-portal' ) );
 		}
 		if ( $user_id ) {
 			$u = get_userdata( $user_id );
@@ -155,7 +155,7 @@ class PROMOTUR_Consultas {
 			'user_id'              => (int) $user_id,
 			'comment_approved'     => 0,
 		) );
-		return $cid ? (int) $cid : new WP_Error( 'fail', __( 'No se pudo enviar.', 'caaguazu-portal' ) );
+		return $cid ? (int) $cid : new WP_Error( 'fail', __( 'No pudimos enviar la consulta.', 'caaguazu-portal' ) );
 	}
 
 	/**
