@@ -22,3 +22,4 @@ Apariencia → Temas → Añadir → Subir tema → `caaguazu-theme.zip` → Act
 - **Menús, widgets y Customizer**: el theme no registra ninguno a propósito. Lo que haya configurado el sitio queda guardado en la base y vuelve a aparecer cuando el theme nuevo los registre de nuevo.
 - **Contenido**: el theme no borra ni toca nada de la base de datos. Las entradas, páginas y CPTs siguen ahí; simplemente no hay plantilla que los muestre.
 - **Versión**: subir `Version:` en `style.css` es lo que dispara el Release y, con eso, la actualización automática en producción.
+- **Convive con el panel en el mismo repo**: ahí también se publica `caaguazu-portal`, con su propia versión y su propio zip. Por eso `inc/updater.php` ya no mira `/releases/latest` —que bien puede ser un release del panel— sino el último release que traiga adjunto `caaguazu-theme.zip`.

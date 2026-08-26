@@ -45,10 +45,16 @@ Convive con el plugin `caaguazu-locales` sin colisiones (prefijos distintos).
 == Auto-actualización ==
 
 El plugin se actualiza desde wp-admin sin pasar por WordPress.org, usando
-plugin-update-checker (vendoreado en `vendor/`) contra los GitHub Releases del
-repositorio. Al hacer push a `main`, el workflow `.github/workflows/publish-releases.yml`
-lee la versión del header, empaqueta `caaguazu-portal.zip` y publica el release
-`v{version}`; el checker lo detecta (~cada 12 h) y ofrece la actualización.
+plugin-update-checker (vendoreado en `vendor/`) contra los GitHub Releases de
+`NasastaXD/Caaguazu`. Al mergear a `main`, el job `portal` de
+`.github/workflows/release.yml` lee la versión del header, empaqueta
+`caaguazu-portal.zip` y publica el release `v{version}`; el checker lo detecta
+(~cada 12 h) y ofrece la actualización.
+
+En ese repositorio también se publica el theme del sitio, con su propia versión
+y su propio zip. Para que no se confundan, el updater sólo considera un release
+que traiga adjunto `caaguazu-portal.zip` — la regla no depende de cómo se
+llamen los tags.
 
 * Versión en un solo lugar: header `Version:` + constante `PROMOTUR_VERSION` (semver).
 * Migraciones de BD: incrementar `PROMOTUR_DB_VERSION`; corren solas en `admin_init`
@@ -65,6 +71,7 @@ lee la versión del header, empaqueta `caaguazu-portal.zip` y publica el release
 * `PROMOTUR_Stats::serie_diaria()`: actividad editorial por día leída del log de auditoría (una sola consulta agrupada), para las barras del inicio.
 * Atajo ⌘K / Ctrl+K para el buscador, y submenú plegable en el lateral.
 * Se sacan los `alert()` del navegador: los errores se dicen en la pantalla, donde pasó la cosa.
+* **El auto-updater pasa a leer los releases de `NasastaXD/Caaguazu`**, donde vive ahora el codigo. Como en ese repo tambien se publica el theme del sitio, el updater filtra por release que traiga adjunto `caaguazu-portal.zip`: nunca se come un release del theme creyendo que es suyo.
 
 = 1.1.3 =
 * Integración con el shell propio de Turismo del theme Caaguazú (`caaguazu_tourism_shell_items`): agrega "Destinos" (desplegable con las categorías reales de `promotur_categoria`) y, solo para usuarios logueados con el permiso `promotur_view_panel`, un link directo al panel de promotor.

@@ -66,8 +66,14 @@ class Caaguazu_GitHub_Updater {
 	}
 
 	/**
-	 * GET /repos/{repo}/releases/latest, cacheado 12h para no pegarle
+	 * Último release que traiga el zip del theme, cacheado 12h para no pegarle
 	 * de más a la API pública de GitHub (60 req/hora sin token, por IP).
+	 *
+	 * No se usa /releases/latest: en este repositorio conviven dos series de
+	 * releases —el theme y el plugin del panel—, y "el último" bien puede ser
+	 * el del plugin. Se piden los últimos y se agarra el primero que traiga
+	 * adjunto caaguazu-theme.zip; el de al lado no tiene ese asset y queda
+	 * descartado solo, sin depender de cómo se llamen los tags.
 	 */
 	private function get_latest_release() {
 		$cached = get_transient( self::CACHE_KEY );
@@ -76,7 +82,7 @@ class Caaguazu_GitHub_Updater {
 		}
 
 		$response = wp_remote_get(
-			sprintf( 'https://api.github.com/repos/%s/releases/latest', self::REPO ),
+			sprintf( 'https://api.github.com/repos/%s/releases?per_page=10', self::REPO ),
 			array(
 				'headers' => array(
 					'Accept'     => 'application/vnd.github+json',
@@ -93,8 +99,19 @@ class Caaguazu_GitHub_Updater {
 			return array();
 		}
 
-		$release = json_decode( wp_remote_retrieve_body( $response ), true );
-		$release = is_array( $release ) ? $release : array();
+		$releases = json_decode( wp_remote_retrieve_body( $response ), true );
+		$release  = array();
+
+		foreach ( is_array( $releases ) ? $releases : array() as $candidate ) {
+			if ( ! is_array( $candidate ) || ! empty( $candidate['draft'] ) || ! empty( $candidate['prerelease'] ) ) {
+				continue;
+			}
+			if ( $this->find_zip_asset( $candidate ) ) {
+				$release = $candidate;
+				break;
+			}
+		}
+
 		set_transient( self::CACHE_KEY, $release, self::CACHE_TTL );
 		return $release;
 	}

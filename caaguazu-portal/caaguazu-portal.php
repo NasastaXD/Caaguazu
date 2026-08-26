@@ -36,7 +36,10 @@ define( 'PROMOTUR_BASENAME', plugin_basename( __FILE__ ) );
 define( 'PROMOTUR_BASE', 'turismo-panel' );
 
 /** Repositorio público desde el que se publican los releases (auto-update). */
-define( 'PROMOTUR_REPO', 'https://github.com/nasastaxd/turismo/' );
+define( 'PROMOTUR_REPO', 'https://github.com/NasastaXD/Caaguazu/' );
+
+/** Nombre del zip que el updater busca adjunto a cada release. */
+define( 'PROMOTUR_ASSET', 'caaguazu-portal.zip' );
 
 require_once PROMOTUR_DIR . 'includes/helpers.php';
 require_once PROMOTUR_DIR . 'includes/class-roles.php';
@@ -223,7 +226,28 @@ function promotur_updater() {
 	// Usar el .zip adjunto al release (no el zip del código fuente del repo).
 	$api = method_exists( $updater, 'getVcsApi' ) ? $updater->getVcsApi() : null;
 	if ( $api && method_exists( $api, 'enableReleaseAssets' ) ) {
-		$api->enableReleaseAssets( '/caaguazu-portal\.zip$/i' );
+		$api->enableReleaseAssets( '/' . preg_quote( PROMOTUR_ASSET, '/' ) . '$/i' );
+	}
+
+	/**
+	 * En este repositorio conviven dos cosas que se publican por separado: el
+	 * theme del sitio y este plugin. El updater saca la versión del tag del
+	 * release, así que si agarrara el release del theme (v5.x) creería que hay
+	 * una versión nueva del plugin (3.x) y descargaría lo que no es.
+	 *
+	 * La regla es simple y no depende de cómo se llamen los tags: sólo cuenta
+	 * un release que traiga adjunto el zip de ESTE plugin. El de al lado trae
+	 * el del theme y queda descartado.
+	 */
+	if ( $api && method_exists( $api, 'setReleaseFilter' ) ) {
+		$api->setReleaseFilter( function ( $version, $release ) {
+			foreach ( isset( $release->assets ) ? (array) $release->assets : array() as $asset ) {
+				if ( isset( $asset->name ) && PROMOTUR_ASSET === $asset->name ) {
+					return true;
+				}
+			}
+			return false;
+		} );
 	}
 
 	$token = promotur_github_token();

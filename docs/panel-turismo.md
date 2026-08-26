@@ -226,6 +226,40 @@ Está acá para que sea una decisión y no una sorpresa.
 5. **Sólo hay una serie temporal.** La actividad editorial sale del log de auditoría, que es lo único con timestamp. No hay serie de fichas publicadas por día, ni de visitas: por eso las tarjetas de cifras no tienen variación "vs. la semana pasada" como la referencia. Antes que inventar el número, no está.
 6. **Colapsar el menú lateral** (el ícono de la referencia que reduce el panel a íconos) no está hecho.
 
-### Un aviso operativo
+---
 
-El auto-updater del plugin apunta a los releases de **`nasastaxd/turismo`** (`PROMOTUR_REPO`). El código reworkeado vive ahora en **este** repo. Si se instala esta versión a mano y el updater encuentra un release más nuevo allá, **la pisa**. Antes de instalar hay que decidir cuál de los dos repos publica el plugin — y no se tocó `PROMOTUR_REPO` justamente porque esa decisión no es del código.
+## 9. Cómo se publica
+
+El plugin y el theme viven en **este** repo y se actualizan solos desde sus GitHub Releases. `PROMOTUR_REPO` apunta acá; el repo `nasastaxd/turismo` ya no interviene.
+
+Dos componentes en un mismo repo comparten el espacio de tags, y el updater saca la versión del tag del release. La regla que los mantiene separados no depende de cómo se llamen los tags:
+
+> **Cada release lleva un solo zip, y cada updater se queda con el release que trae el suyo.**
+
+- El plugin filtra por un release que tenga adjunto `caaguazu-portal.zip` (`setReleaseFilter` en `caaguazu-portal.php`).
+- El theme hace lo mismo con `caaguazu-theme.zip`: dejó de mirar `/releases/latest` —que bien puede ser un release del plugin— y ahora recorre los últimos hasta encontrar el que trae su zip.
+
+Para publicar una versión nueva alcanza con subir el número de versión en su header y mergear a `main`:
+
+| Componente | Dónde va la versión | Tag | Asset |
+| --- | --- | --- | --- |
+| Panel | header `Version:` de `caaguazu-portal/caaguazu-portal.php` (y `PROMOTUR_VERSION`) | `v3.0.0` | `caaguazu-portal.zip` |
+| Theme | header `Version:` de `caaguazu-theme/style.css` | `v5.0.1` | `caaguazu-theme.zip` |
+
+[`.github/workflows/release.yml`](../.github/workflows/release.yml) tiene un job por componente: cada uno lee su versión, y si ese tag todavía no existe arma su zip y publica el release. Si la versión no subió, el tag ya existe y el job no hace nada.
+
+Los sitios ven la actualización dentro de las 12 h, o al toque desde **wp-admin → Portal Turismo → Actualizaciones**, que tiene su botón de comprobar.
+
+> Las dos series de números tienen que seguir sin cruzarse: el theme va por 5.x y el panel por 3.x. Si algún día coincidieran, el job falla porque el tag ya existe — falla ruidosa, no un release corrupto.
+
+---
+
+## 10. Los textos
+
+Todos los textos que se ven en el panel están inventariados en [`textos-del-panel.md`](textos-del-panel.md): 569 en total, agrupados por pantalla, con su archivo y línea y una columna para escribir el reemplazo. Se regenera con:
+
+```bash
+php tools/textos-del-panel.php > docs/textos-del-panel.md
+```
+
+Ahí están marcados los tres huecos `[FALTA: …]` y los catorce textos que arrancan en minúscula (casi todos son fragmentos pensados para leerse después de un número: *"4 esperan revisión"*).
