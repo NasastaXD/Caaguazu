@@ -13,9 +13,10 @@ El "sistema de turismo" no es un solo plugin: son **cinco plugins activos repart
 |---|---|---|---|
 | `caaguazu-turismo` | `NasastaXD/Caaguazu` | 1.11.1 | Las 21 páginas de contenido turístico + integración con el nav del theme |
 | `caaguazu-locales` | `NasastaXD/Turismo` | 1.1.0 | Directorio de negocios, reservas por WhatsApp, mapa, reseñas |
-| `caaguazu-portal` | `NasastaXD/Turismo` | 2.0.1 | Panel de promotores turísticos (app tipo PWA) con flujo editorial |
+| `caaguazu-portal` | `NasastaXD/Turismo` | 2.1.0 | Panel de promotores turísticos (app tipo PWA) con flujo editorial |
 | `caaguazu-cuentas` | `NasastaXD/Turismo` | 0.2.0 | Sistema de identidad propio, separado de los usuarios de WordPress |
 | `caaguazu-sso-cead` | `NasastaXD/Turismo` | 1.0.0 | Acceso de un clic desde el colegio CEAD al panel de promotores |
+| `caaguazu-app-api` | `NasastaXD/Turismo` | 0.1.0 | Capa REST que consume la app Android (`/wp-json/czu-app/v1/`) |
 | `caaguazu-theme` (legado) | `NasastaXD/Turismo` | 1.0.0 | **Theme muerto del sitio viejo — ver §7.1** |
 
 Todo corre sobre el theme `Caaguazú` v4.5.1 del repo `NasastaXD/Caaguazu`.
@@ -186,7 +187,7 @@ Al activarse crea `/cuenta/` y `/panel-de-mi-local/` automáticamente.
 
 ## 5. `caaguazu-portal` — el panel de promotores
 
-**Repo:** `NasastaXD/Turismo` · **Versión:** 2.0.1 · **56 archivos PHP** — es, por lejos, el componente más grande del sistema.
+**Repo:** `NasastaXD/Turismo` · **Versión:** 2.1.0 · **56 archivos PHP** — es, por lejos, el componente más grande del sistema.
 
 No es "un CPT con un formulario": es una **aplicación completa** montada sobre rutas propias, con su propio enrutador, su propio shell visual (no usa el theme para el panel) e instalable como PWA.
 
@@ -251,7 +252,7 @@ Las 15 secciones del panel (`home`, `buscar`, `editor`, `captura`, `mis-contenid
 
 ---
 
-## 6. `caaguazu-cuentas` y `caaguazu-sso-cead` — la identidad
+## 6. Identidad, SSO y la API de la app
 
 ### 6.1 `caaguazu-cuentas` (v0.2.0)
 
@@ -320,6 +321,30 @@ El secreto va igual en los dos sitios (uno firma, el otro verifica); las URLs so
 
 > **Estado actual: inactivo.** El endpoint `/wp-json/cead-sso/v1/redeem` de `cead.caaguazu.net` **todavía no existe** — devuelve 404 `rest_no_route`. La mitad emisora no está construida, así que el SSO no puede funcionar aunque se configuren las constantes. El plugin activa igual y avisa en wp-admin; `/acceso-cead` responde 503.
 
+### 6.3 `caaguazu-app-api` (v0.1.0)
+
+Capa REST bajo `/wp-json/czu-app/v1/` que consume la app Android de turismo. Es el componente más nuevo del sistema.
+
+**Es un plugin aparte a propósito:** el theme y las páginas de `caaguazu.net` van a rehacerse, y ese trabajo no debe poder romper la API de una app ya publicada en la tienda. No usa el theme ni sus helpers, no renderiza HTML, y lee el contenido de donde ya vive.
+
+No reimplementa identidad, permisos ni flujo editorial — delega en `caaguazu-cuentas` y `caaguazu-portal`. Sí aporta las entidades que faltaban:
+
+| Aporta | Qué es |
+|---|---|
+| CPT `promotur_evento` | Eventos con fecha, lugar (referenciado o propio) y costo |
+| CPT `promotur_recorrido` | Recorridos prehechos y de usuario, con paradas ordenadas |
+| CPT `promotur_articulo` | Artículos de la app, separados de las Noticias del portal |
+| Term meta en `promotur_categoria` | Icono, color y PNG de marcador por categoría |
+| `_promotur_rango_precio` | Rango 0–4 en la ficha, además del texto libre de costo |
+
+**Dos tablas propias:** `caaguazu_app_tokens` (tokens bearer para la app — tabla separada de las sesiones de navegador a propósito, porque cerrar sesión en la web no debe desloguear el celular) y `caaguazu_app_tombstones` (registro de lo que dejó de estar publicado, para que `/sync` pueda informar bajas y no solo altas).
+
+**Un detalle que importa:** el autor que devuelve la API **no sale de `post_author`**. Como la gente del panel no es usuaria de WordPress, el autor técnico de todo el contenido es el usuario de servicio; el autor real se resuelve desde el meta del dueño. Si eso se cambia, todos los artículos aparecen firmados por `caaguazu-servicio`.
+
+El mapa base **no** lo sirve este plugin: la app usa tiles vectoriales embebidos (2 MB, contra los ~250 MB que pesaría una pirámide ráster). Lo que sí sirve son los markers, separados del mapa base — eso es lo que hace que registrar un lugar haga aparecer su pin sin regenerar nada.
+
+**Pendiente:** `POST /contenido` (alta de fichas desde el teléfono) no está implementado; la lectura sí. Y no tiene auto-updater (§7.5).
+
 ---
 
 ## 7. Hallazgos
@@ -332,7 +357,7 @@ Los cuatro primeros son defectos reales verificados en el código. Ninguno rompe
 
 El repo `NasastaXD/Turismo` contiene `caaguazu-theme/` v1.0.0 — el theme del sitio original `turismo.caaguazu.net`, anterior a la consolidación en el portal. Su último cambio real fue el 10 de julio de 2026.
 
-El problema no es que exista, sino que **`.github/workflows/publish-releases.yml` lo empaqueta y publica en cada release**. El release v2.0.1 de hoy incluye `caaguazu-theme.zip` (126 KB).
+El problema no es que exista, sino que **`.github/workflows/publish-releases.yml` lo empaqueta y publica en cada release**. El release v2.1.0 incluye `caaguazu-theme.zip` (126 KB).
 
 Ese theme, al activarse, **siembra automáticamente sus propias 27 páginas** con los mismos slugs que usa `caaguazu-turismo` (`/que-hacer`, `/la-capital-de-la-madera/historia`, etc.). Si alguien lo instala pensando que es el theme del portal, obtiene un theme que compite con el actual y duplica el contenido.
 
@@ -402,9 +427,9 @@ No es un defecto, pero es la causa raíz de 7.2 y 7.4, y conviene tenerlo escrit
 | Theme, `caaguazu-modulos`, `caaguazu-turismo`, `caaguazu-editor-ux` | Clase compartida `Caaguazu_Component_Updater`, compara contra `manifest.json` del release |
 | `caaguazu-portal` | `plugin-update-checker` vendoreado, lee los GitHub Releases directamente |
 | `caaguazu-locales` | Manifiesto JSON manual en `updates/` *(roto, ver 7.4)* |
-| `caaguazu-cuentas`, `caaguazu-sso-cead` | **Ninguno** — instalación y actualización a mano |
+| `caaguazu-cuentas`, `caaguazu-sso-cead`, `caaguazu-app-api` | **Ninguno** — instalación y actualización a mano |
 
-Los dos plugins sin updater son precisamente los de identidad, o sea los que más conviene poder parchear rápido si aparece un problema de seguridad.
+Los tres plugins sin updater son los de identidad y el que sirve la API de la app — o sea los que más conviene poder parchear rápido si aparece un problema de seguridad. Con una app publicada dependiendo de esa API, deja de ser incómodo y pasa a ser un riesgo.
 
 ### 7.6 El conteo de páginas está mal documentado en tres lugares
 
@@ -438,7 +463,7 @@ El código tiene 21 páginas. El header y el README de `caaguazu-turismo` dicen 
 
 **Repo `NasastaXD/Turismo`** — el workflow se dispara con cualquier cambio en las carpetas de los componentes. Lee la versión de `caaguazu-portal/caaguazu-portal.php` para el tag, y **no publica nada si ese tag ya existe**. Esto significa que un cambio en Locales, Cuentas o SSO que no venga acompañado de un bump de versión del Portal **no genera release**.
 
-Último release: **v2.0.1** (25/08/2026), con `caaguazu-portal.zip`, `caaguazu-locales.zip`, `caaguazu-cuentas.zip`, `caaguazu-sso-cead.zip` y `caaguazu-theme.zip` *(este último, el legado de §7.1)*.
+Último release: **v2.1.0** (26/08/2026), con `caaguazu-portal.zip`, `caaguazu-locales.zip`, `caaguazu-cuentas.zip`, `caaguazu-sso-cead.zip`, `caaguazu-app-api.zip` y `caaguazu-theme.zip` *(este último, el legado de §7.1)*.
 
 ---
 
@@ -452,7 +477,8 @@ En un sitio limpio:
 4. **`caaguazu-locales`** — crea `/cuenta/` y `/panel-de-mi-local/`.
 5. **`caaguazu-turismo`** (repo `Caaguazu`) — siembra las 21 páginas, que ya embeben los shortcodes de los dos anteriores.
 6. **`caaguazu-sso-cead`** — opcional, y hoy inactivo (§6.2).
-7. **Ajustes → Enlaces permanentes → Guardar**, para refrescar las rewrite rules.
+7. **`caaguazu-app-api`** — solo si se va a usar la app Android (§6.3). Crea sus dos tablas.
+8. **Ajustes → Enlaces permanentes → Guardar**, para refrescar las rewrite rules.
 
 **No instalar** `caaguazu-theme.zip` del repo `Turismo` (§7.1).
 
@@ -460,6 +486,6 @@ En un sitio limpio:
 
 Evitar crear páginas con estos slugs, porque los toman los plugins por rewrite rule:
 
-`/czu-login` · `/registro` · `/recuperar` · `/salir` · `/i/{token}` · `/turismo/panel/...` · `/acceso-cead` · `/promotur-*`
+`/czu-login` · `/registro` · `/recuperar` · `/salir` · `/i/{token}` · `/turismo/panel/...` · `/acceso-cead` · `/promotur-*` · `/evento/*` · `/articulo/*` · `/recorrido/*`
 
 `/cuenta/` y `/panel-de-mi-local/` las crea Locales solo.
