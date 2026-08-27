@@ -28,8 +28,29 @@ class PROMOTUR_Audit {
 	}
 
 	/** Acciones consideradas "de posts" (para la pestaña de logs de posts). */
+	/**
+	 * Las acciones que puede registrar el flujo editorial, para los TRES tipos
+	 * de contenido —no sólo la ficha, que es como nació esta lista—.
+	 *
+	 * Generada a partir de PROMOTUR_Editorial::tipos() en vez de tenerla
+	 * escrita a mano: un tipo nuevo (o uno que se vaya) queda reflejado acá
+	 * solo, sin otro lugar que acordarse de tocar.
+	 *
+	 * @return string[]
+	 */
 	public static function post_actions() {
-		return array( 'destino_created', 'destino_enviado', 'destino_publicado', 'destino_necesita_cambios', 'destino_aprobado' );
+		if ( ! class_exists( 'PROMOTUR_Editorial' ) ) {
+			return array( 'destino_created', 'destino_enviado', 'destino_publicado', 'destino_necesita_cambios', 'destino_aprobado' );
+		}
+		$estados = array( 'enviado', 'publicado', 'necesita_cambios', 'aprobado' );
+		$out     = array();
+		foreach ( array_keys( PROMOTUR_Editorial::tipos() ) as $tipo ) {
+			$out[] = $tipo . '_created';
+			foreach ( $estados as $estado ) {
+				$out[] = $tipo . '_' . $estado;
+			}
+		}
+		return $out;
 	}
 
 	public static function client_ip() {
