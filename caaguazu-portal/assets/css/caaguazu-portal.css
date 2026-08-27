@@ -776,6 +776,24 @@ html.promotur-no-splash .promotur-splash { display: none; }
 
 .promotur-paginas { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: var(--gap); }
 
+/* --------------------------------------------------------------------------
+ * Estructura
+ *
+ * Una fila por categoría, zona o etiqueta. El nombre se edita donde está, sin
+ * abrir otra pantalla: son nombres de una línea. En teléfono la fila se parte
+ * en dos y el campo se queda con el ancho.
+ * ------------------------------------------------------------------------ */
+
+.promotur-termino { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--linea); }
+.promotur-termino:last-child { border-bottom: 0; }
+.promotur-termino__nombre { display: flex; flex: 1 1 240px; align-items: center; gap: 8px; min-width: 0; font-weight: 600; }
+.promotur-app .promotur-termino__nombre input { flex: 1 1 auto; min-width: 0; height: 44px; }
+.promotur-termino__uso { display: flex; align-items: center; gap: 10px; }
+
+/* Un enlace suelto al pie de una sección. Va con alto de blanco tocable: en el
+   teléfono un renglón de texto es un blanco de 17px. */
+.promotur-nota-enlace { display: inline-flex; align-items: center; min-height: 44px; }
+
 @media print {
 	.promotur-sidebar, .promotur-topbar, .promotur-splash, .promotur-backdrop, .promotur-bottomnav { display: none !important; }
 	.promotur-main { margin: 0 !important; }

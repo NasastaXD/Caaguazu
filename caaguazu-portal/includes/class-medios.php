@@ -92,9 +92,9 @@ class PROMOTUR_Medios {
 		return (string) get_post_meta( (int) $id, self::META_CREDITO, true );
 	}
 
-	/** ¿Puede la cuenta actual tocar esta foto? */
+	/** ¿Puede la cuenta actual tocar esta foto? Las propias, siempre. */
 	public static function puede_editar( $id ) {
-		if ( caaguazu_account_can( 'promotor', 'promotur_review_content' ) ) {
+		if ( caaguazu_account_can( 'promotor', 'promotur_manage_media' ) ) {
 			return true;
 		}
 		$duena = (int) get_post_meta( (int) $id, self::META_CUENTA, true );

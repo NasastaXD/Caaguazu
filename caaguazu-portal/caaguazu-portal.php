@@ -63,6 +63,7 @@ require_once PROMOTUR_DIR . 'includes/class-gestion-ajax.php';
 require_once PROMOTUR_DIR . 'includes/class-app-control.php';
 require_once PROMOTUR_DIR . 'includes/class-cuenta.php';
 require_once PROMOTUR_DIR . 'includes/class-medios.php';
+require_once PROMOTUR_DIR . 'includes/class-estructura.php';
 
 /**
  * ¿Está activo el sistema de cuentas universal (caaguazu-cuentas)?
@@ -136,6 +137,7 @@ function promotur_boot() {
 	PROMOTUR_App_Control::instance();
 	PROMOTUR_Cuenta::instance();
 	PROMOTUR_Medios::instance();
+	PROMOTUR_Estructura::instance();
 	PROMOTUR_Audit::instance();
 	if ( is_admin() ) {
 		PROMOTUR_Admin::instance();
