@@ -6,7 +6,7 @@
  *
  * Sale con código 1 si alguna pantalla falla, para poder colgarlo de CI.
  *
- * Comprueba dos cosas, en las 15 pantallas del panel, y las dos son reglas
+ * Comprueba dos cosas, en las 22 pantallas del panel, y las dos son reglas
  * escritas del proyecto, no gustos:
  *
  *   1. **Nada se sale de la pantalla.** Un desborde horizontal en un teléfono
@@ -41,11 +41,24 @@ const ANCHO = Number( process.argv[ 2 ] ) || 390;
 const ALTO = 844;
 const MIN_TACTIL = 44;
 
+/*
+ * Cada entrada es la ruta de la plantilla y, opcionalmente, el segmento de
+ * detalle: tres secciones hacen de lista y de editor en la misma ruta, y la
+ * mitad que hay que auditar en un teléfono es justamente la del editor —es
+ * donde hay formularios, botones chicos y filas que se pueden desbordar—.
+ *
+ * `sections/app` no está: esa pantalla salió de circulación (ver
+ * promotur_app_api_activa()).
+ */
 const PANTALLAS = [
-	'sections/home', 'sections/mis-contenidos', 'sections/editor', 'sections/captura',
-	'sections/revision', 'sections/tareas', 'sections/equipo', 'sections/reportes',
+	'sections/home', 'sections/mis-contenidos', 'sections/editor', 'sections/editor 100',
+	'sections/captura', 'sections/inventario', 'sections/inventario 100',
+	'sections/articulos', 'sections/articulos nuevo',
+	'sections/recorridos', 'sections/recorridos 100',
+	'sections/revision', 'sections/revision 100',
+	'sections/tareas', 'sections/equipo', 'sections/reportes',
 	'sections/biblioteca', 'sections/estructura', 'sections/buscar', 'sections/perfil',
-	'sections/app', 'sections/ayuda', 'auth/login',
+	'sections/ayuda', 'auth/login',
 ];
 
 const dir = mkdtempSync( join( tmpdir(), 'czu-movil-' ) );
@@ -62,8 +75,9 @@ const navegador = await chromium.launch(
 console.log( `\n${ gris }Panel en ${ ANCHO }×${ ALTO }${ fin }\n` );
 
 for ( const pantalla of PANTALLAS ) {
-	const archivo = join( dir, pantalla.replace( '/', '-' ) + '.html' );
-	writeFileSync( archivo, execFileSync( 'php', [ join( raiz, 'tools/vista-previa-panel.php' ), pantalla ], { encoding: 'utf8' } ) );
+	const argumentos = pantalla.split( ' ' );
+	const archivo = join( dir, argumentos.join( '-' ).replace( /\//g, '-' ) + '.html' );
+	writeFileSync( archivo, execFileSync( 'php', [ join( raiz, 'tools/vista-previa-panel.php' ), ...argumentos ], { encoding: 'utf8' } ) );
 
 	const pagina = await navegador.newPage( { viewport: { width: ANCHO, height: ALTO } } );
 	await pagina.goto( 'file://' + archivo );

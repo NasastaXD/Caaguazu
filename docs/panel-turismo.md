@@ -1,7 +1,7 @@
 # Panel de Promotores Turísticos
 
 Todo lo que hace el panel, dónde vive cada cosa y qué queda pendiente.
-Versión `3.1.0` del plugin `caaguazu-portal`.
+Versión `3.2.0` del plugin `caaguazu-portal`.
 
 ---
 
@@ -70,9 +70,13 @@ Tres roles, y la UI se gatea **por capability, nunca por rol**:
 | `promotur_manage_structure` | ● | | |
 | `promotur_manage_app` | ● | | |
 
+Las capabilities de contenido no llevan el nombre del tipo: `promotur_create_draft`, `promotur_edit_destino`, `promotur_review_content` y `promotur_publish_destino` gobiernan los tres —fichas, artículos y recorridos—. El nombre quedó de cuando la ficha era lo único que había; renombrarlas obligaría a tocar los permisos ya otorgados de cada cuenta a cambio de nada.
+
 Un item de menú cuyo capability no tiene la cuenta **no se dibuja**, y un grupo que se queda sin items visibles tampoco pinta su rótulo: nadie ve un link que después le va a dar 403. El guard del router repite el chequeo del lado del servidor, así que ocultar el link no es la seguridad, es la cortesía.
 
 **Acceso desde el CEAD**: el plugin `caaguazu-sso-cead` canjea el código del colegio y manda a `promotur_url( 'panel' )`. Como esa función ya apunta a `/turismo-panel`, el SSO siguió funcionando sin tocarle una línea.
+
+Lo que sí hubo que arreglar (v1.1.0 de ese plugin) fue **la traducción de roles**. El CEAD es un WordPress y manda roles de WordPress; acá la identidad no es de WordPress, y son roles `promotur_*`. El puente entre los dos vocabularios era una constante de dos entradas (`alumno_turismo`, `docente_turismo`), y cualquier otra forma —`alumno`, `cead_alumno`, `subscriber`, `Docente`— rebotaba con «Tu rol no está habilitado». Peor: el registro de intentos guardaba la columna `rol_cead` y los claims traían la clave `rol`, así que **el rol quedaba en NULL en todas las filas** y la pantalla de admin mostraba «—» justo donde había que mirar. Ahora los nombres se comparan normalizados, el mapa se edita desde wp-admin, el rol crudo se registra, y hay una pantalla que valida las cinco piezas de la integración y prueba el endpoint del colegio.
 
 ### Nada de lo que hace el equipo pasa por WordPress
 
@@ -105,11 +109,11 @@ En wp-admin quedan dos pantallas —el registro de auditoría y las actualizacio
 └── Barra inferior    5 accesos, sólo en teléfono
 ```
 
-- **Menú agrupado con submenú.** Dos grupos y un pie. "Mis contenidos" abre en árbol a "Nueva ficha" y "Salida de campo"; el submenú viene abierto si estás parado en el padre o en un hijo.
+- **Menú agrupado con submenú.** Tres grupos —Gestión, Contenido y Portal— y un pie. "Mis contenidos" abre en árbol a "Nueva ficha" y "Salida de campo"; el submenú viene abierto si estás parado en el padre o en un hijo.
 - **Migas de pan** en vez de repetir el título: el `<h1>` de la página ya dice dónde estás. En teléfono desaparecen, porque la barra no da para más.
 - **Buscador con ⌘K / Ctrl+K.** La tecla dibujada al lado del campo funciona de verdad: un atajo anunciado y no implementado es peor que no anunciarlo.
 - **Modo claro y oscuro**, elegido por el usuario y recordado, con anti-parpadeo antes del primer dibujado.
-- **El panel es en español, y nada más.** No hay selector de idioma: el que había cambiaba el locale del panel por cookie y arrastraba una capa de traducción que nadie usaba. Los idiomas que sí existen son los de la **app** (ES / EN / GN), y se editan en la sección App.
+- **El panel es en español, y nada más.** No hay selector de idioma: el que había cambiaba el locale del panel por cookie y arrastraba una capa de traducción que nadie usaba. Los idiomas que sí existen son los de la **app** (ES / EN / GN).
 - **Splash de marca** una vez por sesión, y apagado si el sistema pide movimiento reducido.
 - **Barra inferior en teléfono**: una cápsula flotante centrada, de vidrio —papel translúcido con desenfoque—, que deja ver el contenido correr por debajo. Lleva los cinco accesos que corresponden al rol, y la etiqueta se abre **sólo en el activo**: los otros cuatro son ícono, que es lo que hace que entren sin apretujarse. El texto de los inactivos sigue en el DOM para quien usa lector de pantalla; se le cierra el ancho, no se lo esconde. Donde no hay soporte de desenfoque, cae a papel opaco.
 
@@ -117,13 +121,18 @@ En wp-admin quedan dos pantallas —el registro de auditoría y las actualizacio
 
 ## 4. Las secciones
 
-Catorce, cada una con su capability. El shell resuelve la sección, verifica el permiso y ejecuta el contrato de página; una sección desconocida cae en el 404 del panel, no en el del sitio.
+Dieciséis, cada una con su capability. El shell resuelve la sección, verifica el permiso y ejecuta el contrato de página; una sección desconocida cae en el 404 del panel, no en el del sitio.
+
+Tres de ellas —Inventario, Artículos y Recorridos— hacen de lista y de detalle en la misma ruta, como la cola de revisión: `/articulos` lista, `/articulos/nuevo` abre uno en blanco y `/articulos/<id>` abre ese.
 
 | Sección | Ruta | Capability | Qué hace |
 | --- | --- | --- | --- |
 | **Inicio** | `/turismo-panel` | `promotur_view_panel` | Pulso del día: cuántas fichas esperan revisión, publicadas, esperando tu corrección, en proceso, reseñas por moderar y consultas sin responder — cada una es un link a donde se resuelve. Más la actividad editorial de los últimos 7 días y los accesos rápidos. |
-| **Mis contenidos** | `/mis-contenidos` | `promotur_create_draft` | Tus fichas ordenadas por última modificación, con su estado editorial. |
+| **Mis contenidos** | `/mis-contenidos` | `promotur_create_draft` | Todo lo tuyo —fichas, artículos y recorridos— ordenado por última modificación, con su tipo y su estado editorial. |
 | **Nueva ficha / Editor** | `/editor[/<id>]` | `promotur_edit_destino` | Ficha guiada por grupos de campos, con checklist de mínimos en vivo que bloquea el envío si falta algo, subida de fotos y geolocalización. Muestra el feedback de quien revisó. |
+| **Inventario turístico** | `/inventario[/<id>]` | `promotur_view_panel` | El catálogo de fichas publicadas del departamento, con sus datos. Es de donde los recorridos toman sus paradas. |
+| **Artículos** | `/articulos[/nuevo\|<id>]` | `promotur_create_draft` | Las notas que la app muestra: ante título, título, foto con su pie, autores, subtítulo, entradilla, cuerpo y fuentes, más categoría y etiquetas. |
+| **Recorridos** | `/recorridos[/nuevo\|<id>]` | `promotur_create_draft` | Rutas armadas con hasta nueve sitios del inventario, cada uno con su texto y su audio o video, reordenables. Más los medios del recorrido entero y los artículos vinculados. |
 | **Salida de campo** | `/captura` | `promotur_create_draft` | Captura offline: título, nota, foto y GPS quedan en el teléfono y se sincronizan cuando hay señal. |
 | **Cola de revisión** | `/revision[/<id>]` | `promotur_review_content` | Lo que espera revisión, con badge en el menú. Asignarse una ficha, aprobar, publicar o devolver con feedback (hay motivos de un clic). |
 | **Tareas** | `/tareas` | `promotur_view_own_tasks` | Encargos del equipo: reclamar y completar. Badge con las pendientes. |
@@ -133,7 +142,6 @@ Catorce, cada una con su capability. El shell resuelve la sección, verifica el 
 | **Estructura** | `/estructura` | `promotur_view_panel` (editar: `promotur_manage_structure`) | Categorías, zonas y etiquetas: cuántas fichas usa cada una, crear, renombrar en su lugar y borrar lo que no esté en uso. |
 | **Buscar** | `/buscar?q=` | `promotur_view_panel` | Búsqueda de fichas dentro del panel. |
 | **Mi perfil** | `/perfil` | `promotur_edit_profile` | La cuenta: nombre, correo, teléfono, foto y contraseña. Más el nivel de confianza y el portafolio de fichas publicadas. |
-| **App** | `/app` | `promotur_manage_app` | La cabina de mando de la aplicación móvil: textos por idioma, medios, e icono y color de cada categoría. Sólo aparece si el plugin de la API de la app está instalado. |
 | **Ayuda** | `/ayuda` | `promotur_view_panel` | Cómo se usa el panel. |
 
 ### El flujo editorial
@@ -143,7 +151,32 @@ borrador ─enviar→ enviado ─asignarse→ en revisión ─┬─aprobar→ a
                                                    └─devolver→ necesita cambios ─→ borrador
 ```
 
-Cada paso queda en el log de auditoría con quién, qué y cuándo. Los estados tienen su pastilla de color, y el color viene del sistema de tokens (§5), no de un hex suelto.
+**Vale para los tres tipos de contenido**, no sólo para la ficha. Y tiene que ser así: el flujo es el acuerdo de cómo trabaja el equipo, no un detalle de la ficha. Un artículo y un recorrido se escriben, se envían, los revisa alguien y los aprueba el staff, exactamente igual.
+
+Lo único que cambia entre tipos es **qué mínimos hay que cumplir**, y eso lo declara cada clase de contenido con dos métodos: `fields()` —de donde salen los campos marcados obligatorios— y `checklist_extra()` —lo que no es un campo suelto: que haya cuerpo, que haya dos paradas, que haya ubicación—. En `PROMOTUR_Editorial` no hay un solo `if` por tipo.
+
+| | Ficha (`promotur_destino`) | Artículo (`promotur_articulo`) | Recorrido (`promotur_recorrido`) |
+| --- | --- | --- | --- |
+| Mínimos propios | gancho, portada, crédito, horario, costo, descripción y ubicación | autores, portada, pie de foto, fuentes, entradilla y cuerpo | portada, duración, introducción y dos paradas |
+| Se edita en | `/editor` | `/articulos` | `/recorridos` |
+
+Cada paso queda en el log de auditoría con quién, qué y cuándo, y la acción lleva el tipo adelante (`articulo_publicado`, `recorrido_enviado`) para que el registro siga diciendo qué se movió. Los estados tienen su pastilla de color, y el color viene del sistema de tokens (§5), no de un hex suelto.
+
+### La ubicación de una ficha
+
+El **enlace de Google Maps es el modo por defecto**, y las coordenadas quedaron de alternativa. No es una preferencia: la app se apoya en Google Maps para llevar a la gente hasta el lugar, así que el enlace es el dato que de verdad se usa. Y del lado de quien carga, pegar un enlace que ya tiene en el teléfono sale bien siempre; transcribir dos números con seis decimales, no — y un pin corrido no tira ningún error, manda a alguien al lugar equivocado.
+
+El pin se sigue necesitando (el mapa de la app filtra por rango de latitud y longitud, y eso no se puede hacer sobre un valor calculado al vuelo), así que **se saca del enlace al guardar** cuando el enlace lo trae. Están cubiertos los cuatro formatos que escribe Google, y `!3d!4d` gana sobre `@` a propósito: en un enlace de lugar conviven los dos, y el `@` es dónde estaba mirando la cámara, no dónde está el lugar.
+
+Los enlaces cortos (`maps.app.goo.gl`) no traen el punto: resolverlos exigiría un pedido de red desde el servidor en medio de un guardado. Ahí el panel lo dice y quedan los campos de latitud y longitud.
+
+Se fueron cinco campos de la ficha —cómo llegar, referencia, temporada ideal, servicios y duración sugerida—: se llenaban con frases genéricas que no ayudaban a decidir nada. **Los datos ya cargados no se borran**, sólo dejan de pedirse, de mostrarse y de publicarse (ver `PROMOTUR_Destinos::campos_retirados()`).
+
+### Los recorridos
+
+Un recorrido no es un conjunto de lugares: es una **secuencia**. Cambiar el tercero por el quinto cambia el paseo, así que el orden se guarda explícito y el editor tiene botones para subir y bajar cada parada — no un menú escondido ni algo que aparezca al pasar el mouse, porque en un teléfono no hay mouse y reordenar es la operación principal.
+
+El tope de **nueve paradas** no es arbitrario: la app manda el recorrido a Google Maps como una ruta con waypoints, y ahí hay un límite duro. Un recorrido de doce se cortaría solo, en silencio, en el teléfono de alguien que ya salió de casa. Se corta acá, donde se puede avisar, y en tres lugares: el editor, el guardado del panel y la API.
 
 ### PWA
 
@@ -159,14 +192,16 @@ La aplicación Android es otro cliente del mismo backend, y **el panel es su cab
 | Manifiesto de medios (qué imagen o animación va en cada clave) | opción `czuapi_media_manifest` | `GET /wp-json/czu-app/v1/media-manifest` |
 | Icono y color de cada categoría | term meta `czuapi_icono` · `czuapi_color` | `GET /wp-json/czu-app/v1/categorias` |
 
-Ese mecanismo ya existía en `caaguazu-app-api` —endpoints, ETag, fusión sobre el respaldo local, y la regla de que un valor vacío no pisa— pero **no tenía editor**: la promesa de "se cambia sin publicar un APK" estaba a medias. La sección App es la otra mitad.
+Ese mecanismo ya existía en `caaguazu-app-api` —endpoints, ETag, fusión sobre el respaldo local, y la regla de que un valor vacío no pisa— pero **no tenía editor**: la promesa de "se cambia sin publicar un APK" estaba a medias. La sección App fue la otra mitad, y **hoy está desconectada**: llamaba a `CZUAPI_UI_Content::get_strings()`, `get_manifest()` y `set_manifest()`, que existen desde `caaguazu-app-api` 0.2.0, contra la 0.1.0 que hay instalada — y `class_exists()` no distingue una versión de otra, así que la pantalla moría con un error fatal apenas se abría. Es exactamente la clase de dependencia que este ecosistema evita: el panel dando por sentado el interior de otro plugin. El código queda en el repo (`includes/class-app-control.php` y `templates/sections/app.php`) con una guarda, y volver a enchufarla es una línea en `promotur_app_api_activa()`: comprobar los métodos que se usan, no las clases. Mientras tanto los textos y los medios de la app se editan desde wp-admin.
 
 Dos detalles de cómo está hecho:
 
 - **El panel no escribe las opciones del otro plugin a mano.** Pasa por su API pública (`CZUAPI_UI_Content::set_strings()`, `set_manifest()`) y por sus constantes de meta. El día que cambie el formato, cambia en un solo lado. Para eso hubo que agregarle a `caaguazu-app-api` los tres accesos que le faltaban (`get_strings()`, `get_manifest()`, `set_manifest()`): se pidió el cambio en el origen en vez de compensarlo con un parche del lado del panel.
 - **Es una dependencia blanda.** Si la API de la app no está instalada, la sección no se registra, el item no aparece en el menú y su ruta cae en el 404 del panel. El panel funciona igual sin app; la app no funciona sin panel.
 
-Lo que **no** controla el panel todavía: el contenido propio de la app —Eventos, Recorridos y Artículos— se sigue cargando desde wp-admin, donde esos CPTs ya tienen su pantalla. Llevarlos al panel es otra ronda.
+**Artículos y Recorridos ya están en el panel** (v3.2.0). Los dos nacieron como CPTs de `caaguazu-app-api` y estaban al revés: son contenido humano que se escribe, se revisa y aprueba el staff, o sea exactamente lo que hace el panel, y mientras vivían allá había que cargarlos desde wp-admin sin pasar por ninguna revisión. Se mudaron sin cambiar de `post_type`, así que no se perdió nada, y la API se corrió: si el panel está activo, no vuelve a registrarlos.
+
+Lo que **no** controla el panel todavía: los Eventos, que se siguen cargando desde wp-admin.
 
 ---
 
@@ -217,14 +252,30 @@ Cada comprobación está escrita en las dos direcciones: se probó que detecta e
 
 Hoy pasa **sin un solo aviso**: no queda CSS sin usar, ni una clase sin estilo, ni un texto pendiente, ni un asset de terceros.
 
+Y hay un segundo verificador, para lo que el de diseño no puede ver:
+
+```bash
+php tools/verificar-logica.php
+```
+
+Comprueba las **dos únicas funciones del ecosistema que transforman un dato en vez de moverlo de un lado a otro**, que son justo las dos que fallan en silencio si se equivocan:
+
+- `PROMOTUR_Destinos::coords_desde_maps()` — decide dónde cae un pin. Un pin corrido no tira ningún error: manda a alguien al lugar equivocado.
+- `CEADSSO_Roles::normalizar()` — decide si alguien del CEAD entra o no. Un rol que no normaliza bien rebota a una persona con un mensaje que no dice por qué.
+
+Los casos son los reales: los cuatro formatos de enlace que escribe Google (incluido el corto, que no trae el punto, y uno con la latitud fuera del planeta), y las formas en que un WordPress escribe el nombre de un rol. Corre sin WordPress: probar esto no puede costar levantar un sitio.
+
+`npm run verificar` corre los dos, más la auditoría móvil.
+
 Y para mirar una pantalla sin levantar un WordPress:
 
 ```bash
-php tools/vista-previa-panel.php sections/home > /tmp/home.html
-php tools/vista-previa-panel.php auth/login    > /tmp/login.html
+php tools/vista-previa-panel.php sections/home             > /tmp/home.html
+php tools/vista-previa-panel.php auth/login                > /tmp/login.html
+php tools/vista-previa-panel.php sections/recorridos nuevo > /tmp/recorrido.html
 ```
 
-Con eso se revisaron las **21 plantillas** del panel, una por una, antes de dar nada por bueno. Los datos son de maqueta y están declarados como tales.
+El segundo argumento es el segmento que el router pasa como id: sin él, las secciones que hacen de lista y de detalle a la vez sólo se pueden mirar en su mitad de lista. Con esto se revisaron las **23 pantallas** del panel, una por una y en sus dos mitades, antes de dar nada por bueno. Los datos son de maqueta y están declarados como tales.
 
 ---
 
@@ -301,6 +352,8 @@ Dos consecuencias que conviene tener presentes:
 
 El panel bajó de 16 secciones a 14, y de 608 textos a 481.
 
+> Desde v3.2.0 son **16 secciones y 565 textos** otra vez, pero por el otro motivo: no volvió nada de la web pública: entraron Inventario, Artículos y Recorridos, que es contenido de la app. Y se fue la sección App, que estaba rota.
+
 ---
 
 ## 10. Cómo se publica
@@ -331,7 +384,7 @@ Los sitios ven la actualización dentro de las 12 h, o al toque desde **wp-admin
 
 ## 11. Los textos
 
-Todos los textos que se ven en el panel están inventariados en [`textos-del-panel.md`](textos-del-panel.md): 481 en total, agrupados por pantalla, con su archivo y línea y una columna para escribir el reemplazo. Se regenera con:
+Todos los textos que se ven en el panel están inventariados en [`textos-del-panel.md`](textos-del-panel.md): 565 en total, agrupados por pantalla, con su archivo y línea y una columna para escribir el reemplazo. Se regenera con:
 
 ```bash
 php tools/textos-del-panel.php > docs/textos-del-panel.md

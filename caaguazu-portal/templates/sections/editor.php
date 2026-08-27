@@ -1,7 +1,7 @@
 <?php
 /**
- * Editor de ficha de destino: campos estructurados + checklist en vivo + medios.
- * $promotur_id = id del destino a editar (o null = nuevo).
+ * Editor de ficha turística: campos estructurados + checklist en vivo + medios.
+ * $promotur_id = id de la ficha a editar (o null = nueva).
  */
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
@@ -9,13 +9,10 @@ $post_id = isset( $promotur_id ) ? (int) $promotur_id : 0;
 $post    = $post_id ? get_post( $post_id ) : null;
 
 // Si edita una ficha ajena sin ser revisor/admin → bloquear. El dueño real
-// se resuelve por PROMOTUR_Destinos::OWNER_META, no por post_author (que en
-// toda ficha creada desde el panel apunta al usuario de servicio).
+// se resuelve por el meta de cuenta, no por post_author (que en toda ficha
+// creada desde el panel apunta al usuario de servicio).
 if ( $post && PROMOTUR_Destinos::CPT === $post->post_type ) {
-	$owner    = PROMOTUR_Destinos::owner_account_id( $post_id );
-	$mine     = caaguazu_account_id();
-	$is_owner = ( $owner > 0 && $mine > 0 && $owner === $mine );
-	if ( ! $is_owner && ! caaguazu_account_can( 'promotor', 'promotur_review_content' ) ) {
+	if ( ! promotur_puede_editar_contenido( $post_id ) ) {
 		wp_die( esc_html__( 'No podés editar esta ficha.', 'caaguazu-portal' ), '', array( 'response' => 403 ) );
 	}
 } elseif ( $post_id ) {
@@ -24,7 +21,7 @@ if ( $post && PROMOTUR_Destinos::CPT === $post->post_type ) {
 }
 
 $estado    = $post_id ? PROMOTUR_Editorial::get_estado( $post_id ) : 'borrador';
-$checklist = PROMOTUR_Editorial::checklist( $post_id ? $post_id : 0 );
+$checklist = PROMOTUR_Editorial::checklist( $post_id, 'destino' );
 $feedback  = $post_id ? PROMOTUR_Editorial::get_feedback( $post_id ) : array();
 $groups    = PROMOTUR_Destinos::fields();
 
@@ -56,8 +53,9 @@ $body = function () use ( $post, $post_id, $estado, $checklist, $feedback, $grou
 	<?php endif; ?>
 
 	<div class="promotur-editor">
-		<form class="promotur-form promotur-editor__form" data-editor-form>
+		<form class="promotur-form promotur-editor__form" data-editor-form data-tipo="destino">
 			<input type="hidden" name="post_id" value="<?php echo esc_attr( $post_id ); ?>">
+			<input type="hidden" name="tipo" value="destino">
 
 			<label class="promotur-field">
 				<span><?php esc_html_e( 'Nombre del destino', 'caaguazu-portal' ); ?> <em>*</em></span>
@@ -69,54 +67,35 @@ $body = function () use ( $post, $post_id, $estado, $checklist, $feedback, $grou
 				<textarea name="descripcion" rows="5" data-check="descripcion"><?php echo esc_textarea( $content ); ?></textarea>
 			</label>
 
-			<?php foreach ( $groups as $gkey => $group ) : ?>
+			<fieldset class="promotur-fieldset">
+				<legend><?php esc_html_e( 'Clasificación', 'caaguazu-portal' ); ?></legend>
+				<div class="promotur-grid promotur-grid--2">
+					<?php
+					promotur_select_taxonomia( 'promotur_categoria', $post_id, 'categoria', __( 'Categoría', 'caaguazu-portal' ) );
+					promotur_select_taxonomia( 'promotur_zona', $post_id, 'zona', __( 'Zona', 'caaguazu-portal' ) );
+					?>
+					<label class="promotur-field">
+						<span><?php esc_html_e( 'Etiquetas', 'caaguazu-portal' ); ?></span>
+						<input type="text" name="etiquetas" value="<?php echo esc_attr( promotur_etiquetas_texto( $post_id ) ); ?>">
+						<small class="promotur-ayuda"><?php esc_html_e( 'Separadas por comas: «con niños», «gratis», «llega colectivo».', 'caaguazu-portal' ); ?></small>
+					</label>
+				</div>
+			</fieldset>
+
+			<?php
+			foreach ( $groups as $gkey => $group ) : ?>
 				<fieldset class="promotur-fieldset">
 					<legend><?php echo esc_html( $group['label'] ); ?></legend>
 					<div class="promotur-grid promotur-grid--2">
-						<?php foreach ( $group['fields'] as $key => $def ) :
-							$val = $post_id ? get_post_meta( $post_id, $key, true ) : '';
-							$req = ! empty( $def['req'] );
-							$check_attr = $req ? ' data-check="' . esc_attr( $key ) . '"' : '';
-							?>
-							<label class="promotur-field promotur-field--<?php echo esc_attr( $def['type'] ); ?>">
-								<span><?php echo esc_html( $def['label'] ); ?><?php echo $req ? ' <em>*</em>' : ''; ?></span>
-								<?php
-								switch ( $def['type'] ) :
-									case 'textarea': ?>
-										<textarea name="meta[<?php echo esc_attr( $key ); ?>]" rows="3"<?php echo $check_attr; // phpcs:ignore ?>><?php echo esc_textarea( (string) $val ); ?></textarea>
-										<?php break;
-									case 'select': ?>
-										<select name="meta[<?php echo esc_attr( $key ); ?>]"<?php echo $check_attr; // phpcs:ignore ?>>
-											<option value=""><?php esc_html_e( '—', 'caaguazu-portal' ); ?></option>
-											<?php foreach ( $def['options'] as $ov => $ol ) : ?>
-												<option value="<?php echo esc_attr( $ov ); ?>" <?php selected( $val, $ov ); ?>><?php echo esc_html( $ol ); ?></option>
-											<?php endforeach; ?>
-										</select>
-										<?php break;
-									case 'coord': ?>
-										<input type="text" inputmode="decimal" name="meta[<?php echo esc_attr( $key ); ?>]" value="<?php echo esc_attr( (string) $val ); ?>" data-coord="<?php echo esc_attr( '_promotur_lat' === $key ? 'lat' : 'lng' ); ?>"<?php echo $check_attr; // phpcs:ignore ?>>
-										<?php break;
-									case 'image':
-										$img = $val ? wp_get_attachment_image_url( (int) $val, 'medium' ) : '';
-										?>
-										<span class="promotur-upload" data-upload>
-											<input type="hidden" name="meta[<?php echo esc_attr( $key ); ?>]" value="<?php echo esc_attr( (string) $val ); ?>" data-upload-value<?php echo $check_attr; // phpcs:ignore ?>>
-											<span class="promotur-upload__preview"<?php echo $img ? ' style="background-image:url(' . esc_url( $img ) . ')"' : ''; ?> data-upload-preview></span>
-											<label class="promotur-btn promotur-btn--ghost promotur-btn--small">
-												<input type="file" accept="image/*" hidden data-upload-input>
-												<?php esc_html_e( 'Subir foto', 'caaguazu-portal' ); ?>
-											</label>
-										</span>
-										<?php break;
-									default: ?>
-										<input type="<?php echo 'url' === $def['type'] ? 'url' : 'text'; ?>" name="meta[<?php echo esc_attr( $key ); ?>]" value="<?php echo esc_attr( (string) $val ); ?>"<?php echo $check_attr; // phpcs:ignore ?>>
-								<?php endswitch; ?>
-							</label>
-						<?php endforeach; ?>
-						<?php if ( 'ubicacion' === $gkey ) : ?>
-							<button type="button" class="promotur-btn promotur-btn--ghost promotur-btn--small" data-geolocate><?php esc_html_e( '📍 Usar mi ubicación actual', 'caaguazu-portal' ); ?></button>
-						<?php endif; ?>
+						<?php foreach ( $group['fields'] as $key => $def ) {
+							promotur_campo( $key, $def, $post_id ? get_post_meta( $post_id, $key, true ) : '' );
+						} ?>
 					</div>
+					<?php if ( 'ubicacion' === $gkey ) : ?>
+						<div class="promotur-editor__actions">
+							<button type="button" class="promotur-btn promotur-btn--ghost promotur-btn--small" data-geolocate><?php esc_html_e( '📍 Usar mi ubicación actual', 'caaguazu-portal' ); ?></button>
+						</div>
+					<?php endif; ?>
 				</fieldset>
 			<?php endforeach; ?>
 

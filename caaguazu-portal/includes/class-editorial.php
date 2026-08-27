@@ -1,6 +1,18 @@
 <?php
 /**
  * Flujo editorial: estados, checklist de mínimos, asignación de revisor y feedback.
+ *
+ * Vale para los TRES tipos de contenido del panel —ficha, artículo y
+ * recorrido— y no sólo para la ficha, que es como nació. El flujo (borrador →
+ * enviado → en revisión → aprobado → publicado, o devuelto con cambios) es el
+ * mismo para los tres, y tiene que serlo: es el acuerdo de cómo trabaja el
+ * equipo, no un detalle de la ficha.
+ *
+ * Lo único que cambia entre tipos es QUÉ mínimos hay que cumplir, y eso lo
+ * declara cada clase de contenido con dos métodos: `fields()` (de donde salen
+ * los campos marcados `req`) y `checklist_extra()` (lo que no es un campo
+ * suelto: que haya cuerpo, que haya dos paradas, que haya ubicación). Acá no
+ * hay un solo `if` por tipo.
  */
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
@@ -9,6 +21,101 @@ class PROMOTUR_Editorial {
 
 	private static $instance = null;
 	const FEEDBACK_TYPE = 'promotur_feedback';
+
+	/**
+	 * Los tipos de contenido que pasan por el flujo: clave → clase que los
+	 * define.
+	 *
+	 * La clave es la que se usa en las URLs y en el log de auditoría
+	 * (`destino_publicado`, `articulo_enviado`), así que no se cambia a la
+	 * ligera: hay filas viejas escritas con ella.
+	 *
+	 * @return array clave => nombre de clase
+	 */
+	public static function tipos() {
+		return array(
+			'destino'   => 'PROMOTUR_Destinos',
+			'articulo'  => 'PROMOTUR_Articulos',
+			'recorrido' => 'PROMOTUR_Recorridos',
+		);
+	}
+
+	/**
+	 * Los post types que pasan por el flujo.
+	 *
+	 * @return string[]
+	 */
+	public static function cpts() {
+		$out = array();
+		foreach ( self::tipos() as $clase ) {
+			$out[] = constant( $clase . '::CPT' );
+		}
+		return $out;
+	}
+
+	/**
+	 * De un post a su clave de tipo, o '' si ese post no es del panel.
+	 *
+	 * @param int|WP_Post $post
+	 * @return string
+	 */
+	public static function tipo_de( $post ) {
+		$post_type = is_object( $post ) ? $post->post_type : get_post_type( $post );
+		foreach ( self::tipos() as $clave => $clase ) {
+			if ( constant( $clase . '::CPT' ) === $post_type ) {
+				return $clave;
+			}
+		}
+		return '';
+	}
+
+	/**
+	 * La clase que define un tipo, por clave o por post.
+	 *
+	 * @param string $tipo
+	 * @return string|null nombre de clase
+	 */
+	public static function clase( $tipo ) {
+		$tipos = self::tipos();
+		return isset( $tipos[ $tipo ] ) ? $tipos[ $tipo ] : null;
+	}
+
+	/**
+	 * Nombre en singular de un tipo, para los textos de pantalla.
+	 *
+	 * @param string $tipo
+	 * @return string
+	 */
+	public static function tipo_label( $tipo ) {
+		$clase = self::clase( $tipo );
+		if ( ! $clase ) {
+			return '';
+		}
+		if ( method_exists( $clase, 'singular' ) ) {
+			return call_user_func( array( $clase, 'singular' ) );
+		}
+		return __( 'Ficha', 'caaguazu-portal' );
+	}
+
+	/**
+	 * A dónde lleva el enlace para editar una pieza de contenido.
+	 *
+	 * @param int|WP_Post $post
+	 * @return string URL del panel, o '' si el post no es del panel
+	 */
+	public static function url_editor( $post ) {
+		$id   = is_object( $post ) ? (int) $post->ID : (int) $post;
+		$tipo = self::tipo_de( $post );
+		switch ( $tipo ) {
+			case 'destino':
+				return promotur_url( 'panel/editor/' . $id );
+			case 'articulo':
+				return promotur_url( 'panel/articulos/' . $id );
+			case 'recorrido':
+				return promotur_url( 'panel/recorridos/' . $id );
+		}
+		return '';
+	}
 
 	public static function instance() {
 		if ( null === self::$instance ) {
@@ -61,10 +168,13 @@ class PROMOTUR_Editorial {
 		if ( 'publicado' === $estado ) {
 			update_post_meta( $post_id, '_promotur_verificado_en', current_time( 'mysql' ) );
 		}
-		// Auditoría del ciclo editorial (log de posts).
-		if ( class_exists( 'PROMOTUR_Audit' ) && in_array( $estado, array( 'enviado', 'publicado', 'necesita_cambios', 'aprobado' ), true ) ) {
-			PROMOTUR_Audit::log( 'destino_' . $estado, array(
-				'entity_type' => 'destino',
+		// Auditoría del ciclo editorial (log de posts). La acción lleva el
+		// tipo adelante —`articulo_publicado`, `recorrido_enviado`— para que
+		// el registro siga diciendo qué se movió y no sólo que algo se movió.
+		$tipo = self::tipo_de( $post_id );
+		if ( $tipo && class_exists( 'PROMOTUR_Audit' ) && in_array( $estado, array( 'enviado', 'publicado', 'necesita_cambios', 'aprobado' ), true ) ) {
+			PROMOTUR_Audit::log( $tipo . '_' . $estado, array(
+				'entity_type' => $tipo,
 				'entity_id'   => (int) $post_id,
 				'payload'     => array( 'title' => get_the_title( $post_id ) ),
 			) );
@@ -72,44 +182,80 @@ class PROMOTUR_Editorial {
 	}
 
 	/**
-	 * Checklist de mínimos del destino: cada ítem { key, label, done }.
+	 * Checklist de mínimos: cada ítem { key, label, done }.
 	 *
-	 * @param int $post_id
+	 * Se arma con lo que declara la clase del tipo, en este orden:
+	 *
+	 *   1. el título, que lo tienen los tres;
+	 *   2. sus campos marcados `req` en `fields()`;
+	 *   3. lo que agregue `checklist_extra()` — el cuerpo del artículo, las
+	 *      dos paradas del recorrido, la ubicación de la ficha.
+	 *
+	 * `key` es lo que el JavaScript usa para tachar el ítem en vivo mientras
+	 * se escribe: coincide con el `data-check` del campo del formulario.
+	 *
+	 * @param int    $post_id
+	 * @param string $tipo si no se pasa, se deduce del post
 	 * @return array[]
 	 */
-	public static function checklist( $post_id ) {
+	public static function checklist( $post_id, $tipo = '' ) {
+		if ( '' === $tipo ) {
+			$tipo = $post_id ? self::tipo_de( $post_id ) : 'destino';
+		}
+		$clase = self::clase( $tipo );
+		if ( ! $clase ) {
+			return array();
+		}
+
 		$items = array();
 
-		// Título (campo nativo).
 		$items[] = array(
 			'key'   => 'titulo',
-			'label' => __( 'Nombre del destino', 'caaguazu-portal' ),
-			'done'  => '' !== trim( (string) get_the_title( $post_id ) ),
-		);
-		// Descripción (post_content).
-		$content = get_post_field( 'post_content', $post_id );
-		$items[] = array(
-			'key'   => 'descripcion',
-			'label' => __( 'Descripción', 'caaguazu-portal' ),
-			'done'  => '' !== trim( wp_strip_all_tags( (string) $content ) ),
+			'label' => self::label_titulo( $tipo ),
+			'done'  => $post_id && '' !== trim( (string) get_the_title( $post_id ) ),
 		);
 
-		// Campos obligatorios del modelo.
-		foreach ( PROMOTUR_Destinos::flat_fields() as $key => $def ) {
+		foreach ( call_user_func( array( $clase, 'flat_fields' ) ) as $key => $def ) {
 			if ( empty( $def['req'] ) ) { continue; }
-			$val  = get_post_meta( $post_id, $key, true );
-			$done = ( '' !== trim( (string) $val ) );
-			$items[] = array( 'key' => $key, 'label' => $def['label'], 'done' => $done );
+			$val  = $post_id ? get_post_meta( $post_id, $key, true ) : '';
+			$items[] = array(
+				'key'   => $key,
+				'label' => $def['label'],
+				'done'  => '' !== trim( (string) $val ),
+			);
+		}
+
+		if ( method_exists( $clase, 'checklist_extra' ) ) {
+			foreach ( call_user_func( array( $clase, 'checklist_extra' ), $post_id ) as $extra ) {
+				$items[] = $extra;
+			}
 		}
 
 		return $items;
 	}
 
 	/**
+	 * Cómo se llama el título en cada tipo. Un artículo no tiene "nombre", una
+	 * ficha no tiene "titular".
+	 *
+	 * @param string $tipo
+	 * @return string
+	 */
+	public static function label_titulo( $tipo ) {
+		switch ( $tipo ) {
+			case 'articulo':
+				return __( 'Título', 'caaguazu-portal' );
+			case 'recorrido':
+				return __( 'Nombre del recorrido', 'caaguazu-portal' );
+		}
+		return __( 'Nombre del destino', 'caaguazu-portal' );
+	}
+
+	/**
 	 * ¿Cumple todos los mínimos?
 	 */
-	public static function is_complete( $post_id ) {
-		foreach ( self::checklist( $post_id ) as $item ) {
+	public static function is_complete( $post_id, $tipo = '' ) {
+		foreach ( self::checklist( $post_id, $tipo ) as $item ) {
 			if ( ! $item['done'] ) { return false; }
 		}
 		return true;
@@ -124,7 +270,8 @@ class PROMOTUR_Editorial {
 			__( 'Mejorá las fotos: cuidá la luz, el encuadre y la portada.', 'caaguazu-portal' ),
 			__( 'Verificá los horarios y los costos.', 'caaguazu-portal' ),
 			__( 'Revisá la ortografía y la redacción.', 'caaguazu-portal' ),
-			__( 'Precisá cómo llegar.', 'caaguazu-portal' ),
+			__( 'Comprobá que el enlace de Google Maps caiga en el lugar correcto.', 'caaguazu-portal' ),
+			__( 'Revisá el orden de las paradas: no cuenta lo mismo al revés.', 'caaguazu-portal' ),
 		);
 	}
 

@@ -123,6 +123,7 @@ class PROMOTUR_Destinos {
 	/**
 	 * Definición de campos de la ficha (data model + base del editor y del checklist).
 	 * 'req' => true marca los obligatorios que componen el checklist de mínimos.
+	 * 'ayuda' es la línea que se lee debajo del campo, donde hace falta.
 	 *
 	 * @return array grupo => [ key => { label, type, req } ]
 	 */
@@ -137,22 +138,59 @@ class PROMOTUR_Destinos {
 					'_promotur_video'         => array( 'label' => __( 'Video (URL, opcional)', 'caaguazu-portal' ), 'type' => 'url', 'req' => false ),
 				),
 			),
+			/*
+			 * UBICACIÓN — el enlace de Google Maps es el modo por defecto, y las
+			 * coordenadas quedaron de alternativa.
+			 *
+			 * El motivo no es de gusto: la app se apoya en Google Maps para
+			 * llevar a la gente hasta el lugar, así que el enlace es el dato
+			 * que de verdad se usa. Y del lado de quien carga la ficha, pegar
+			 * un enlace que ya tiene en el teléfono es una operación que sale
+			 * bien siempre; transcribir dos números con seis decimales, no.
+			 *
+			 * El pin del mapa se sigue necesitando, pero se saca del enlace
+			 * cuando se puede (ver coords_desde_maps()). Los campos de latitud
+			 * y longitud siguen ahí para los casos que ese parseo no cubre —un
+			 * enlace corto de maps.app.goo.gl, un lugar sin ficha en Google— y
+			 * para poder corregir el pin a mano.
+			 */
 			'ubicacion' => array(
-				'label'  => __( 'Ubicación y acceso', 'caaguazu-portal' ),
+				'label'  => __( 'Ubicación', 'caaguazu-portal' ),
 				'fields' => array(
-					'_promotur_lat'         => array( 'label' => __( 'Latitud (pin)', 'caaguazu-portal' ), 'type' => 'coord', 'req' => true ),
-					'_promotur_lng'         => array( 'label' => __( 'Longitud (pin)', 'caaguazu-portal' ), 'type' => 'coord', 'req' => true ),
-					'_promotur_referencia'  => array( 'label' => __( 'Referencia («a 3 km de…»)', 'caaguazu-portal' ), 'type' => 'text', 'req' => false ),
-					'_promotur_como_llegar' => array( 'label' => __( 'Cómo llegar (auto / colectivo / a pie)', 'caaguazu-portal' ), 'type' => 'textarea', 'req' => true ),
+					'_promotur_maps' => array(
+						'label' => __( 'Enlace de Google Maps', 'caaguazu-portal' ),
+						'type'  => 'url',
+						'req'   => false,
+						'check' => true,
+						'ayuda' => __( 'Buscá el lugar en Google Maps, tocá «Compartir» y pegá acá el enlace. De ahí sacamos el pin solos.', 'caaguazu-portal' ),
+					),
+					'_promotur_lat' => array(
+						'label' => __( 'Latitud (alternativa al enlace)', 'caaguazu-portal' ),
+						'type'  => 'coord',
+						'req'   => false,
+						'ayuda' => __( 'Sólo si el enlace no alcanza: un enlace corto, o un lugar que Google no tiene.', 'caaguazu-portal' ),
+					),
+					'_promotur_lng' => array(
+						'label' => __( 'Longitud (alternativa al enlace)', 'caaguazu-portal' ),
+						'type'  => 'coord',
+						'req'   => false,
+					),
 					'_promotur_estado_camino' => array( 'label' => __( 'Estado del camino', 'caaguazu-portal' ), 'type' => 'select', 'req' => false, 'options' => array( 'asfalto' => 'Asfalto', 'ripio' => 'Ripio', 'tierra' => 'Tierra' ) ),
 					'_promotur_accesibilidad' => array( 'label' => __( 'Accesibilidad', 'caaguazu-portal' ), 'type' => 'text', 'req' => false ),
 				),
 			),
+			/*
+			 * Se fueron de acá «cómo llegar», «temporada ideal», «duración
+			 * sugerida», «servicios» y «referencia»: en la práctica se llenaban
+			 * con frases genéricas que no ayudaban a decidir nada, y cada campo
+			 * de relleno es un renglón más entre quien carga la ficha y los
+			 * datos que la app sí usa. Cómo llegar lo resuelve el enlace de
+			 * Google Maps mejor que un párrafo.
+			 */
 			'practicos' => array(
 				'label'  => __( 'Datos prácticos', 'caaguazu-portal' ),
 				'fields' => array(
 					'_promotur_horario'   => array( 'label' => __( 'Horario y mejor momento para visitar', 'caaguazu-portal' ), 'type' => 'text', 'req' => true ),
-					'_promotur_temporada' => array( 'label' => __( 'Temporada ideal / cuándo evitar', 'caaguazu-portal' ), 'type' => 'text', 'req' => false ),
 					'_promotur_costo'     => array( 'label' => __( 'Costo / entrada', 'caaguazu-portal' ), 'type' => 'text', 'req' => true ),
 					// Rango de precio como número, ADEMÁS del texto libre de
 					// arriba y no en su reemplazo: la app necesita filtrar por
@@ -173,8 +211,6 @@ class PROMOTUR_Destinos {
 							'4' => __( '$$$$ — Caro', 'caaguazu-portal' ),
 						),
 					),
-					'_promotur_servicios' => array( 'label' => __( 'Servicios (baños, comida, sombra…)', 'caaguazu-portal' ), 'type' => 'text', 'req' => false ),
-					'_promotur_duracion'  => array( 'label' => __( 'Duración sugerida', 'caaguazu-portal' ), 'type' => 'text', 'req' => false ),
 					'_promotur_contacto'  => array( 'label' => __( 'Contacto del lugar', 'caaguazu-portal' ), 'type' => 'text', 'req' => false ),
 				),
 			),
@@ -183,6 +219,153 @@ class PROMOTUR_Destinos {
 				'fields' => array(
 					'_promotur_fuentes' => array( 'label' => __( 'Fuentes / referencias', 'caaguazu-portal' ), 'type' => 'textarea', 'req' => false ),
 				),
+			),
+		);
+	}
+
+	/**
+	 * Campos que dejaron de existir en el modelo.
+	 *
+	 * Se listan —y no se borran de la base— porque el dato cargado por una
+	 * persona no se tira sin que alguien lo decida: la ficha deja de pedirlos,
+	 * de mostrarlos y de publicarlos, pero el valor sigue en su meta por si
+	 * mañana hace falta recuperarlo. Sirve además de documentación de qué se
+	 * podó, que si no se pierde en el historial de git.
+	 *
+	 * @return string[]
+	 */
+	public static function campos_retirados() {
+		return array(
+			'_promotur_como_llegar',
+			'_promotur_referencia',
+			'_promotur_temporada',
+			'_promotur_servicios',
+			'_promotur_duracion',
+		);
+	}
+
+	/**
+	 * Coordenadas de una ficha, o null si no tiene pin.
+	 *
+	 * @param int $post_id
+	 * @return array|null { lat: float, lng: float }
+	 */
+	public static function coordenadas( $post_id ) {
+		$lat = get_post_meta( $post_id, '_promotur_lat', true );
+		$lng = get_post_meta( $post_id, '_promotur_lng', true );
+		if ( '' === $lat || '' === $lng || null === $lat || null === $lng ) {
+			return null;
+		}
+		return array( 'lat' => (float) $lat, 'lng' => (float) $lng );
+	}
+
+	/**
+	 * Saca el par de coordenadas de un enlace de Google Maps.
+	 *
+	 * Google escribe el mismo punto de varias formas según de dónde salga el
+	 * enlace, así que se prueban todas, de la más precisa a la más general:
+	 *
+	 *   !3d<lat>!4d<lng>   el punto exacto del lugar (enlace de «Compartir»)
+	 *   @<lat>,<lng>,17z   el centro del mapa (enlace de la barra de dirección)
+	 *   ?q= / query= / ll= / center=   el punto pedido
+	 *   «-25.46, -56.01»   dos números pegados a mano, sin enlace
+	 *
+	 * `@` va DESPUÉS de `!3d!4d` a propósito: en un enlace de lugar los dos
+	 * conviven, y el `@` es dónde estaba mirando la cámara, no dónde está el
+	 * lugar. Tomar el primero que aparece pondría el pin corrido.
+	 *
+	 * Los enlaces cortos (`maps.app.goo.gl`, `goo.gl/maps`) no traen el punto:
+	 * hay que seguir la redirección para saberlo, y eso es un pedido de red
+	 * desde el servidor en medio de un guardado. No se hace: se devuelve null
+	 * y quedan los campos de latitud/longitud para ese caso.
+	 *
+	 * @param string $url
+	 * @return array|null { lat: float, lng: float }
+	 */
+	public static function coords_desde_maps( $url ) {
+		$url = trim( (string) $url );
+		if ( '' === $url ) {
+			return null;
+		}
+
+		$num     = '(-?\d{1,3}\.\d+)';
+		$patrones = array(
+			'/!3d' . $num . '!4d' . $num . '/',
+			'/@' . $num . ',' . $num . '/',
+			'/[?&](?:q|query|ll|center|daddr|destination)=' . $num . '(?:,|%2C)\s*' . $num . '/i',
+			'/^' . $num . '\s*,\s*' . $num . '$/',
+		);
+
+		foreach ( $patrones as $patron ) {
+			if ( ! preg_match( $patron, $url, $m ) ) {
+				continue;
+			}
+			$lat = (float) $m[1];
+			$lng = (float) $m[2];
+			// Un enlace mal pegado puede dejar dos números que parsean pero no
+			// son un punto de la Tierra; y si el punto cae fuera del planeta,
+			// el pin miente en el mapa en vez de faltar.
+			if ( $lat < -90 || $lat > 90 || $lng < -180 || $lng > 180 ) {
+				continue;
+			}
+			return array( 'lat' => $lat, 'lng' => $lng );
+		}
+
+		return null;
+	}
+
+	/**
+	 * Enlace de Google Maps de una ficha: el que cargó la persona, o uno
+	 * armado con el pin si sólo hay coordenadas.
+	 *
+	 * La app abre siempre un enlace, así que resolver acá el caso "sólo hay
+	 * coordenadas" le ahorra al cliente tener dos caminos para lo mismo.
+	 *
+	 * @param int $post_id
+	 * @return string
+	 */
+	public static function maps_url( $post_id ) {
+		$guardado = trim( (string) get_post_meta( $post_id, '_promotur_maps', true ) );
+		if ( '' !== $guardado ) {
+			return $guardado;
+		}
+		$coord = self::coordenadas( $post_id );
+		if ( ! $coord ) {
+			return '';
+		}
+		return 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode( $coord['lat'] . ',' . $coord['lng'] );
+	}
+
+	/**
+	 * ¿Tiene la ficha una ubicación cargada, por cualquiera de los dos
+	 * caminos? Es el ítem del checklist que reemplazó a "latitud" y
+	 * "longitud" sueltas.
+	 *
+	 * @param int $post_id
+	 * @return bool
+	 */
+	public static function tiene_ubicacion( $post_id ) {
+		return '' !== self::maps_url( $post_id );
+	}
+
+	/**
+	 * Ítems de checklist propios de la ficha, más allá de los campos `req`.
+	 *
+	 * @param int $post_id
+	 * @return array[]
+	 */
+	public static function checklist_extra( $post_id ) {
+		$content = $post_id ? get_post_field( 'post_content', $post_id ) : '';
+		return array(
+			array(
+				'key'   => 'descripcion',
+				'label' => __( 'Descripción', 'caaguazu-portal' ),
+				'done'  => '' !== trim( wp_strip_all_tags( (string) $content ) ),
+			),
+			array(
+				'key'   => '_promotur_maps',
+				'label' => __( 'Ubicación (enlace de Google Maps o coordenadas)', 'caaguazu-portal' ),
+				'done'  => $post_id ? self::tiene_ubicacion( $post_id ) : false,
 			),
 		);
 	}
@@ -213,7 +396,7 @@ class PROMOTUR_Destinos {
 			) );
 		}
 		// Meta de flujo editorial.
-		foreach ( array( '_promotur_estado', '_promotur_revisor', '_promotur_galeria', '_promotur_destacado', '_promotur_verificado_en', self::OWNER_META ) as $key ) {
+		foreach ( array( '_promotur_estado', '_promotur_revisor', '_promotur_galeria', '_promotur_destacado', '_promotur_verificado_en', '_promotur_articulos_rel', self::OWNER_META ) as $key ) {
 			register_post_meta( self::CPT, $key, array(
 				'type'          => 'string',
 				'single'        => true,

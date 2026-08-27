@@ -474,6 +474,13 @@ body.promotur-nav-open .promotur-sidebar { transform: translateX(0); }
 	.promotur-auth__links a { display: inline-flex; align-items: center; min-height: 44px; }
 	.promotur-check input { width: 22px; height: 22px; }
 	.promotur-linklist a { display: flex; align-items: center; min-height: 44px; padding: 4px 0; }
+	/* El «← Volver» de las vistas de detalle. Es un renglón de texto —21px— y
+	   es el enlace que más se toca en un teléfono: se sale de una ficha, un
+	   artículo o un recorrido mucho más seguido de lo que se entra. */
+	.promotur-back { display: inline-flex; align-items: center; min-height: 44px; margin-bottom: 0; }
+	/* Los motivos de un clic de la revisión: son varios y chiquitos, y se tocan
+	   con el pulgar mientras se lee la ficha en la otra mitad de la pantalla. */
+	.promotur-chip { min-height: 44px; padding: .5em 1em; }
 	.promotur-app input, .promotur-app select, .promotur-app textarea { min-height: 44px; }
 }
 
@@ -798,6 +805,60 @@ html.promotur-no-splash .promotur-splash { display: none; }
    por una línea: cambiar un rol o suspender a alguien no es lo mismo que leer
    cuánto publicó. */
 .promotur-mod__gestion { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--linea); }
+
+/* --------------------------------------------------------------------------
+ * Ayuda de campo
+ *
+ * La línea que explica qué va en un campo. Va DEBAJO del control y no al lado
+ * de la etiqueta: arriba compite con el nombre del campo, y en un teléfono la
+ * parte. Apagada, porque se lee una vez y después estorba.
+ * ------------------------------------------------------------------------ */
+
+.promotur-ayuda { color: var(--texto-debil); font-size: .8rem; line-height: 1.45; }
+
+/* --------------------------------------------------------------------------
+ * Paradas de un recorrido
+ *
+ * Cada parada es una tarjeta apoyada sobre el hueco, con su número a la
+ * izquierda y los tres botones de mover a la derecha. El número es lo único
+ * que lleva el acento: es el dato que hay que poder leer de un vistazo cuando
+ * se está acomodando el orden, que es para lo que se abre esta pantalla.
+ *
+ * Los botones de mover no se esconden en un menú ni aparecen al pasar el mouse:
+ * en un teléfono no hay mouse, y reordenar es la operación principal.
+ * ------------------------------------------------------------------------ */
+
+.promotur-paradas { display: flex; flex-direction: column; gap: 14px; }
+.promotur-paradas legend { margin-bottom: .2rem; }
+
+.promotur-parada { display: flex; flex-direction: column; gap: 12px; padding: 14px; border: 1px solid var(--linea); border-radius: var(--r-2); background: var(--hueco); }
+.promotur-parada + .promotur-parada { margin-top: 12px; }
+.promotur-parada__cabeza { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; }
+
+.promotur-parada__n {
+	display: grid;
+	place-items: center;
+	flex: 0 0 auto;
+	width: 30px;
+	height: 30px;
+	margin-bottom: 7px;
+	border-radius: var(--r-full);
+	background: var(--tinta);
+	color: var(--sobre-tinta);
+	font-size: .85rem;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+}
+
+.promotur-parada__sitio { flex: 1 1 220px; min-width: 0; }
+.promotur-parada__mover { display: flex; flex: 0 0 auto; gap: 6px; margin-bottom: 3px; }
+
+/* --------------------------------------------------------------------------
+ * Artículos vinculados a un recorrido
+ * ------------------------------------------------------------------------ */
+
+.promotur-vinculos { display: grid; gap: 8px; margin-top: .6rem; grid-template-columns: 1fr; }
+@media (min-width: 700px) { .promotur-vinculos { grid-template-columns: repeat(2, 1fr); } }
 
 @media print {
 	.promotur-sidebar, .promotur-topbar, .promotur-splash, .promotur-backdrop, .promotur-bottomnav { display: none !important; }

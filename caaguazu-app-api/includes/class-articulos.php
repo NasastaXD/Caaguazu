@@ -1,14 +1,25 @@
 <?php
 /**
- * CPT Artículo + endpoints.
+ * Endpoints de Artículo.
  *
- * CPT propio y no las entradas nativas de WordPress: las entradas del portal
- * institucional (Noticias, Agenda) viven en otro plugin y en otro repositorio,
- * y la web va a rehacerse. Un CPT propio deja los artículos de la app fuera de
- * ese trabajo.
+ * EL CPT YA NO SE REGISTRA ACÁ
  *
- * El autor que se publica NO es post_author — ver czuapi_autor() en
- * helpers.php.
+ * `promotur_articulo` nació en este plugin y se mudó a `caaguazu-portal`
+ * (ver PROMOTUR_Articulos). El motivo es simple: el artículo es contenido
+ * humano que se escribe, se revisa y se aprueba, y eso lo hace el panel. Esta
+ * capa lo lee y lo sirve, que es lo suyo.
+ *
+ * El `post_type` no cambió, así que no se perdió ni un artículo. Y queda un
+ * registro de respaldo: si esta API corriera sin el panel —o con un panel
+ * viejo—, el CPT igual existe y wp-admin lo puede editar. Nunca los dos:
+ * `post_type_exists()` decide.
+ *
+ * EL AUTOR
+ *
+ * Lo que se publica NO es `post_author` (ver czuapi_autor() en helpers.php), y
+ * en los artículos hay una vuelta más: la nota la firma quien la escribió, que
+ * no siempre es la cuenta que la cargó. Si el artículo tiene firma escrita, esa
+ * gana; si no, se cae a la cuenta dueña.
  */
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
@@ -19,7 +30,12 @@ class CZUAPI_Articulos {
 
 	const CPT = 'promotur_articulo';
 
-	const META_PIE_PORTADA = '_articulo_pie_portada';
+	const META_PIE_PORTADA  = '_articulo_pie_portada';
+	const META_ANTETITULO   = '_articulo_antetitulo';
+	const META_SUBTITULO    = '_articulo_subtitulo';
+	const META_AUTORES      = '_articulo_autores';
+	const META_FUENTES      = '_articulo_fuentes';
+	const META_PORTADA      = '_articulo_portada';
 	const META_RELACIONADOS = '_articulo_relacionados';
 
 	public static function instance() {
@@ -30,28 +46,29 @@ class CZUAPI_Articulos {
 	}
 
 	private function __construct() {
-		add_action( 'init', array( $this, 'register_post_type' ) );
+		// Prioridad 11: después de que el panel registre el suyo (prioridad 9).
+		add_action( 'init', array( $this, 'register_post_type' ), 11 );
 	}
 
 	public function register_post_type() {
+		if ( post_type_exists( self::CPT ) ) {
+			return; // lo registró el panel, que es su dueño.
+		}
 		register_post_type( self::CPT, array(
 			'labels' => array(
 				'name'          => __( 'Artículos', 'caaguazu-app-api' ),
 				'singular_name' => __( 'Artículo', 'caaguazu-app-api' ),
 				'menu_name'     => __( 'Artículos (app)', 'caaguazu-app-api' ),
 			),
-			'public'       => true,
-			'show_ui'      => true,
-			'show_in_rest' => false,
-			'menu_icon'    => 'dashicons-media-document',
-			'supports'     => array( 'title', 'editor', 'thumbnail', 'excerpt' ),
-			'has_archive'  => false,
-			'rewrite'      => array( 'slug' => 'articulo' ),
-			'taxonomies'   => array( CZUAPI_Taxonomias::TAX_CATEGORIA ),
-		) );
-
-		register_post_meta( self::CPT, self::META_PIE_PORTADA, array(
-			'type' => 'string', 'single' => true, 'show_in_rest' => false,
+			'public'             => false,
+			'publicly_queryable' => false,
+			'show_ui'            => true,
+			'show_in_rest'       => false,
+			'menu_icon'          => 'dashicons-media-document',
+			'supports'           => array( 'title', 'editor', 'thumbnail', 'excerpt' ),
+			'has_archive'        => false,
+			'rewrite'            => false,
+			'taxonomies'         => array( CZUAPI_Taxonomias::TAX_CATEGORIA ),
 		) );
 	}
 
@@ -62,6 +79,7 @@ class CZUAPI_Articulos {
 			'permission_callback' => '__return_true',
 			'args'                => array(
 				'categoria'  => array( 'type' => 'integer' ),
+				'etiqueta'   => array( 'type' => 'integer' ),
 				'pagina'     => array( 'type' => 'integer', 'default' => 1 ),
 				'por_pagina' => array( 'type' => 'integer', 'default' => 20 ),
 			),
@@ -86,12 +104,26 @@ class CZUAPI_Articulos {
 			'order'          => 'DESC',
 		) );
 
+		$tax_query = array();
 		if ( $request->get_param( 'categoria' ) ) {
-			$args['tax_query'] = array( array( // phpcs:ignore WordPress.DB.SlowDBQuery
+			$tax_query[] = array(
 				'taxonomy' => CZUAPI_Taxonomias::TAX_CATEGORIA,
 				'field'    => 'term_id',
 				'terms'    => (int) $request->get_param( 'categoria' ),
-			) );
+			);
+		}
+		// Filtrar por etiqueta, que es lo que hace útil el sistema de tags:
+		// las etiquetas son las mismas que las de las fichas, así que una nota
+		// y un lugar marcados «con niños» se encuentran entre sí.
+		if ( $request->get_param( 'etiqueta' ) ) {
+			$tax_query[] = array(
+				'taxonomy' => 'promotur_etiqueta',
+				'field'    => 'term_id',
+				'terms'    => (int) $request->get_param( 'etiqueta' ),
+			);
+		}
+		if ( $tax_query ) {
+			$args['tax_query'] = $tax_query; // phpcs:ignore WordPress.DB.SlowDBQuery
 		}
 
 		$q     = new WP_Query( $args );
@@ -114,31 +146,113 @@ class CZUAPI_Articulos {
 
 		$out = $this->resumen( $post );
 
-		$out['cuerpo_html'] = apply_filters( 'the_content', $post->post_content );
-		$out['pie_portada'] = (string) get_post_meta( $post->ID, self::META_PIE_PORTADA, true );
-		$out['categoria']   = czuapi_primer_termino( $post->ID, CZUAPI_Taxonomias::TAX_CATEGORIA );
+		$out['cuerpo_html']  = apply_filters( 'the_content', $post->post_content );
+		$out['fuentes']      = $this->fuentes( $post->ID );
+		$out['categoria']    = czuapi_primer_termino( $post->ID, CZUAPI_Taxonomias::TAX_CATEGORIA );
+		$out['etiquetas']    = $this->etiquetas( $post->ID );
 		$out['relacionados'] = $this->relacionados( $post->ID );
-		$out['actualizado'] = czuapi_fecha( $post->post_modified_gmt );
+		$out['actualizado']  = czuapi_fecha( $post->post_modified_gmt );
 
 		return new WP_REST_Response( $out, 200 );
 	}
 
 	/**
+	 * La cabeza de la nota: lo que alcanza para pintar una tarjeta y lo que
+	 * encabeza el detalle. Es la misma forma en los dos lados a propósito —
+	 * así el cliente puede abrir el detalle mostrando ya lo que tenía en la
+	 * lista, sin esperar la respuesta.
+	 *
 	 * @param WP_Post $post
 	 * @return array
 	 */
 	private function resumen( $post ) {
+		$id = (int) $post->ID;
 		return array(
-			'id'        => (int) $post->ID,
-			'titulo'    => get_the_title( $post ),
-			'bajada'    => get_the_excerpt( $post ),
-			'portada'   => czuapi_imagen(
-				(int) get_post_thumbnail_id( $post->ID ),
-				(string) get_post_meta( $post->ID, self::META_PIE_PORTADA, true )
-			),
-			'autor'     => czuapi_autor( $post->ID ),
-			'publicado' => czuapi_fecha( $post->post_date_gmt ),
+			'id'         => $id,
+			'antetitulo' => (string) get_post_meta( $id, self::META_ANTETITULO, true ),
+			'titulo'     => get_the_title( $post ),
+			'subtitulo'  => (string) get_post_meta( $id, self::META_SUBTITULO, true ),
+			// `entradilla` es el párrafo de arranque escrito por la redacción
+			// (el post_excerpt). Se llamaba `bajada` hasta acá: se renombró
+			// para hablar el mismo idioma que el panel, donde el campo se
+			// llama así y así lo escribe la gente.
+			'entradilla' => get_the_excerpt( $post ),
+			'portada'    => $this->portada( $id ),
+			'autores'    => $this->autores( $id ),
+			'publicado'  => czuapi_fecha( $post->post_date_gmt ),
 		);
+	}
+
+	/**
+	 * La portada, con su pie de foto y crédito.
+	 *
+	 * @return array|null
+	 */
+	private function portada( $id ) {
+		$att = (int) get_post_meta( $id, self::META_PORTADA, true );
+		if ( ! $att ) {
+			$att = (int) get_post_thumbnail_id( $id );
+		}
+		return czuapi_imagen( $att, (string) get_post_meta( $id, self::META_PIE_PORTADA, true ) );
+	}
+
+	/**
+	 * Quién firma. Lista, no cadena: una nota puede tener dos autores y el
+	 * cliente tiene que poder mostrarlos como quiera.
+	 *
+	 * @return array[] { nombre, cuenta }
+	 */
+	private function autores( $id ) {
+		$out = array();
+
+		if ( class_exists( 'PROMOTUR_Articulos' ) && method_exists( 'PROMOTUR_Articulos', 'autores' ) ) {
+			foreach ( PROMOTUR_Articulos::autores( $id ) as $nombre ) {
+				$out[] = array( 'nombre' => $nombre, 'cuenta' => null );
+			}
+		}
+
+		if ( $out ) {
+			return $out;
+		}
+
+		// Sin firma escrita: la cuenta que lo cargó. Nunca `post_author`, que
+		// en todo lo creado desde el panel es el usuario de servicio.
+		$cuenta = czuapi_autor( $id );
+		if ( $cuenta ) {
+			$out[] = array( 'nombre' => $cuenta['nombre'], 'cuenta' => $cuenta['id'] );
+		}
+		return $out;
+	}
+
+	/**
+	 * Las fuentes, una por línea. Se parten del lado del servidor porque el
+	 * campo es un textarea y "una por línea" es la convención que se le pide a
+	 * la redacción: dejar que cada cliente la interprete es cómo se terminan
+	 * viendo dos fuentes pegadas en un renglón.
+	 *
+	 * @return string[]
+	 */
+	private function fuentes( $id ) {
+		$crudo = (string) get_post_meta( $id, self::META_FUENTES, true );
+		$out   = array();
+		foreach ( preg_split( '/\r\n|\r|\n/', $crudo ) as $linea ) {
+			$linea = trim( $linea );
+			if ( '' !== $linea ) {
+				$out[] = $linea;
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * @return array[]
+	 */
+	private function etiquetas( $id ) {
+		$terms = get_the_terms( $id, 'promotur_etiqueta' );
+		if ( ! $terms || is_wp_error( $terms ) ) {
+			return array();
+		}
+		return array_map( 'czuapi_termino', $terms );
 	}
 
 	/**

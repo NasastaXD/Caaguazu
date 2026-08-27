@@ -12,8 +12,11 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 $identity = promotur_current_identity();
 $uid      = caaguazu_account_id();
+// El portafolio son las tres cosas que se publican, no sólo las fichas: una
+// persona que escribió cinco artículos tiene un portafolio, aunque no haya
+// cargado ninguna ficha.
 $pub      = get_posts( array(
-	'post_type'      => PROMOTUR_Destinos::CPT,
+	'post_type'      => PROMOTUR_Editorial::cpts(),
 	'post_status'    => 'publish',
 	'meta_query'     => array( array( 'key' => PROMOTUR_Destinos::OWNER_META, 'value' => $uid ) ), // phpcs:ignore WordPress.DB.SlowDBQuery
 	'posts_per_page' => 50,
@@ -75,11 +78,11 @@ $body = function () use ( $identity, $uid, $pub, $is_mini ) {
 
 	<h3 class="promotur-h3"><?php esc_html_e( 'Mi portafolio', 'caaguazu-portal' ); ?></h3>
 	<?php if ( empty( $pub ) ) : ?>
-		<p class="promotur-muted"><?php esc_html_e( 'Todavía no tenés fichas publicadas.', 'caaguazu-portal' ); ?></p>
+		<p class="promotur-muted"><?php esc_html_e( 'Todavía no tenés nada publicado.', 'caaguazu-portal' ); ?></p>
 	<?php else : ?>
 		<div class="promotur-list">
 			<?php foreach ( $pub as $p ) : ?>
-				<a class="promotur-row" href="<?php echo esc_url( promotur_url( 'panel/editor/' . $p->ID ) ); ?>">
+				<a class="promotur-row" href="<?php echo esc_url( PROMOTUR_Editorial::url_editor( $p ) ); ?>">
 					<span class="promotur-row__main">
 						<span class="promotur-row__title"><?php echo esc_html( get_the_title( $p ) ); ?></span>
 					</span>

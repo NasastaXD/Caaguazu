@@ -7,8 +7,9 @@
  * por una razón concreta: un agente (o cualquiera) puede pasar el linter y no
  * haber visto nunca la pantalla dibujada. Esto permite mirarla.
  *
- *   php tools/vista-previa-panel.php sections/home > /tmp/home.html
- *   php tools/vista-previa-panel.php auth/login    > /tmp/login.html
+ *   php tools/vista-previa-panel.php sections/home            > /tmp/home.html
+ *   php tools/vista-previa-panel.php auth/login               > /tmp/login.html
+ *   php tools/vista-previa-panel.php sections/recorridos nuevo > /tmp/rec.html
  *
  * NO va dentro del plugin: es herramienta de repo, no código que se instale.
  * Los datos son de mentira y están puestos para poblar la maqueta — nada de
@@ -132,9 +133,23 @@ function get_term_meta( $id, $key = '', $single = false ) {
 }
 function is_wp_error( $x ) { return false; }
 function sanitize_hex_color( $c ) { return $c; }
-function wp_list_pluck( $arr, $field ) { return array(); }
+function wp_list_pluck( $arr, $field ) { $out = array(); foreach ( (array) $arr as $x ) { $out[] = is_object( $x ) ? $x->$field : ( is_array( $x ) ? $x[ $field ] : $x ); } return $out; }
 function get_edit_post_link( $id ) { return '#'; }
-function get_post( $id = null ) { $p = new stdClass(); $p->ID = (int) $id; $p->post_title = 'Salto Suizo'; return $p; }
+function get_post( $id = null ) {
+	// Un post de maqueta con TODAS las propiedades que leen las plantillas.
+	// Faltaban post_type, post_content y post_excerpt, y sin ellas las vistas
+	// de detalle —las que se abren con un id— morían en un aviso antes de
+	// dibujar nada, que es justo lo que esta herramienta existe para evitar.
+	$p               = new stdClass();
+	$p->ID           = (int) $id;
+	$p->post_title   = 'Salto Suizo';
+	$p->post_type    = $GLOBALS['promotur_vista_previa_cpt'] ?? 'promotur_destino';
+	$p->post_status  = 'draft';
+	$p->post_content = 'Sendero corto, sombra y agua fría todo el año. Se llega por el camino viejo y la caída se escucha antes de verse.';
+	$p->post_excerpt = 'Una caída de agua a 40 minutos del centro.';
+	$p->post_modified_gmt = gmdate( 'Y-m-d H:i:s', time() - 86400 );
+	return $p;
+}
 function get_post_status( $id = null ) { return 'draft'; }
 function get_post_modified_time( $f = 'U', $gmt = false, $p = null ) { return time() - 7200; }
 function get_post_time( $f = 'U', $gmt = false, $p = null ) { return time() - 86400; }
@@ -142,6 +157,13 @@ function get_the_excerpt( $p = null ) { return 'Sendero corto, sombra y agua fr�
 function get_the_author_meta( $f, $id = 0 ) { return 'Ana Giménez'; }
 function wp_trim_words( $t, $n = 55, $more = null ) { return $t; }
 function has_post_thumbnail( $p = null ) { return false; }
+function get_post_thumbnail_id( $p = null ) { return 0; }
+function wp_get_attachment_image( $id, $size = '', $icon = false, $attr = array() ) { return ''; }
+function get_post_field( $campo, $p = null ) { return 'post_content' === $campo ? 'Sendero corto, sombra y agua fría todo el año.' : ''; }
+function get_post_type( $p = null ) { return $GLOBALS['promotur_vista_previa_cpt'] ?? 'promotur_destino'; }
+function get_the_terms( $p, $tax ) { return get_terms( array( 'taxonomy' => $tax ) ); }
+function wp_get_object_terms( $p, $tax, $args = array() ) { return array( 30 ); }
+function wp_die( $mensaje = '', $titulo = '', $args = array() ) { echo esc_html( $mensaje ); exit( 0 ); }
 function wp_head() {
 	global $promotur_css;
 	echo "<title>Vista previa — panel</title>\n<style>\n" . $promotur_css . "\n</style>\n";
@@ -241,28 +263,130 @@ class PROMOTUR_Roles {
 }
 class PROMOTUR_Destinos {
 	const CPT = 'promotur_destino';
-	const OWNER_META = '_promotur_owner';
+	const OWNER_META = '_caaguazu_owner';
 	public static function owner_account_id( $post_id ) { return 7; }
+	/* Los campos son los reales: si la maqueta dibujara otros, serviría para
+	   juzgar una pantalla que no existe. */
 	public static function fields() {
 		return array(
-			'basico' => array(
-				'label'  => 'Lo básico',
+			'identidad' => array(
+				'label'  => 'Identidad',
 				'fields' => array(
-					'titulo' => array( 'label' => 'Nombre del lugar', 'type' => 'text', 'req' => true ),
-					'gancho' => array( 'label' => 'Frase gancho', 'type' => 'text', 'req' => true ),
-					'descripcion' => array( 'label' => 'Descripción', 'type' => 'textarea', 'req' => true ),
+					'_promotur_gancho'        => array( 'label' => 'Gancho (una línea)', 'type' => 'text', 'req' => true ),
+					'_promotur_portada'       => array( 'label' => 'Foto de portada', 'type' => 'image', 'req' => true ),
+					'_promotur_credito_fotos' => array( 'label' => 'Crédito de las fotos', 'type' => 'text', 'req' => true ),
+					'_promotur_video'         => array( 'label' => 'Video (URL, opcional)', 'type' => 'url', 'req' => false ),
 				),
 			),
-			'visita' => array(
-				'label'  => 'La visita',
+			'ubicacion' => array(
+				'label'  => 'Ubicación',
 				'fields' => array(
-					'como_llegar' => array( 'label' => 'Cómo llegar', 'type' => 'textarea', 'req' => false ),
-					'horarios'    => array( 'label' => 'Horarios', 'type' => 'text', 'req' => false ),
-					'precio'      => array( 'label' => 'Precio', 'type' => 'text', 'req' => false ),
+					'_promotur_maps' => array( 'label' => 'Enlace de Google Maps', 'type' => 'url', 'req' => false, 'check' => true, 'ayuda' => 'Buscá el lugar en Google Maps, tocá «Compartir» y pegá acá el enlace. De ahí sacamos el pin solos.' ),
+					'_promotur_lat'  => array( 'label' => 'Latitud (alternativa al enlace)', 'type' => 'coord', 'req' => false, 'ayuda' => 'Sólo si el enlace no alcanza.' ),
+					'_promotur_lng'  => array( 'label' => 'Longitud (alternativa al enlace)', 'type' => 'coord', 'req' => false ),
+					'_promotur_estado_camino' => array( 'label' => 'Estado del camino', 'type' => 'select', 'req' => false, 'options' => array( 'asfalto' => 'Asfalto', 'ripio' => 'Ripio', 'tierra' => 'Tierra' ) ),
+					'_promotur_accesibilidad' => array( 'label' => 'Accesibilidad', 'type' => 'text', 'req' => false ),
+				),
+			),
+			'practicos' => array(
+				'label'  => 'Datos prácticos',
+				'fields' => array(
+					'_promotur_horario'  => array( 'label' => 'Horario y mejor momento para visitar', 'type' => 'text', 'req' => true ),
+					'_promotur_costo'    => array( 'label' => 'Costo / entrada', 'type' => 'text', 'req' => true ),
+					'_promotur_contacto' => array( 'label' => 'Contacto del lugar', 'type' => 'text', 'req' => false ),
+				),
+			),
+			'editorial' => array(
+				'label'  => 'Fuentes y referencias',
+				'fields' => array(
+					'_promotur_fuentes' => array( 'label' => 'Fuentes / referencias', 'type' => 'textarea', 'req' => false ),
 				),
 			),
 		);
 	}
+	public static function flat_fields() {
+		$out = array();
+		foreach ( self::fields() as $g ) { foreach ( $g['fields'] as $k => $d ) { $out[ $k ] = $d; } }
+		return $out;
+	}
+	public static function maps_url( $post_id ) { return 'https://www.google.com/maps/search/?api=1&query=-25.4669,-56.0175'; }
+	public static function tiene_ubicacion( $post_id ) { return true; }
+	public static function coordenadas( $post_id ) { return array( 'lat' => -25.4669, 'lng' => -56.0175 ); }
+	public static function checklist_extra( $post_id ) { return array(); }
+}
+class PROMOTUR_Articulos {
+	const CPT = 'promotur_articulo';
+	const OWNER_META = '_caaguazu_owner';
+	public static function singular() { return 'Artículo'; }
+	public static function plural() { return 'Artículos'; }
+	public static function autores( $post_id ) { return array( 'Ana Giménez' ); }
+	public static function portada_id( $post_id ) { return 0; }
+	public static function fields() {
+		return array(
+			'cabeza' => array(
+				'label'  => 'Cabeza',
+				'fields' => array(
+					'_articulo_antetitulo' => array( 'label' => 'Ante título', 'type' => 'text', 'req' => false, 'ayuda' => 'La línea corta que va arriba del título.' ),
+					'_articulo_subtitulo'  => array( 'label' => 'Subtítulo', 'type' => 'text', 'req' => false ),
+					'_articulo_autores'    => array( 'label' => 'Autor / autores', 'type' => 'text', 'req' => true, 'ayuda' => 'Quién firma la nota.' ),
+				),
+			),
+			'foto' => array(
+				'label'  => 'Foto de portada',
+				'fields' => array(
+					'_articulo_portada'     => array( 'label' => 'Foto', 'type' => 'image', 'req' => true ),
+					'_articulo_pie_portada' => array( 'label' => 'Pie de foto y crédito', 'type' => 'text', 'req' => true ),
+				),
+			),
+			'cierre' => array(
+				'label'  => 'Fuentes',
+				'fields' => array(
+					'_articulo_fuentes' => array( 'label' => 'Fuentes', 'type' => 'textarea', 'req' => true, 'ayuda' => 'Una por línea.' ),
+				),
+			),
+		);
+	}
+	public static function flat_fields() {
+		$out = array();
+		foreach ( self::fields() as $g ) { foreach ( $g['fields'] as $k => $d ) { $out[ $k ] = $d; } }
+		return $out;
+	}
+	public static function checklist_extra( $post_id ) { return array(); }
+}
+class PROMOTUR_Recorridos {
+	const CPT = 'promotur_recorrido';
+	const OWNER_META = '_caaguazu_owner';
+	const META_TIPO = '_recorrido_tipo';
+	const META_DURACION = '_recorrido_duracion';
+	const MAX_PARADAS = 9;
+	public static function singular() { return 'Recorrido'; }
+	public static function plural() { return 'Recorridos'; }
+	public static function es_prehecho( $post_id ) { return true; }
+	public static function fields() {
+		return array(
+			'identidad' => array(
+				'label'  => 'Identidad',
+				'fields' => array(
+					'_recorrido_portada'  => array( 'label' => 'Foto de portada', 'type' => 'image', 'req' => true ),
+					'_recorrido_duracion' => array( 'label' => 'Duración estimada', 'type' => 'text', 'req' => true, 'ayuda' => 'Cuánto lleva hacerlo entero.' ),
+				),
+			),
+		);
+	}
+	public static function flat_fields() {
+		$out = array();
+		foreach ( self::fields() as $g ) { foreach ( $g['fields'] as $k => $d ) { $out[ $k ] = $d; } }
+		return $out;
+	}
+	public static function paradas( $post_id ) {
+		return array(
+			array( 'orden' => 1, 'ref_tipo' => 'destino', 'ref_id' => 100, 'texto' => 'Se llega por el camino viejo; la caída se escucha antes de verse.', 'media_tipo' => 'audio', 'media_url' => '' ),
+			array( 'orden' => 2, 'ref_tipo' => 'destino', 'ref_id' => 102, 'texto' => '', 'media_tipo' => '', 'media_url' => '' ),
+		);
+	}
+	public static function medios( $post_id ) { return array(); }
+	public static function articulos( $post_id ) { return array(); }
+	public static function checklist_extra( $post_id ) { return array(); }
 }
 class PROMOTUR_Notifications {
 	public static function instance() { return new self(); }
@@ -341,18 +465,38 @@ class PROMOTUR_Stats {
 	}
 }
 class PROMOTUR_Editorial {
+	public static function tipos() {
+		return array( 'destino' => 'PROMOTUR_Destinos', 'articulo' => 'PROMOTUR_Articulos', 'recorrido' => 'PROMOTUR_Recorridos' );
+	}
+	public static function cpts() { return array( 'promotur_destino', 'promotur_articulo', 'promotur_recorrido' ); }
+	public static function clase( $tipo ) { $t = self::tipos(); return isset( $t[ $tipo ] ) ? $t[ $tipo ] : null; }
+	public static function tipo_de( $post ) {
+		$cpt = $GLOBALS['promotur_vista_previa_cpt'] ?? 'promotur_destino';
+		$map = array( 'promotur_destino' => 'destino', 'promotur_articulo' => 'articulo', 'promotur_recorrido' => 'recorrido' );
+		return isset( $map[ $cpt ] ) ? $map[ $cpt ] : 'destino';
+	}
+	public static function tipo_label( $tipo ) { $m = array( 'destino' => 'Ficha', 'articulo' => 'Artículo', 'recorrido' => 'Recorrido' ); return isset( $m[ $tipo ] ) ? $m[ $tipo ] : 'Ficha'; }
+	public static function url_editor( $post ) { $id = is_object( $post ) ? $post->ID : (int) $post; return promotur_url( 'panel/editor/' . $id ); }
+	public static function label_titulo( $tipo ) { return 'Nombre del destino'; }
 	public static function get_estado( $id ) { return isset( $id->estado ) ? $id->estado : 'borrador'; }
-	public static function checklist( $post_id ) {
+	public static function checklist( $post_id, $tipo = '' ) {
 		return array(
 			array( 'key' => 'titulo', 'label' => 'Nombre del lugar', 'done' => true ),
-			array( 'key' => 'gancho', 'label' => 'Frase gancho', 'done' => true ),
+			array( 'key' => '_promotur_gancho', 'label' => 'Gancho (una línea)', 'done' => true ),
 			array( 'key' => 'descripcion', 'label' => 'Descripción', 'done' => false ),
-			array( 'key' => 'portada', 'label' => 'Foto de portada', 'done' => false ),
-			array( 'key' => 'ubicacion', 'label' => 'Ubicación', 'done' => true ),
+			array( 'key' => '_promotur_portada', 'label' => 'Foto de portada', 'done' => false ),
+			array( 'key' => '_promotur_maps', 'label' => 'Ubicación (enlace de Google Maps o coordenadas)', 'done' => true ),
 		);
 	}
+	public static function is_complete( $post_id, $tipo = '' ) { return false; }
 	public static function get_feedback( $post_id ) {
-		return array( array( 'autor' => 'Revisión', 'when' => 'ayer', 'texto' => 'Falta la foto de portada.' ) );
+		// Objetos con la forma de un WP_Comment, que es lo que leen las
+		// plantillas (comment_author, comment_content, comment_date_gmt).
+		return array( (object) array(
+			'comment_author'   => 'Revisión',
+			'comment_content'  => 'Falta la foto de portada.',
+			'comment_date_gmt' => gmdate( 'Y-m-d H:i:s', time() - 86400 ),
+		) );
 	}
 	public static function quick_feedback() { return array( 'Falta foto', 'Falta ubicación', 'Revisar redacción' ); }
 	public static function estado_class( $e ) {
@@ -425,9 +569,9 @@ $GLOBALS['wpdb'] = new Promotur_Vista_Previa_DB();
 
 require $plugin . 'includes/helpers.php';
 
-// Esta clase se carga de verdad (no se simula): es la que lee lo que la app
-// tiene guardado, y la vista previa sirve justamente para ver ese resultado.
-require $plugin . 'includes/class-app-control.php';
+// La cabina de mando de la app está fuera de circulación (ver
+// promotur_app_api_activa()): su clase ya no se carga acá tampoco, para que la
+// vista previa refleje lo que el panel realmente sirve.
 
 // El CSS se inyecta inline y las fuentes se apuntan al archivo real: si la
 // vista previa se dibuja con otra tipografía, no sirve para juzgar el diseño.
@@ -438,6 +582,30 @@ $GLOBALS['promotur_css'] = str_replace(
 );
 
 $ruta = isset( $argv[1] ) ? $argv[1] : 'sections/home';
+
+/*
+ * Segmento opcional, el que el router pasa como $promotur_id. Sin él, las
+ * secciones que hacen de lista y de detalle a la vez —artículos, recorridos,
+ * inventario, revisión— sólo se pueden mirar en su mitad de lista:
+ *
+ *   php tools/vista-previa-panel.php sections/recorridos nuevo
+ *   php tools/vista-previa-panel.php sections/inventario 100
+ */
+if ( isset( $argv[2] ) ) {
+	$promotur_id = $argv[2];
+}
+
+/*
+ * Qué post_type devuelven los dobles de get_post()/get_post_type(). Se deduce
+ * de la sección que se está mirando: en la vista de detalle de artículos, un
+ * post que dijera ser una ficha haría que la plantilla se plante.
+ */
+$GLOBALS['promotur_vista_previa_cpt'] = 'promotur_destino';
+if ( false !== strpos( $ruta, 'articulos' ) ) {
+	$GLOBALS['promotur_vista_previa_cpt'] = 'promotur_articulo';
+} elseif ( false !== strpos( $ruta, 'recorridos' ) ) {
+	$GLOBALS['promotur_vista_previa_cpt'] = 'promotur_recorrido';
+}
 
 // El estado activo del menú sale de la sección que se está dibujando.
 $GLOBALS['promotur_section'] = 0 === strpos( $ruta, 'sections/' ) ? substr( $ruta, strlen( 'sections/' ) ) : '';

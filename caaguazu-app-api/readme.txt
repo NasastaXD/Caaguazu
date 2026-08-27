@@ -2,7 +2,7 @@
 Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 0.1.0
+Stable tag: 0.3.0
 License: GPLv2 or later
 
 Capa REST que consume la app Android de turismo (Turismo App Czu).
@@ -25,9 +25,15 @@ duplicarlo.
 * Flujo editorial y visibilidad → `caaguazu-portal`
 * Fichas turísticas → CPT `promotur_destino`
 
-**Sí aporta lo que faltaba:** los CPTs Evento, Recorrido y Artículo, el rango
-de precio numérico, los artículos relacionados, y el icono y color por
-categoría.
+**Sí aporta lo que faltaba:** el CPT Evento, el rango de precio numérico, los
+artículos relacionados, y el icono y color por categoría.
+
+**Artículo y Recorrido se mudaron al panel.** Nacieron acá, pero los dos son
+contenido humano con flujo editorial —se escriben, se revisan, los aprueba el
+staff—, y eso lo hace `caaguazu-portal`. Mientras vivían acá había que
+cargarlos desde wp-admin y la cola de revisión no los alcanzaba. El `post_type`
+no cambió, así que no se perdió nada: esta capa los lee y los sirve, y conserva
+un registro de respaldo del CPT por si corriera sin el panel.
 
 == Endpoints ==
 
@@ -48,7 +54,7 @@ Namespace: `/wp-json/czu-app/v1/`
 * `GET /mapa/markers`
 * `GET /recorridos`, `GET /recorridos/{id}`
 * `GET·POST·PUT·DELETE /mis-recorridos` — requiere token
-* `GET /articulos`, `GET /articulos/{id}`
+* `GET /articulos`, `GET /articulos/{id}` — filtros: `categoria`, `etiqueta`
 
 = Interfaz =
 * `GET /strings/{locale}` — `es`, `en`, `gn`
@@ -92,11 +98,28 @@ solo el hash SHA-256, nunca el token.
 2. Subir a `/wp-content/plugins/` y activar. Crea sus dos tablas.
 3. Cargar icono y color de cada categoría en **Destinos → Categorías**.
 
+== Cambios del contrato en 0.3.0 ==
+
+Están detallados, con payloads, en `docs/contrato-app-contenido.md`.
+
+* **La ficha suma `google_maps`** y pierde `practicos.duracion`,
+  `practicos.servicios`, `practicos.temporada`, `acceso.como_llegar` y
+  `acceso.referencia`. El enlace de Google Maps pasó a ser el modo por defecto
+  de cargar la ubicación en el panel; las coordenadas siguen viniendo, y se
+  derivan del enlace cuando se pueden leer de él.
+* **El artículo suma `antetitulo`, `subtitulo`, `autores`, `fuentes` y
+  `etiquetas`**, y su `bajada` se llama ahora `entradilla`.
+* **El recorrido suma `medios`, `articulos` y `google_maps`**, y cada parada
+  suma `texto` (que reemplaza a `nota`), `medio` y `google_maps`.
+
 == Pendiente ==
 
 * Escritura desde la app (`POST /contenido`) para que un promotor cargue
   fichas desde el teléfono. La lectura ya está; falta el alta.
-* Pantalla de panel para editar textos e imágenes de UI. Hoy las opciones
-  existen y la API las sirve, pero se cargan por código.
+* Pantalla de panel para editar textos e imágenes de UI. Existió (sección
+  «App» de `caaguazu-portal`) y está desconectada: llamaba a `get_strings()`,
+  `get_manifest()` y `set_manifest()`, que existen desde 0.2.0, contra una
+  instalación 0.1.0 — y moría con un error fatal. Se vuelve a enchufar cuando
+  la versión instalada acá sea la que esa pantalla necesita.
 * Este plugin todavía no tiene auto-updater, igual que `caaguazu-cuentas` y
   `caaguazu-sso-cead`.
