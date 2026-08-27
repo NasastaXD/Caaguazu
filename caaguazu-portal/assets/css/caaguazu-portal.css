@@ -1,0 +1,755 @@
+/**
+ * Caaguazú Portal — sistema de diseño del panel.
+ * ============================================================================
+ *
+ * Un solo archivo, sin framework, sin utilidades sueltas: el panel entero se
+ * dibuja con este CSS y nada más. Las reglas del sistema están acá arriba
+ * porque `tools/verificar-diseno.php` las comprueba una por una — si una regla
+ * no se puede verificar es una intención, no una regla.
+ *
+ * 1. COLOR — conjunto cerrado. Ningún color literal fuera del bloque :root
+ *    (y su gemelo de modo oscuro). Los tokens se nombran por rol —`--tinta`,
+ *    `--papel`, `--linea`— nunca por color, para que sobrevivan al día que la
+ *    tinta deje de ser negra.
+ *
+ * 2. EL ACENTO ES ESCASO. La tinta como *fondo* aparece sólo en seis lugares:
+ *    item activo del menú, botón primario, pastilla activa de un segmentado,
+ *    barra destacada de un sparkline, item activo de la barra inferior, y el
+ *    isotipo/avatar. Nunca como fondo de una superficie grande, nunca en una
+ *    tarjeta. El resto del panel es papel, línea y texto.
+ *    Verde, rojo, ámbar y azul son *semántica*, no decoración: sólo estado
+ *    editorial y variación (+7,1 % / −2 %). Nunca para dar color a algo.
+ *
+ * 3. TRES RADIOS Y UNA PASTILLA. --r-1 / --r-2 / --r-3 / --r-full. Ningún
+ *    número escrito a mano.
+ *
+ * 4. DOS SOMBRAS, y cada una con su lugar escrito. `--sombra` es contacto:
+ *    apenas despega el menú activo y los desplegables. `--sombra-flotante` es
+ *    distancia, y se usa en una sola cosa: la barra inferior del teléfono, que
+ *    flota por encima del contenido que sigue corriendo abajo. Las tarjetas no
+ *    llevan ninguna: se separan con una línea de 1px. Un sistema donde cada
+ *    tarjeta flota un poco no tiene jerarquía.
+ *
+ * 5. UNA FAMILIA TIPOGRÁFICA (Inter, servida desde el plugin). Sin gradientes.
+ *    El único motivo decorativo es el rayado diagonal de --trama, y se usa
+ *    donde hace falta separar sin dibujar una caja más.
+ */
+
+/* ---------------------------------------------------------------------------
+ * Tipografía (ver assets/fonts/LEEME.md)
+ * ------------------------------------------------------------------------ */
+
+@font-face {
+	font-family: "Inter";
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url("../fonts/inter-400.woff2") format("woff2");
+}
+@font-face {
+	font-family: "Inter";
+	font-style: normal;
+	font-weight: 600;
+	font-display: swap;
+	src: url("../fonts/inter-600.woff2") format("woff2");
+}
+@font-face {
+	font-family: "Inter";
+	font-style: normal;
+	font-weight: 700;
+	font-display: swap;
+	src: url("../fonts/inter-700.woff2") format("woff2");
+}
+
+/* ---------------------------------------------------------------------------
+ * Tokens
+ * ------------------------------------------------------------------------ */
+
+:root {
+	/* Tinta: el acento. Un negro apenas frío. */
+	--tinta:        #101012;
+	--tinta-2:      #2c2c31;
+	--sobre-tinta:  #ffffff;
+
+	/* Superficies. Los neutros tienen un sesgo cálido elegido a propósito:
+	   un gris medio puro se lee como no elegido. */
+	--papel:        #ffffff;
+	--lienzo:       #f4f4f2;
+	--hueco:        #fafaf9;
+
+	/* Texto */
+	--texto:        #18181b;
+	--texto-2:      #55555e;
+	--texto-debil:  #8b8b93;
+
+	/* Líneas */
+	--linea:        #e7e6e2;
+	--linea-2:      #d5d4ce;
+
+	/* Semántica (estado, nunca decoración) */
+	--alza:         #15803d;
+	--baja:         #b42318;
+	--espera:       #a16207;
+	--info:         #1d4ed8;
+	--tinte-alza:   #e9f5ec;
+	--tinte-baja:   #fdecea;
+	--tinte-espera: #fdf3dd;
+	--tinte-info:   #eaeffc;
+	--tinte-neutro: #f1f0ec;
+
+	/* Forma */
+	--r-1:    8px;
+	--r-2:    12px;
+	--r-3:    16px;
+	--r-full: 999px;
+	--sombra: 0 1px 2px rgba(16, 16, 18, .06);
+	/* La segunda —y última— sombra: la de lo que flota de verdad sobre el
+	   contenido, hoy sólo la barra inferior del teléfono. Es blanda y grande
+	   justamente para leerse como distancia, no como borde. */
+	--sombra-flotante: 0 1px 1px rgba(16, 16, 18, .04), 0 8px 24px rgba(16, 16, 18, .12);
+	/* Vidrio: papel translúcido para lo que se apoya sobre el contenido. */
+	--vidrio: rgba(255, 255, 255, .72);
+	/* Velo de los overlays (menú en teléfono). */
+	--velo:   rgba(16, 16, 18, .45);
+
+	/* Trama: el único motivo decorativo del sistema. Se intuye, no se ve. */
+	--linea-tenue: rgba(16, 16, 18, .045);
+	--trama: repeating-linear-gradient(135deg, transparent 0 7px, var(--linea-tenue) 7px 8px);
+
+	/* Layout */
+	--lateral: 268px;
+	--topbar:  60px;
+	--ancho:   1180px;
+	--gap:     16px;
+
+	/* Tipografía */
+	--letra: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+[data-theme="dark"] {
+	--tinta:        #f4f4f2;
+	--tinta-2:      #d8d8d4;
+	--sobre-tinta:  #101012;
+
+	--papel:        #17171a;
+	--lienzo:       #0e0e10;
+	--hueco:        #1e1e22;
+
+	--texto:        #f2f2f0;
+	--texto-2:      #b3b3ba;
+	--texto-debil:  #85858e;
+
+	--linea:        #2a2a30;
+	--linea-2:      #3a3a42;
+
+	--alza:         #4ade80;
+	--baja:         #f87171;
+	--espera:       #fbbf24;
+	--info:         #93b4fd;
+	--tinte-alza:   #14291d;
+	--tinte-baja:   #2c1614;
+	--tinte-espera: #2b2412;
+	--tinte-info:   #161d33;
+	--tinte-neutro: #212127;
+
+	--sombra: 0 1px 2px rgba(0, 0, 0, .5);
+	--linea-tenue: rgba(255, 255, 255, .05);
+	--sombra-flotante: 0 1px 1px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .5);
+	--vidrio: rgba(23, 23, 26, .74);
+	--velo:   rgba(0, 0, 0, .6);
+}
+
+/* ---------------------------------------------------------------------------
+ * Base
+ * ------------------------------------------------------------------------ */
+
+body.promotur-app {
+	margin: 0;
+	background: var(--lienzo);
+	color: var(--texto);
+	font-family: var(--letra);
+	font-size: 15px;
+	line-height: 1.55;
+	-webkit-font-smoothing: antialiased;
+	-webkit-text-size-adjust: 100%;
+}
+
+.promotur-app *, .promotur-app *::before, .promotur-app *::after { box-sizing: border-box; }
+/* :where() no suma especificidad: sin él, esta regla le gana a la de cualquier
+   componente que sea un enlace —el menú, el submenú, la barra inferior— y los
+   pinta a todos con el color del texto normal en vez del apagado que les toca.
+   Los enlaces sueltos siguen heredando, que es para lo que está. */
+.promotur-app :where(a) { color: inherit; }
+/* Un componente que declara `display` le gana al [hidden] del navegador: sin
+   esto, un botón marcado como oculto (el de instalar la app, un submenú
+   cerrado) se dibuja igual. */
+.promotur-app [hidden] { display: none; }
+.promotur-app :focus-visible { outline: 2px solid var(--tinta); outline-offset: 2px; border-radius: var(--r-1); }
+
+/* Controles de formulario. Van acá arriba y no con los formularios: son
+   estilo base de elemento, y los componentes que los ajustan —los buscadores
+   con ícono— tienen que poder pisarlos por orden, no por especificidad. */
+.promotur-app input[type=text], .promotur-app input[type=email], .promotur-app input[type=password],
+.promotur-app input[type=tel], .promotur-app input[type=number], .promotur-app input[type=url],
+.promotur-app input[type=search], .promotur-app input[type=date], .promotur-app input[type=time],
+.promotur-app input[type=file], .promotur-app textarea, .promotur-app select {
+	width: 100%;
+	padding: .62em .8em;
+	border: 1px solid var(--linea);
+	border-radius: var(--r-2);
+	background: var(--papel);
+	color: var(--texto);
+	font: inherit;
+}
+.promotur-app textarea { resize: vertical; }
+/* El selector de color nativo no acepta el relleno de un campo de texto: se
+   dibuja como una muestra, no como un input. */
+.promotur-app input[type=color] { height: 42px; padding: 4px; cursor: pointer; }
+.promotur-app input:focus, .promotur-app textarea:focus, .promotur-app select:focus { outline: none; border-color: var(--tinta); box-shadow: var(--sombra); }
+
+.promotur-h2 { font-size: 1.8rem; font-weight: 600; letter-spacing: -.035em; margin: 0 0 .35em; }
+.promotur-h3 { font-size: 1.05rem; font-weight: 600; letter-spacing: -.01em; margin: 1.8em 0 .7em; }
+.promotur-muted { color: var(--texto-2); font-size: .92rem; }
+.promotur-mt { margin-top: 1.5rem; }
+.promotur-eyebrow { font-size: .72rem; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--texto-debil); }
+.promotur-empty { color: var(--texto-debil); }
+
+/* ---------------------------------------------------------------------------
+ * Armazón
+ * ------------------------------------------------------------------------ */
+
+.promotur-sidebar {
+	position: fixed;
+	inset: 0 auto 0 0;
+	z-index: 50;
+	width: var(--lateral);
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 16px 12px;
+	background: var(--papel);
+	border-right: 1px solid var(--linea);
+	transform: translateX(-100%);
+	transition: transform .22s ease;
+	overflow-y: auto;
+}
+
+.promotur-main { min-height: 100vh; min-height: 100svh; display: flex; flex-direction: column; }
+.promotur-content { width: 100%; max-width: var(--ancho); padding: 28px clamp(16px, 3.5vw, 36px) 72px; outline: none; }
+
+.promotur-backdrop { position: fixed; inset: 0; z-index: 40; background: var(--velo); }
+.promotur-backdrop[hidden] { display: none; }
+body.promotur-nav-open .promotur-sidebar { transform: translateX(0); }
+
+@media (min-width: 900px) {
+	.promotur-sidebar { transform: none; }
+	.promotur-main { margin-left: var(--lateral); }
+	.promotur-backdrop { display: none !important; }
+	.promotur-hamburger { display: none !important; }
+}
+
+/* Marca */
+.promotur-brand { display: flex; align-items: center; gap: 10px; padding: 4px 6px 14px; text-decoration: none; font-weight: 700; letter-spacing: -.015em; }
+.promotur-brand__mark { display: grid; place-items: center; flex: 0 0 auto; width: 34px; height: 34px; border-radius: var(--r-1); background: var(--tinta); color: var(--sobre-tinta); }
+.promotur-brand__text { font-size: 1.06rem; }
+.promotur-brand--auth { justify-content: center; padding: 0 0 20px; }
+
+/* Buscador del lateral */
+.promotur-sidesearch { position: relative; margin-bottom: 14px; }
+.promotur-app .promotur-sidesearch input { width: 100%; height: 40px; padding: 0 46px 0 36px; border: 1px solid var(--linea); border-radius: var(--r-2); background: var(--papel); color: var(--texto); font: inherit; font-size: .92rem; }
+.promotur-sidesearch input::placeholder { color: var(--texto-debil); }
+.promotur-sidesearch__icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); display: flex; color: var(--texto-debil); pointer-events: none; }
+.promotur-sidesearch kbd { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); padding: 2px 6px; border: 1px solid var(--linea); border-radius: var(--r-1); background: var(--hueco); color: var(--texto-debil); font: inherit; font-size: .7rem; }
+
+/* Menú */
+.promotur-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.promotur-nav__group { padding: 18px 10px 6px; font-size: .68rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--texto-debil); }
+.promotur-nav__group:first-child { padding-top: 4px; }
+
+.promotur-nav__item {
+	display: flex;
+	align-items: center;
+	gap: 11px;
+	width: 100%;
+	padding: 9px 11px;
+	border: 1px solid transparent;
+	border-radius: var(--r-2);
+	background: none;
+	color: var(--texto-2);
+	font: inherit;
+	font-size: .93rem;
+	font-weight: 500;
+	text-align: left;
+	text-decoration: none;
+	cursor: pointer;
+}
+.promotur-nav__item:hover { background: var(--hueco); color: var(--texto); }
+.promotur-nav__item.is-active { background: var(--tinta); border-color: var(--tinta); color: var(--sobre-tinta); box-shadow: var(--sombra); font-weight: 600; }
+.promotur-nav__label { flex: 1; }
+.promotur-nav__badge { padding: 1px 7px; border-radius: var(--r-full); background: var(--baja); color: var(--papel); font-size: .7rem; font-weight: 700; }
+.promotur-nav__item.is-active .promotur-nav__badge { background: var(--sobre-tinta); color: var(--tinta); }
+.promotur-nav__caret { display: flex; color: var(--texto-debil); transition: transform .18s ease; }
+.promotur-nav__item[aria-expanded="true"] .promotur-nav__caret { transform: rotate(180deg); }
+
+/* Submenú: el arbolito de la referencia. La guía vertical es un borde, no un
+   carácter — así no la lee un lector de pantalla ni se rompe al traducir. */
+.promotur-subnav { display: flex; flex-direction: column; gap: 2px; margin: 2px 0 2px 22px; padding-left: 12px; border-left: 1px solid var(--linea); }
+.promotur-subnav[hidden] { display: none; }
+.promotur-subnav__item { position: relative; padding: 7px 10px; border-radius: var(--r-1); color: var(--texto-2); font-size: .88rem; text-decoration: none; }
+.promotur-subnav__item::before { content: ""; position: absolute; left: -12px; top: 50%; width: 8px; height: 1px; background: var(--linea); }
+.promotur-subnav__item:hover { background: var(--hueco); color: var(--texto); }
+.promotur-subnav__item.is-active { color: var(--texto); font-weight: 600; }
+
+.promotur-sidebar__foot { display: flex; flex-direction: column; gap: 2px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--linea); }
+
+/* ---------------------------------------------------------------------------
+ * Barra superior
+ * ------------------------------------------------------------------------ */
+
+.promotur-topbar {
+	position: sticky;
+	top: 0;
+	z-index: 30;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	min-height: var(--topbar);
+	padding: 0 clamp(12px, 3vw, 28px);
+	background: var(--lienzo);
+	border-bottom: 1px solid var(--linea);
+}
+.promotur-topbar__actions { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+
+/* Migas: dicen dónde estás sin gastar un título entero. */
+.promotur-breadcrumb { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: .92rem; color: var(--texto-debil); }
+.promotur-breadcrumb__icon { display: flex; }
+.promotur-breadcrumb__sep { color: var(--linea-2); }
+.promotur-breadcrumb__aqui { color: var(--texto); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.promotur-breadcrumb a { color: inherit; text-decoration: none; }
+.promotur-breadcrumb a:hover { color: var(--texto-2); }
+
+.promotur-hamburger, .promotur-iconbtn {
+	position: relative;
+	display: grid;
+	place-items: center;
+	width: 38px;
+	height: 38px;
+	border: 1px solid transparent;
+	border-radius: var(--r-2);
+	background: none;
+	color: var(--texto-2);
+	cursor: pointer;
+}
+.promotur-hamburger:hover, .promotur-iconbtn:hover { background: var(--papel); border-color: var(--linea); color: var(--texto); }
+
+.promotur-search { position: relative; display: none; }
+.promotur-search__icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); display: flex; color: var(--texto-debil); }
+.promotur-app .promotur-search input { width: 210px; height: 38px; padding: 0 14px 0 36px; border: 1px solid var(--linea); border-radius: var(--r-2); background: var(--papel); color: var(--texto); font: inherit; font-size: .9rem; }
+@media (min-width: 680px) { .promotur-search { display: block; } }
+
+/* Tema: se muestra el ícono del modo al que se va a cambiar. */
+.promotur-theme-dark { display: none; }
+[data-theme="dark"] .promotur-theme-light { display: none; }
+[data-theme="dark"] .promotur-theme-dark { display: inline-flex; }
+
+/* Notificaciones */
+.promotur-notifs { position: relative; }
+.promotur-notifs__badge { position: absolute; top: 3px; right: 3px; padding: 1px 5px; border-radius: var(--r-full); background: var(--baja); color: var(--papel); font-size: .62rem; font-weight: 700; line-height: 1.35; }
+.promotur-dropdown { position: absolute; right: 0; top: calc(100% + 8px); z-index: 60; width: 330px; max-width: 88vw; overflow: hidden; border: 1px solid var(--linea); border-radius: var(--r-3); background: var(--papel); box-shadow: var(--sombra); }
+.promotur-dropdown[hidden] { display: none; }
+.promotur-dropdown__head { display: flex; align-items: center; justify-content: space-between; padding: 13px 15px; border-bottom: 1px solid var(--linea); font-size: .95rem; }
+.promotur-dropdown__body { max-height: 60vh; overflow-y: auto; padding: 6px; }
+.promotur-notif { display: flex; gap: 10px; padding: 10px; border-radius: var(--r-2); text-decoration: none; }
+.promotur-notif:hover { background: var(--hueco); }
+.promotur-notif__icon { flex: 0 0 auto; color: var(--texto-debil); }
+.promotur-notif__main { display: flex; flex-direction: column; }
+.promotur-notif__title { font-size: .9rem; }
+.promotur-notif__when { color: var(--texto-debil); font-size: .76rem; }
+.promotur-link-btn { padding: 0; border: 0; background: none; color: var(--texto-2); font: inherit; font-size: .82rem; text-decoration: underline; cursor: pointer; }
+
+/* Chip de usuario */
+.promotur-userchip { display: flex; align-items: center; gap: 9px; padding: 4px; border-radius: var(--r-full); text-decoration: none; }
+.promotur-userchip:hover { background: var(--papel); }
+.promotur-userchip__meta { display: none; line-height: 1.2; }
+.promotur-userchip__name { display: block; font-size: .86rem; font-weight: 600; }
+.promotur-userchip__role { display: block; color: var(--texto-debil); font-size: .74rem; }
+@media (min-width: 680px) { .promotur-userchip__meta { display: block; } }
+
+.promotur-avatar { display: grid; place-items: center; flex: 0 0 auto; width: 34px; height: 34px; overflow: hidden; border-radius: var(--r-full); background: var(--tinta); color: var(--sobre-tinta); font-size: .8rem; font-weight: 600; }
+.promotur-avatar img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.promotur-avatar--sm { width: 28px; height: 28px; font-size: .7rem; }
+.promotur-avatar--lg { width: 64px; height: 64px; font-size: 1.35rem; }
+
+/* ---------------------------------------------------------------------------
+ * Barra inferior (teléfono)
+ * ------------------------------------------------------------------------ */
+
+.promotur-bottomnav { display: none; }
+
+@media (max-width: 899px) {
+	/* Cápsula flotante, no una franja pegada al borde: se despega del canto,
+	   se centra, y deja ver el contenido correr por debajo a través del
+	   vidrio. La etiqueta se abre sólo en el item activo — los otros cuatro
+	   son ícono, que es lo que hace que entre sin apretujarse. El texto sigue
+	   en el DOM para quien usa lector de pantalla; se le cierra el ancho, no
+	   se lo esconde. */
+	.promotur-bottomnav {
+		position: fixed;
+		left: 50%;
+		bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+		z-index: 46;
+		display: inline-flex;
+		align-items: center;
+		gap: 2px;
+		max-width: calc(100% - 24px);
+		padding: 5px;
+		border: 1px solid var(--linea);
+		border-radius: var(--r-full);
+		background: var(--vidrio);
+		box-shadow: var(--sombra-flotante);
+		transform: translateX(-50%);
+		-webkit-backdrop-filter: saturate(180%) blur(20px);
+		        backdrop-filter: saturate(180%) blur(20px);
+	}
+	/* Sin soporte de blur, el vidrio se vería como un blanco sucio: se cae a
+	   papel opaco, que es lo que el diseño pide de todos modos. */
+	@supports not (backdrop-filter: blur(1px)) {
+		.promotur-bottomnav { background: var(--papel); }
+	}
+
+	.promotur-bottomnav__item {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 44px;
+		min-height: 44px;
+		padding: 0 11px;
+		border-radius: var(--r-full);
+		color: var(--texto-debil);
+		font-size: .82rem;
+		font-weight: 600;
+		text-decoration: none;
+		transition: background .2s ease, color .2s ease;
+	}
+	.promotur-bottomnav__item span {
+		max-width: 0;
+		overflow: hidden;
+		opacity: 0;
+		white-space: nowrap;
+		transition: max-width .24s ease, opacity .18s ease, margin .24s ease;
+	}
+	.promotur-bottomnav__item.is-active {
+		background: var(--tinta);
+		color: var(--sobre-tinta);
+	}
+	.promotur-bottomnav__item.is-active span {
+		max-width: 7rem;
+		margin-left: 8px;
+		opacity: 1;
+	}
+	.promotur-bottomnav__item svg { width: 22px; height: 22px; }
+
+	.promotur-content { padding-bottom: 96px; }
+
+	/* En un teléfono la barra superior no entra: hamburguesa + migas + cinco
+	   acciones terminan comiéndose el nombre de la sección. Las migas se van
+	   —el <h1> de la página dice lo mismo, más grande— y quedan los controles,
+	   que no tienen otro lugar donde vivir. */
+	.promotur-breadcrumb { display: none; }
+
+	/* Objetivos táctiles cómodos: buena parte del público es mayor y trabaja
+	   con el teléfono en la mano, muchas veces al sol y en el campo. Nada que
+	   se toque baja de 44px de alto. */
+	.promotur-nav__item { padding: 12px; }
+	.promotur-subnav__item { display: flex; align-items: center; min-height: 44px; }
+	.promotur-iconbtn, .promotur-hamburger { width: 44px; height: 44px; }
+	.promotur-userchip { padding: 5px; }
+
+	.promotur-btn { min-height: 44px; padding: .8em 1.2em; }
+	.promotur-btn--small { min-height: 44px; padding: .5em 1em; font-size: .88rem; }
+	.promotur-seg__item { display: inline-flex; align-items: center; min-height: 44px; }
+	/* El caret abre el submenú y es lo más chico que hay: se le da su propia
+	   área de toque sin agrandar el dibujo. */
+	.promotur-nav__caret { display: grid; place-items: center; width: 44px; height: 44px; margin: -12px -12px -12px 0; }
+	.promotur-auth__links a { display: inline-flex; align-items: center; min-height: 44px; }
+	.promotur-check input { width: 22px; height: 22px; }
+	.promotur-linklist a { display: flex; align-items: center; min-height: 44px; padding: 4px 0; }
+	.promotur-app input, .promotur-app select, .promotur-app textarea { min-height: 44px; }
+}
+
+/* ---------------------------------------------------------------------------
+ * Encabezado de página
+ * ------------------------------------------------------------------------ */
+
+.promotur-pagehead { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 1.6rem; }
+.promotur-back { display: inline-block; margin-bottom: .5rem; color: var(--texto-debil); font-size: .86rem; text-decoration: none; }
+.promotur-back:hover { color: var(--texto-2); }
+
+/* ---------------------------------------------------------------------------
+ * Tarjetas
+ * ------------------------------------------------------------------------ */
+
+.promotur-card { padding: 18px; border: 1px solid var(--linea); border-radius: var(--r-3); background: var(--papel); }
+.promotur-card--link { text-decoration: none; transition: border-color .15s ease; }
+.promotur-card--link:hover { border-color: var(--linea-2); }
+
+/* Cabecera de tarjeta con trama: separa sin dibujar otra caja adentro. */
+.promotur-card__head { display: flex; align-items: center; gap: 9px; margin: -18px -18px 16px; padding: 13px 18px; border-bottom: 1px solid var(--linea); border-radius: var(--r-3) var(--r-3) 0 0; background-image: var(--trama); font-weight: 600; }
+.promotur-card__head svg { color: var(--texto-2); }
+.promotur-card__head-extra { margin-left: auto; }
+
+.promotur-grid { display: grid; gap: var(--gap); grid-template-columns: 1fr; }
+@media (min-width: 560px) { .promotur-grid--2 { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 560px) { .promotur-grid--3 { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 940px) { .promotur-grid--3 { grid-template-columns: repeat(3, 1fr); } }
+
+/* ---------------------------------------------------------------------------
+ * Cifras
+ * ------------------------------------------------------------------------ */
+
+.promotur-stat { display: flex; flex-direction: column; text-decoration: none; }
+/* La flecha dice que la tarjeta lleva a algún lado. Ocupa el lugar donde la
+   referencia pone su gráfico: acá no hay serie por métrica, y una flecha
+   verdadera es mejor que un gráfico inventado. */
+/* La variante en fila es la de las tarjetas de cifra: número a la izquierda,
+   flecha a la derecha. La caja del gráfico se queda en bloque. */
+.promotur-stat__caja--fila { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.promotur-stat__ir { display: flex; color: var(--linea-2); }
+.promotur-card--link:hover .promotur-stat__ir { color: var(--texto-debil); }
+
+.promotur-stat__n {
+	font-size: 2.4rem;
+	font-weight: 600;
+	letter-spacing: -.045em;
+	line-height: 1;
+	/* Cifras de ancho fijo: sin esto, un 1 ocupa menos que un 8 y los números
+	   de dos tarjetas contiguas no alinean. */
+	font-variant-numeric: tabular-nums;
+	font-feature-settings: "tnum" 1;
+}
+
+/* La caja interior: el número no flota sobre la tarjeta, se apoya en una
+   superficie propia. Es lo que le da profundidad sin encender una sombra. */
+.promotur-stat__caja {
+	display: block;
+	padding: 16px;
+	border: 1px solid var(--linea);
+	border-radius: var(--r-2);
+	background: var(--papel);
+}
+
+/* El gráfico de actividad. Un trazo sobre una reja punteada, como la
+   referencia: con siete puntos, un gráfico de barras a lo ancho de una tarjeta
+   queda vacío, y una línea no. El SVG se estira al ancho disponible y el punto
+   de hoy va en HTML encima, para que no se deforme con el estirado. */
+.promotur-grafico { position: relative; height: 150px; margin-top: 6px; }
+.promotur-grafico__svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.promotur-grafico__reja { fill: none; stroke: var(--linea); stroke-width: 1; stroke-dasharray: 2 5; }
+.promotur-grafico__trazo { fill: none; stroke: var(--tinta); stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.promotur-grafico__hoy { position: absolute; width: 10px; height: 10px; border: 2px solid var(--papel); border-radius: var(--r-full); background: var(--tinta); transform: translate(-50%, -50%); }
+.promotur-grafico__dias { display: flex; justify-content: space-between; margin-top: 12px; }
+.promotur-grafico__dias span { color: var(--texto-debil); font-size: .74rem; font-weight: 500; text-transform: capitalize; }
+
+.promotur-quick { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border: 1px solid var(--linea); border-radius: var(--r-2); background: var(--papel); color: var(--texto); font-weight: 500; text-decoration: none; }
+.promotur-quick:hover { border-color: var(--linea-2); background: var(--hueco); }
+.promotur-quick svg { color: var(--texto-debil); }
+
+/* ---------------------------------------------------------------------------
+ * Pastillas de estado
+ * ------------------------------------------------------------------------ */
+
+.promotur-pill { display: inline-block; padding: .2em .7em; border-radius: var(--r-full); background: var(--tinte-neutro); color: var(--texto-2); font-size: .75rem; font-weight: 600; white-space: nowrap; }
+.promotur-pill.is-draft { background: var(--tinte-neutro); color: var(--texto-2); }
+.promotur-pill.is-sent { background: var(--tinte-info); color: var(--info); }
+.promotur-pill.is-review { background: var(--tinte-espera); color: var(--espera); }
+.promotur-pill.is-changes { background: var(--tinte-baja); color: var(--baja); }
+.promotur-pill.is-approved { background: var(--tinte-alza); color: var(--alza); }
+.promotur-pill.is-published { background: var(--tinta); color: var(--sobre-tinta); }
+.promotur-pill.is-muted { background: var(--tinte-neutro); color: var(--texto-debil); }
+
+/* Segmentado: elegir entre pocas opciones sin gastar un desplegable. Hoy lo
+   usa el selector de idioma de los textos de la app. */
+.promotur-seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: var(--r-full); background: var(--hueco); }
+.promotur-seg__item { padding: .3em .8em; border: 0; border-radius: var(--r-full); background: none; color: var(--texto-2); font: inherit; font-size: .8rem; font-weight: 600; text-decoration: none; cursor: pointer; }
+.promotur-seg__item.is-active { background: var(--tinta); color: var(--sobre-tinta); }
+
+/* ---------------------------------------------------------------------------
+ * Listas
+ * ------------------------------------------------------------------------ */
+
+.promotur-list { display: flex; flex-direction: column; gap: 8px; }
+.promotur-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 16px; border: 1px solid var(--linea); border-radius: var(--r-2); background: var(--papel); color: inherit; text-decoration: none; }
+.promotur-row:hover { border-color: var(--linea-2); }
+.promotur-row__main { display: flex; flex-direction: column; min-width: 0; }
+.promotur-row__user { flex-direction: row; align-items: center; gap: 10px; }
+.promotur-row__title { font-weight: 600; }
+.promotur-row__meta { color: var(--texto-debil); font-size: .82rem; }
+
+.promotur-linklist { margin: .6rem 0 0; padding: 0; list-style: none; }
+.promotur-linklist a { display: block; padding: 8px 0; color: var(--texto-2); font-size: .9rem; }
+.promotur-linklist a:hover { color: var(--texto); }
+
+.promotur-empty-box { padding: 40px 24px; text-align: center; }
+.promotur-empty-box p { margin: 0 0 1rem; color: var(--texto-2); }
+
+/* ---------------------------------------------------------------------------
+ * Formularios
+ * ------------------------------------------------------------------------ */
+
+.promotur-form { display: flex; flex-direction: column; gap: 15px; }
+.promotur-field { display: flex; flex-direction: column; gap: 6px; }
+.promotur-field > span { font-size: .86rem; font-weight: 600; }
+.promotur-field em { color: var(--baja); font-style: normal; }
+
+.promotur-check { display: flex; align-items: center; gap: 9px; font-size: .9rem; }
+.promotur-check input { accent-color: var(--tinta); width: 17px; height: 17px; }
+
+.promotur-form-msg { font-size: .86rem; color: var(--texto-2); }
+.promotur-form-msg.is-error { color: var(--baja); }
+.promotur-form-msg.is-success { color: var(--alza); }
+
+.promotur-fieldset { margin: 0; padding: 16px; border: 1px solid var(--linea); border-radius: var(--r-3); }
+.promotur-fieldset legend { padding: 0 6px; font-weight: 600; }
+.promotur-inline-form { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.promotur-upload { display: flex; align-items: center; gap: 12px; }
+.promotur-upload__preview { flex: 0 0 auto; width: 64px; height: 64px; border: 1px solid var(--linea); border-radius: var(--r-2); background: var(--hueco) center / cover no-repeat; }
+
+/* ---------------------------------------------------------------------------
+ * Botones
+ * ------------------------------------------------------------------------ */
+
+.promotur-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: .45em;
+	padding: .68em 1.15em;
+	border: 1px solid transparent;
+	border-radius: var(--r-2);
+	font: inherit;
+	font-size: .92rem;
+	font-weight: 600;
+	line-height: 1.15;
+	text-decoration: none;
+	cursor: pointer;
+}
+.promotur-btn--primary { background: var(--tinta); color: var(--sobre-tinta); }
+.promotur-btn--primary:hover { background: var(--tinta-2); }
+.promotur-btn--ghost { border-color: var(--linea); background: var(--papel); color: var(--texto); }
+.promotur-btn--ghost:hover { border-color: var(--linea-2); background: var(--hueco); }
+.promotur-btn--danger { background: var(--baja); color: var(--papel); }
+.promotur-btn--block { width: 100%; }
+.promotur-btn--small { padding: .45em .8em; font-size: .84rem; }
+.promotur-btn[disabled] { opacity: .55; cursor: default; }
+
+.promotur-chip { padding: .32em .75em; border: 1px solid var(--linea); border-radius: var(--r-full); background: var(--papel); color: var(--texto-2); font: inherit; font-size: .8rem; cursor: pointer; }
+.promotur-chip:hover { border-color: var(--linea-2); background: var(--hueco); }
+
+/* ---------------------------------------------------------------------------
+ * Editor
+ * ------------------------------------------------------------------------ */
+
+.promotur-editor { display: grid; gap: 20px; grid-template-columns: 1fr; align-items: start; }
+@media (min-width: 1000px) {
+	.promotur-editor { grid-template-columns: 1fr 310px; }
+	.promotur-editor__side { position: sticky; top: calc(var(--topbar) + 16px); }
+}
+/* En una sola columna el checklist se iría al fondo, después de todo el
+   formulario: justo lo que hay que ver ANTES de empezar a completar, y lo que
+   dice si ya se puede enviar. Va primero. */
+@media (max-width: 999px) {
+	.promotur-editor__side { order: -1; }
+}
+.promotur-editor__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+
+.promotur-checklist ul { display: flex; flex-direction: column; gap: 9px; margin: .6rem 0 0; padding: 0; list-style: none; }
+.promotur-checklist__item { display: flex; align-items: center; gap: 10px; color: var(--texto-2); font-size: .9rem; }
+.promotur-checklist__box { display: grid; place-items: center; flex: 0 0 auto; width: 18px; height: 18px; border: 1.5px solid var(--linea-2); border-radius: var(--r-1); }
+.promotur-checklist__item.is-done { color: var(--texto); }
+.promotur-checklist__item.is-done .promotur-checklist__box { border-color: var(--tinta); background: var(--tinta); }
+.promotur-checklist__item.is-done .promotur-checklist__box::after { content: ""; width: 9px; height: 5px; border: 2px solid var(--sobre-tinta); border-top: 0; border-right: 0; transform: translateY(-1px) rotate(-45deg); }
+
+.promotur-feedback__item { padding: 12px 0; border-top: 1px solid var(--linea); }
+.promotur-feedback__item:first-of-type { border-top: 0; }
+.promotur-feedback__item p { margin: .3rem 0 0; }
+
+/* ---------------------------------------------------------------------------
+ * Revisión
+ * ------------------------------------------------------------------------ */
+
+.promotur-review { display: grid; gap: 20px; grid-template-columns: 1fr; align-items: start; }
+@media (min-width: 1000px) {
+	.promotur-review { grid-template-columns: 1fr 340px; }
+	.promotur-review__panel { position: sticky; top: calc(var(--topbar) + 16px); display: flex; flex-direction: column; gap: 16px; }
+}
+.promotur-review__cover { width: 100%; margin-bottom: 1rem; border-radius: var(--r-2); }
+.promotur-review__grouptitle { margin: 1.3rem 0 .4rem; font-size: 1rem; font-weight: 600; }
+.promotur-review__buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-top: .7rem; }
+.promotur-deflist { display: grid; grid-template-columns: auto 1fr; gap: 7px 18px; margin: 0; }
+.promotur-deflist dt { color: var(--texto-debil); font-size: .84rem; font-weight: 600; }
+.promotur-deflist dd { margin: 0; }
+.promotur-quickfb { display: flex; flex-wrap: wrap; gap: 6px; margin: .5rem 0; }
+.promotur-prose p { margin: .5rem 0; }
+
+.promotur-profile { display: flex; align-items: center; gap: 16px; margin-bottom: 1.5rem; }
+
+/* ---------------------------------------------------------------------------
+ * Avisos
+ * ------------------------------------------------------------------------ */
+
+.promotur-flash, .promotur-notice { display: flex; align-items: flex-start; gap: 10px; margin: 0 0 1.2rem; padding: .85em 1em; border: 1px solid var(--linea); border-radius: var(--r-2); background: var(--papel); font-size: .92rem; }
+.promotur-flash--success, .promotur-notice--success { border-color: var(--alza); background: var(--tinte-alza); color: var(--alza); }
+.promotur-flash--error, .promotur-notice--error { border-color: var(--baja); background: var(--tinte-baja); color: var(--baja); }
+.promotur-flash--info, .promotur-notice--info { border-color: var(--info); background: var(--tinte-info); color: var(--info); }
+
+/* ---------------------------------------------------------------------------
+ * Acceso
+ * ------------------------------------------------------------------------ */
+
+body.promotur-auth-page { display: grid; place-items: center; min-height: 100vh; min-height: 100svh; padding: 24px; background: var(--lienzo); }
+.promotur-auth { width: 100%; max-width: 420px; }
+.promotur-auth__card { padding: 30px; border: 1px solid var(--linea); border-radius: var(--r-3); background: var(--papel); }
+.promotur-auth__title { margin: 0 0 .3em; font-size: 1.45rem; font-weight: 600; letter-spacing: -.02em; }
+.promotur-auth__sub { margin: 0 0 1.4em; color: var(--texto-2); font-size: .93rem; }
+.promotur-auth__links { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; margin-top: 1.2rem; font-size: .86rem; }
+.promotur-auth__links a { color: var(--texto-2); }
+
+/* ---------------------------------------------------------------------------
+ * Splash y offline
+ * ------------------------------------------------------------------------ */
+
+.promotur-splash { position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: var(--lienzo); color: var(--tinta); animation: promoturSplashOut .45s ease 1s forwards; }
+.promotur-splash__mark { display: grid; place-items: center; width: 56px; height: 56px; border-radius: var(--r-2); background: var(--tinta); color: var(--sobre-tinta); animation: promoturSplashIn .5s ease; }
+.promotur-splash__name { color: var(--texto); font-weight: 600; }
+html.promotur-no-splash .promotur-splash { display: none; }
+.promotur-splash.is-hidden { display: none; }
+@keyframes promoturSplashIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes promoturSplashOut { to { opacity: 0; visibility: hidden; } }
+
+.promotur-offline-page { display: grid; place-items: center; min-height: 100vh; padding: 24px; }
+.promotur-offline-box { max-width: 380px; text-align: center; }
+
+/* ---------------------------------------------------------------------------
+ * Nivel de confianza (Mi perfil)
+ * ------------------------------------------------------------------------ */
+
+.promotur-trustbar { display: flex; flex-wrap: wrap; gap: 6px; margin: .7rem 0; }
+.promotur-truststep { flex: 1; min-width: 92px; padding: .5em; border-radius: var(--r-1); background: var(--tinte-neutro); color: var(--texto-debil); font-size: .82rem; font-weight: 600; text-align: center; }
+.promotur-truststep.is-on { background: var(--tinta); color: var(--sobre-tinta); }
+
+/* ---------------------------------------------------------------------------
+ * Movimiento reducido / impresión
+ * ------------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+	*, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+	.promotur-splash { animation: none; }
+	html:not(.promotur-no-splash) .promotur-splash { display: none; }
+}
+
+@media print {
+	.promotur-sidebar, .promotur-topbar, .promotur-splash, .promotur-backdrop, .promotur-bottomnav { display: none !important; }
+	.promotur-main { margin: 0 !important; }
+	.promotur-content { max-width: none; padding: 0; }
+	.promotur-card { border-color: var(--linea-2); }
+}

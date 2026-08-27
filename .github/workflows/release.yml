@@ -1,23 +1,35 @@
-name: Release theme zip
+name: Publicar releases
 
-# Se dispara solo cuando un push a main toca la linea "Version:" de
-# style.css. Arma caaguazu-theme.zip (bin/build-zip.sh) y publica un GitHub
-# Release con ese asset — de ahi lee las actualizaciones
-# caaguazu-theme/inc/updater.php (compara su version contra el tag). Sin
-# pasos manuales de tag: alcanza con subir el numero de version del theme en
-# el PR que se mergea a main.
+# En este repo conviven dos cosas que se instalan por separado y se actualizan
+# solas: el theme del sitio publico y el plugin del panel de promotores. Cada
+# uno tiene su propia version, su propio tag y su propio zip.
+#
+# La regla que hace que convivan sin pisarse: **cada release lleva un solo
+# zip**, y cada updater se queda con el release que trae EL SUYO
+# (caaguazu-theme/inc/updater.php y el filtro de release de
+# caaguazu-portal.php). Asi el updater del theme no confunde un release del
+# plugin con uno suyo, ni al reves, sin depender de como se llamen los tags.
+#
+# Cada job arma su release solo si su tag todavia no existe, o sea: solo cuando
+# subio el numero de version en el header correspondiente. No hace falta
+# taggear a mano.
+#
+# OJO: las dos series comparten el espacio de tags (vX.Y.Z). El theme va por
+# 5.x y el plugin por 3.x; si algun dia los numeros se cruzaran, el job falla
+# porque el tag ya existe — falla ruidosa, no release corrupto.
 
 on:
   push:
     branches: [main]
     paths:
       - 'caaguazu-theme/style.css'
+      - 'caaguazu-portal/caaguazu-portal.php'
 
 permissions:
   contents: write
 
 jobs:
-  release:
+  theme:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -25,7 +37,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Leer version de style.css
+      - name: Leer version del theme
         id: version
         run: |
           VERSION=$(grep -m1 '^Version:' caaguazu-theme/style.css | sed -E 's/Version:[[:space:]]*//' | tr -d '\r')
@@ -47,7 +59,7 @@ jobs:
 
       - name: Armar el zip del theme
         if: steps.check.outputs.exists == 'false'
-        run: bash bin/build-zip.sh
+        run: bash bin/build-zip.sh theme
 
       - name: Crear Release y subir el zip
         if: steps.check.outputs.exists == 'false'
@@ -56,5 +68,47 @@ jobs:
         run: |
           gh release create "${{ steps.version.outputs.tag }}" \
             caaguazu-theme.zip \
-            --title "${{ steps.version.outputs.tag }}" \
+            --title "Theme ${{ steps.version.outputs.tag }}" \
+            --generate-notes
+
+  portal:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Leer version del plugin
+        id: version
+        run: |
+          VERSION=$(grep -m1 '^ \* Version:' caaguazu-portal/caaguazu-portal.php | sed -E 's/.*Version:[[:space:]]*//' | tr -d '\r')
+          if [ -z "$VERSION" ]; then
+            echo "No se encontro la linea Version: en caaguazu-portal.php" >&2
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Verificar si el tag ya existe
+        id: check
+        run: |
+          if git rev-parse "${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Armar el zip del plugin
+        if: steps.check.outputs.exists == 'false'
+        run: bash bin/build-zip.sh portal
+
+      - name: Crear Release y subir el zip
+        if: steps.check.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ steps.version.outputs.tag }}" \
+            caaguazu-portal.zip \
+            --title "Panel ${{ steps.version.outputs.tag }}" \
             --generate-notes
