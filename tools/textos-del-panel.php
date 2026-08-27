@@ -30,6 +30,7 @@ $mapa = array(
 	'includes/class-assets.php'             => array( 'Mensajes del JavaScript', 'armazon' ),
 	'includes/class-notifications.php'      => array( 'Notificaciones', 'armazon' ),
 	'includes/class-editorial.php'          => array( 'Estados del flujo editorial', 'armazon' ),
+	'includes/class-acciones.php'           => array( 'Guardas de las acciones', 'armazon' ),
 	'includes/class-roles.php'              => array( 'Nombres de los roles', 'armazon' ),
 
 	// --- Las secciones ----------------------------------------------------
@@ -42,11 +43,15 @@ $mapa = array(
 	'templates/sections/tareas.php'         => array( 'Tareas', 'secciones' ),
 	'includes/class-tareas.php'             => array( 'Tareas (estados y avisos)', 'secciones' ),
 	'templates/sections/equipo.php'         => array( 'Equipo', 'secciones' ),
+	'includes/class-equipo.php'             => array( 'Equipo (avisos)', 'secciones' ),
 	'templates/sections/reportes.php'       => array( 'Reportes', 'secciones' ),
 	'templates/sections/biblioteca.php'     => array( 'Biblioteca', 'secciones' ),
+	'includes/class-medios.php'             => array( 'Biblioteca (avisos)', 'secciones' ),
 	'templates/sections/estructura.php'     => array( 'Estructura', 'secciones' ),
+	'includes/class-estructura.php'         => array( 'Estructura (nombres y avisos)', 'secciones' ),
 	'templates/sections/buscar.php'         => array( 'Buscar', 'secciones' ),
 	'templates/sections/perfil.php'         => array( 'Mi perfil', 'secciones' ),
+	'includes/class-cuenta.php'             => array( 'Mi perfil (avisos)', 'secciones' ),
 	'includes/class-stats.php'              => array( 'Niveles de confianza', 'secciones' ),
 	'templates/sections/app.php'            => array( 'App (control de la app móvil)', 'secciones' ),
 	'includes/class-app-control.php'        => array( 'App (avisos)', 'secciones' ),

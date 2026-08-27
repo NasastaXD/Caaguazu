@@ -24,7 +24,7 @@ class PROMOTUR_Auth {
 	}
 
 	private function __construct() {
-		add_action( 'admin_post_promotur_invite', array( $this, 'handle_create_invite' ) );
+		PROMOTUR_Acciones::formulario( 'invite', array( $this, 'handle_create_invite' ) );
 		// Invite-only: se desactiva el alta nativa de WordPress (el registro de
 		// cuentas ya no pasa por wp_insert_user en absoluto).
 		add_filter( 'option_users_can_register', '__return_zero' );
@@ -36,10 +36,10 @@ class PROMOTUR_Auth {
 	}
 
 	/**
-	 * admin-post: genera un link de invitación (desde el panel de equipo del Promotor).
+	 * Genera un link de invitación, desde la sección Equipo del panel.
 	 */
 	public function handle_create_invite() {
-		if ( ! caaguazu_account_can( 'promotor', 'promotur_manage_team' ) || ! check_admin_referer( 'promotur_invite' ) ) {
+		if ( ! caaguazu_account_can( 'promotor', 'promotur_manage_team' ) ) {
 			wp_die( esc_html__( 'No tenés autorización para hacer esto.', 'caaguazu-portal' ) );
 		}
 		$role = isset( $_POST['role'] ) ? sanitize_key( wp_unslash( $_POST['role'] ) ) : 'promotur_mini';
@@ -123,8 +123,15 @@ class PROMOTUR_Auth {
 		return promotur_url( 'panel' );
 	}
 
+	/**
+	 * El token de los formularios de acceso. Mismo mecanismo que el resto del
+	 * panel; acá todavía no hay cuenta, así que se firma con cuenta 0 — que es
+	 * lo mismo que hace WordPress con un visitante anónimo, pero sin depender
+	 * de que exista un usuario de WordPress.
+	 */
 	private function verify( $action ) {
-		return isset( $_POST['promotur_nonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['promotur_nonce'] ) ), $action );
+		$token = isset( $_POST['promotur_token'] ) ? sanitize_text_field( wp_unslash( $_POST['promotur_token'] ) ) : '';
+		return PROMOTUR_Acciones::token_valido( $token, $action );
 	}
 
 	/* ----- Login ----- */

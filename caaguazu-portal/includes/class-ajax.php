@@ -25,21 +25,21 @@ class PROMOTUR_Ajax {
 			'return_changes' => 'return_changes',
 			'upload_media'   => 'upload_media',
 		);
+		// Puerta propia del panel (`/turismo-panel/datos/…`), no `admin-ajax.php`:
+		// `wp_ajax_*` sólo corre para usuarios de WordPress, y acá la identidad
+		// la pone `caaguazu-cuentas`.
 		foreach ( $map as $action => $method ) {
-			add_action( 'wp_ajax_promotur_' . $action, array( $this, $method ) );
+			PROMOTUR_Acciones::datos( $action, array( $this, $method ) );
 		}
 	}
 
 	/**
-	 * Guard: nonce + sesión (cuenta propia, o admin de WP vía bypass) + capability.
+	 * Guard: capability.
+	 *
+	 * La sesión y el token ya los revisó `PROMOTUR_Acciones` antes de llegar
+	 * acá; lo que queda es el permiso, que cambia por acción.
 	 */
 	private function guard( $cap ) {
-		if ( ! check_ajax_referer( 'promotur', 'nonce', false ) ) {
-			wp_send_json_error( array( 'message' => __( 'Tu sesión venció. Recargá la página.', 'caaguazu-portal' ) ), 403 );
-		}
-		if ( ! caaguazu_is_logged_in() && ! caaguazu_wp_admin_bypass() ) {
-			wp_send_json_error( array( 'message' => __( 'Necesitás iniciar sesión.', 'caaguazu-portal' ) ), 401 );
-		}
 		if ( $cap && ! caaguazu_account_can( 'promotor', $cap ) ) {
 			wp_send_json_error( array( 'message' => __( 'No tenés permiso para hacer esto.', 'caaguazu-portal' ) ), 403 );
 		}
@@ -227,6 +227,9 @@ class PROMOTUR_Ajax {
 		if ( is_wp_error( $id ) ) {
 			wp_send_json_error( array( 'message' => $id->get_error_message() ) );
 		}
+		// Una foto es una foto, entre por el editor o por la galería: queda a
+		// nombre de la cuenta y aparece en la Biblioteca del panel.
+		PROMOTUR_Medios::marcar( $id );
 		wp_send_json_success( array(
 			'id'    => $id,
 			'thumb' => wp_get_attachment_image_url( $id, 'medium' ),

@@ -19,7 +19,7 @@ class PROMOTUR_Notifications {
 	}
 
 	private function __construct() {
-		add_action( 'admin_post_promotur_mark_read', array( $this, 'handle_mark_read' ) );
+		PROMOTUR_Acciones::formulario( 'mark_read', array( $this, 'handle_mark_read' ) );
 	}
 
 	/**
@@ -122,12 +122,10 @@ class PROMOTUR_Notifications {
 	}
 
 	/**
-	 * admin-post: marcar todo como leído.
+	 * Marcar todo como leído. La sesión y el token ya los revisó
+	 * PROMOTUR_Acciones.
 	 */
 	public function handle_mark_read() {
-		if ( ( ! caaguazu_is_logged_in() && ! caaguazu_wp_admin_bypass() ) || ! check_admin_referer( 'promotur_mark_read' ) ) {
-			wp_die( esc_html__( 'No tenés autorización para hacer esto.', 'caaguazu-portal' ) );
-		}
 		$uid = caaguazu_account_id();
 		if ( $uid > 0 ) {
 			caaguazu_account_meta_set( $uid, self::READ_META, time() );

@@ -2,8 +2,8 @@
 /**
  * Plugin Name:       Caaguazú Portal — Promotores Turísticos
  * Plugin URI:        https://turismo.caaguazu.net
- * Description:       Panel autenticado tipo app (sidebar + topbar + contenido, instalable como PWA) sobre rutas propias, con flujo editorial borrador → revisión → publicación para el Portal de Promotores Turísticos. Hereda los colores del sitio vía tokens CSS. Desde 2.0.0 la identidad de los promotores corre sobre el sistema de cuentas universal (caaguazu-cuentas): ya no son usuarios de WordPress.
- * Version:           3.0.0
+ * Description:       Panel autenticado tipo app bajo /turismo-panel, instalable como PWA, con flujo editorial borrador → revisión → publicación, y la cabina de mando de la app móvil (textos, medios y categorías). Corre sobre rutas propias y no depende del theme: trae su propio CSS y su propia tipografía, y desencola los del theme activo en sus rutas. La identidad de los promotores corre sobre el sistema de cuentas universal (caaguazu-cuentas): no son usuarios de WordPress.
+ * Version:           3.1.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Requires Plugins:  caaguazu-cuentas
@@ -17,7 +17,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'PROMOTUR_VERSION', '3.0.0' );
+define( 'PROMOTUR_VERSION', '3.1.0' );
 define( 'PROMOTUR_DB_VERSION', 2 ); // se incrementa cuando cambia la estructura de datos.
 define( 'PROMOTUR_FILE', __FILE__ );
 define( 'PROMOTUR_DIR', plugin_dir_path( __FILE__ ) );
@@ -44,6 +44,7 @@ define( 'PROMOTUR_ASSET', 'caaguazu-portal.zip' );
 require_once PROMOTUR_DIR . 'includes/helpers.php';
 require_once PROMOTUR_DIR . 'includes/class-roles.php';
 require_once PROMOTUR_DIR . 'includes/class-install.php';
+require_once PROMOTUR_DIR . 'includes/class-acciones.php';
 require_once PROMOTUR_DIR . 'includes/class-router.php';
 require_once PROMOTUR_DIR . 'includes/class-shell.php';
 require_once PROMOTUR_DIR . 'includes/class-assets.php';
@@ -60,6 +61,10 @@ require_once PROMOTUR_DIR . 'includes/class-tareas.php';
 require_once PROMOTUR_DIR . 'includes/class-stats.php';
 require_once PROMOTUR_DIR . 'includes/class-gestion-ajax.php';
 require_once PROMOTUR_DIR . 'includes/class-app-control.php';
+require_once PROMOTUR_DIR . 'includes/class-cuenta.php';
+require_once PROMOTUR_DIR . 'includes/class-medios.php';
+require_once PROMOTUR_DIR . 'includes/class-estructura.php';
+require_once PROMOTUR_DIR . 'includes/class-equipo.php';
 
 /**
  * ¿Está activo el sistema de cuentas universal (caaguazu-cuentas)?
@@ -131,6 +136,10 @@ function promotur_boot() {
 	PROMOTUR_Stats::instance();
 	PROMOTUR_Gestion_Ajax::instance();
 	PROMOTUR_App_Control::instance();
+	PROMOTUR_Cuenta::instance();
+	PROMOTUR_Medios::instance();
+	PROMOTUR_Estructura::instance();
+	PROMOTUR_Equipo::instance();
 	PROMOTUR_Audit::instance();
 	if ( is_admin() ) {
 		PROMOTUR_Admin::instance();
@@ -141,22 +150,36 @@ function promotur_boot() {
 add_action( 'plugins_loaded', 'promotur_boot' );
 
 /**
- * Auto re-flush de rewrite rules si cambió la versión (upgrades sin re-activar).
- * En `admin_init`, no en `plugins_loaded`: ese hook corre en CADA visita pública
- * (antes de que los CPTs terminen de registrar sus propias reglas en `init`), así
- * que un flush ahí reconstruye el rewrite_rules con reglas incompletas y lo hace
- * en el camino caliente de cualquier visitante anónimo. Mismo patrón de catch-up
- * ya usado en caaguazu-turismo/includes/tourism-seeder.php.
+ * Las reglas de reescritura del panel, presentes siempre.
+ *
+ * Antes esto corría sólo en `admin_init` y sólo al cambiar de versión, y eso
+ * tenía un agujero que se veía en la cara: hasta que alguien entrara a
+ * wp-admin, `/turismo-panel` no existía como regla, WordPress lo resolvía como
+ * 404 y el theme —que hoy tiene una sola plantilla— pintaba la página de obra
+ * encima del panel. Lo mismo pasaba después de restaurar una base, de cambiar
+ * los enlaces permanentes, o de instalar el plugin sin pasar por el escritorio.
+ *
+ * Ahora se comprueba en `init` que la regla base esté realmente guardada, y si
+ * no está se vacía una vez. `get_option( 'rewrite_rules' )` está en el
+ * autoload, así que la comprobación no agrega una consulta; el flush, que sí
+ * es caro, sólo ocurre cuando falta de verdad.
  */
-function promotur_maybe_flush_rewrite_rules() {
-	if ( get_option( 'promotur_version' ) === PROMOTUR_VERSION ) {
+function promotur_asegurar_rewrite_rules() {
+	$version_nueva = get_option( 'promotur_version' ) !== PROMOTUR_VERSION;
+
+	$reglas  = get_option( 'rewrite_rules' );
+	$falta   = ! is_array( $reglas ) || ! isset( $reglas[ '^' . PROMOTUR_BASE . '/?$' ] );
+
+	if ( ! $version_nueva && ! $falta ) {
 		return;
 	}
-	PROMOTUR_Router::add_rewrite_rules();
+
 	flush_rewrite_rules();
 	update_option( 'promotur_version', PROMOTUR_VERSION );
 }
-add_action( 'admin_init', 'promotur_maybe_flush_rewrite_rules' );
+// Prioridad 20: después de que el router (10) y los CPTs registraron las suyas,
+// para que el flush escriba el juego completo y no uno a medias.
+add_action( 'init', 'promotur_asegurar_rewrite_rules', 20 );
 
 /**
  * Traducciones.

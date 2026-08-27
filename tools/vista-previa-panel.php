@@ -176,6 +176,58 @@ class Caaguazu_Cuentas_Panels {
  * Clases del portal que tocan la base
  * ------------------------------------------------------------------------ */
 
+/**
+ * Las dos puertas del panel. Acá sólo hace falta que dibujen la URL y el campo
+ * oculto; quien despacha de verdad es la clase real.
+ */
+class PROMOTUR_Acciones {
+	public static function url( $nombre, $tipo = 'accion' ) { return promotur_url( $tipo . '/' . $nombre ); }
+	public static function token( $ambito = 'panel' ) { return 'token-de-prueba'; }
+	public static function campos( $ambito = 'panel' ) { echo '<input type="hidden" name="promotur_token" value="token-de-prueba">'; }
+}
+class PROMOTUR_Equipo {
+	const CAP = 'promotur_manage_team';
+	public static function invitaciones_abiertas() {
+		return array(
+			array( 'id' => 3, 'role' => 'promotur_mini', 'expires_at' => gmdate( 'Y-m-d H:i:s', time() + 9 * DAY_IN_SECONDS ) ),
+		);
+	}
+}
+class PROMOTUR_Estructura {
+	const CAP = 'promotur_manage_structure';
+	public static function grupos() {
+		return array(
+			'promotur_categoria' => array( 'titulo' => 'Categorías', 'singular' => 'Categoría', 'ayuda' => 'De qué tipo es el lugar: salto, museo, feria. La app agrupa por acá y les pone ícono y color.' ),
+			'promotur_zona'      => array( 'titulo' => 'Zonas', 'singular' => 'Zona', 'ayuda' => 'Dónde queda: el distrito o la región del departamento.' ),
+			'promotur_etiqueta'  => array( 'titulo' => 'Etiquetas', 'singular' => 'Etiqueta', 'ayuda' => 'Lo que no entra en las otras dos: «con niños», «gratis», «llega colectivo».' ),
+		);
+	}
+	public static function terminos( $tax ) {
+		$muestra = array(
+			'promotur_categoria' => array( array( 'Saltos de agua', 7 ), array( 'Ferias', 0 ) ),
+			'promotur_zona'      => array( array( 'Coronel Oviedo', 4 ), array( 'Yhú', 0 ) ),
+			'promotur_etiqueta'  => array( array( 'Con niños', 2 ) ),
+		);
+		$out = array();
+		foreach ( $muestra[ $tax ] as $i => $t ) {
+			$out[] = (object) array( 'term_id' => 100 + $i, 'name' => $t[0], 'count' => $t[1] );
+		}
+		return $out;
+	}
+}
+class PROMOTUR_Medios {
+	const META_CREDITO = '_promotur_credito';
+	public static function pagina( array $args = array() ) {
+		$fotos = array();
+		foreach ( array( 'Salto Cristal', 'Feria de artesanías', 'Iglesia de Yhú' ) as $i => $t ) {
+			$fotos[] = (object) array( 'ID' => 900 + $i, 'post_title' => $t );
+		}
+		return array( 'fotos' => $fotos, 'total' => 3, 'paginas' => 1, 'pagina' => 1 );
+	}
+	public static function credito( $id ) { return ''; }
+	public static function puede_editar( $id ) { return true; }
+	public static function usada_en( $id ) { return 901 === (int) $id ? array( 12 ) : array(); }
+}
 class PROMOTUR_Roles {
 	public static function sections() { return array(); }
 	public static function label( $key ) { return 'promotur_mini' === $key ? 'Mini Promotor' : 'Promotor'; }

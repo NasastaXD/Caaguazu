@@ -19,9 +19,8 @@
 		var body;
 		if (data instanceof FormData) { body = data; }
 		else { body = new FormData(); Object.keys(data || {}).forEach(function (k) { body.append(k, data[k]); }); }
-		body.append('action', 'promotur_' + action);
-		body.append('nonce', CFG.nonce);
-		return fetch(CFG.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: body }).then(function (r) { return r.json(); });
+		body.append('promotur_token', CFG.token);
+		return fetch(CFG.datosUrl + action, { method: 'POST', credentials: 'same-origin', body: body }).then(function (r) { return r.json(); });
 	}
 
 	/**
@@ -40,6 +39,7 @@
 		initTheme();
 		initDrawer();
 		initDropdowns();
+		initConfirmar();
 		initInstall();
 		initServiceWorker();
 		initSubnav();
@@ -272,6 +272,15 @@
 		}
 		document.addEventListener('click', closeAll);
 		document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeAll(); } });
+	}
+
+	/* ---------- Confirmar lo que no se puede deshacer ---------- */
+	function initConfirmar() {
+		document.addEventListener('submit', function (e) {
+			var form = e.target.closest ? e.target.closest('[data-confirmar]') : null;
+			if (!form) { return; }
+			if (!window.confirm(form.getAttribute('data-confirmar'))) { e.preventDefault(); }
+		});
 	}
 
 	/* ---------- Instalar app (PWA) ---------- */

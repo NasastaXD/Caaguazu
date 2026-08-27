@@ -26,7 +26,7 @@ $body = function () use ( $error, $notice, $next, $reset ) {
 	<?php endif; ?>
 
 	<form class="promotur-form" method="post">
-		<?php wp_nonce_field( 'promotur_login', 'promotur_nonce' ); ?>
+		<?php PROMOTUR_Acciones::campos( 'promotur_login' ); ?>
 		<input type="hidden" name="promotur_auth" value="login">
 		<input type="hidden" name="next" value="<?php echo esc_attr( $next ); ?>">
 

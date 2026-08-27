@@ -1,7 +1,7 @@
 # Panel de Promotores Turísticos
 
 Todo lo que hace el panel, dónde vive cada cosa y qué queda pendiente.
-Versión `3.0.0` del plugin `caaguazu-portal`.
+Versión `3.1.0` del plugin `caaguazu-portal`.
 
 ---
 
@@ -24,6 +24,8 @@ Versión `3.0.0` del plugin `caaguazu-portal`.
 | `/turismo-panel/sw.js` | Service worker (alcance `/turismo-panel/`) |
 | `/turismo-panel/icon-<n>.png` | Ícono PWA en cualquier tamaño |
 | `/turismo-panel/offline` | Pantalla sin conexión |
+| `/turismo-panel/accion/<nombre>` | Donde caen los formularios del panel (POST) |
+| `/turismo-panel/datos/<nombre>` | Donde caen los pedidos del JavaScript (POST, responde JSON) |
 
 El slug base es **una constante**, `PROMOTUR_BASE` en `caaguazu-portal.php`. El router arma las reglas de reescritura con ella y `promotur_url()` arma las URLs con la misma: mover el panel de lugar es cambiar esa línea. Hay una comprobación automática que falla si alguien vuelve a escribir una URL del panel a mano (§6).
 
@@ -72,6 +74,25 @@ Un item de menú cuyo capability no tiene la cuenta **no se dibuja**, y un grupo
 
 **Acceso desde el CEAD**: el plugin `caaguazu-sso-cead` canjea el código del colegio y manda a `promotur_url( 'panel' )`. Como esa función ya apunta a `/turismo-panel`, el SSO siguió funcionando sin tocarle una línea.
 
+### Nada de lo que hace el equipo pasa por WordPress
+
+WordPress corre abajo y guarda lo que hay que guardar, pero **nadie del equipo abre una pantalla suya, y nada del panel depende de que exista un usuario de WordPress.** Esto no era así y costó arreglarlo; queda escrito para que no se vuelva atrás sin darse cuenta.
+
+Lo que estaba mal, y dónde quedó:
+
+| Estaba así | Por qué era un problema | Ahora |
+| --- | --- | --- |
+| Guardar, aprobar y subir colgaban de `admin-ajax.php` | `wp_ajax_*` —sin `nopriv`— **sólo corre para usuarios de WordPress**: un promotor con cuenta y sin usuario de WP recibía `0` en cada guardado | `/turismo-panel/datos/<nombre>`, autenticado con la cuenta |
+| Invitar y marcar leído colgaban de `admin-post.php` | Igual, y además sacaba a la persona del panel | `/turismo-panel/accion/<nombre>` |
+| Los nonces eran `wp_create_nonce()` | Se firman con el usuario de WordPress, no con la cuenta | Token HMAC firmado con la cuenta, ventana de 12 h y se acepta la anterior |
+| Mi perfil enlazaba a `wp-admin/profile.php` | Edita **otra cosa** —un usuario de WordPress que un promotor no tiene— | Se edita en Mi perfil: nombre, correo, teléfono, foto y contraseña, contra `caaguazu-cuentas` |
+| El avatar venía de Gravatar | `get_avatar_url()` devuelve URL siempre, así que la rama de iniciales no corría nunca: cada pantalla mandaba el correo de un promotor a un tercero | Foto de la cuenta, o iniciales |
+| Biblioteca era un enlace a `wp-admin/upload.php` | Ese enlace *era* la galería | La galería está en el panel: grilla, subida, descripción, crédito y borrado |
+| Estructura eran tres botones a `edit-tags.php` | Lo mismo | Se edita en el panel |
+| «Usuarios» en wp-admin listaba usuarios de WordPress | Cambiaba roles de WordPress y suspendía con una usermeta: desde el cutover de identidad editaba a otra gente, o a nadie | Equipo, en el panel, sobre la cuenta y su permiso |
+
+En wp-admin quedan dos pantallas —el registro de auditoría y las actualizaciones del plugin— y las dos son de administrador del sitio. La única persona que entra ahí es quien administra el servidor.
+
 ---
 
 ## 3. El armazón
@@ -106,12 +127,12 @@ Catorce, cada una con su capability. El shell resuelve la sección, verifica el 
 | **Salida de campo** | `/captura` | `promotur_create_draft` | Captura offline: título, nota, foto y GPS quedan en el teléfono y se sincronizan cuando hay señal. |
 | **Cola de revisión** | `/revision[/<id>]` | `promotur_review_content` | Lo que espera revisión, con badge en el menú. Asignarse una ficha, aprobar, publicar o devolver con feedback (hay motivos de un clic). |
 | **Tareas** | `/tareas` | `promotur_view_own_tasks` | Encargos del equipo: reclamar y completar. Badge con las pendientes. |
-| **Equipo** | `/equipo` | `promotur_manage_team` | Quién es quién, su rol y su nivel de confianza. |
+| **Equipo** | `/equipo` | `promotur_manage_team` | Quién es quién, su rol y su nivel de confianza. Cambiar el rol, suspender, sacar del panel, e invitar: crear enlaces de invitación, ver los que están abiertos y revocarlos. |
 | **Reportes** | `/reportes` | `promotur_view_reports` | Producción por autor y salud del contenido: fichas publicadas sin portada y fichas sin verificar hace más de seis meses. |
-| **Biblioteca** | `/biblioteca` | `promotur_manage_media` | Medios del panel. |
-| **Estructura** | `/estructura` | `promotur_manage_structure` | Categorías, zonas y etiquetas de las fichas. |
+| **Biblioteca** | `/biblioteca` | `upload_files` | La galería: grilla de fotos, subida de a tandas, nombre, descripción y crédito de cada una, y borrado —bloqueado si la foto es la portada de una ficha. Filtro por nombre y por «sólo las mías». |
+| **Estructura** | `/estructura` | `promotur_view_panel` (editar: `promotur_manage_structure`) | Categorías, zonas y etiquetas: cuántas fichas usa cada una, crear, renombrar en su lugar y borrar lo que no esté en uso. |
 | **Buscar** | `/buscar?q=` | `promotur_view_panel` | Búsqueda de fichas dentro del panel. |
-| **Mi perfil** | `/perfil` | `promotur_edit_profile` | Datos de la cuenta, nivel de confianza y portafolio de fichas publicadas. |
+| **Mi perfil** | `/perfil` | `promotur_edit_profile` | La cuenta: nombre, correo, teléfono, foto y contraseña. Más el nivel de confianza y el portafolio de fichas publicadas. |
 | **App** | `/app` | `promotur_manage_app` | La cabina de mando de la aplicación móvil: textos por idioma, medios, e icono y color de cada categoría. Sólo aparece si el plugin de la API de la app está instalado. |
 | **Ayuda** | `/ayuda` | `promotur_view_panel` | Cómo se usa el panel. |
 
@@ -245,10 +266,12 @@ El `.zip` es **OneUI 5.12** (pixelcave): Bootstrap 5, jQuery y 40 dependencias, 
 
 Está acá para que sea una decisión y no una sorpresa.
 
-1. **El texto sigue viviendo en el código.** Hay 311 cadenas `__()` en plantillas y clases: cambiar "Cola de revisión" hoy exige publicar el plugin. El mecanismo correcto ya existe en el ecosistema (`caaguazu-app-api` sirve textos por clave desde opciones, con fusión sobre el respaldo local y sin pisar con vacíos), pero no tiene editor y el panel no lo consume. Es un trabajo aparte, y grande.
+1. **El texto sigue viviendo en el código.** Hay 537 cadenas `__()` en plantillas y clases: cambiar "Cola de revisión" hoy exige publicar el plugin. El mecanismo correcto ya existe en el ecosistema (`caaguazu-app-api` sirve textos por clave desde opciones, con fusión sobre el respaldo local y sin pisar con vacíos), pero no tiene editor y el panel no lo consume. Es un trabajo aparte, y grande.
 2. **Los cuatro estados, a medias.** Hay vacío y éxito; el error es un mensaje genérico sin "reintentar" y no hay estado de carga salvo el "Enviando…". Sin conexión sólo sobrevive la cola de capturas.
 3. **Sólo hay una serie temporal.** La actividad editorial sale del log de auditoría, que es lo único con timestamp. No hay serie de fichas publicadas por día, ni de visitas: por eso las tarjetas de cifras no tienen variación "vs. la semana pasada" como la referencia. Antes que inventar el número, no está.
 4. **Colapsar el menú lateral** (el ícono de la referencia que reduce el panel a íconos) no está hecho.
+5. **La galería lista todas las imágenes del sitio**, no sólo las que entraron por el panel. Hoy da igual —el sitio viejo se borró entero y no hay otras—, pero cada foto que entra queda marcada como del panel, así que el día que haga falta separarlas, el dato ya está guardado.
+6. **La foto de la cuenta no se puede sacar**, sólo reemplazar por otra.
 
 ---
 

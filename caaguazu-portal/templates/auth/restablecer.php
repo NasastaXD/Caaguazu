@@ -20,7 +20,7 @@ $body = function () use ( $error, $login, $key, $valid_key ) {
 
 	<?php if ( $valid_key ) : ?>
 		<form class="promotur-form" method="post">
-			<?php wp_nonce_field( 'promotur_restablecer', 'promotur_nonce' ); ?>
+			<?php PROMOTUR_Acciones::campos( 'promotur_restablecer' ); ?>
 			<input type="hidden" name="promotur_auth" value="restablecer">
 			<input type="hidden" name="login" value="<?php echo esc_attr( $login ); ?>">
 			<input type="hidden" name="key" value="<?php echo esc_attr( $key ); ?>">

@@ -747,6 +747,58 @@ html.promotur-no-splash .promotur-splash { display: none; }
 	html:not(.promotur-no-splash) .promotur-splash { display: none; }
 }
 
+/* --------------------------------------------------------------------------
+ * Galería
+ *
+ * Cada foto se abre en su lugar —un <details>— en vez de en una ventana
+ * flotante: en el teléfono una modal tapa justo la foto que estás describiendo.
+ * Al abrirse ocupa la fila entera, así la imagen se ve grande sin cambiar de
+ * pantalla.
+ * ------------------------------------------------------------------------ */
+
+.promotur-filtros { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: var(--gap) 0; }
+.promotur-app .promotur-buscador { flex: 1 1 200px; min-width: 0; height: 44px; }
+
+.promotur-galeria { display: grid; gap: var(--gap); grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); }
+
+.promotur-foto { overflow: hidden; border: 1px solid var(--linea); border-radius: var(--r-3); background: var(--papel); }
+.promotur-foto[open] { grid-column: 1 / -1; }
+.promotur-foto__cara { display: block; list-style: none; cursor: pointer; }
+.promotur-foto__cara::-webkit-details-marker { display: none; }
+.promotur-foto__img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: var(--hueco); }
+.promotur-foto[open] .promotur-foto__img { aspect-ratio: 16 / 9; }
+.promotur-foto__pie { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; padding: 8px 12px; }
+.promotur-foto__nombre { overflow: hidden; font-size: .84rem; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.promotur-foto__ficha { display: flex; flex-direction: column; gap: 14px; padding: 14px 12px; border-top: 1px solid var(--linea); }
+.promotur-foto__acciones { display: flex; flex-wrap: wrap; gap: 10px; }
+.promotur-btn--peligro { border-color: var(--linea-2); background: var(--papel); color: var(--baja); }
+.promotur-btn--peligro:hover { background: var(--tinte-baja); }
+
+.promotur-paginas { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: var(--gap); }
+
+/* --------------------------------------------------------------------------
+ * Estructura
+ *
+ * Una fila por categoría, zona o etiqueta. El nombre se edita donde está, sin
+ * abrir otra pantalla: son nombres de una línea. En teléfono la fila se parte
+ * en dos y el campo se queda con el ancho.
+ * ------------------------------------------------------------------------ */
+
+.promotur-termino { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--linea); }
+.promotur-termino:last-child { border-bottom: 0; }
+.promotur-termino__nombre { display: flex; flex: 1 1 240px; align-items: center; gap: 8px; min-width: 0; font-weight: 600; }
+.promotur-app .promotur-termino__nombre input { flex: 1 1 auto; min-width: 0; height: 44px; }
+.promotur-termino__uso { display: flex; align-items: center; gap: 10px; }
+
+/* Un enlace suelto al pie de una sección. Va con alto de blanco tocable: en el
+   teléfono un renglón de texto es un blanco de 17px. */
+.promotur-nota-enlace { display: inline-flex; align-items: center; min-height: 44px; }
+
+/* Los controles de una persona del equipo. Separados del resto de su tarjeta
+   por una línea: cambiar un rol o suspender a alguien no es lo mismo que leer
+   cuánto publicó. */
+.promotur-mod__gestion { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--linea); }
+
 @media print {
 	.promotur-sidebar, .promotur-topbar, .promotur-splash, .promotur-backdrop, .promotur-bottomnav { display: none !important; }
 	.promotur-main { margin: 0 !important; }

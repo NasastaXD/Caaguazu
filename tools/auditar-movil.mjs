@@ -20,7 +20,7 @@
  */
 
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, rmSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -52,7 +52,12 @@ const dir = mkdtempSync( join( tmpdir(), 'czu-movil-' ) );
 const verde = '\x1b[32m', rojo = '\x1b[31m', gris = '\x1b[90m', fin = '\x1b[0m';
 
 let fallas = 0;
-const navegador = await chromium.launch();
+// El contenedor trae Chromium instalado aparte; si la versión de Playwright no
+// coincide con la suya, hay que apuntarle el ejecutable a mano.
+const ejecutable = process.env.PLAYWRIGHT_CHROMIUM || '/opt/pw-browsers/chromium';
+const navegador = await chromium.launch(
+	existsSync( ejecutable ) ? { executablePath: ejecutable } : {}
+);
 
 console.log( `\n${ gris }Panel en ${ ANCHO }×${ ALTO }${ fin }\n` );
 

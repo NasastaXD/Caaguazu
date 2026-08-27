@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "description": "Sólo para las herramientas de verificación: tools/auditar-movil.mjs necesita Playwright. El panel no usa nada de npm.",
+  "scripts": {
+    "verificar": "php tools/verificar-diseno.php && node tools/auditar-movil.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.62.1"
+  }
+}

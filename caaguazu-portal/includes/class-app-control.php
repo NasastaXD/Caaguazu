@@ -39,7 +39,7 @@ class PROMOTUR_App_Control {
 	}
 
 	private function __construct() {
-		add_action( 'admin_post_promotur_save_app', array( $this, 'handle_save' ) );
+		PROMOTUR_Acciones::formulario( 'save_app', array( $this, 'handle_save' ) );
 	}
 
 	/* ---------------------------------------------------------------------
@@ -130,7 +130,7 @@ class PROMOTUR_App_Control {
 	 * los medios de rebote.
 	 */
 	public function handle_save() {
-		if ( ! promotur_app_api_activa() || ! caaguazu_account_can( 'promotor', self::CAP ) || ! check_admin_referer( 'promotur_app' ) ) {
+		if ( ! promotur_app_api_activa() || ! caaguazu_account_can( 'promotor', self::CAP ) ) {
 			wp_die( esc_html__( 'No tenés autorización para hacer esto.', 'caaguazu-portal' ), '', array( 'response' => 403 ) );
 		}
 
