@@ -39,6 +39,7 @@
 		initTheme();
 		initDrawer();
 		initDropdowns();
+		initConfirmar();
 		initInstall();
 		initServiceWorker();
 		initSubnav();
@@ -271,6 +272,15 @@
 		}
 		document.addEventListener('click', closeAll);
 		document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeAll(); } });
+	}
+
+	/* ---------- Confirmar lo que no se puede deshacer ---------- */
+	function initConfirmar() {
+		document.addEventListener('submit', function (e) {
+			var form = e.target.closest ? e.target.closest('[data-confirmar]') : null;
+			if (!form) { return; }
+			if (!window.confirm(form.getAttribute('data-confirmar'))) { e.preventDefault(); }
+		});
 	}
 
 	/* ---------- Instalar app (PWA) ---------- */

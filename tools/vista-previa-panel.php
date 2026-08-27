@@ -185,6 +185,19 @@ class PROMOTUR_Acciones {
 	public static function token( $ambito = 'panel' ) { return 'token-de-prueba'; }
 	public static function campos( $ambito = 'panel' ) { echo '<input type="hidden" name="promotur_token" value="token-de-prueba">'; }
 }
+class PROMOTUR_Medios {
+	const META_CREDITO = '_promotur_credito';
+	public static function pagina( array $args = array() ) {
+		$fotos = array();
+		foreach ( array( 'Salto Cristal', 'Feria de artesanías', 'Iglesia de Yhú' ) as $i => $t ) {
+			$fotos[] = (object) array( 'ID' => 900 + $i, 'post_title' => $t );
+		}
+		return array( 'fotos' => $fotos, 'total' => 3, 'paginas' => 1, 'pagina' => 1 );
+	}
+	public static function credito( $id ) { return ''; }
+	public static function puede_editar( $id ) { return true; }
+	public static function usada_en( $id ) { return 901 === (int) $id ? array( 12 ) : array(); }
+}
 class PROMOTUR_Roles {
 	public static function sections() { return array(); }
 	public static function label( $key ) { return 'promotur_mini' === $key ? 'Mini Promotor' : 'Promotor'; }

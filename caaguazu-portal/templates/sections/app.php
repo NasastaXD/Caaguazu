@@ -82,8 +82,8 @@ $body = function () use ( $locales, $idioma, $textos, $medios, $cats ) {
 			<?php echo promotur_icon( 'image' ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 			<span><?php esc_html_e( 'Medios', 'caaguazu-portal' ); ?></span>
 			<a class="promotur-card__head-extra promotur-btn promotur-btn--ghost promotur-btn--small"
-			   href="<?php echo esc_url( admin_url( 'upload.php' ) ); ?>" target="_blank" rel="noopener">
-				<?php esc_html_e( 'Abrir biblioteca de WordPress', 'caaguazu-portal' ); ?>
+			   href="<?php echo esc_url( promotur_url( 'panel/biblioteca' ) ); ?>">
+				<?php esc_html_e( 'Ir a la biblioteca', 'caaguazu-portal' ); ?>
 			</a>
 		</div>
 

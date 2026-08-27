@@ -227,6 +227,9 @@ class PROMOTUR_Ajax {
 		if ( is_wp_error( $id ) ) {
 			wp_send_json_error( array( 'message' => $id->get_error_message() ) );
 		}
+		// Una foto es una foto, entre por el editor o por la galería: queda a
+		// nombre de la cuenta y aparece en la Biblioteca del panel.
+		PROMOTUR_Medios::marcar( $id );
 		wp_send_json_success( array(
 			'id'    => $id,
 			'thumb' => wp_get_attachment_image_url( $id, 'medium' ),
