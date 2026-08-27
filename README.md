@@ -18,11 +18,11 @@ Lo único que se conservó del theme viejo son dos cosas que no son "sitio": `in
 
 ## El ecosistema alrededor del panel
 
-El panel no autentica ni guarda identidad por su cuenta: todo eso corre sobre `caaguazu-cuentas`.
+El panel no autentica ni guarda identidad por su cuenta: todo eso corre sobre `caaguazu-cuentas`. **Nadie del equipo abre una pantalla de WordPress y nada del panel depende de que exista un usuario de WordPress**: la cuenta, la galería, la estructura y el equipo se administran adentro del panel. Ver [«Nada de lo que hace el equipo pasa por WordPress»](docs/panel-turismo.md#nada-de-lo-que-hace-el-equipo-pasa-por-wordpress).
 
 | Pieza | Plugin | Estado |
 | --- | --- | --- |
-| Panel de promotor | `caaguazu-portal` | acá, reworkeado (v3.0.0) |
+| Panel de promotor | `caaguazu-portal` | acá, reworkeado (v3.1.0) |
 | Identidad, sesión y permisos | `caaguazu-cuentas` | dependencia dura |
 | Acceso de un clic desde el CEAD | `caaguazu-sso-cead` | funciona sin cambios |
 | Negocios, reservas y reseñas | `caaguazu-locales` | independiente |
