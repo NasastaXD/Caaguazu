@@ -64,6 +64,7 @@ llamen los tags.
 * **El panel deja de heredar el CSS del theme activo**: se desencola en las rutas del panel. El sitio público se rehace sin poder romper el panel.
 * `PROMOTUR_Stats::serie_diaria()`: actividad editorial por día leída del log de auditoría (una sola consulta agrupada), para las barras del inicio.
 * Atajo ⌘K / Ctrl+K para el buscador, y submenú plegable en el lateral.
+* **Tarjetas con relieve**: las de cifra pasan a ser banda de título con trama + caja interior con el número y la flecha, y los rótulos arrancan en mayúscula. El pulso de actividad deja de ser un sparkline en un rincón y pasa a ser un trazo sobre reja punteada, con el día debajo de cada punto y el de hoy marcado.
 * **Barra inferior nueva en teléfono**: cápsula flotante de vidrio, centrada y despegada del borde, con la etiqueta abriéndose sólo en el acceso activo.
 * **El panel queda sólo en español**: se saca el selector de idioma de la barra superior y la capa que cambiaba el locale por cookie. Los idiomas que sí existen son los de la app (ES/EN/GN), y se editan en la sección App.
 * **Repaso del panel en teléfono**: las 15 pantallas auditadas con `tools/auditar-movil.mjs` — sin desborde horizontal y con todo lo que se toca en 44px o más. En el editor, el checklist de mínimos sube antes del formulario cuando hay una sola columna.

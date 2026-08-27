@@ -16,15 +16,8 @@ Casi todas son fragmentos escritos para leerse **después de un número** ("4 es
 | # | Texto | Dónde |
 | --- | --- | --- |
 | 46 | `atrás` | Notificaciones |
-| 68 | `esperan revisión` | Inicio |
-| 69 | `publicados` | Inicio |
-| 70 | `esperan tu corrección` | Inicio |
-| 71 | `en proceso` | Inicio |
 | 170 | `revisa %s` | Cola de revisión |
 | 186 | `vence %s` | Tareas |
-| 212 | `fichas publicadas sin portada` | Reportes |
-| 213 | `fichas sin verificar hace +6 meses` | Reportes |
-| 236 | `fichas publicadas` | Mi perfil |
 | 423 | `nunca` | Pantallas de wp-admin |
 
 ## El armazón
@@ -39,21 +32,21 @@ Lo que se ve en todas las pantallas.
 | --- | --- | --- | --- |
 | 1 | `Administrador` | 175 | |
 | 2 | `Invitado` | 177 | |
-| 3 | `GESTIÓN` | 301 | |
-| 4 | `Inicio` | 303 | |
-| 5 | `Mis contenidos` | 306 | |
-| 6 | `Nueva ficha` | 310 | |
-| 7 | `Salida de campo` | 311 | |
-| 8 | `Cola de revisión` | 314 | |
-| 9 | `Tareas` | 315 | |
-| 10 | `PORTAL` | 319 | |
-| 11 | `Equipo` | 321 | |
-| 12 | `Reportes` | 322 | |
-| 13 | `Biblioteca` | 323 | |
-| 14 | `Estructura` | 324 | |
-| 15 | `App` | 332 | |
-| 16 | `Mi perfil` | 352 | |
-| 17 | `Ayuda` | 353 | |
+| 3 | `GESTIÓN` | 302 | |
+| 4 | `Inicio` | 304 | |
+| 5 | `Mis contenidos` | 307 | |
+| 6 | `Nueva ficha` | 311 | |
+| 7 | `Salida de campo` | 312 | |
+| 8 | `Cola de revisión` | 315 | |
+| 9 | `Tareas` | 316 | |
+| 10 | `PORTAL` | 320 | |
+| 11 | `Equipo` | 322 | |
+| 12 | `Reportes` | 323 | |
+| 13 | `Biblioteca` | 324 | |
+| 14 | `Estructura` | 325 | |
+| 15 | `App` | 333 | |
+| 16 | `Mi perfil` | 353 | |
+| 17 | `Ayuda` | 354 | |
 
 ### Menú lateral (pie)
 
@@ -164,22 +157,22 @@ Una tabla por pantalla del panel.
 
 | # | Texto actual | Línea | Nuevo texto |
 | --- | --- | --- | --- |
-| 68 | `esperan revisión` 🔡 | 34 | |
-| 69 | `publicados` 🔡 | 35 | |
-| 70 | `esperan tu corrección` 🔡 | 38 | |
-| 71 | `en proceso` 🔡 | 39 | |
+| 68 | `Esperan revisión` | 34 | |
+| 69 | `Publicados` | 35 | |
+| 70 | `Esperan tu corrección` | 38 | |
+| 71 | `En proceso` | 39 | |
 | 72 | `Inicio` | 51 | |
 | 73 | `Tu actividad de hoy` | 56 | |
 | 74 | `Hola, %s 👋` ⚠️ | 59 | |
-| 75 | `Actividad reciente` | 81 | |
-| 76 | `Actividad de los últimos %d día` ⚠️ | 86 | |
-| 77 | `Actividad de los últimos %d días` ⚠️ | 86 | |
-| 78 | `Accesos rápidos` | 101 | |
-| 79 | `Crear una ficha` | 106 | |
-| 80 | `Mis contenidos` | 109 | |
-| 81 | `Cola de revisión` | 112 | |
-| 82 | `Equipo` | 115 | |
-| 83 | `Mi perfil` | 117 | |
+| 75 | `Actividad reciente` | 84 | |
+| 76 | `Actividad de los últimos %d día` ⚠️ | 107 | |
+| 77 | `Actividad de los últimos %d días` ⚠️ | 107 | |
+| 78 | `Accesos rápidos` | 123 | |
+| 79 | `Crear una ficha` | 128 | |
+| 80 | `Mis contenidos` | 131 | |
+| 81 | `Cola de revisión` | 134 | |
+| 82 | `Equipo` | 137 | |
+| 83 | `Mi perfil` | 139 | |
 
 ### Mis contenidos
 
@@ -371,8 +364,8 @@ Una tabla por pantalla del panel.
 | 209 | `Producción por autor` | 18 | |
 | 210 | `%1$d publicadas / %2$d` ⚠️ | 27 | |
 | 211 | `Estado del contenido` | 33 | |
-| 212 | `fichas publicadas sin portada` 🔡 | 36 | |
-| 213 | `fichas sin verificar hace +6 meses` 🔡 | 46 | |
+| 212 | `Fichas publicadas sin portada` | 36 | |
+| 213 | `Fichas sin verificar hace +6 meses` | 46 | |
 
 ### Biblioteca
 
@@ -423,11 +416,11 @@ Una tabla por pantalla del panel.
 | 233 | `Nivel máximo: publicás directamente y después se hace una auditoría. Gracias por tu compromiso.` | 50 | |
 | 234 | `Promotor Jr: podés editar fichas publicadas sin pasar por una nueva revisión. Seguí sumando aprobaciones para llegar a «De confianza».` | 52 | |
 | 235 | `Aprendiz: todo tu contenido pasa por revisión. A medida que sumás aprobaciones, vas ganando autonomía.` | 54 | |
-| 236 | `fichas publicadas` 🔡 | 64 | |
-| 237 | `Mi portafolio` | 68 | |
-| 238 | `Todavía no tenés fichas publicadas.` | 70 | |
-| 239 | `Publicado` | 78 | |
-| 240 | `Editar mi perfil en WordPress →` | 86 | |
+| 236 | `Fichas publicadas` | 64 | |
+| 237 | `Mi portafolio` | 73 | |
+| 238 | `Todavía no tenés fichas publicadas.` | 75 | |
+| 239 | `Publicado` | 83 | |
+| 240 | `Editar mi perfil en WordPress →` | 91 | |
 
 ### Niveles de confianza
 

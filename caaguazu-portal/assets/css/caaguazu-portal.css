@@ -112,8 +112,9 @@
 	/* Velo de los overlays (menú en teléfono). */
 	--velo:   rgba(16, 16, 18, .45);
 
-	/* Trama: el único motivo decorativo del sistema. */
-	--trama: repeating-linear-gradient(135deg, transparent 0 5px, var(--linea) 5px 6px);
+	/* Trama: el único motivo decorativo del sistema. Se intuye, no se ve. */
+	--linea-tenue: rgba(16, 16, 18, .045);
+	--trama: repeating-linear-gradient(135deg, transparent 0 7px, var(--linea-tenue) 7px 8px);
 
 	/* Layout */
 	--lateral: 268px;
@@ -152,6 +153,7 @@
 	--tinte-neutro: #212127;
 
 	--sombra: 0 1px 2px rgba(0, 0, 0, .5);
+	--linea-tenue: rgba(255, 255, 255, .05);
 	--sombra-flotante: 0 1px 1px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .5);
 	--vidrio: rgba(23, 23, 26, .74);
 	--velo:   rgba(0, 0, 0, .6);
@@ -205,7 +207,7 @@ body.promotur-app {
 .promotur-app input[type=color] { height: 42px; padding: 4px; cursor: pointer; }
 .promotur-app input:focus, .promotur-app textarea:focus, .promotur-app select:focus { outline: none; border-color: var(--tinta); box-shadow: var(--sombra); }
 
-.promotur-h2 { font-size: 1.75rem; font-weight: 600; letter-spacing: -.02em; margin: 0 0 .35em; }
+.promotur-h2 { font-size: 1.8rem; font-weight: 600; letter-spacing: -.035em; margin: 0 0 .35em; }
 .promotur-h3 { font-size: 1.05rem; font-weight: 600; letter-spacing: -.01em; margin: 1.8em 0 .7em; }
 .promotur-muted { color: var(--texto-2); font-size: .92rem; }
 .promotur-mt { margin-top: 1.5rem; }
@@ -505,17 +507,48 @@ body.promotur-nav-open .promotur-sidebar { transform: translateX(0); }
  * Cifras
  * ------------------------------------------------------------------------ */
 
-.promotur-stat { display: flex; flex-direction: column; gap: 3px; text-decoration: none; }
-.promotur-stat__icon { color: var(--texto-debil); }
-.promotur-stat__n { font-size: 2.1rem; font-weight: 600; letter-spacing: -.03em; line-height: 1.05; }
-.promotur-stat__label { color: var(--texto-2); font-size: .88rem; }
-.promotur-stat__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
-.promotur-stat__foot { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.promotur-stat { display: flex; flex-direction: column; text-decoration: none; }
+/* La flecha dice que la tarjeta lleva a algún lado. Ocupa el lugar donde la
+   referencia pone su gráfico: acá no hay serie por métrica, y una flecha
+   verdadera es mejor que un gráfico inventado. */
+/* La variante en fila es la de las tarjetas de cifra: número a la izquierda,
+   flecha a la derecha. La caja del gráfico se queda en bloque. */
+.promotur-stat__caja--fila { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.promotur-stat__ir { display: flex; color: var(--linea-2); }
+.promotur-card--link:hover .promotur-stat__ir { color: var(--texto-debil); }
 
-/* Sparkline de barras: la barra destacada es el único uso de tinta acá. */
-.promotur-spark { display: flex; align-items: flex-end; gap: 3px; height: 38px; }
-.promotur-spark__bar { width: 8px; min-height: 2px; border-radius: var(--r-1); background: var(--tinte-neutro); }
-.promotur-spark__bar.is-on { background: var(--tinta); }
+.promotur-stat__n {
+	font-size: 2.4rem;
+	font-weight: 600;
+	letter-spacing: -.045em;
+	line-height: 1;
+	/* Cifras de ancho fijo: sin esto, un 1 ocupa menos que un 8 y los números
+	   de dos tarjetas contiguas no alinean. */
+	font-variant-numeric: tabular-nums;
+	font-feature-settings: "tnum" 1;
+}
+
+/* La caja interior: el número no flota sobre la tarjeta, se apoya en una
+   superficie propia. Es lo que le da profundidad sin encender una sombra. */
+.promotur-stat__caja {
+	display: block;
+	padding: 16px;
+	border: 1px solid var(--linea);
+	border-radius: var(--r-2);
+	background: var(--papel);
+}
+
+/* El gráfico de actividad. Un trazo sobre una reja punteada, como la
+   referencia: con siete puntos, un gráfico de barras a lo ancho de una tarjeta
+   queda vacío, y una línea no. El SVG se estira al ancho disponible y el punto
+   de hoy va en HTML encima, para que no se deforme con el estirado. */
+.promotur-grafico { position: relative; height: 150px; margin-top: 6px; }
+.promotur-grafico__svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.promotur-grafico__reja { fill: none; stroke: var(--linea); stroke-width: 1; stroke-dasharray: 2 5; }
+.promotur-grafico__trazo { fill: none; stroke: var(--tinta); stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.promotur-grafico__hoy { position: absolute; width: 10px; height: 10px; border: 2px solid var(--papel); border-radius: var(--r-full); background: var(--tinta); transform: translate(-50%, -50%); }
+.promotur-grafico__dias { display: flex; justify-content: space-between; margin-top: 12px; }
+.promotur-grafico__dias span { color: var(--texto-debil); font-size: .74rem; font-weight: 500; text-transform: capitalize; }
 
 .promotur-quick { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border: 1px solid var(--linea); border-radius: var(--r-2); background: var(--papel); color: var(--texto); font-weight: 500; text-decoration: none; }
 .promotur-quick:hover { border-color: var(--linea-2); background: var(--hueco); }

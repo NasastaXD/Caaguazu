@@ -31,12 +31,12 @@ $count_by = function ( $estado, $owner = 0 ) {
 
 $pulse = array();
 if ( $can_review ) {
-	$pulse[] = array( 'n' => PROMOTUR_Notifications::review_queue_count(), 'label' => __( 'esperan revisión', 'caaguazu-portal' ), 'url' => 'panel/revision', 'icon' => 'inbox' );
-	$pulse[] = array( 'n' => $count_by( 'publicado' ), 'label' => __( 'publicados', 'caaguazu-portal' ), 'url' => 'panel/revision', 'icon' => 'check' );
+	$pulse[] = array( 'n' => PROMOTUR_Notifications::review_queue_count(), 'label' => __( 'Esperan revisión', 'caaguazu-portal' ), 'url' => 'panel/revision', 'icon' => 'inbox' );
+	$pulse[] = array( 'n' => $count_by( 'publicado' ), 'label' => __( 'Publicados', 'caaguazu-portal' ), 'url' => 'panel/revision', 'icon' => 'check' );
 }
 if ( $can_draft ) {
-	$pulse[] = array( 'n' => $count_by( 'necesita_cambios', $uid ), 'label' => __( 'esperan tu corrección', 'caaguazu-portal' ), 'url' => 'panel/mis-contenidos', 'icon' => 'edit' );
-	$pulse[] = array( 'n' => $count_by( array( 'borrador', 'enviado', 'en_revision' ), $uid ), 'label' => __( 'en proceso', 'caaguazu-portal' ), 'url' => 'panel/mis-contenidos', 'icon' => 'doc' );
+	$pulse[] = array( 'n' => $count_by( 'necesita_cambios', $uid ), 'label' => __( 'Esperan tu corrección', 'caaguazu-portal' ), 'url' => 'panel/mis-contenidos', 'icon' => 'edit' );
+	$pulse[] = array( 'n' => $count_by( array( 'borrador', 'enviado', 'en_revision' ), $uid ), 'label' => __( 'En proceso', 'caaguazu-portal' ), 'url' => 'panel/mis-contenidos', 'icon' => 'doc' );
 }
 
 // Actividad editorial de los últimos 7 días, del log de auditoría. Es la única
@@ -65,11 +65,14 @@ $body = function () use ( $identity, $pulse, $serie, $tope, $can_draft, $can_rev
 		<div class="promotur-grid promotur-grid--3">
 			<?php foreach ( $pulse as $p ) : ?>
 				<a class="promotur-card promotur-card--link promotur-stat" href="<?php echo esc_url( promotur_url( $p['url'] ) ); ?>">
-					<span class="promotur-stat__head">
-						<span class="promotur-stat__label"><?php echo esc_html( $p['label'] ); ?></span>
-						<span class="promotur-stat__icon"><?php echo promotur_icon( $p['icon'] ); // phpcs:ignore WordPress.Security.EscapeOutput ?></span>
+					<span class="promotur-card__head">
+						<span><?php echo esc_html( $p['label'] ); ?></span>
+						<span class="promotur-card__head-extra"><?php echo promotur_icon( $p['icon'] ); // phpcs:ignore WordPress.Security.EscapeOutput ?></span>
 					</span>
-					<span class="promotur-stat__n"><?php echo esc_html( number_format_i18n( $p['n'] ) ); ?></span>
+					<span class="promotur-stat__caja promotur-stat__caja--fila">
+						<span class="promotur-stat__n"><?php echo esc_html( number_format_i18n( $p['n'] ) ); ?></span>
+						<span class="promotur-stat__ir"><?php echo promotur_icon( 'chevron' ); // phpcs:ignore WordPress.Security.EscapeOutput ?></span>
+					</span>
 				</a>
 			<?php endforeach; ?>
 		</div>
@@ -80,21 +83,40 @@ $body = function () use ( $identity, $pulse, $serie, $tope, $can_draft, $can_rev
 			<?php echo promotur_icon( 'chart' ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 			<span><?php esc_html_e( 'Actividad reciente', 'caaguazu-portal' ); ?></span>
 		</div>
-		<div class="promotur-stat__foot">
+		<div class="promotur-stat__caja">
 			<span class="promotur-stat__n"><?php echo esc_html( number_format_i18n( $serie['total'] ) ); ?></span>
-			<span class="promotur-spark" role="img"
-			      aria-label="<?php echo esc_attr( sprintf( /* translators: %d = cantidad de días */ _n( 'Actividad de los últimos %d día', 'Actividad de los últimos %d días', count( $serie['dias'] ), 'caaguazu-portal' ), count( $serie['dias'] ) ) ); ?>">
-				<?php
-				$hoy = count( $serie['dias'] ) - 1;
-				foreach ( $serie['dias'] as $i => $dia ) :
-					// Altura proporcional al día más movido de la ventana. Un
-					// día sin actividad queda como un tope de 2px (el mínimo
-					// del CSS): se ve que ese día existe y que fue cero.
-					$alto = $tope > 0 ? round( 36 * $dia['n'] / $tope ) : 0;
-					?>
-					<span class="promotur-spark__bar<?php echo $i === $hoy ? ' is-on' : ''; ?>" style="height:<?php echo esc_attr( $alto ); ?>px"></span>
+
+			<?php
+			// El trazo se arma en coordenadas de 0 a 100 y el SVG lo estira al
+			// ancho de la tarjeta: así el gráfico se adapta sin recalcular nada
+			// y sin JavaScript. `vector-effect` mantiene el grosor de la línea
+			// aunque el estirado sea desparejo.
+			$dias   = $serie['dias'];
+			$cuenta = count( $dias );
+			$puntos = array();
+			$rejas  = '';
+			foreach ( $dias as $i => $dia ) {
+				$x = $cuenta > 1 ? ( $i / ( $cuenta - 1 ) ) * 100 : 50;
+				$y = 92 - ( $tope > 0 ? ( $dia['n'] / $tope ) * 84 : 0 );
+				$puntos[] = round( $x, 2 ) . ',' . round( $y, 2 );
+				$rejas   .= sprintf( 'M%s,0 V100 ', round( $x, 2 ) );
+			}
+			$ultimo = $cuenta ? explode( ',', end( $puntos ) ) : array( 50, 50 );
+			?>
+			<div class="promotur-grafico" role="img"
+			     aria-label="<?php echo esc_attr( sprintf( /* translators: %d = cantidad de días */ _n( 'Actividad de los últimos %d día', 'Actividad de los últimos %d días', $cuenta, 'caaguazu-portal' ), $cuenta ) ); ?>">
+				<svg class="promotur-grafico__svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+					<path class="promotur-grafico__reja" d="<?php echo esc_attr( trim( $rejas ) ); ?>" vector-effect="non-scaling-stroke" />
+					<polyline class="promotur-grafico__trazo" points="<?php echo esc_attr( implode( ' ', $puntos ) ); ?>" vector-effect="non-scaling-stroke" />
+				</svg>
+				<span class="promotur-grafico__hoy" style="left:<?php echo esc_attr( $ultimo[0] ); ?>%; top:<?php echo esc_attr( $ultimo[1] ); ?>%"></span>
+			</div>
+
+			<div class="promotur-grafico__dias">
+				<?php foreach ( $dias as $dia ) : ?>
+					<span><?php echo esc_html( date_i18n( 'D', strtotime( $dia['fecha'] ) ) ); ?></span>
 				<?php endforeach; ?>
-			</span>
+			</div>
 		</div>
 	</div>
 

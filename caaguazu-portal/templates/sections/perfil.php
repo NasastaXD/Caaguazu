@@ -60,8 +60,13 @@ $body = function () use ( $identity, $uid, $pub, $is_mini ) {
 
 	<div class="promotur-grid promotur-grid--3">
 		<div class="promotur-card promotur-stat">
-			<span class="promotur-stat__n"><?php echo esc_html( count( $pub ) ); ?></span>
-			<span class="promotur-stat__label"><?php esc_html_e( 'fichas publicadas', 'caaguazu-portal' ); ?></span>
+			<div class="promotur-card__head">
+				<span><?php esc_html_e( 'Fichas publicadas', 'caaguazu-portal' ); ?></span>
+				<span class="promotur-card__head-extra"><?php echo promotur_icon( 'check' ); // phpcs:ignore WordPress.Security.EscapeOutput ?></span>
+			</div>
+			<div class="promotur-stat__caja">
+				<span class="promotur-stat__n"><?php echo esc_html( count( $pub ) ); ?></span>
+			</div>
 		</div>
 	</div>
 

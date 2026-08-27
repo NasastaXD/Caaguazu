@@ -86,6 +86,13 @@ function get_the_title( $p = null ) { return is_object( $p ) ? $p->post_title : 
 function get_the_modified_date( $f = '', $p = null ) { return '12 de agosto de 2026'; }
 function human_time_diff( $a, $b = null ) { return 'hace 2 horas'; }
 function current_time( $tipo = 'mysql' ) { return 'mysql' === $tipo ? gmdate( 'Y-m-d H:i:s' ) : gmdate( $tipo ); }
+function date_i18n( $formato, $marca = null ) {
+	// WordPress traduce los nombres de día; acá alcanza con los tres primeros
+	// caracteres en español para que la maqueta se lea como se va a leer.
+	$dias = array( 'dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb' );
+	if ( 'D' === $formato ) { return $dias[ (int) gmdate( 'w', $marca ?: time() ) ]; }
+	return gmdate( $formato, $marca ?: time() );
+}
 function add_query_arg( ...$a ) { return isset( $a[2] ) ? $a[2] : ( is_string( end( $a ) ) ? end( $a ) : '#' ); }
 function remove_query_arg( ...$a ) { return '#'; }
 function is_admin() { return false; }

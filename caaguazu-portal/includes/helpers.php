@@ -256,6 +256,7 @@ function promotur_icon( $name ) {
 		'menu'    => '<path d="M4 6h16M4 12h16M4 18h16"/>',
 		'help'    => '<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1 .9-1 1.7"/><path d="M12 17h.01"/>',
 		'caret'   => '<path d="m6 9 6 6 6-6"/>',
+		'chevron' => '<path d="m9 6 6 6-6 6"/>',
 		'moon'    => '<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/>',
 		'movil'   => '<rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/>',
 		'apps'    => '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',

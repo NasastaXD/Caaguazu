@@ -162,7 +162,9 @@ Un solo archivo (`assets/css/caaguazu-portal.css`), sin framework, sin utilidade
 | **Radios** | Tres, nombrados: `--r-1` 8px, `--r-2` 12px, `--r-3` 16px, más `--r-full` para pastillas. Ningún número a mano. |
 | **Sombra** | Dos, cada una con su lugar escrito: `--sombra` es contacto (menú activo, desplegables) y `--sombra-flotante` es distancia, en una sola cosa — la cápsula de la barra inferior, que flota sobre el contenido. Las tarjetas no llevan ninguna: se separan con una línea de 1px. |
 | **Tipografía** | Una familia, Inter, servida desde el plugin (400/600/700, 76 KB). Sin Google Fonts ni CDN. |
-| **Gradientes** | Ninguno. El único motivo decorativo es la trama de rayas diagonales (`--trama`), y vive en un token. |
+| **Gradientes** | Ninguno. El único motivo decorativo es la trama de rayas diagonales (`--trama`), y vive en un token. Va **sólo en la banda de título** de las tarjetas: se intuye, no se ve. |
+| **Profundidad** | Sin sombras en las tarjetas: la dan las superficies anidadas. Una tarjeta de cifra es banda de título con trama + caja interior lisa con el número, como la referencia. |
+| **Cifras** | `tabular-nums`: sin eso un 1 ocupa menos que un 8 y los números de dos tarjetas contiguas no alinean. |
 | **Movimiento** | Sólo lo que explica de dónde sale algo. Todo se apaga con `prefers-reduced-motion`. |
 
 **El panel ya no hereda nada del theme.** Antes tomaba colores y fuentes del sitio público vía `var(--flag-green, …)`; ahora trae lo suyo y **desencola el CSS del theme activo** en sus rutas. El sitio público se puede rehacer entero sin poder cambiarle la cara —ni romperle el layout— al panel.
