@@ -1,9 +1,12 @@
 <?php
 /**
- * Perfil / portafolio del usuario actual, con su nivel de confianza.
+ * Mi perfil: la cuenta, el nivel de confianza y lo publicado.
  *
- * Ya no muestra vistas: las contaba la vitrina web del plugin, que se fue. Y el
- * portafolio linkea al editor, no a una página pública que dejó de existir.
+ * La cuenta se edita acá y en ningún otro lado. Vive en `caaguazu-cuentas`,
+ * que es un sistema aparte de los usuarios de WordPress: cambiar el nombre, el
+ * correo, el teléfono, la foto o la contraseña de un promotor no tiene nada que
+ * ver con `wp-admin/profile.php`, que edita otra cosa —un usuario de WordPress
+ * que un promotor ni siquiera tiene.
  */
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
@@ -86,10 +89,76 @@ $body = function () use ( $identity, $uid, $pub, $is_mini ) {
 		</div>
 	<?php endif; ?>
 
-	<?php if ( 0 === $uid ) : // bypass de administrador de WP: sí tiene un perfil de WordPress que editar. ?>
+	<?php if ( 0 === $uid ) : ?>
 		<p class="promotur-muted promotur-mt">
-			<a href="<?php echo esc_url( admin_url( 'profile.php' ) ); ?>"><?php esc_html_e( 'Editar mi perfil en WordPress →', 'caaguazu-portal' ); ?></a>
+			<?php esc_html_e( 'Estás entrando como administrador del sitio, con acceso prestado. Este acceso no tiene cuenta del panel, así que no hay datos que editar acá.', 'caaguazu-portal' ); ?>
 		</p>
+	<?php else : ?>
+
+		<h3 class="promotur-h3 promotur-mt"><?php esc_html_e( 'Mis datos', 'caaguazu-portal' ); ?></h3>
+		<div class="promotur-card">
+			<form class="promotur-form" method="post" enctype="multipart/form-data"
+				  action="<?php echo esc_url( PROMOTUR_Acciones::url( 'perfil' ) ); ?>">
+				<?php PROMOTUR_Acciones::campos(); ?>
+
+				<label class="promotur-field">
+					<span><?php esc_html_e( 'Nombre', 'caaguazu-portal' ); ?></span>
+					<input type="text" name="display_name" required
+						   value="<?php echo esc_attr( $identity['display_name'] ); ?>">
+				</label>
+
+				<div class="promotur-grid promotur-grid--2">
+					<label class="promotur-field">
+						<span><?php esc_html_e( 'Correo', 'caaguazu-portal' ); ?></span>
+						<input type="email" name="email" required
+							   value="<?php echo esc_attr( $identity['email'] ); ?>">
+					</label>
+					<label class="promotur-field">
+						<span><?php esc_html_e( 'Teléfono', 'caaguazu-portal' ); ?> <em><?php esc_html_e( 'opcional', 'caaguazu-portal' ); ?></em></span>
+						<input type="tel" name="phone" value="<?php echo esc_attr( $identity['phone'] ); ?>">
+					</label>
+				</div>
+
+				<label class="promotur-field">
+					<span><?php esc_html_e( 'Foto', 'caaguazu-portal' ); ?> <em><?php esc_html_e( 'opcional', 'caaguazu-portal' ); ?></em></span>
+					<input type="file" name="foto" accept="image/jpeg,image/png,image/webp">
+				</label>
+				<p class="promotur-form-msg"><?php esc_html_e( 'Con el correo entrás al panel: si lo cambiás, la próxima vez iniciás sesión con el nuevo.', 'caaguazu-portal' ); ?></p>
+
+				<div>
+					<button type="submit" class="promotur-btn promotur-btn--primary"><?php esc_html_e( 'Guardar cambios', 'caaguazu-portal' ); ?></button>
+				</div>
+			</form>
+		</div>
+
+		<h3 class="promotur-h3 promotur-mt"><?php esc_html_e( 'Contraseña', 'caaguazu-portal' ); ?></h3>
+		<div class="promotur-card">
+			<form class="promotur-form" method="post"
+				  action="<?php echo esc_url( PROMOTUR_Acciones::url( 'clave' ) ); ?>">
+				<?php PROMOTUR_Acciones::campos(); ?>
+
+				<label class="promotur-field">
+					<span><?php esc_html_e( 'Contraseña actual', 'caaguazu-portal' ); ?></span>
+					<input type="password" name="clave_actual" autocomplete="current-password" required>
+				</label>
+
+				<div class="promotur-grid promotur-grid--2">
+					<label class="promotur-field">
+						<span><?php esc_html_e( 'Contraseña nueva', 'caaguazu-portal' ); ?></span>
+						<input type="password" name="clave_nueva" autocomplete="new-password" required>
+					</label>
+					<label class="promotur-field">
+						<span><?php esc_html_e( 'Repetila', 'caaguazu-portal' ); ?></span>
+						<input type="password" name="clave_repetir" autocomplete="new-password" required>
+					</label>
+				</div>
+
+				<div>
+					<button type="submit" class="promotur-btn"><?php esc_html_e( 'Cambiar contraseña', 'caaguazu-portal' ); ?></button>
+				</div>
+			</form>
+		</div>
+
 	<?php endif; ?>
 	<?php
 };

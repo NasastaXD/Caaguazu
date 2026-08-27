@@ -448,12 +448,15 @@ function promotur_flash( $msg = null, $type = 'info' ) {
 }
 
 /**
- * Avatar: imagen (Gravatar por email) si hay, o iniciales como fallback.
+ * Avatar: la foto que la persona subió, o sus iniciales.
  *
- * Acepta dos formas: un ID de usuario de WordPress (uso legado — todavía lo
- * usa templates/sections/equipo.php, que sigue listando usuarios de WP, ver
- * README de caaguazu-cuentas), o un array de identidad normalizada
- * { email, display_name } como el que devuelve promotur_current_identity().
+ * Antes esto pedía la imagen a Gravatar con el hash del correo. Dos problemas:
+ * mandaba el correo de cada promotor a un tercero en cada carga de pantalla, y
+ * la foto se editaba en un sitio ajeno. Ahora la foto es de la cuenta —la sube
+ * la persona en Mi perfil— y si no hay, quedan las iniciales.
+ *
+ * Acepta un ID de cuenta o una identidad ya armada (la de
+ * promotur_current_identity()).
  *
  * @param int|array $identity
  * @param string    $extra_class
@@ -461,24 +464,29 @@ function promotur_flash( $msg = null, $type = 'info' ) {
  */
 function promotur_avatar( $identity, $extra_class = '' ) {
 	if ( is_array( $identity ) ) {
-		$email = (string) ( $identity['email'] ?? '' );
-		$name  = (string) ( $identity['display_name'] ?? '' );
-		if ( '' === $email && '' === $name ) { return ''; }
+		$id   = (int) ( $identity['id'] ?? 0 );
+		$name = (string) ( $identity['display_name'] ?? '' );
+		if ( '' === $name ) {
+			$name = (string) ( $identity['email'] ?? '' );
+		}
 	} else {
-		$user = get_userdata( (int) $identity );
-		if ( ! $user ) { return ''; }
-		$email = $user->user_email;
-		$name  = $user->display_name ? $user->display_name : $user->user_login;
+		$id     = (int) $identity;
+		$cuenta = ( $id > 0 && class_exists( 'Caaguazu_Cuentas_Accounts' ) ) ? Caaguazu_Cuentas_Accounts::get( $id ) : null;
+		$name   = $cuenta ? (string) ( $cuenta['display_name'] ? $cuenta['display_name'] : $cuenta['email'] ) : '';
+	}
+	if ( '' === trim( $name ) ) {
+		return '';
 	}
 
-	$has_gravatar = ( $email && function_exists( 'get_avatar_url' ) ) ? get_avatar_url( $email ) : '';
-	if ( $has_gravatar ) {
+	$foto = class_exists( 'PROMOTUR_Cuenta' ) ? PROMOTUR_Cuenta::foto_url( $id ) : '';
+	if ( $foto ) {
 		return sprintf(
 			'<span class="promotur-avatar %s"><img src="%s" alt="" width="36" height="36" loading="lazy"></span>',
 			esc_attr( $extra_class ),
-			esc_url( $has_gravatar )
+			esc_url( $foto )
 		);
 	}
+
 	$parts    = preg_split( '/\s+/', trim( $name ) );
 	$initials = strtoupper( mb_substr( $parts[0], 0, 1 ) . ( isset( $parts[1] ) ? mb_substr( $parts[1], 0, 1 ) : '' ) );
 	return sprintf(

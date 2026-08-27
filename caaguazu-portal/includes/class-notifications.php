@@ -122,10 +122,11 @@ class PROMOTUR_Notifications {
 	}
 
 	/**
-	 * admin-post: marcar todo como leído.
+	 * Marcar todo como leído. La sesión y el token ya los revisó
+	 * PROMOTUR_Acciones.
 	 */
 	public function handle_mark_read() {
-				$uid = caaguazu_account_id();
+		$uid = caaguazu_account_id();
 		if ( $uid > 0 ) {
 			caaguazu_account_meta_set( $uid, self::READ_META, time() );
 		} else {
