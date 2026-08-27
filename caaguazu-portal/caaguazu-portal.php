@@ -3,7 +3,7 @@
  * Plugin Name:       Caaguazú Portal — Promotores Turísticos
  * Plugin URI:        https://turismo.caaguazu.net
  * Description:       Panel autenticado tipo app bajo /turismo-panel, instalable como PWA, con flujo editorial borrador → revisión → publicación, y la cabina de mando de la app móvil (textos, medios y categorías). Corre sobre rutas propias y no depende del theme: trae su propio CSS y su propia tipografía, y desencola los del theme activo en sus rutas. La identidad de los promotores corre sobre el sistema de cuentas universal (caaguazu-cuentas): no son usuarios de WordPress.
- * Version:           3.0.0
+ * Version:           3.1.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Requires Plugins:  caaguazu-cuentas
@@ -17,7 +17,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'PROMOTUR_VERSION', '3.0.0' );
+define( 'PROMOTUR_VERSION', '3.1.0' );
 define( 'PROMOTUR_DB_VERSION', 2 ); // se incrementa cuando cambia la estructura de datos.
 define( 'PROMOTUR_FILE', __FILE__ );
 define( 'PROMOTUR_DIR', plugin_dir_path( __FILE__ ) );
@@ -44,6 +44,7 @@ define( 'PROMOTUR_ASSET', 'caaguazu-portal.zip' );
 require_once PROMOTUR_DIR . 'includes/helpers.php';
 require_once PROMOTUR_DIR . 'includes/class-roles.php';
 require_once PROMOTUR_DIR . 'includes/class-install.php';
+require_once PROMOTUR_DIR . 'includes/class-acciones.php';
 require_once PROMOTUR_DIR . 'includes/class-router.php';
 require_once PROMOTUR_DIR . 'includes/class-shell.php';
 require_once PROMOTUR_DIR . 'includes/class-assets.php';

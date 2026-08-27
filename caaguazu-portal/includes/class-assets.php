@@ -55,9 +55,12 @@ class PROMOTUR_Assets {
 		);
 
 		wp_localize_script( 'promotur', 'PROMOTUR', array(
-			'ajaxUrl'   => admin_url( 'admin-ajax.php' ),
-			'adminPost' => admin_url( 'admin-post.php' ),
-			'nonce'     => wp_create_nonce( 'promotur' ),
+			// Las dos puertas del panel. Antes esto apuntaba a `admin-ajax.php`
+			// y `admin-post.php`; ya no: el panel recibe lo suyo en su propia
+			// URL y lo autentica con la cuenta, no con un usuario de WordPress.
+			'datosUrl'  => promotur_url( 'datos' ) . '/',
+			'accionUrl' => promotur_url( 'accion' ) . '/',
+			'token'     => PROMOTUR_Acciones::token(),
 			'swUrl'     => promotur_url( 'sw.js' ),
 			'swScope'   => '/' . PROMOTUR_BASE . '/',
 			'manifest'  => promotur_url( 'manifest.webmanifest' ),

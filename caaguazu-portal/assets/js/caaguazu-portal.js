@@ -19,9 +19,8 @@
 		var body;
 		if (data instanceof FormData) { body = data; }
 		else { body = new FormData(); Object.keys(data || {}).forEach(function (k) { body.append(k, data[k]); }); }
-		body.append('action', 'promotur_' + action);
-		body.append('nonce', CFG.nonce);
-		return fetch(CFG.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: body }).then(function (r) { return r.json(); });
+		body.append('promotur_token', CFG.token);
+		return fetch(CFG.datosUrl + action, { method: 'POST', credentials: 'same-origin', body: body }).then(function (r) { return r.json(); });
 	}
 
 	/**

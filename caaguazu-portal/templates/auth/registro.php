@@ -46,7 +46,7 @@ $body = function () use ( $error, $next, $token, $invite_status, $invite_role, $
 	</div>
 
 	<form class="promotur-form" method="post">
-		<?php wp_nonce_field( 'promotur_registro', 'promotur_nonce' ); ?>
+		<?php PROMOTUR_Acciones::campos( 'promotur_registro' ); ?>
 		<input type="hidden" name="promotur_auth" value="registro">
 		<input type="hidden" name="next" value="<?php echo esc_attr( $next ); ?>">
 		<input type="hidden" name="token" value="<?php echo esc_attr( $token ); ?>">

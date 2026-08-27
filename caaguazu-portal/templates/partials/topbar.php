@@ -55,9 +55,8 @@ $en_home  = 'home' === promotur_current_route();
 				<div class="promotur-dropdown__head">
 					<strong><?php esc_html_e( 'Notificaciones', 'caaguazu-portal' ); ?></strong>
 					<?php if ( ! empty( $items ) ) : ?>
-						<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
-							<?php wp_nonce_field( 'promotur_mark_read' ); ?>
-							<input type="hidden" name="action" value="promotur_mark_read">
+						<form method="post" action="<?php echo esc_url( PROMOTUR_Acciones::url( 'mark_read' ) ); ?>">
+							<?php PROMOTUR_Acciones::campos(); ?>
 							<button type="submit" class="promotur-link-btn"><?php esc_html_e( 'Marcar todo como leído', 'caaguazu-portal' ); ?></button>
 						</form>
 					<?php endif; ?>

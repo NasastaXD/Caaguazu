@@ -176,6 +176,15 @@ class Caaguazu_Cuentas_Panels {
  * Clases del portal que tocan la base
  * ------------------------------------------------------------------------ */
 
+/**
+ * Las dos puertas del panel. Acá sólo hace falta que dibujen la URL y el campo
+ * oculto; quien despacha de verdad es la clase real.
+ */
+class PROMOTUR_Acciones {
+	public static function url( $nombre, $tipo = 'accion' ) { return promotur_url( $tipo . '/' . $nombre ); }
+	public static function token( $ambito = 'panel' ) { return 'token-de-prueba'; }
+	public static function campos( $ambito = 'panel' ) { echo '<input type="hidden" name="promotur_token" value="token-de-prueba">'; }
+}
 class PROMOTUR_Roles {
 	public static function sections() { return array(); }
 	public static function label( $key ) { return 'promotur_mini' === $key ? 'Mini Promotor' : 'Promotor'; }

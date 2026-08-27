@@ -83,6 +83,13 @@ class PROMOTUR_Router {
 		add_rewrite_rule( '^' . $base . '/(.+?)/?$', 'index.php?promotur_route=panel&promotur_sub=$matches[1]', 'top' );
 		add_rewrite_rule( '^' . $base . '/?$',       'index.php?promotur_route=panel', 'top' );
 
+		// 1.b Las dos puertas del panel: formularios y JavaScript. Van después
+		//     de la regla genérica de sección para que se evalúen antes que
+		//     ella (`'top'` antepone) y /turismo-panel/accion/x no se lea como
+		//     una sección llamada "accion".
+		add_rewrite_rule( '^' . $base . '/accion/([a-z0-9_-]+)/?$', 'index.php?promotur_route=accion&promotur_sub=$matches[1]', 'top' );
+		add_rewrite_rule( '^' . $base . '/datos/([a-z0-9_-]+)/?$',  'index.php?promotur_route=datos&promotur_sub=$matches[1]', 'top' );
+
 		// 2. Auth. El identificador interno de la ruta de login sigue siendo
 		//    'login' (query var, switch, template); sólo el slug público es
 		//    /entrar.
@@ -131,6 +138,14 @@ class PROMOTUR_Router {
 					$url = add_query_arg( array_map( 'sanitize_text_field', wp_unslash( $args ) ), $url );
 				}
 				wp_safe_redirect( $url, 301 );
+				exit;
+
+			case 'accion':
+			case 'datos':
+				PROMOTUR_Acciones::instance()->despachar(
+					$route,
+					sanitize_key( (string) get_query_var( 'promotur_sub' ) )
+				);
 				exit;
 
 			case 'pwa-manifest':

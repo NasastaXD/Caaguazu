@@ -20,7 +20,7 @@ $cats   = PROMOTUR_App_Control::categorias();
 
 $page_title = __( 'App', 'caaguazu-portal' );
 $body = function () use ( $locales, $idioma, $textos, $medios, $cats ) {
-	$accion = admin_url( 'admin-post.php' );
+	$accion = PROMOTUR_Acciones::url( 'save_app' );
 	?>
 	<div class="promotur-pagehead">
 		<div>
@@ -45,8 +45,7 @@ $body = function () use ( $locales, $idioma, $textos, $medios, $cats ) {
 		</div>
 
 		<form class="promotur-form" method="post" action="<?php echo esc_url( $accion ); ?>">
-			<?php wp_nonce_field( 'promotur_app' ); ?>
-			<input type="hidden" name="action" value="promotur_save_app">
+			<?php PROMOTUR_Acciones::campos(); ?>
 			<input type="hidden" name="bloque" value="textos">
 			<input type="hidden" name="locale" value="<?php echo esc_attr( $idioma ); ?>">
 
@@ -89,8 +88,7 @@ $body = function () use ( $locales, $idioma, $textos, $medios, $cats ) {
 		</div>
 
 		<form class="promotur-form" method="post" action="<?php echo esc_url( $accion ); ?>">
-			<?php wp_nonce_field( 'promotur_app' ); ?>
-			<input type="hidden" name="action" value="promotur_save_app">
+			<?php PROMOTUR_Acciones::campos(); ?>
 			<input type="hidden" name="bloque" value="medios">
 
 			<?php
@@ -152,8 +150,7 @@ $body = function () use ( $locales, $idioma, $textos, $medios, $cats ) {
 			<a class="promotur-btn promotur-btn--ghost" href="<?php echo esc_url( promotur_url( 'panel/estructura' ) ); ?>"><?php esc_html_e( 'Estructura', 'caaguazu-portal' ); ?></a>
 		<?php else : ?>
 			<form class="promotur-form" method="post" action="<?php echo esc_url( $accion ); ?>">
-				<?php wp_nonce_field( 'promotur_app' ); ?>
-				<input type="hidden" name="action" value="promotur_save_app">
+				<?php PROMOTUR_Acciones::campos(); ?>
 				<input type="hidden" name="bloque" value="categorias">
 
 				<?php foreach ( $cats as $cat ) : ?>

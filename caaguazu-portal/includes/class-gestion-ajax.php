@@ -19,14 +19,12 @@ class PROMOTUR_Gestion_Ajax {
 
 	private function __construct() {
 		foreach ( array( 'create_tarea', 'claim_tarea', 'complete_tarea', 'set_nivel' ) as $a ) {
-			add_action( 'wp_ajax_promotur_' . $a, array( $this, $a ) );
+			PROMOTUR_Acciones::datos( $a, array( $this, $a ) );
 		}
 	}
 
+	/** Sesión y token ya los revisó PROMOTUR_Acciones; acá queda el permiso. */
 	private function guard( $cap ) {
-		if ( ! check_ajax_referer( 'promotur', 'nonce', false ) ) {
-			wp_send_json_error( array( 'message' => __( 'Tu sesión venció. Recargá la página.', 'caaguazu-portal' ) ), 403 );
-		}
 		if ( $cap && ! caaguazu_account_can( 'promotor', $cap ) ) {
 			wp_send_json_error( array( 'message' => __( 'No tenés permiso para hacer esto.', 'caaguazu-portal' ) ), 403 );
 		}
