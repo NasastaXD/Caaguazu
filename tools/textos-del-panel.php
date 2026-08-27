@@ -52,6 +52,8 @@ $mapa = array(
 	'templates/sections/buscar.php'         => array( 'Buscar', 'secciones' ),
 	'templates/sections/perfil.php'         => array( 'Mi perfil', 'secciones' ),
 	'includes/class-stats.php'              => array( 'Niveles de confianza', 'secciones' ),
+	'templates/sections/app.php'            => array( 'App (control de la app móvil)', 'secciones' ),
+	'includes/class-app-control.php'        => array( 'App (avisos)', 'secciones' ),
 	'templates/sections/ayuda.php'          => array( 'Ayuda', 'secciones' ),
 	'templates/sections/404.php'            => array( 'Sección inexistente', 'secciones' ),
 

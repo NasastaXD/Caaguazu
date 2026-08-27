@@ -70,6 +70,7 @@ llamen los tags.
 * **El panel deja de heredar el CSS del theme activo**: se desencola en las rutas del panel. El sitio público se rehace sin poder romper el panel.
 * `PROMOTUR_Stats::serie_diaria()`: actividad editorial por día leída del log de auditoría (una sola consulta agrupada), para las barras del inicio.
 * Atajo ⌘K / Ctrl+K para el buscador, y submenú plegable en el lateral.
+* **Sección App**: el panel pasa a ser la cabina de mando de la aplicación móvil. Desde ahí se editan los textos de la app por idioma (ES/EN/GN), el manifiesto de medios y el icono y color de cada categoría — todo lo que la app lee del servidor y antes tenía endpoint pero no editor. Requiere `caaguazu-app-api` 0.2.0; sin ese plugin la sección no se registra.
 * Repaso completo de textos: los 569 mensajes del panel revisados y reescritos por una persona (ver `docs/textos-del-panel.md` en el repo).
 * Se sacan los `alert()` del navegador: los errores se dicen en la pantalla, donde pasó la cosa.
 * **El auto-updater pasa a leer los releases de `NasastaXD/Caaguazu`**, donde vive ahora el codigo. Como en ese repo tambien se publica el theme del sitio, el updater filtra por release que traiga adjunto `caaguazu-portal.zip`: nunca se come un release del theme creyendo que es suyo.

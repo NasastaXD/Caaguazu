@@ -68,6 +68,7 @@ Tres roles, y la UI se gatea **por capability, nunca por rol**:
 | `promotur_view_reports` | ● | | |
 | `promotur_manage_media` | ● | | |
 | `promotur_manage_structure` | ● | | |
+| `promotur_manage_app` | ● | | |
 
 Un item de menú cuyo capability no tiene la cuenta **no se dibuja**, y un grupo que se queda sin items visibles tampoco pinta su rótulo: nadie ve un link que después le va a dar 403. El guard del router repite el chequeo del lado del servidor, así que ocultar el link no es la seguridad, es la cortesía.
 
@@ -96,7 +97,7 @@ Un item de menú cuyo capability no tiene la cuenta **no se dibuja**, y un grupo
 
 ## 4. Las secciones
 
-Quince, cada una con su capability. El shell resuelve la sección, verifica el permiso y ejecuta el contrato de página; una sección desconocida cae en el 404 del panel, no en el del sitio.
+Dieciséis, cada una con su capability. El shell resuelve la sección, verifica el permiso y ejecuta el contrato de página; una sección desconocida cae en el 404 del panel, no en el del sitio.
 
 | Sección | Ruta | Capability | Qué hace |
 | --- | --- | --- | --- |
@@ -114,6 +115,7 @@ Quince, cada una con su capability. El shell resuelve la sección, verifica el p
 | **Estructura** | `/estructura` | `promotur_manage_structure` | Categorías, zonas y etiquetas de las fichas. |
 | **Buscar** | `/buscar?q=` | `promotur_view_panel` | Búsqueda del panel; las búsquedas sin resultado se registran y salen en Reportes. |
 | **Mi perfil** | `/perfil` | `promotur_edit_profile` | Datos de la cuenta y nivel de confianza. |
+| **App** | `/app` | `promotur_manage_app` | La cabina de mando de la aplicación móvil: textos por idioma, medios, e icono y color de cada categoría. Sólo aparece si el plugin de la API de la app está instalado. |
 | **Ayuda** | `/ayuda` | `promotur_view_panel` | Cómo se usa el panel. |
 
 ### El flujo editorial
@@ -128,6 +130,25 @@ Cada paso queda en el log de auditoría con quién, qué y cuándo. Los estados 
 ### PWA
 
 Instalable desde el propio panel ("Instalar app" aparece sola cuando el navegador lo permite). El service worker es *network-first* con caída a caché y, si la caída es una navegación, a la pantalla offline. En el precache entran la pantalla offline, el CSS, el JS, el ícono **y las tres variantes de la tipografía**: sin ellas, la pantalla de "no hay señal" se dibujaría con otra letra justo cuando el usuario ya está desconfiando.
+
+### El panel manda sobre la app
+
+La aplicación Android es otro cliente del mismo backend, y **el panel es su cabina de mando**: la app no se vuelve a publicar en la tienda para cambiar una palabra o una imagen. Lee del servidor lo que puede cambiar, y eso se edita acá.
+
+| Qué controla el panel | Dónde vive | Endpoint que lo sirve |
+| --- | --- | --- |
+| Textos de interfaz, por idioma (ES / EN / GN) | opción `czuapi_strings_<locale>` | `GET /wp-json/czu-app/v1/strings/<locale>` |
+| Manifiesto de medios (qué imagen o animación va en cada clave) | opción `czuapi_media_manifest` | `GET /wp-json/czu-app/v1/media-manifest` |
+| Icono y color de cada categoría | term meta `czuapi_icono` · `czuapi_color` | `GET /wp-json/czu-app/v1/categorias` |
+
+Ese mecanismo ya existía en `caaguazu-app-api` —endpoints, ETag, fusión sobre el respaldo local, y la regla de que un valor vacío no pisa— pero **no tenía editor**: la promesa de "se cambia sin publicar un APK" estaba a medias. La sección App es la otra mitad.
+
+Dos detalles de cómo está hecho:
+
+- **El panel no escribe las opciones del otro plugin a mano.** Pasa por su API pública (`CZUAPI_UI_Content::set_strings()`, `set_manifest()`) y por sus constantes de meta. El día que cambie el formato, cambia en un solo lado. Para eso hubo que agregarle a `caaguazu-app-api` los tres accesos que le faltaban (`get_strings()`, `get_manifest()`, `set_manifest()`): se pidió el cambio en el origen en vez de compensarlo con un parche del lado del panel.
+- **Es una dependencia blanda.** Si la API de la app no está instalada, la sección no se registra, el item no aparece en el menú y su ruta cae en el 404 del panel. El panel funciona igual sin app; la app no funciona sin panel.
+
+Lo que **no** controla el panel todavía: el contenido propio de la app —Eventos, Recorridos y Artículos— se sigue cargando desde wp-admin, donde esos CPTs ya tienen su pantalla. Llevarlos al panel es otra ronda.
 
 ---
 
@@ -205,7 +226,11 @@ Catorce archivos tocados, todos de presentación o de ruteo:
 | `templates/partials/sidebar.php` · `topbar.php` · `head.php` · `splash.php` | Rediseñados |
 | `templates/auth-shell.php` | Isotipo unificado |
 | `templates/sections/home.php` | Rediseñado + gráfico de actividad |
+| `includes/class-app-control.php` | **Nuevo**: lee y guarda lo que la app consume |
+| `templates/sections/app.php` | **Nuevo**: la sección App |
 | `readme.txt` | Changelog |
+
+En `caaguazu-app-api` (v0.2.0) se agregaron **sólo tres métodos**, todos aditivos: `CZUAPI_UI_Content::get_strings()`, `get_manifest()` y `set_manifest()`. Ni un endpoint, ni un formato, ni un comportamiento cambió: es la contraparte de escritura de lo que ya se leía.
 
 Las otras 20 plantillas **no se tocaron**: usan el mismo vocabulario de clases de siempre, así que se rediseñaron solas al cambiar el sistema debajo. Fue deliberado — mantiene el diff chico y el riesgo bajo.
 

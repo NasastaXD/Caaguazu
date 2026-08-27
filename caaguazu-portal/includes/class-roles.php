@@ -40,6 +40,7 @@ class PROMOTUR_Roles {
 			'promotur_view_reports'    => true,
 			'promotur_manage_media'    => true,
 			'promotur_manage_structure'=> true,
+			'promotur_manage_app'      => true,
 			'promotur_edit_profile'    => true,
 			'upload_files'             => true,
 		);
@@ -73,7 +74,7 @@ class PROMOTUR_Roles {
 	 * @return array
 	 */
 	public static function sections() {
-		return array(
+		$secciones = array(
 			'home'           => 'promotur_view_panel',
 			'buscar'         => 'promotur_view_panel',
 			'ayuda'          => 'promotur_view_panel',
@@ -90,6 +91,16 @@ class PROMOTUR_Roles {
 			'biblioteca'     => 'promotur_manage_media',
 			'estructura'     => 'promotur_manage_structure',
 		);
+
+		// La pantalla que controla la app sólo existe si la app existe: sin el
+		// plugin de la API, la sección no se registra y su ruta cae en el 404
+		// del panel en vez de abrir un formulario que no guardaría en ningún
+		// lado.
+		if ( promotur_app_api_activa() ) {
+			$secciones['app'] = 'promotur_manage_app';
+		}
+
+		return $secciones;
 	}
 
 	/**

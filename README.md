@@ -4,10 +4,11 @@ Portal del departamento de Caaguazú, Paraguay. **El sitio se está rehaciendo d
 
 - [`caaguazu-theme/`](caaguazu-theme/) — el sitio público: un theme de una sola plantilla que muestra *"caaguazu.net está siendo construida"* en cualquier URL. Sin JavaScript, sin pedidos a terceros.
 - [`caaguazu-portal/`](caaguazu-portal/) — **el panel de promotores turísticos**, bajo `/turismo-panel`. Es lo que sigue vivo y en desarrollo. Ver [`docs/panel-turismo.md`](docs/panel-turismo.md).
+- [`caaguazu-app-api/`](caaguazu-app-api/) — la API REST que consume la app Android. El panel es su cabina de mando: desde ahí se editan los textos, los medios y los colores que la app lee.
 - [`docs/textos-del-panel.md`](docs/textos-del-panel.md) — todos los textos que se ven en el panel, por pantalla, con una columna para reescribirlos.
 - [`tools/`](tools/) — `verificar-diseno.php` (comprueba las reglas del sistema de diseño; sale con código 1 si algo las rompe) y `vista-previa-panel.php` (dibuja una pantalla del panel sin levantar WordPress) y `textos-del-panel.php` (regenera el inventario de textos).
 
-Los cuatro `.zip` restantes son los plugins del ecosistema de los que depende el panel —cuentas, locales, SSO CEAD y la API de la app—, tal como se subieron. Su código fuente vive en `nasastaxd/turismo`.
+Los tres `.zip` restantes son los plugins del ecosistema de los que depende el panel —cuentas, locales y SSO CEAD—, tal como se subieron.
 
 ## Qué se borró
 

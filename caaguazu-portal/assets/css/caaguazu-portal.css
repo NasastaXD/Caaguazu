@@ -185,6 +185,9 @@ body.promotur-app {
 	font: inherit;
 }
 .promotur-app textarea { resize: vertical; }
+/* El selector de color nativo no acepta el relleno de un campo de texto: se
+   dibuja como una muestra, no como un input. */
+.promotur-app input[type=color] { height: 42px; padding: 4px; cursor: pointer; }
 .promotur-app input:focus, .promotur-app textarea:focus, .promotur-app select:focus { outline: none; border-color: var(--tinta); box-shadow: var(--sombra); }
 
 .promotur-h2 { font-size: 1.75rem; font-weight: 600; letter-spacing: -.02em; margin: 0 0 .35em; }
@@ -437,6 +440,7 @@ body.promotur-nav-open .promotur-sidebar { transform: translateX(0); }
 /* Cabecera de tarjeta con trama: separa sin dibujar otra caja adentro. */
 .promotur-card__head { display: flex; align-items: center; gap: 9px; margin: -18px -18px 16px; padding: 13px 18px; border-bottom: 1px solid var(--linea); border-radius: var(--r-3) var(--r-3) 0 0; background-image: var(--trama); font-weight: 600; }
 .promotur-card__head svg { color: var(--texto-2); }
+.promotur-card__head-extra { margin-left: auto; }
 
 .promotur-grid { display: grid; gap: var(--gap); grid-template-columns: 1fr; }
 @media (min-width: 560px) { .promotur-grid--2 { grid-template-columns: repeat(2, 1fr); } }
@@ -475,6 +479,12 @@ body.promotur-nav-open .promotur-sidebar { transform: translateX(0); }
 .promotur-pill.is-approved { background: var(--tinte-alza); color: var(--alza); }
 .promotur-pill.is-published { background: var(--tinta); color: var(--sobre-tinta); }
 .promotur-pill.is-muted { background: var(--tinte-neutro); color: var(--texto-debil); }
+
+/* Segmentado: elegir entre pocas opciones sin gastar un desplegable. Hoy lo
+   usa el selector de idioma de los textos de la app. */
+.promotur-seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: var(--r-full); background: var(--hueco); }
+.promotur-seg__item { padding: .3em .8em; border: 0; border-radius: var(--r-full); background: none; color: var(--texto-2); font: inherit; font-size: .8rem; font-weight: 600; text-decoration: none; cursor: pointer; }
+.promotur-seg__item.is-active { background: var(--tinta); color: var(--sobre-tinta); }
 
 /* ---------------------------------------------------------------------------
  * Listas

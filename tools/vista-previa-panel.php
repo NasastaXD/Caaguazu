@@ -109,7 +109,22 @@ function get_post_meta( $id, $key = '', $single = false ) {
 function get_the_post_thumbnail_url( $p = null, $size = '' ) { return ''; }
 function wp_get_attachment_image_url( $id, $size = '' ) { return ''; }
 function wp_get_attachment_url( $id ) { return ''; }
-function get_terms( $args = array() ) { return array(); }
+function get_terms( $args = array() ) {
+	$out = array();
+	foreach ( array( 'Naturaleza', 'Gastronomía', 'Cultura' ) as $i => $nombre ) {
+		$t          = new stdClass();
+		$t->term_id = 30 + $i;
+		$t->name    = $nombre;
+		$out[]      = $t;
+	}
+	return $out;
+}
+function get_term_meta( $id, $key = '', $single = false ) {
+	$muestra = array( 'czuapi_color' => '#2e7d32', 'czuapi_icono' => 'nature' );
+	return isset( $muestra[ $key ] ) ? $muestra[ $key ] : '';
+}
+function is_wp_error( $x ) { return false; }
+function sanitize_hex_color( $c ) { return $c; }
 function wp_list_pluck( $arr, $field ) { return array(); }
 function get_edit_post_link( $id ) { return '#'; }
 function get_post( $id = null ) { $p = new stdClass(); $p->ID = (int) $id; $p->post_title = 'Salto Suizo'; return $p; }
@@ -249,6 +264,31 @@ class PROMOTUR_Audit {
 	public static function post_actions() { return array( 'destino_created', 'destino_enviado', 'destino_publicado' ); }
 	public static function table() { return 'wp_promotur_audit_log'; }
 }
+/* La API de la app: el panel la controla, así que la vista previa la simula
+   con el mismo contrato público que expone el plugin real. */
+class CZUAPI_UI_Content {
+	const LOCALES = array( 'es', 'en', 'gn' );
+	public static function base() {
+		return array( 'nav.inventario' => 'Inventario', 'nav.mapa' => 'Mapa', 'nav.recorridos' => 'Recorridos', 'nav.articulos' => 'Artículos' );
+	}
+	public static function get_strings( $locale ) {
+		return 'es' === $locale ? array( 'nav.mapa' => 'Mapa', 'inicio.saludo' => 'Bienvenido a Caaguazú' ) : array();
+	}
+	public static function get_manifest() {
+		return array(
+			'inicio.portada' => array( 'tipo' => 'imagen', 'id' => 42, 'alt' => 'Vista del salto' ),
+			'ayuda.gesto'    => array( 'tipo' => 'animacion', 'url' => 'https://ejemplo.test/gesto.json', 'formato' => 'lottie' ),
+		);
+	}
+	public static function set_strings( $locale, array $strings ) { return true; }
+	public static function set_manifest( array $manifest ) { return true; }
+}
+class CZUAPI_Taxonomias {
+	const TAX_CATEGORIA = 'promotur_categoria';
+	const META_ICONO    = 'czuapi_icono';
+	const META_COLOR    = 'czuapi_color';
+}
+
 class PROMOTUR_Curaduria {
 	public static function destacados() { return array( 100, 101 ); }
 	public static function banner() { return array( 'title' => '', 'text' => '', 'url' => '', 'desde' => '', 'hasta' => '' ); }
@@ -366,6 +406,10 @@ class Promotur_Vista_Previa_DB {
 $GLOBALS['wpdb'] = new Promotur_Vista_Previa_DB();
 
 require $plugin . 'includes/helpers.php';
+
+// Esta clase se carga de verdad (no se simula): es la que lee lo que la app
+// tiene guardado, y la vista previa sirve justamente para ver ese resultado.
+require $plugin . 'includes/class-app-control.php';
 
 // El CSS se inyecta inline y las fuentes se apuntan al archivo real: si la
 // vista previa se dibuja con otra tipografía, no sirve para juzgar el diseño.

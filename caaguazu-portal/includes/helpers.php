@@ -257,6 +257,7 @@ function promotur_icon( $name ) {
 		'help'    => '<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1 .9-1 1.7"/><path d="M12 17h.01"/>',
 		'caret'   => '<path d="m6 9 6 6 6-6"/>',
 		'moon'    => '<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/>',
+		'movil'   => '<rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/>',
 		'apps'    => '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
 		// Isotipo del portal (la planta). Definido acá y no suelto en cada
 		// plantilla: lo usan el menú, el acceso y el splash.
@@ -264,6 +265,20 @@ function promotur_icon( $name ) {
 	);
 	$d = isset( $paths[ $name ] ) ? $paths[ $name ] : $paths['doc'];
 	return '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . $d . '</svg>';
+}
+
+/**
+ * ¿Está activo el plugin de la API de la app (caaguazu-app-api)?
+ *
+ * El panel es la cabina de mando de la app: desde acá se editan sus textos,
+ * sus medios y el icono y color de cada categoría. Pero es una dependencia
+ * blanda —el panel funciona igual sin la app—, así que todo lo que la
+ * controla se registra sólo si la API está instalada.
+ *
+ * @return bool
+ */
+function promotur_app_api_activa() {
+	return class_exists( 'CZUAPI_UI_Content' ) && class_exists( 'CZUAPI_Taxonomias' );
 }
 
 /**
@@ -312,6 +327,15 @@ function promotur_nav_grupos() {
 			),
 		),
 	);
+
+	if ( promotur_app_api_activa() ) {
+		$grupos[1]['items'][] = array(
+			'route' => 'panel/app',
+			'label' => __( 'App', 'caaguazu-portal' ),
+			'icon'  => 'movil',
+			'cap'   => 'promotur_manage_app',
+		);
+	}
 
 	/**
 	 * @param array[] $grupos
