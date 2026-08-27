@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Caaguazú Portal — Promotores Turísticos
  * Plugin URI:        https://turismo.caaguazu.net
- * Description:       Panel autenticado tipo app (sidebar + topbar + contenido, instalable como PWA) sobre rutas propias, con flujo editorial borrador → revisión → publicación para el Portal de Promotores Turísticos. Hereda los colores del sitio vía tokens CSS. Desde 2.0.0 la identidad de los promotores corre sobre el sistema de cuentas universal (caaguazu-cuentas): ya no son usuarios de WordPress.
+ * Description:       Panel autenticado tipo app bajo /turismo-panel, instalable como PWA, con flujo editorial borrador → revisión → publicación, y la cabina de mando de la app móvil (textos, medios y categorías). Corre sobre rutas propias y no depende del theme: trae su propio CSS y su propia tipografía, y desencola los del theme activo en sus rutas. La identidad de los promotores corre sobre el sistema de cuentas universal (caaguazu-cuentas): no son usuarios de WordPress.
  * Version:           3.0.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
