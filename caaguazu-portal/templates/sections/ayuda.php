@@ -57,7 +57,7 @@ $body = function () {
 	<ul class="promotur-muted">
 		<li><?php esc_html_e( 'Podés instalar el portal como app (PWA) y consultar parte del contenido sin conexión desde el menú lateral.', 'caaguazu-portal' ); ?></li>
 		<li><?php esc_html_e( 'Cada ficha pública puede tener reseñas, indicaciones para llegar, un código QR para imprimir y un botón para agregarla a «Mi viaje».', 'caaguazu-portal' ); ?></li>
-		<li><?php esc_html_e( 'Podés cambiar entre modo claro y oscuro y elegir el idioma (ES/EN/GN) desde la barra superior.', 'caaguazu-portal' ); ?></li>
+		<li><?php esc_html_e( 'Podés cambiar entre modo claro y oscuro desde la barra superior.', 'caaguazu-portal' ); ?></li>
 		<li><?php esc_html_e( 'El acceso es solo por invitación. Pedí tu enlace al equipo de Turismo.', 'caaguazu-portal' ); ?></li>
 	</ul>
 	<?php

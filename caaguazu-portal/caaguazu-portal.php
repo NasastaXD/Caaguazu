@@ -59,7 +59,6 @@ require_once PROMOTUR_DIR . 'includes/class-ajax.php';
 require_once PROMOTUR_DIR . 'includes/class-tareas.php';
 require_once PROMOTUR_DIR . 'includes/class-stats.php';
 require_once PROMOTUR_DIR . 'includes/class-gestion-ajax.php';
-require_once PROMOTUR_DIR . 'includes/class-i18n.php';
 require_once PROMOTUR_DIR . 'includes/class-app-control.php';
 
 /**
@@ -131,7 +130,6 @@ function promotur_boot() {
 	PROMOTUR_Tareas::instance();
 	PROMOTUR_Stats::instance();
 	PROMOTUR_Gestion_Ajax::instance();
-	PROMOTUR_I18n::instance();
 	PROMOTUR_App_Control::instance();
 	PROMOTUR_Audit::instance();
 	if ( is_admin() ) {

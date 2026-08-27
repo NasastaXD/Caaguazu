@@ -79,7 +79,7 @@ Un item de menú cuyo capability no tiene la cuenta **no se dibuja**, y un grupo
 ```
 /turismo-panel/…
 ├── Menú lateral      marca · buscador (⌘K) · grupos · submenú · pie (perfil, ayuda, instalar, salir)
-├── Barra superior    migas de pan · buscador · idioma (ES/EN/GN) · tema · notificaciones · chip de usuario
+├── Barra superior    migas de pan · buscador · tema · notificaciones · chip de usuario
 ├── Contenido         una sección (contrato $page_title + $body)
 └── Barra inferior    5 accesos, sólo en teléfono
 ```
@@ -88,6 +88,7 @@ Un item de menú cuyo capability no tiene la cuenta **no se dibuja**, y un grupo
 - **Migas de pan** en vez de repetir el título: el `<h1>` de la página ya dice dónde estás. En teléfono desaparecen, porque la barra no da para más.
 - **Buscador con ⌘K / Ctrl+K.** La tecla dibujada al lado del campo funciona de verdad: un atajo anunciado y no implementado es peor que no anunciarlo.
 - **Modo claro y oscuro**, elegido por el usuario y recordado, con anti-parpadeo antes del primer dibujado.
+- **El panel es en español, y nada más.** No hay selector de idioma: el que había cambiaba el locale del panel por cookie y arrastraba una capa de traducción que nadie usaba. Los idiomas que sí existen son los de la **app** (ES / EN / GN), y se editan en la sección App.
 - **Splash de marca** una vez por sesión, y apagado si el sistema pide movimiento reducido.
 - **Barra inferior en teléfono** con los cinco accesos que corresponden al rol, objetivos táctiles de 52 px.
 

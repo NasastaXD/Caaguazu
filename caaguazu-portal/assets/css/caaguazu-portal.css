@@ -336,11 +336,6 @@ body.promotur-nav-open .promotur-sidebar { transform: translateX(0); }
 [data-theme="dark"] .promotur-theme-light { display: none; }
 [data-theme="dark"] .promotur-theme-dark { display: inline-flex; }
 
-/* Idiomas */
-.promotur-langs { display: inline-flex; gap: 2px; padding: 3px; border-radius: var(--r-full); background: var(--hueco); }
-.promotur-lang { padding: .2em .55em; border-radius: var(--r-full); color: var(--texto-debil); font-size: .74rem; font-weight: 600; text-decoration: none; }
-.promotur-lang.is-active { background: var(--tinta); color: var(--sobre-tinta); }
-
 /* Notificaciones */
 .promotur-notifs { position: relative; }
 .promotur-notifs__badge { position: absolute; top: 3px; right: 3px; padding: 1px 5px; border-radius: var(--r-full); background: var(--baja); color: var(--papel); font-size: .62rem; font-weight: 700; line-height: 1.35; }
@@ -423,7 +418,6 @@ body.promotur-nav-open .promotur-sidebar { transform: translateX(0); }
 
 	.promotur-btn { min-height: 44px; padding: .8em 1.2em; }
 	.promotur-btn--small { min-height: 44px; padding: .5em 1em; font-size: .88rem; }
-	.promotur-lang { display: inline-flex; align-items: center; min-height: 44px; padding: 0 .7em; }
 	.promotur-seg__item { display: inline-flex; align-items: center; min-height: 44px; }
 	/* El caret abre el submenú y es lo más chico que hay: se le da su propia
 	   área de toque sin agrandar el dibujo. */

@@ -1,7 +1,7 @@
 <?php
 /**
  * Barra superior: hamburguesa (teléfono) + migas de pan, y a la derecha
- * buscador, idioma, tema, notificaciones y chip de usuario.
+ * buscador, tema, notificaciones y chip de usuario.
  *
  * Las migas reemplazan al título repetido: el nombre de la sección ya está en
  * el <h1> de la página, así que acá sirve para decir dónde estás parado, no
@@ -38,8 +38,6 @@ $en_home  = 'home' === promotur_current_route();
 			<span class="promotur-search__icon"><?php echo promotur_icon( 'search' ); // phpcs:ignore WordPress.Security.EscapeOutput ?></span>
 			<input type="search" name="q" value="<?php echo esc_attr( $q ); ?>" data-buscador placeholder="<?php esc_attr_e( 'Buscar…', 'caaguazu-portal' ); ?>" aria-label="<?php esc_attr_e( 'Buscar', 'caaguazu-portal' ); ?>">
 		</form>
-
-		<?php echo PROMOTUR_I18n::switcher(); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 
 		<button type="button" class="promotur-iconbtn" data-theme-toggle aria-label="<?php esc_attr_e( 'Cambiar tema', 'caaguazu-portal' ); ?>">
 			<span class="promotur-theme-light"><?php echo promotur_icon( 'moon' ); // phpcs:ignore WordPress.Security.EscapeOutput ?></span>

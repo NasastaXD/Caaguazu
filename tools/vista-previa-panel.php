@@ -309,14 +309,6 @@ class PROMOTUR_PWA {
 	public static function chrome_color( $dark = false ) { return $dark ? '#101012' : '#ffffff'; }
 	public static function brand_hex() { return '#101012'; }
 }
-class PROMOTUR_I18n {
-	public static function switcher() {
-		return '<div class="promotur-langs" role="group" aria-label="Idioma">'
-			. '<a class="promotur-lang is-active" href="#">ES</a>'
-			. '<a class="promotur-lang" href="#">EN</a>'
-			. '<a class="promotur-lang" href="#">GN</a></div>';
-	}
-}
 
 /** WP_Query, sólo lo que usan las plantillas del panel. */
 class WP_Query {

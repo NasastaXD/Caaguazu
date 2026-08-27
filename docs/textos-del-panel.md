@@ -1,6 +1,6 @@
 # Textos del panel
 
-Todo lo que un usuario lee en el panel, sacado de las fuentes el 2026-08-27. **470 textos.**
+Todo lo que un usuario lee en el panel, sacado de las fuentes el 2026-08-27. **469 textos.**
 
 Se regenera con `php tools/textos-del-panel.php > docs/textos-del-panel.md`.
 
@@ -79,10 +79,10 @@ Lo que se ve en todas las pantallas.
 | 26 | `Inicio` | 30 | |
 | 27 | `Buscar…` | 39 | |
 | 28 | `Buscar` | 39 | |
-| 29 | `Cambiar tema` | 44 | |
-| 30 | `Notificaciones` | 50 | |
-| 31 | `Marcar todo como leído` | 63 | |
-| 32 | `No hay novedades por ahora. ✨` | 69 | |
+| 29 | `Cambiar tema` | 42 | |
+| 30 | `Notificaciones` | 48 | |
+| 31 | `Marcar todo como leído` | 61 | |
+| 32 | `No hay novedades por ahora. ✨` | 67 | |
 
 ### Barra inferior (teléfono)
 
@@ -519,7 +519,7 @@ Una tabla por pantalla del panel.
 | 301 | `Extras` | 56 | |
 | 302 | `Podés instalar el portal como app (PWA) y consultar parte del contenido sin conexión desde el menú lateral.` | 58 | |
 | 303 | `Cada ficha pública puede tener reseñas, indicaciones para llegar, un código QR para imprimir y un botón para agregarla a «Mi viaje».` | 59 | |
-| 304 | `Podés cambiar entre modo claro y oscuro y elegir el idioma (ES/EN/GN) desde la barra superior.` | 60 | |
+| 304 | `Podés cambiar entre modo claro y oscuro desde la barra superior.` | 60 | |
 | 305 | `El acceso es solo por invitación. Pedí tu enlace al equipo de Turismo.` | 61 | |
 
 ### Sección inexistente
@@ -790,19 +790,11 @@ Pantallas de administración y respuestas de las acciones.
 | 466 | `El usuario no es válido.` | 80 | |
 | 467 | `Nivel actualizado.` | 83 | |
 
-### Selector de idioma
-
-`includes/class-i18n.php`
-
-| # | Texto actual | Línea | Nuevo texto |
-| --- | --- | --- | --- |
-| 468 | `Idioma` | 82 | |
-
 ### Avisos del plugin
 
 `caaguazu-portal.php`
 
 | # | Texto actual | Línea | Nuevo texto |
 | --- | --- | --- | --- |
-| 469 | `Caaguazú Portal necesita tener activo el plugin «Caaguazú Cuentas» para funcionar. El inicio de sesión de los Promotores ya no usa los usuarios de WordPress. Activá el plugin desde Plugins para volver a usar el panel.` | 84 | |
-| 470 | `Portal de Promotores` | 105 | |
+| 468 | `Caaguazú Portal necesita tener activo el plugin «Caaguazú Cuentas» para funcionar. El inicio de sesión de los Promotores ya no usa los usuarios de WordPress. Activá el plugin desde Plugins para volver a usar el panel.` | 83 | |
+| 469 | `Portal de Promotores` | 104 | |

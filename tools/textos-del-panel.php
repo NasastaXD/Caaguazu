@@ -71,7 +71,6 @@ $mapa = array(
 	'includes/class-gestion-ajax.php'       => array( 'Respuestas de gestión', 'admin' ),
 	'includes/class-audit.php'              => array( 'Auditoría', 'admin' ),
 	'includes/class-install.php'            => array( 'Instalación', 'admin' ),
-	'includes/class-i18n.php'               => array( 'Selector de idioma', 'admin' ),
 	'caaguazu-portal.php'                   => array( 'Avisos del plugin', 'admin' ),
 );
 
