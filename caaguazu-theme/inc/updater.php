@@ -116,6 +116,23 @@ class Caaguazu_GitHub_Updater {
 		return $release;
 	}
 
+	/**
+	 * La versión que anuncia un tag.
+	 *
+	 * Los tags de este repo son `theme-5.0.2` y `portal-3.1.1`: uno por
+	 * componente. Antes eran `vX.Y.Z` para los dos, y ahí estaba el problema —
+	 * el repo ya traía los tags `v1.x` a `v5.0.1` del sistema viejo, así que
+	 * cuando al theme le tocó `v5.0.1` el release no se publicó nunca: el tag
+	 * ya existía. Se siguen aceptando los `vX.Y.Z` para no perder de vista los
+	 * releases publicados con el esquema anterior.
+	 *
+	 * @param string $tag
+	 * @return string Versión, o '' si el tag no anuncia ninguna.
+	 */
+	private function version_del_tag( $tag ) {
+		return preg_match( '/(\d+(?:\.\d+)*(?:[-+][A-Za-z0-9.]+)?)$/', (string) $tag, $m ) ? $m[1] : '';
+	}
+
 	private function find_zip_asset( $release ) {
 		foreach ( $release['assets'] ?? array() as $asset ) {
 			if ( isset( $asset['name'], $asset['browser_download_url'] ) && self::ASSET_NAME === $asset['name'] ) {
@@ -135,7 +152,7 @@ class Caaguazu_GitHub_Updater {
 			return $transient;
 		}
 
-		$remote_version  = ltrim( $release['tag_name'], 'v' );
+		$remote_version  = $this->version_del_tag( $release['tag_name'] );
 		$current_version = isset( $transient->checked[ self::SLUG ] ) ? $transient->checked[ self::SLUG ] : '0';
 
 		if ( version_compare( $remote_version, $current_version, '>' ) ) {
@@ -172,7 +189,7 @@ class Caaguazu_GitHub_Updater {
 		return (object) array(
 			'name'          => 'Caaguazú',
 			'slug'          => self::SLUG,
-			'version'       => ltrim( $release['tag_name'], 'v' ),
+			'version'       => $this->version_del_tag( $release['tag_name'] ),
 			'sections'      => array(
 				'changelog' => wpautop( wp_kses_post( $release['body'] ?? '' ) ),
 			),

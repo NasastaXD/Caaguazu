@@ -14,9 +14,12 @@ name: Publicar releases
 # subio el numero de version en el header correspondiente. No hace falta
 # taggear a mano.
 #
-# OJO: las dos series comparten el espacio de tags (vX.Y.Z). El theme va por
-# 5.x y el plugin por 3.x; si algun dia los numeros se cruzaran, el job falla
-# porque el tag ya existe — falla ruidosa, no release corrupto.
+# Cada componente tiene su propio prefijo de tag: theme-X.Y.Z y portal-X.Y.Z.
+# No es cosmetico. Antes los dos usaban vX.Y.Z, y el repo ya traia los tags
+# v1.x a v5.0.1 del sistema viejo: cuando al theme le toco 5.0.1 y al panel
+# 3.1.0, los dos tags ya existian y ninguno de los dos releases se publico
+# nunca. Con un prefijo por componente cada serie es suya y no se cruza ni con
+# la otra ni con la historia vieja.
 
 on:
   push:
@@ -46,7 +49,7 @@ jobs:
             exit 1
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=theme-$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Verificar si el tag ya existe
         id: check
@@ -68,7 +71,7 @@ jobs:
         run: |
           gh release create "${{ steps.version.outputs.tag }}" \
             caaguazu-theme.zip \
-            --title "Theme ${{ steps.version.outputs.tag }}" \
+            --title "Theme ${{ steps.version.outputs.version }}" \
             --generate-notes
 
   portal:
@@ -88,7 +91,7 @@ jobs:
             exit 1
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=portal-$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Verificar si el tag ya existe
         id: check
@@ -110,5 +113,5 @@ jobs:
         run: |
           gh release create "${{ steps.version.outputs.tag }}" \
             caaguazu-portal.zip \
-            --title "Panel ${{ steps.version.outputs.tag }}" \
+            --title "Panel ${{ steps.version.outputs.version }}" \
             --generate-notes
