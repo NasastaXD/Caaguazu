@@ -90,7 +90,7 @@ Un item de menú cuyo capability no tiene la cuenta **no se dibuja**, y un grupo
 - **Modo claro y oscuro**, elegido por el usuario y recordado, con anti-parpadeo antes del primer dibujado.
 - **El panel es en español, y nada más.** No hay selector de idioma: el que había cambiaba el locale del panel por cookie y arrastraba una capa de traducción que nadie usaba. Los idiomas que sí existen son los de la **app** (ES / EN / GN), y se editan en la sección App.
 - **Splash de marca** una vez por sesión, y apagado si el sistema pide movimiento reducido.
-- **Barra inferior en teléfono** con los cinco accesos que corresponden al rol, objetivos táctiles de 52 px.
+- **Barra inferior en teléfono**: una cápsula flotante centrada, de vidrio —papel translúcido con desenfoque—, que deja ver el contenido correr por debajo. Lleva los cinco accesos que corresponden al rol, y la etiqueta se abre **sólo en el activo**: los otros cuatro son ícono, que es lo que hace que entren sin apretujarse. El texto de los inactivos sigue en el DOM para quien usa lector de pantalla; se le cierra el ancho, no se lo esconde. Donde no hay soporte de desenfoque, cae a papel opaco.
 
 ---
 
@@ -160,7 +160,7 @@ Un solo archivo (`assets/css/caaguazu-portal.css`), sin framework, sin utilidade
 | **Semántica** | Verde, rojo, ámbar y azul sólo dicen estado (aprobado, error, en espera, enviado). Nunca decoran. |
 | **Neutros** | Grises con un sesgo cálido elegido a propósito: un gris medio puro se lee como no elegido. |
 | **Radios** | Tres, nombrados: `--r-1` 8px, `--r-2` 12px, `--r-3` 16px, más `--r-full` para pastillas. Ningún número a mano. |
-| **Sombra** | Una, `--sombra`, y sólo en lo que flota de verdad: menú activo, desplegables, modales. Las tarjetas se separan con una línea de 1px. |
+| **Sombra** | Dos, cada una con su lugar escrito: `--sombra` es contacto (menú activo, desplegables) y `--sombra-flotante` es distancia, en una sola cosa — la cápsula de la barra inferior, que flota sobre el contenido. Las tarjetas no llevan ninguna: se separan con una línea de 1px. |
 | **Tipografía** | Una familia, Inter, servida desde el plugin (400/600/700, 76 KB). Sin Google Fonts ni CDN. |
 | **Gradientes** | Ninguno. El único motivo decorativo es la trama de rayas diagonales (`--trama`), y vive en un token. |
 | **Movimiento** | Sólo lo que explica de dónde sale algo. Todo se apaga con `prefers-reduced-motion`. |
@@ -181,7 +181,7 @@ Sale con código 1 si algo rompe una regla, así se puede colgar de CI. Comprueb
 1. Ningún color literal fuera del bloque de tokens.
 2. Ningún token nombrado por color en vez de por rol.
 3. Ningún radio fuera de los cuatro declarados.
-4. Una sola sombra en todo el panel.
+4. Ninguna sombra fuera de `--sombra` / `--sombra-flotante`.
 5. Una sola familia tipográfica.
 6. Sin gradientes decorativos.
 7. Sin assets de terceros en el panel.

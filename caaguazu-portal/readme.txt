@@ -64,6 +64,7 @@ llamen los tags.
 * **El panel deja de heredar el CSS del theme activo**: se desencola en las rutas del panel. El sitio público se rehace sin poder romper el panel.
 * `PROMOTUR_Stats::serie_diaria()`: actividad editorial por día leída del log de auditoría (una sola consulta agrupada), para las barras del inicio.
 * Atajo ⌘K / Ctrl+K para el buscador, y submenú plegable en el lateral.
+* **Barra inferior nueva en teléfono**: cápsula flotante de vidrio, centrada y despegada del borde, con la etiqueta abriéndose sólo en el acceso activo.
 * **El panel queda sólo en español**: se saca el selector de idioma de la barra superior y la capa que cambiaba el locale por cookie. Los idiomas que sí existen son los de la app (ES/EN/GN), y se editan en la sección App.
 * **Repaso del panel en teléfono**: las 15 pantallas auditadas con `tools/auditar-movil.mjs` — sin desborde horizontal y con todo lo que se toca en 44px o más. En el editor, el checklist de mínimos sube antes del formulario cuando hay una sola columna.
 * **Poda del sitio viejo**: se fue todo lo que existía para alimentar la web pública que este plugin publicaba — la vitrina y sus 7 shortcodes, la ficha pública, las reseñas y consultas de visitantes, la curaduría de portada, el SEO/Open Graph, la integración con el nav del theme viejo, y las secciones Moderación y Curaduría del panel. Con eso se van también Leaflet por CDN y qrcode.js. El destino deja de ser una página web (`public => false`): su consumidor es la app, que lo lee por `/wp-json/czu-app/v1/inventario`.

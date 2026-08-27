@@ -23,10 +23,12 @@
  * 3. TRES RADIOS Y UNA PASTILLA. --r-1 / --r-2 / --r-3 / --r-full. Ningún
  *    número escrito a mano.
  *
- * 4. UNA SOMBRA, --sombra, y sólo en lo que flota de verdad: el menú activo,
- *    los desplegables y los modales. Las tarjetas se separan con una línea de
- *    1px, no flotando. Un sistema donde cada tarjeta flota un poco no tiene
- *    jerarquía.
+ * 4. DOS SOMBRAS, y cada una con su lugar escrito. `--sombra` es contacto:
+ *    apenas despega el menú activo y los desplegables. `--sombra-flotante` es
+ *    distancia, y se usa en una sola cosa: la barra inferior del teléfono, que
+ *    flota por encima del contenido que sigue corriendo abajo. Las tarjetas no
+ *    llevan ninguna: se separan con una línea de 1px. Un sistema donde cada
+ *    tarjeta flota un poco no tiene jerarquía.
  *
  * 5. UNA FAMILIA TIPOGRÁFICA (Inter, servida desde el plugin). Sin gradientes.
  *    El único motivo decorativo es el rayado diagonal de --trama, y se usa
@@ -101,7 +103,13 @@
 	--r-3:    16px;
 	--r-full: 999px;
 	--sombra: 0 1px 2px rgba(16, 16, 18, .06);
-	/* Velo de los overlays (menú en teléfono, modal del QR). */
+	/* La segunda —y última— sombra: la de lo que flota de verdad sobre el
+	   contenido, hoy sólo la barra inferior del teléfono. Es blanda y grande
+	   justamente para leerse como distancia, no como borde. */
+	--sombra-flotante: 0 1px 1px rgba(16, 16, 18, .04), 0 8px 24px rgba(16, 16, 18, .12);
+	/* Vidrio: papel translúcido para lo que se apoya sobre el contenido. */
+	--vidrio: rgba(255, 255, 255, .72);
+	/* Velo de los overlays (menú en teléfono). */
 	--velo:   rgba(16, 16, 18, .45);
 
 	/* Trama: el único motivo decorativo del sistema. */
@@ -144,6 +152,8 @@
 	--tinte-neutro: #212127;
 
 	--sombra: 0 1px 2px rgba(0, 0, 0, .5);
+	--sombra-flotante: 0 1px 1px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .5);
+	--vidrio: rgba(23, 23, 26, .74);
 	--velo:   rgba(0, 0, 0, .6);
 }
 
@@ -163,7 +173,11 @@ body.promotur-app {
 }
 
 .promotur-app *, .promotur-app *::before, .promotur-app *::after { box-sizing: border-box; }
-.promotur-app a { color: inherit; }
+/* :where() no suma especificidad: sin él, esta regla le gana a la de cualquier
+   componente que sea un enlace —el menú, el submenú, la barra inferior— y los
+   pinta a todos con el color del texto normal en vez del apagado que les toca.
+   Los enlaces sueltos siguen heredando, que es para lo que está. */
+.promotur-app :where(a) { color: inherit; }
 /* Un componente que declara `display` le gana al [hidden] del navegador: sin
    esto, un botón marcado como oculto (el de instalar la app, un submenú
    cerrado) se dibuja igual. */
@@ -371,36 +385,69 @@ body.promotur-nav-open .promotur-sidebar { transform: translateX(0); }
 .promotur-bottomnav { display: none; }
 
 @media (max-width: 899px) {
+	/* Cápsula flotante, no una franja pegada al borde: se despega del canto,
+	   se centra, y deja ver el contenido correr por debajo a través del
+	   vidrio. La etiqueta se abre sólo en el item activo — los otros cuatro
+	   son ícono, que es lo que hace que entre sin apretujarse. El texto sigue
+	   en el DOM para quien usa lector de pantalla; se le cierra el ancho, no
+	   se lo esconde. */
 	.promotur-bottomnav {
 		position: fixed;
-		left: 0; right: 0; bottom: 0;
+		left: 50%;
+		bottom: calc(10px + env(safe-area-inset-bottom, 0px));
 		z-index: 46;
-		display: flex;
-		justify-content: space-around;
-		padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px));
-		background: var(--papel);
-		border-top: 1px solid var(--linea);
+		display: inline-flex;
+		align-items: center;
+		gap: 2px;
+		max-width: calc(100% - 24px);
+		padding: 5px;
+		border: 1px solid var(--linea);
+		border-radius: var(--r-full);
+		background: var(--vidrio);
+		box-shadow: var(--sombra-flotante);
+		transform: translateX(-50%);
+		-webkit-backdrop-filter: saturate(180%) blur(20px);
+		        backdrop-filter: saturate(180%) blur(20px);
 	}
+	/* Sin soporte de blur, el vidrio se vería como un blanco sucio: se cae a
+	   papel opaco, que es lo que el diseño pide de todos modos. */
+	@supports not (backdrop-filter: blur(1px)) {
+		.promotur-bottomnav { background: var(--papel); }
+	}
+
 	.promotur-bottomnav__item {
-		display: flex;
-		flex: 1;
-		flex-direction: column;
+		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		gap: 3px;
-		min-height: 52px;
-		padding: 5px 2px;
-		border-radius: var(--r-2);
+		min-width: 44px;
+		min-height: 44px;
+		padding: 0 11px;
+		border-radius: var(--r-full);
 		color: var(--texto-debil);
-		font-size: .68rem;
-		font-weight: 500;
+		font-size: .82rem;
+		font-weight: 600;
 		text-decoration: none;
+		transition: background .2s ease, color .2s ease;
 	}
-	.promotur-bottomnav__item.is-active { color: var(--texto); font-weight: 600; }
-	.promotur-bottomnav__item.is-active svg { color: var(--tinta); }
+	.promotur-bottomnav__item span {
+		max-width: 0;
+		overflow: hidden;
+		opacity: 0;
+		white-space: nowrap;
+		transition: max-width .24s ease, opacity .18s ease, margin .24s ease;
+	}
+	.promotur-bottomnav__item.is-active {
+		background: var(--tinta);
+		color: var(--sobre-tinta);
+	}
+	.promotur-bottomnav__item.is-active span {
+		max-width: 7rem;
+		margin-left: 8px;
+		opacity: 1;
+	}
 	.promotur-bottomnav__item svg { width: 22px; height: 22px; }
 
-	.promotur-content { padding-bottom: 88px; }
+	.promotur-content { padding-bottom: 96px; }
 
 	/* En un teléfono la barra superior no entra: hamburguesa + migas + cinco
 	   acciones terminan comiéndose el nombre de la sección. Las migas se van

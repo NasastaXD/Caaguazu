@@ -110,12 +110,12 @@ preg_match_all( '/box-shadow:\s*([^;]+);/', $fuente_css, $sh );
 $sombras_malas = array();
 foreach ( array_unique( $sh[1] ) as $valor ) {
 	$limpio = trim( $valor );
-	if ( 'var(--sombra)' !== $limpio && 'none' !== $limpio ) {
+	if ( ! in_array( $limpio, array( 'var(--sombra)', 'var(--sombra-flotante)', 'none' ), true ) ) {
 		$sombras_malas[] = $limpio;
 	}
 }
-czu_check( 'Una sola sombra en todo el panel', $sombras_malas,
-	'Un sistema donde cada tarjeta flota un poco no tiene jerarquía.' );
+czu_check( 'Ninguna sombra fuera de --sombra / --sombra-flotante', $sombras_malas,
+	'Dos sombras, cada una con su lugar: contacto y flotación. Un sistema donde cada tarjeta flota un poco no tiene jerarquía.' );
 
 /* --------------------------------------------------------------------------
  * 3. Una familia tipográfica, sin gradientes, sin pedidos a terceros
