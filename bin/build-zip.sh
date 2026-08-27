@@ -8,6 +8,10 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# OJO: acá conviven los zips de los plugins del ecosistema que se subieron a
+# mano (cuentas, locales, SSO CEAD). Este script borra sólo los que vuelve a
+# armar, uno por uno y por nombre. Nunca `rm *.zip`.
+
 que="${1:-todo}"
 
 if [ "$que" = "todo" ] || [ "$que" = "theme" ]; then
