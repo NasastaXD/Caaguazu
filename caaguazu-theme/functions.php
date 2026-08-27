@@ -34,6 +34,15 @@ add_action( 'after_setup_theme', 'caaguazu_setup' );
  * ------------------------------------------------------------------------ */
 
 function caaguazu_enqueue_assets() {
+	// El Portal de promotores (turismo-panel) tiene su propio wp_head() y su
+	// propio CSS —tokens y tipografía propios, nada prestado del theme— pero
+	// este enqueue corre en TODA carga del sitio, panel incluido: sin esta
+	// guarda, la hoja de esta página de obra (con su aro decorativo de fondo)
+	// se colaba detrás del panel en cada pantalla.
+	if ( '' !== get_query_var( 'promotur_route' ) ) {
+		return;
+	}
+
 	wp_enqueue_style( 'caaguazu-obra', get_stylesheet_uri(), array(), CAAGUAZU_VERSION );
 
 	// La página no usa bloques ni theme.json: nada de esto pinta nada, sólo

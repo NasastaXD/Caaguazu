@@ -32,4 +32,4 @@ add_filter( 'pre_get_document_title', function () use ( $promotur_title ) {
 <link rel="icon" type="image/png" href="<?php echo esc_url( promotur_url( 'icon-192.png' ) ); ?>">
 <link rel="apple-touch-icon" href="<?php echo esc_url( promotur_url( 'icon-192.png' ) ); ?>">
 
-<?php wp_head(); // carga el CSS/JS del portal + el styles.css del theme (tokens + fuentes). ?>
+<?php wp_head(); // carga el CSS/JS propios del panel; el theme queda afuera (ver caaguazu_enqueue_assets() en el theme). ?>
