@@ -16,9 +16,20 @@ if ( class_exists( 'PROMOTUR_Roles' ) ) {
 delete_option( 'promotur_version' );
 delete_option( 'promotur_db_version' );
 delete_option( 'promotur_invites' );
+// Opciones de la vitrina web que este plugin publicaba en versiones
+// anteriores. Ya no se escriben, pero se siguen borrando para dejar limpia una
+// base que venga de esa etapa.
 delete_option( 'promotur_destacados' );
 delete_option( 'promotur_banner' );
 delete_option( 'promotur_empty_searches' );
+
+// Capabilities de esa misma etapa (moderación y curaduría), que pudieron
+// quedar sueltas en el rol de administrador.
+$admin = get_role( 'administrator' );
+if ( $admin ) {
+	$admin->remove_cap( 'promotur_moderate' );
+	$admin->remove_cap( 'promotur_curate_featured' );
+}
 
 // Tablas custom (invitaciones y auditoría).
 global $wpdb;

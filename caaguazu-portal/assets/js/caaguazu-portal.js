@@ -46,7 +46,6 @@
 		initAtajos();
 		initEditor();
 		initReview();
-		initModeration();
 		initGestion();
 		initCaptura();
 	});
@@ -210,80 +209,6 @@
 					if (msg) { msg.textContent = r.success ? (r.data.message || i18n.saved) : ((r.data && r.data.message) || i18n.error); msg.className = 'promotur-form-msg ' + (r.success ? 'is-success' : 'is-error'); }
 				});
 			});
-		});
-	}
-
-	/* ---------- Moderación (panel) ---------- */
-	function initModeration() {
-		// Reseñas: aprobar / descartar.
-		document.querySelectorAll('[data-mod-resena]').forEach(function (card) {
-			var id = card.getAttribute('data-mod-resena');
-			card.querySelectorAll('[data-op]').forEach(function (btn) {
-				btn.addEventListener('click', function () {
-					if (btn.getAttribute('data-op') === 'trash' && !confirm(i18n.confirm)) { return; }
-					ajax('moderate_resena', { comment_id: id, op: btn.getAttribute('data-op') }).then(function (r) {
-						if (r.success) { card.remove(); }
-					});
-				});
-			});
-		});
-		// Consultas: derivar / resolver.
-		document.querySelectorAll('[data-consulta]').forEach(function (card) {
-			var id = card.getAttribute('data-consulta');
-			card.querySelectorAll('[data-op]').forEach(function (btn) {
-				btn.addEventListener('click', function () {
-					var op = btn.getAttribute('data-op');
-					if (op === 'assign') {
-						var sel = card.querySelector('[data-consulta-user]');
-						var uid = sel ? sel.value : '';
-						if (!uid) { return; }
-						ajax('assign_consulta', { id: id, user_id: uid }).then(function (r) { if (r.success) { flashCard(card); } });
-					} else if (op === 'resolve') {
-						ajax('resolve_consulta', { id: id }).then(function (r) { if (r.success) { card.remove(); } });
-					}
-				});
-			});
-		});
-		// Reportes: resolver.
-		document.querySelectorAll('[data-reporte]').forEach(function (card) {
-			var id = card.getAttribute('data-reporte');
-			var btn = card.querySelector('[data-op="resolve"]');
-			if (btn) { btn.addEventListener('click', function () { ajax('resolve_reporte', { comment_id: id }).then(function (r) { if (r.success) { card.remove(); } }); }); }
-		});
-		function flashCard(card) { card.style.outline = '2px solid var(--promotur-brand)'; setTimeout(function () { card.style.outline = ''; }, 1200); }
-	}
-
-	/* ---------- Submenú del lateral ---------- */
-	function initSubnav() {
-		document.querySelectorAll('[data-subnav-toggle]').forEach(function (caret) {
-			var panel = document.getElementById(caret.getAttribute('data-subnav-toggle'));
-			if (!panel) { return; }
-			function alternar(e) {
-				// El caret vive dentro del enlace del padre: si no frenamos el
-				// clic, abrir el submenú navega a la sección.
-				e.preventDefault();
-				e.stopPropagation();
-				var abierto = !panel.hidden;
-				panel.hidden = abierto;
-				caret.setAttribute('aria-expanded', abierto ? 'false' : 'true');
-			}
-			caret.addEventListener('click', alternar);
-			caret.addEventListener('keydown', function (e) {
-				if (e.key === 'Enter' || e.key === ' ') { alternar(e); }
-			});
-		});
-	}
-
-	/* ---------- Atajos de teclado ---------- */
-	function initAtajos() {
-		// ⌘K / Ctrl+K enfoca el buscador — el mismo atajo que anuncia la tecla
-		// dibujada al lado del campo. Un atajo anunciado y no implementado es
-		// peor que no anunciarlo.
-		document.addEventListener('keydown', function (e) {
-			if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
-				var campo = document.querySelector('[data-buscador]');
-				if (campo) { e.preventDefault(); campo.focus(); campo.select(); }
-			}
 		});
 	}
 

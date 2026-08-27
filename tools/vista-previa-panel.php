@@ -234,32 +234,6 @@ class PROMOTUR_Tareas {
 		return $out;
 	}
 }
-class PROMOTUR_Resenas {
-	public static function pending() {
-		$c                  = new stdClass();
-		$c->comment_ID      = 3;
-		$c->comment_author  = 'Visitante';
-		$c->comment_content = 'Muy lindo lugar, ideal para ir temprano.';
-		$c->comment_post_ID = 100;
-		return array( $c );
-	}
-	public static function rating_of( $comment_id ) { return 4; }
-	public static function stars( $n ) { return '<span class="promotur-stars">★★★★☆</span>'; }
-	public static function render_block( $post_id ) { return ''; }
-}
-class PROMOTUR_Consultas {
-	public static function count_open() { return 1; }
-	public static function estados() { return array( 'abierta' => 'Abierta', 'resuelta' => 'Resuelta' ); }
-	public static function get_estado( $c ) { return 'abierta'; }
-	public static function pending_reports() { return array(); }
-	public static function all( $args = array() ) {
-		$c               = new stdClass();
-		$c->ID           = 300;
-		$c->post_title   = 'Consulta sobre horarios';
-		$c->post_content = '¿Se puede visitar los domingos?';
-		return array( $c );
-	}
-}
 class PROMOTUR_Audit {
 	public static function post_actions() { return array( 'destino_created', 'destino_enviado', 'destino_publicado' ); }
 	public static function table() { return 'wp_promotur_audit_log'; }
@@ -289,13 +263,6 @@ class CZUAPI_Taxonomias {
 	const META_COLOR    = 'czuapi_color';
 }
 
-class PROMOTUR_Curaduria {
-	public static function destacados() { return array( 100, 101 ); }
-	public static function banner() { return array( 'title' => '', 'text' => '', 'url' => '', 'desde' => '', 'hasta' => '' ); }
-}
-class PROMOTUR_Public {
-	public static function contact_form( $id = 0 ) { return ''; }
-}
 class PROMOTUR_Stats {
 	public static function views( $post_id ) { return 128; }
 	public static function top_viewed( $limit = 8 ) { return array_slice( get_posts(), 0, 3 ); }

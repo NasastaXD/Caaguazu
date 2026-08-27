@@ -1,6 +1,9 @@
 <?php
 /**
- * Perfil / portafolio del usuario actual (con nivel de confianza y estadísticas).
+ * Perfil / portafolio del usuario actual, con su nivel de confianza.
+ *
+ * Ya no muestra vistas: las contaba la vitrina web del plugin, que se fue. Y el
+ * portafolio linkea al editor, no a una página pública que dejó de existir.
  */
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
@@ -12,12 +15,10 @@ $pub      = get_posts( array(
 	'meta_query'     => array( array( 'key' => PROMOTUR_Destinos::OWNER_META, 'value' => $uid ) ), // phpcs:ignore WordPress.DB.SlowDBQuery
 	'posts_per_page' => 50,
 ) );
-$total_views = 0;
-foreach ( $pub as $p ) { $total_views += PROMOTUR_Stats::views( $p->ID ); }
 $is_mini = ( 'promotur_mini' === promotur_user_role() );
 
 $page_title = __( 'Mi perfil', 'caaguazu-portal' );
-$body = function () use ( $identity, $uid, $pub, $total_views, $is_mini ) {
+$body = function () use ( $identity, $uid, $pub, $is_mini ) {
 	?>
 	<div class="promotur-profile">
 		<?php echo promotur_avatar( $identity, 'promotur-avatar--lg' ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
@@ -62,10 +63,6 @@ $body = function () use ( $identity, $uid, $pub, $total_views, $is_mini ) {
 			<span class="promotur-stat__n"><?php echo esc_html( count( $pub ) ); ?></span>
 			<span class="promotur-stat__label"><?php esc_html_e( 'fichas publicadas', 'caaguazu-portal' ); ?></span>
 		</div>
-		<div class="promotur-card promotur-stat">
-			<span class="promotur-stat__n"><?php echo esc_html( number_format_i18n( $total_views ) ); ?></span>
-			<span class="promotur-stat__label"><?php esc_html_e( 'vistas en total', 'caaguazu-portal' ); ?></span>
-		</div>
 	</div>
 
 	<h3 class="promotur-h3"><?php esc_html_e( 'Mi portafolio', 'caaguazu-portal' ); ?></h3>
@@ -74,13 +71,9 @@ $body = function () use ( $identity, $uid, $pub, $total_views, $is_mini ) {
 	<?php else : ?>
 		<div class="promotur-list">
 			<?php foreach ( $pub as $p ) : ?>
-				<a class="promotur-row" href="<?php echo esc_url( get_permalink( $p ) ); ?>" target="_blank" rel="noopener">
+				<a class="promotur-row" href="<?php echo esc_url( promotur_url( 'panel/editor/' . $p->ID ) ); ?>">
 					<span class="promotur-row__main">
 						<span class="promotur-row__title"><?php echo esc_html( get_the_title( $p ) ); ?></span>
-						<span class="promotur-row__meta"><?php
-							/* translators: %d = vistas */
-							printf( esc_html( _n( '%d vista', '%d vistas', PROMOTUR_Stats::views( $p->ID ), 'caaguazu-portal' ) ), PROMOTUR_Stats::views( $p->ID ) );
-						?></span>
 					</span>
 					<span class="promotur-pill is-published"><?php esc_html_e( 'Publicado', 'caaguazu-portal' ); ?></span>
 				</a>

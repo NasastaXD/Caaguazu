@@ -56,18 +56,11 @@ require_once PROMOTUR_DIR . 'includes/class-notifications.php';
 require_once PROMOTUR_DIR . 'includes/class-destinos.php';
 require_once PROMOTUR_DIR . 'includes/class-editorial.php';
 require_once PROMOTUR_DIR . 'includes/class-ajax.php';
-require_once PROMOTUR_DIR . 'includes/class-resenas.php';
-require_once PROMOTUR_DIR . 'includes/class-consultas.php';
-require_once PROMOTUR_DIR . 'includes/class-seo.php';
-require_once PROMOTUR_DIR . 'includes/class-public.php';
-require_once PROMOTUR_DIR . 'includes/class-public-ajax.php';
-require_once PROMOTUR_DIR . 'includes/class-curaduria.php';
 require_once PROMOTUR_DIR . 'includes/class-tareas.php';
 require_once PROMOTUR_DIR . 'includes/class-stats.php';
 require_once PROMOTUR_DIR . 'includes/class-gestion-ajax.php';
 require_once PROMOTUR_DIR . 'includes/class-i18n.php';
 require_once PROMOTUR_DIR . 'includes/class-app-control.php';
-require_once PROMOTUR_DIR . 'includes/nav-integration.php';
 
 /**
  * ¿Está activo el sistema de cuentas universal (caaguazu-cuentas)?
@@ -135,12 +128,6 @@ function promotur_boot() {
 	PROMOTUR_Destinos::instance();
 	PROMOTUR_Editorial::instance();
 	PROMOTUR_Ajax::instance();
-	PROMOTUR_Resenas::instance();
-	PROMOTUR_Consultas::instance();
-	PROMOTUR_SEO::instance();
-	PROMOTUR_Public::instance();
-	PROMOTUR_Public_Ajax::instance();
-	PROMOTUR_Curaduria::instance();
 	PROMOTUR_Tareas::instance();
 	PROMOTUR_Stats::instance();
 	PROMOTUR_Gestion_Ajax::instance();

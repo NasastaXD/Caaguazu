@@ -1,14 +1,16 @@
 <?php
-/** Reportes / pulso: producción, lo más visto, búsquedas sin resultado y salud del contenido. */
+/** Reportes: producción por autor y salud del contenido.
+ *
+ * Se fueron "lo más visto" y "búsquedas sin resultado": las dos se alimentaban
+ * de la vitrina web que este plugin publicaba, y esa vitrina ya no existe.
+ * Mostrarlas ahora sería mostrar ceros para siempre. */
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-$top     = PROMOTUR_Stats::top_viewed( 8 );
-$empties = PROMOTUR_Stats::empty_searches();
 $health  = PROMOTUR_Stats::content_health( 6 );
 $autores = promotur_team_members( array( 'promotur_promotor', 'promotur_mini' ) );
 
 $page_title = __( 'Reportes', 'caaguazu-portal' );
-$body = function () use ( $top, $empties, $health, $autores ) {
+$body = function () use ( $health, $autores ) {
 	?>
 	<div class="promotur-eyebrow"><?php esc_html_e( 'Métricas', 'caaguazu-portal' ); ?></div>
 	<h2 class="promotur-h2"><?php esc_html_e( 'Actividad del portal', 'caaguazu-portal' ); ?></h2>
@@ -27,37 +29,6 @@ $body = function () use ( $top, $empties, $health, $autores ) {
 			</div>
 		<?php endforeach; ?>
 	</div>
-
-	<h3 class="promotur-h3"><?php esc_html_e( 'Lo más visto', 'caaguazu-portal' ); ?></h3>
-	<?php if ( empty( $top ) ) : ?>
-		<p class="promotur-muted"><?php esc_html_e( 'Todavía no hay vistas registradas.', 'caaguazu-portal' ); ?></p>
-	<?php else : ?>
-		<div class="promotur-list">
-			<?php foreach ( $top as $p ) : ?>
-				<a class="promotur-row" href="<?php echo esc_url( get_permalink( $p ) ); ?>" target="_blank" rel="noopener">
-					<span class="promotur-row__main"><span class="promotur-row__title"><?php echo esc_html( get_the_title( $p ) ); ?></span></span>
-					<span class="promotur-row__meta"><?php
-						/* translators: %d = vistas */
-						printf( esc_html( _n( '%d vista', '%d vistas', PROMOTUR_Stats::views( $p->ID ), 'caaguazu-portal' ) ), PROMOTUR_Stats::views( $p->ID ) );
-					?></span>
-				</a>
-			<?php endforeach; ?>
-		</div>
-	<?php endif; ?>
-
-	<h3 class="promotur-h3"><?php esc_html_e( 'Búsquedas sin resultado', 'caaguazu-portal' ); ?> <span class="promotur-muted"><?php esc_html_e( '(huecos de contenido)', 'caaguazu-portal' ); ?></span></h3>
-	<?php if ( empty( $empties ) ) : ?>
-		<p class="promotur-muted"><?php esc_html_e( 'Todavía no hay búsquedas sin resultado.', 'caaguazu-portal' ); ?></p>
-	<?php else : ?>
-		<div class="promotur-list">
-			<?php $i = 0; foreach ( $empties as $e ) { if ( $i++ >= 15 ) { break; } ?>
-				<div class="promotur-row">
-					<span class="promotur-row__main"><span class="promotur-row__title">“<?php echo esc_html( $e['q'] ); ?>”</span></span>
-					<span class="promotur-row__meta"><?php echo esc_html( sprintf( _n( '%d vez', '%d veces', $e['count'], 'caaguazu-portal' ), $e['count'] ) ); ?></span>
-				</div>
-			<?php } ?>
-		</div>
-	<?php endif; ?>
 
 	<h3 class="promotur-h3"><?php esc_html_e( 'Estado del contenido', 'caaguazu-portal' ); ?></h3>
 	<div class="promotur-grid promotur-grid--2">

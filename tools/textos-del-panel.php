@@ -41,10 +41,6 @@ $mapa = array(
 	'templates/sections/revision.php'       => array( 'Cola de revisión', 'secciones' ),
 	'templates/sections/tareas.php'         => array( 'Tareas', 'secciones' ),
 	'includes/class-tareas.php'             => array( 'Tareas (estados y avisos)', 'secciones' ),
-	'templates/sections/curaduria.php'      => array( 'Curaduría', 'secciones' ),
-	'templates/sections/moderacion.php'     => array( 'Moderación', 'secciones' ),
-	'includes/class-consultas.php'          => array( 'Consultas (estados y avisos)', 'secciones' ),
-	'includes/class-resenas.php'            => array( 'Reseñas', 'secciones' ),
 	'templates/sections/equipo.php'         => array( 'Equipo', 'secciones' ),
 	'templates/sections/reportes.php'       => array( 'Reportes', 'secciones' ),
 	'templates/sections/biblioteca.php'     => array( 'Biblioteca', 'secciones' ),
@@ -69,13 +65,6 @@ $mapa = array(
 	'includes/class-shell.php'              => array( 'Guardas de sección', 'acceso' ),
 	'includes/class-pwa.php'                => array( 'Sin conexión (PWA)', 'acceso' ),
 
-	// --- Lo que ve el visitante -------------------------------------------
-	'templates/public/single-destino.php'   => array( 'Ficha pública', 'publico' ),
-	'includes/class-public.php'             => array( 'Vitrina pública y shortcodes', 'publico' ),
-	'includes/class-public-ajax.php'        => array( 'Formularios públicos', 'publico' ),
-	'includes/class-curaduria.php'          => array( 'Bloques curados', 'publico' ),
-	'includes/class-seo.php'                => array( 'SEO', 'publico' ),
-
 	// --- wp-admin ---------------------------------------------------------
 	'includes/class-admin.php'              => array( 'Pantallas de wp-admin', 'admin' ),
 	'includes/class-ajax.php'               => array( 'Respuestas del editor', 'admin' ),
@@ -90,7 +79,6 @@ $grupos = array(
 	'armazon'   => array( 'El armazón', 'Lo que se ve en todas las pantallas.' ),
 	'secciones' => array( 'Las secciones', 'Una tabla por pantalla del panel.' ),
 	'acceso'    => array( 'Entrar y salir', 'Acceso, registro, recuperación, invitaciones y errores de permiso.' ),
-	'publico'   => array( 'Lo que ve el visitante', 'La vitrina pública que publica el panel — no es parte del panel, pero el texto sale del mismo plugin.' ),
 	'admin'     => array( 'wp-admin y mensajes de sistema', 'Pantallas de administración y respuestas de las acciones.' ),
 );
 

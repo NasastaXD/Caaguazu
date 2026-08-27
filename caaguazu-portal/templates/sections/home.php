@@ -38,10 +38,6 @@ if ( $can_draft ) {
 	$pulse[] = array( 'n' => $count_by( 'necesita_cambios', $uid ), 'label' => __( 'esperan tu corrección', 'caaguazu-portal' ), 'url' => 'panel/mis-contenidos', 'icon' => 'edit' );
 	$pulse[] = array( 'n' => $count_by( array( 'borrador', 'enviado', 'en_revision' ), $uid ), 'label' => __( 'en proceso', 'caaguazu-portal' ), 'url' => 'panel/mis-contenidos', 'icon' => 'doc' );
 }
-if ( caaguazu_account_can( 'promotor', 'promotur_moderate' ) ) {
-	$pulse[] = array( 'n' => count( PROMOTUR_Resenas::pending() ), 'label' => __( 'reseñas por moderar', 'caaguazu-portal' ), 'url' => 'panel/moderacion', 'icon' => 'star' );
-	$pulse[] = array( 'n' => PROMOTUR_Consultas::count_open(), 'label' => __( 'consultas sin responder', 'caaguazu-portal' ), 'url' => 'panel/moderacion', 'icon' => 'inbox' );
-}
 
 // Actividad editorial de los últimos 7 días, del log de auditoría. Es la única
 // serie temporal real que guarda el portal: no hay contadores por día de nada

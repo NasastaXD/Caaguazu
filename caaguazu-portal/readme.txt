@@ -27,12 +27,6 @@ instalable como PWA, con modo claro/oscuro y los colores del sitio heredados ví
 * Editor con checklist de mínimos en vivo (bloquea el envío si falta algo) + subida de fotos + geolocalización.
 * Flujo: borrador → enviar → cola de revisión (asignarme) → aprobar/devolver con feedback → publicado.
 * "Mis contenidos" (Mini Promotor) y "Cola de revisión" (Promotor) funcionando.
-* Vitrina pública mínima: ficha pública (single), `[promotur_destinos]` (grid) y `[promotur_mapa]` (Leaflet).
-
-== Shortcodes ==
-
-* `[promotur_destinos categoria="" cantidad="24"]` — grid de destinos publicados.
-* `[promotur_mapa alto="480px" categoria=""]` — mapa de destinos con coordenadas.
 
 == Instalación ==
 
@@ -70,6 +64,7 @@ llamen los tags.
 * **El panel deja de heredar el CSS del theme activo**: se desencola en las rutas del panel. El sitio público se rehace sin poder romper el panel.
 * `PROMOTUR_Stats::serie_diaria()`: actividad editorial por día leída del log de auditoría (una sola consulta agrupada), para las barras del inicio.
 * Atajo ⌘K / Ctrl+K para el buscador, y submenú plegable en el lateral.
+* **Poda del sitio viejo**: se fue todo lo que existía para alimentar la web pública que este plugin publicaba — la vitrina y sus 7 shortcodes, la ficha pública, las reseñas y consultas de visitantes, la curaduría de portada, el SEO/Open Graph, la integración con el nav del theme viejo, y las secciones Moderación y Curaduría del panel. Con eso se van también Leaflet por CDN y qrcode.js. El destino deja de ser una página web (`public => false`): su consumidor es la app, que lo lee por `/wp-json/czu-app/v1/inventario`.
 * **Sección App**: el panel pasa a ser la cabina de mando de la aplicación móvil. Desde ahí se editan los textos de la app por idioma (ES/EN/GN), el manifiesto de medios y el icono y color de cada categoría — todo lo que la app lee del servidor y antes tenía endpoint pero no editor. Requiere `caaguazu-app-api` 0.2.0; sin ese plugin la sección no se registra.
 * Repaso completo de textos: los 569 mensajes del panel revisados y reescritos por una persona (ver `docs/textos-del-panel.md` en el repo).
 * Se sacan los `alert()` del navegador: los errores se dicen en la pantalla, donde pasó la cosa.

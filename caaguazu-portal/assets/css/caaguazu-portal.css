@@ -417,8 +417,6 @@ body.promotur-nav-open .promotur-sidebar { transform: translateX(0); }
 	.promotur-iconbtn, .promotur-hamburger { width: 44px; height: 44px; }
 	.promotur-btn { padding: .8em 1.2em; }
 	.promotur-userchip { padding: 5px; }
-	.promotur-explorar__filters { flex-direction: column; align-items: stretch; }
-	.promotur-explorar__filters input[type=search], .promotur-explorar__filters select { width: 100%; }
 }
 
 /* ---------------------------------------------------------------------------
@@ -633,80 +631,8 @@ html.promotur-no-splash .promotur-splash { display: none; }
 .promotur-offline-box { max-width: 380px; text-align: center; }
 
 /* ---------------------------------------------------------------------------
- * Vitrina pública y ficha
+ * Nivel de confianza (Mi perfil)
  * ------------------------------------------------------------------------ */
-
-.promotur-vitrina__card { display: flex; flex-direction: column; overflow: hidden; padding: 0; }
-.promotur-vitrina__media { display: block; aspect-ratio: 16 / 10; background: var(--hueco) center / cover no-repeat; }
-.promotur-vitrina__body { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; }
-.promotur-publicmap { width: 100%; overflow: hidden; border: 1px solid var(--linea); border-radius: var(--r-3); }
-
-/* La ficha pública y los bloques de shortcode se dibujaban con clases del
-   theme (`container-wide`, `section-y`, `prose-content`). El theme se rehace
-   entero y el plugin no puede depender de eso: el ancho, el aire y la medida
-   de lectura los pone el propio panel. */
-.promotur-destino { width: 100%; max-width: var(--ancho); margin-inline: auto; padding: clamp(24px, 5vw, 48px) clamp(16px, 4vw, 32px); }
-.promotur-destino__head { margin-bottom: 1.4rem; }
-.promotur-destino__body { max-width: 68ch; line-height: 1.7; }
-.promotur-destino__author { margin-top: .6rem; }
-.promotur-destino__gancho { color: var(--texto-2); font-size: 1.12rem; }
-.promotur-destino__cover { margin: 1.2rem 0; }
-.promotur-destino__cover img { width: 100%; border-radius: var(--r-3); }
-.promotur-destino__cover figcaption { margin-top: .35rem; color: var(--texto-debil); font-size: .8rem; }
-.promotur-destino__facts { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; margin-bottom: 1.5rem; padding: 16px; border: 1px solid var(--linea); border-radius: var(--r-3); }
-.promotur-destino__fact { display: flex; flex-direction: column; }
-.promotur-destino__factlabel { color: var(--texto-debil); font-size: .72rem; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; }
-.promotur-destino__factval { font-weight: 600; }
-.promotur-destino__section { margin-top: 1.7rem; }
-.promotur-destino__verif { margin-top: 1.5rem; color: var(--alza); font-weight: 600; }
-
-.promotur-homeblocks { display: flex; flex-direction: column; gap: 1.2rem; }
-.promotur-banner { display: block; padding: 15px 18px; border: 1px solid var(--linea); border-radius: var(--r-3); background-image: var(--trama); color: var(--texto); text-decoration: none; font-weight: 600; }
-.promotur-banner span { margin-left: .4em; color: var(--texto-2); font-weight: 400; }
-.promotur-hero { display: flex; flex-direction: column; justify-content: flex-end; min-height: 320px; padding: 24px; border-radius: var(--r-3); background: var(--hueco) center / cover no-repeat; color: var(--sobre-tinta); text-decoration: none; }
-.promotur-hero__eyebrow { font-size: .72rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
-.promotur-hero__title { font-size: 1.9rem; font-weight: 700; letter-spacing: -.02em; line-height: 1.1; }
-.promotur-hero__gancho { opacity: .92; }
-
-/* ---------------------------------------------------------------------------
- * Reseñas, moderación, itinerario
- * ------------------------------------------------------------------------ */
-
-.promotur-stars { display: inline-flex; gap: 1px; }
-.promotur-star { color: var(--linea-2); }
-.promotur-star.is-on { color: var(--espera); }
-.promotur-rating-input { display: flex; gap: 3px; }
-.promotur-rating-star { padding: 0; border: 0; background: none; color: var(--linea-2); font-size: 1.7rem; line-height: 1; cursor: pointer; }
-.promotur-rating-star.is-on { color: var(--espera); }
-
-.promotur-resenas { margin-top: 2rem; }
-.promotur-resenas__summary { display: flex; align-items: center; gap: 10px; margin-bottom: 1rem; }
-.promotur-resenas__avg { font-size: 1.8rem; font-weight: 700; letter-spacing: -.02em; }
-.promotur-resenas__list { display: flex; flex-direction: column; }
-.promotur-resena { padding: 13px 0; border-top: 1px solid var(--linea); }
-.promotur-resena header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: .9rem; }
-.promotur-resena p { margin: .4rem 0 0; color: var(--texto-2); }
-.promotur-resena-form, .promotur-contacto-form, .promotur-report-form { margin-top: 1.5rem; padding-top: 1.3rem; border-top: 1px solid var(--linea); }
-.promotur-report { margin-top: 1.2rem; }
-
-.promotur-explorar { display: flex; flex-direction: column; gap: 1rem; }
-.promotur-explorar__filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 1.3rem; }
-.promotur-explorar__filters input[type=search], .promotur-explorar__filters select { width: auto; min-width: 170px; }
-
-.promotur-itinerario { display: flex; flex-direction: column; gap: 10px; }
-.promotur-itinerario__list { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.promotur-itin__ctrls { display: flex; gap: 4px; }
-.promotur-itin__ctrls .promotur-iconbtn { width: 32px; height: 32px; border-color: var(--linea); }
-.promotur-mod { display: flex; flex-direction: column; gap: 8px; }
-.promotur-mod p { margin: .4rem 0; }
-.promotur-newtask summary { cursor: pointer; }
-.promotur-newtask .promotur-form { margin-top: 1rem; }
-
-.promotur-qrmodal { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; background: var(--velo); }
-.promotur-qrmodal[hidden] { display: none; }
-.promotur-qrmodal__box { position: relative; max-width: 90vw; padding: 26px; border-radius: var(--r-3); background: var(--papel); box-shadow: var(--sombra); text-align: center; }
-.promotur-qrmodal__box svg { display: block; margin: 0 auto; }
-.promotur-qrmodal__close { position: absolute; top: 6px; right: 10px; padding: 0; border: 0; background: none; color: var(--texto-2); font-size: 1.6rem; line-height: 1; cursor: pointer; }
 
 .promotur-trustbar { display: flex; flex-wrap: wrap; gap: 6px; margin: .7rem 0; }
 .promotur-truststep { flex: 1; min-width: 92px; padding: .5em; border-radius: var(--r-1); background: var(--tinte-neutro); color: var(--texto-debil); font-size: .82rem; font-weight: 600; text-align: center; }
@@ -723,8 +649,7 @@ html.promotur-no-splash .promotur-splash { display: none; }
 }
 
 @media print {
-	.promotur-sidebar, .promotur-topbar, .promotur-splash, .promotur-backdrop, .promotur-bottomnav,
-	.promotur-resena-form, .promotur-contacto-form, .promotur-report, .promotur-itin__ctrls { display: none !important; }
+	.promotur-sidebar, .promotur-topbar, .promotur-splash, .promotur-backdrop, .promotur-bottomnav { display: none !important; }
 	.promotur-main { margin: 0 !important; }
 	.promotur-content { max-width: none; padding: 0; }
 	.promotur-card { border-color: var(--linea-2); }

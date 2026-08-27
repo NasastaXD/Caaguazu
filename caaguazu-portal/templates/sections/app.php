@@ -148,7 +148,7 @@ $body = function () use ( $locales, $idioma, $textos, $medios, $cats ) {
 		</div>
 
 		<?php if ( empty( $cats ) ) : ?>
-			<p class="promotur-muted">[FALTA: aviso de que todavía no hay categorías]</p>
+			<p class="promotur-muted"><?php esc_html_e( 'Todavía no hay categorías cargadas. Se crean en Estructura y después se les elige acá el icono y el color.', 'caaguazu-portal' ); ?></p>
 			<a class="promotur-btn promotur-btn--ghost" href="<?php echo esc_url( promotur_url( 'panel/estructura' ) ); ?>"><?php esc_html_e( 'Estructura', 'caaguazu-portal' ); ?></a>
 		<?php else : ?>
 			<form class="promotur-form" method="post" action="<?php echo esc_url( $accion ); ?>">

@@ -318,8 +318,6 @@ function promotur_nav_grupos() {
 		array(
 			'label' => __( 'PORTAL', 'caaguazu-portal' ),
 			'items' => array(
-				array( 'route' => 'panel/curaduria',  'label' => __( 'Curaduría', 'caaguazu-portal' ),  'icon' => 'star',   'cap' => 'promotur_curate_featured' ),
-				array( 'route' => 'panel/moderacion', 'label' => __( 'Moderación', 'caaguazu-portal' ), 'icon' => 'shield', 'cap' => 'promotur_moderate' ),
 				array( 'route' => 'panel/equipo',     'label' => __( 'Equipo', 'caaguazu-portal' ),     'icon' => 'team',   'cap' => 'promotur_manage_team' ),
 				array( 'route' => 'panel/reportes',   'label' => __( 'Reportes', 'caaguazu-portal' ),   'icon' => 'chart',  'cap' => 'promotur_view_reports' ),
 				array( 'route' => 'panel/biblioteca', 'label' => __( 'Biblioteca', 'caaguazu-portal' ), 'icon' => 'image',  'cap' => 'promotur_manage_media' ),

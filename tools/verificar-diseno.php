@@ -172,12 +172,6 @@ $archivos_panel = array_merge(
 czu_check( 'Sin assets de terceros en el panel', $busca_terceros( $archivos_panel ),
 	'Cada servicio externo es algo que puede cortarse o cambiar de precio. La tipografía se sirve desde el plugin.' );
 
-// La vitrina pública todavía trae Leaflet de un CDN. No bloquea al panel, pero
-// se avisa: es la misma regla, en la otra mitad del plugin.
-czu_info( 'Assets de terceros fuera del panel (vitrina pública)',
-	$busca_terceros( array_merge( czu_archivos( $plugin . '/templates/public', 'php' ), array( $plugin . '/includes/class-public.php' ) ) ),
-	'Vendorizarlo es la solución; queda como deuda declarada, no como sorpresa.' );
-
 /* --------------------------------------------------------------------------
  * 4. Clases: ninguna que se use y no exista, ninguna declarada que nadie use
  * ------------------------------------------------------------------------ */
@@ -191,7 +185,7 @@ $declaradas = array_values( array_unique( $cd[1] ) );
 $usadas    = array();
 $comodines = array();
 $grupos    = array();
-foreach ( array_merge( czu_archivos( $plugin . '/templates', 'php' ), czu_archivos( $plugin . '/includes', 'php' ), array( $plugin . '/assets/js/caaguazu-portal.js', $plugin . '/assets/js/caaguazu-portal-public.js' ) ) as $f ) {
+foreach ( array_merge( czu_archivos( $plugin . '/templates', 'php' ), czu_archivos( $plugin . '/includes', 'php' ), array( $plugin . '/assets/js/caaguazu-portal.js' ) ) as $f ) {
 	/* Dos lecturas del mismo archivo, y la unión de las dos:
 
 	   1. sin el PHP → captura los atributos class= literales, incluso cuando

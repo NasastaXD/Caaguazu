@@ -61,8 +61,6 @@ Tres roles, y la UI se gatea **por capability, nunca por rol**:
 | `promotur_review_content` | ● | | |
 | `promotur_publish_destino` | ● | | |
 | `promotur_assign_tasks` | ● | | |
-| `promotur_curate_featured` | ● | | |
-| `promotur_moderate` | ● | | |
 | `promotur_manage_team` | ● | | |
 | `promotur_manage_users` | ● | | |
 | `promotur_view_reports` | ● | | |
@@ -97,7 +95,7 @@ Un item de menú cuyo capability no tiene la cuenta **no se dibuja**, y un grupo
 
 ## 4. Las secciones
 
-Dieciséis, cada una con su capability. El shell resuelve la sección, verifica el permiso y ejecuta el contrato de página; una sección desconocida cae en el 404 del panel, no en el del sitio.
+Catorce, cada una con su capability. El shell resuelve la sección, verifica el permiso y ejecuta el contrato de página; una sección desconocida cae en el 404 del panel, no en el del sitio.
 
 | Sección | Ruta | Capability | Qué hace |
 | --- | --- | --- | --- |
@@ -107,14 +105,12 @@ Dieciséis, cada una con su capability. El shell resuelve la sección, verifica 
 | **Salida de campo** | `/captura` | `promotur_create_draft` | Captura offline: título, nota, foto y GPS quedan en el teléfono y se sincronizan cuando hay señal. |
 | **Cola de revisión** | `/revision[/<id>]` | `promotur_review_content` | Lo que espera revisión, con badge en el menú. Asignarse una ficha, aprobar, publicar o devolver con feedback (hay motivos de un clic). |
 | **Tareas** | `/tareas` | `promotur_view_own_tasks` | Encargos del equipo: reclamar y completar. Badge con las pendientes. |
-| **Curaduría** | `/curaduria` | `promotur_curate_featured` | Qué se destaca en la vitrina pública y el banner de temporada. |
-| **Moderación** | `/moderacion` | `promotur_moderate` | Reseñas por aprobar, consultas de visitantes y reportes. |
 | **Equipo** | `/equipo` | `promotur_manage_team` | Quién es quién, su rol y su nivel de confianza. |
-| **Reportes** | `/reportes` | `promotur_view_reports` | Producción por autor, lo más visto, búsquedas sin resultado y salud del contenido (fichas sin foto, fichas viejas). |
+| **Reportes** | `/reportes` | `promotur_view_reports` | Producción por autor y salud del contenido: fichas publicadas sin portada y fichas sin verificar hace más de seis meses. |
 | **Biblioteca** | `/biblioteca` | `promotur_manage_media` | Medios del panel. |
 | **Estructura** | `/estructura` | `promotur_manage_structure` | Categorías, zonas y etiquetas de las fichas. |
-| **Buscar** | `/buscar?q=` | `promotur_view_panel` | Búsqueda del panel; las búsquedas sin resultado se registran y salen en Reportes. |
-| **Mi perfil** | `/perfil` | `promotur_edit_profile` | Datos de la cuenta y nivel de confianza. |
+| **Buscar** | `/buscar?q=` | `promotur_view_panel` | Búsqueda de fichas dentro del panel. |
+| **Mi perfil** | `/perfil` | `promotur_edit_profile` | Datos de la cuenta, nivel de confianza y portafolio de fichas publicadas. |
 | **App** | `/app` | `promotur_manage_app` | La cabina de mando de la aplicación móvil: textos por idioma, medios, e icono y color de cada categoría. Sólo aparece si el plugin de la API de la app está instalado. |
 | **Ayuda** | `/ayuda` | `promotur_view_panel` | Cómo se usa el panel. |
 
@@ -195,6 +191,8 @@ Sale con código 1 si algo rompe una regla, así se puede colgar de CI. Comprueb
 
 Cada comprobación está escrita en las dos direcciones: se probó que detecta el caso malo (inyectando a propósito un `#ff0000`, un radio de 7px, una sombra suelta, otra tipografía y un gradiente: las cinco saltaron) y que no marca el caso bueno.
 
+Hoy pasa **sin un solo aviso**: no queda CSS sin usar, ni una clase sin estilo, ni un texto pendiente, ni un asset de terceros.
+
 Y para mirar una pantalla sin levantar un WordPress:
 
 ```bash
@@ -208,7 +206,7 @@ Con eso se revisaron las **21 plantillas** del panel, una por una, antes de dar 
 
 ## 7. Qué se tocó y qué no
 
-**Backend intacto.** No se cambió ni una línea de: el sistema de cuentas, los roles y capabilities, el CPT Destino, el flujo editorial, las tareas, la curaduría, la moderación, las reseñas, las consultas, las invitaciones, la auditoría, el SEO, las pantallas de wp-admin ni los shortcodes públicos.
+**El backend que quedó, quedó intacto.** No se cambió ni una línea de: el sistema de cuentas, los roles y capabilities, el flujo editorial, las tareas, las invitaciones, la auditoría ni las pantallas de wp-admin. Lo que sí se fue, entero y a propósito, está en §9.
 
 Catorce archivos tocados, todos de presentación o de ruteo:
 
@@ -245,14 +243,41 @@ El `.zip` es **OneUI 5.12** (pixelcave): Bootstrap 5, jQuery y 40 dependencias, 
 Está acá para que sea una decisión y no una sorpresa.
 
 1. **El texto sigue viviendo en el código.** Hay 311 cadenas `__()` en plantillas y clases: cambiar "Cola de revisión" hoy exige publicar el plugin. El mecanismo correcto ya existe en el ecosistema (`caaguazu-app-api` sirve textos por clave desde opciones, con fusión sobre el respaldo local y sin pisar con vacíos), pero no tiene editor y el panel no lo consume. Es un trabajo aparte, y grande.
-2. **Leaflet por CDN** en la vitrina pública (`class-public.php`, `unpkg.com`). Está fuera del panel, pero es la misma regla. Se arregla vendorizándolo. El verificador lo reporta como aviso, no como falla, para no dejar la suite en rojo por deuda declarada.
-3. **Los cuatro estados, a medias.** Hay vacío y éxito; el error es un mensaje genérico sin "reintentar" y no hay estado de carga salvo el "Enviando…". Sin conexión sólo sobrevive la cola de capturas.
-4. **Sólo hay una serie temporal.** La actividad editorial sale del log de auditoría, que es lo único con timestamp. No hay serie de fichas publicadas por día, ni de visitas: por eso las tarjetas de cifras no tienen variación "vs. la semana pasada" como la referencia. Antes que inventar el número, no está.
-5. **Colapsar el menú lateral** (el ícono de la referencia que reduce el panel a íconos) no está hecho.
+2. **Los cuatro estados, a medias.** Hay vacío y éxito; el error es un mensaje genérico sin "reintentar" y no hay estado de carga salvo el "Enviando…". Sin conexión sólo sobrevive la cola de capturas.
+3. **Sólo hay una serie temporal.** La actividad editorial sale del log de auditoría, que es lo único con timestamp. No hay serie de fichas publicadas por día, ni de visitas: por eso las tarjetas de cifras no tienen variación "vs. la semana pasada" como la referencia. Antes que inventar el número, no está.
+4. **Colapsar el menú lateral** (el ícono de la referencia que reduce el panel a íconos) no está hecho.
 
 ---
 
-## 9. Cómo se publica
+## 9. Lo que se podó
+
+El panel arrastraba media aplicación que existía para alimentar **la web pública que este mismo plugin publicaba**: una vitrina con shortcodes, la ficha de destino como página, reseñas y consultas de visitantes, la curaduría de esa portada. Ese sitio se rehace desde cero y el producto pasó a ser la app. Todo eso era residuo, y se fue.
+
+El criterio fue uno solo, verificable: **¿la app lo consume?** La API de la app (`caaguazu-app-api`) usa exactamente cuatro cosas del panel — `PROMOTUR_Destinos::owner_account_id()` y tres métodos de niveles de confianza de `PROMOTUR_Stats` — y no toca reseñas, curaduría ni consultas. Lo que no alimentaba ni a la app ni al trabajo editorial que produce sus fichas, se borró.
+
+| Se fue | Qué era |
+| --- | --- |
+| `class-public.php` | La vitrina web y sus 7 shortcodes (`[promotur_destinos]`, `[promotur_mapa]`, `[promotur_explorar]`, `[promotur_itinerario]`, `[promotur_contacto]`, `[promotur_home]`, `[promotur_destacados]`) |
+| `class-public-ajax.php` | Los formularios de esa vitrina y los AJAX de moderación |
+| `templates/public/single-destino.php` | La ficha de destino como página web |
+| `class-resenas.php` · `class-consultas.php` | Reseñas, consultas y reportes de visitantes |
+| `class-curaduria.php` + sección **Curaduría** | Destacados y banner de la portada web |
+| Sección **Moderación** | Moderaba lo anterior; sin origen, no tenía qué mostrar |
+| `class-seo.php` | Open Graph de las fichas públicas |
+| `nav-integration.php` | Se enganchaba al nav del theme de Turismo, que ya no existe |
+| `qrcode.js` (2.297 líneas) · `caaguazu-portal-public.js` | Sólo servían a la ficha pública |
+| Vistas y búsquedas sin resultado (`PROMOTUR_Stats`) | Se contaban en esa web; sin ella, mostrarían cero para siempre |
+
+Dos consecuencias que conviene tener presentes:
+
+- **El destino dejó de ser una página web.** El CPT pasó a `public => false`: se sirve por `/wp-json/czu-app/v1/inventario`, no por `/destino/<slug>`. Si siguiera siendo público, esa URL la dibujaría el theme del sitio —hoy una página de obra— y Google indexaría fichas que no se ven. Sigue editándose en el panel y en wp-admin, y sigue teniendo estados. El día que el sitio nuevo quiera fichas públicas, es volver a `'public' => true` y escribirle su plantilla.
+- **Leaflet por CDN desapareció solo**, porque vivía en la vitrina. El verificador de diseño quedó **sin un solo aviso**.
+
+El panel bajó de 16 secciones a 14, y de 608 textos a 481.
+
+---
+
+## 10. Cómo se publica
 
 El plugin y el theme viven en **este** repo y se actualizan solos desde sus GitHub Releases. `PROMOTUR_REPO` apunta acá; el repo `nasastaxd/turismo` ya no interviene.
 
@@ -278,14 +303,14 @@ Los sitios ven la actualización dentro de las 12 h, o al toque desde **wp-admin
 
 ---
 
-## 10. Los textos
+## 11. Los textos
 
-Todos los textos que se ven en el panel están inventariados en [`textos-del-panel.md`](textos-del-panel.md): 569 en total, agrupados por pantalla, con su archivo y línea y una columna para escribir el reemplazo. Se regenera con:
+Todos los textos que se ven en el panel están inventariados en [`textos-del-panel.md`](textos-del-panel.md): 481 en total, agrupados por pantalla, con su archivo y línea y una columna para escribir el reemplazo. Se regenera con:
 
 ```bash
 php tools/textos-del-panel.php > docs/textos-del-panel.md
 ```
 
-Los 569 fueron revisados y reescritos por una persona: el panel no tiene hoy ningún texto pendiente, y `verificar-diseno.php` lo comprueba (falla si vuelve a aparecer un `[FALTA: …]`).
+Fueron revisados y reescritos por una persona: el panel no tiene hoy ningún texto pendiente, y `verificar-diseno.php` lo comprueba (falla si vuelve a aparecer un `[FALTA: …]`).
 
 Quedan a propósito catorce textos que arrancan en minúscula: son fragmentos pensados para leerse dentro de una frase o después de un número — *"4 esperan revisión"*. El inventario los marca con 🔡 para que se vean de un vistazo.

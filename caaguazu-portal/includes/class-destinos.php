@@ -30,7 +30,6 @@ class PROMOTUR_Destinos {
 		add_action( 'init', array( __CLASS__, 'register_post_type' ) );
 		add_action( 'init', array( __CLASS__, 'register_taxonomies' ) );
 		add_action( 'init', array( $this, 'register_meta' ) );
-		add_filter( 'template_include', array( $this, 'single_template' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_single' ) );
 	}
 
@@ -67,15 +66,30 @@ class PROMOTUR_Destinos {
 			'edit_item'     => __( 'Editar destino', 'caaguazu-portal' ),
 			'search_items'  => __( 'Buscar destinos', 'caaguazu-portal' ),
 		);
+		/*
+		 * El destino dejó de ser una página web y pasó a ser un registro que
+		 * consume la app: se publica en /wp-json/czu-app/v1/inventario, no en
+		 * /destino/<slug>. Por eso el CPT ya no es públicamente consultable —
+		 * si lo fuera, esa URL la dibujaría el theme del sitio, que hoy es una
+		 * página de obra, y Google indexaría fichas que no se ven.
+		 *
+		 * Sigue editándose en wp-admin y en el panel, y sigue teniendo estados
+		 * (publicado, borrador…), que es lo que la app mira para saber qué
+		 * mostrar. El día que el sitio nuevo quiera fichas públicas, esto
+		 * vuelve a `'public' => true` y se le escribe su plantilla.
+		 */
 		register_post_type( self::CPT, array(
-			'labels'          => $labels,
-			'public'          => true,
-			'show_in_rest'    => true,
-			'show_in_menu'    => true,
-			'menu_icon'       => 'dashicons-palmtree',
-			'menu_position'   => 26,
-			'has_archive'     => true,
-			'rewrite'         => array( 'slug' => 'destino', 'with_front' => false ),
+			'labels'             => $labels,
+			'public'             => false,
+			'publicly_queryable' => false,
+			'exclude_from_search'=> true,
+			'show_ui'            => true,
+			'show_in_rest'       => true,
+			'show_in_menu'       => true,
+			'menu_icon'          => 'dashicons-palmtree',
+			'menu_position'      => 26,
+			'has_archive'        => false,
+			'rewrite'            => false,
 			'supports'        => array( 'title', 'editor', 'thumbnail', 'excerpt', 'author' ),
 			'capability_type' => array( 'promotur_destino', 'promotur_destinos' ),
 			'map_meta_cap'    => true,
@@ -83,19 +97,26 @@ class PROMOTUR_Destinos {
 	}
 
 	public static function register_taxonomies() {
-		$common = array( 'hierarchical' => true, 'show_in_rest' => true, 'show_admin_column' => true );
+		// Mismo criterio que el CPT: se editan y se sirven por la API de la
+		// app, no tienen archivo web propio.
+		$common = array(
+			'hierarchical'       => true,
+			'show_in_rest'       => true,
+			'show_admin_column'  => true,
+			'public'             => false,
+			'publicly_queryable' => false,
+			'show_ui'            => true,
+			'rewrite'            => false,
+		);
 		register_taxonomy( 'promotur_categoria', self::CPT, array_merge( $common, array(
 			'labels' => array( 'name' => __( 'Categorías', 'caaguazu-portal' ), 'singular_name' => __( 'Categoría', 'caaguazu-portal' ) ),
-			'rewrite' => array( 'slug' => 'categoria-destino' ),
 		) ) );
 		register_taxonomy( 'promotur_zona', self::CPT, array_merge( $common, array(
 			'labels' => array( 'name' => __( 'Zonas', 'caaguazu-portal' ), 'singular_name' => __( 'Zona', 'caaguazu-portal' ) ),
-			'rewrite' => array( 'slug' => 'zona' ),
 		) ) );
 		register_taxonomy( 'promotur_etiqueta', self::CPT, array(
 			'hierarchical' => false, 'show_in_rest' => true,
 			'labels' => array( 'name' => __( 'Etiquetas', 'caaguazu-portal' ), 'singular_name' => __( 'Etiqueta', 'caaguazu-portal' ) ),
-			'rewrite' => array( 'slug' => 'etiqueta-destino' ),
 		) );
 	}
 
@@ -241,15 +262,4 @@ class PROMOTUR_Destinos {
 		update_post_meta( $post_id, self::OWNER_META, (int) $account_id );
 	}
 
-	/**
-	 * Single público del CPT desde el plugin (con override de theme).
-	 */
-	public function single_template( $template ) {
-		if ( is_singular( self::CPT ) ) {
-			$override = locate_template( array( 'promotur/public/single-destino.php' ) );
-			if ( $override ) { return $override; }
-			return PROMOTUR_DIR . 'templates/public/single-destino.php';
-		}
-		return $template;
-	}
 }
