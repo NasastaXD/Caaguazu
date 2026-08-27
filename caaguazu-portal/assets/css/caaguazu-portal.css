@@ -175,7 +175,8 @@ body.promotur-app {
    con ícono— tienen que poder pisarlos por orden, no por especificidad. */
 .promotur-app input[type=text], .promotur-app input[type=email], .promotur-app input[type=password],
 .promotur-app input[type=tel], .promotur-app input[type=number], .promotur-app input[type=url],
-.promotur-app input[type=search], .promotur-app textarea, .promotur-app select {
+.promotur-app input[type=search], .promotur-app input[type=date], .promotur-app input[type=time],
+.promotur-app input[type=file], .promotur-app textarea, .promotur-app select {
 	width: 100%;
 	padding: .62em .8em;
 	border: 1px solid var(--linea);
@@ -412,11 +413,25 @@ body.promotur-nav-open .promotur-sidebar { transform: translateX(0); }
 	   que no tienen otro lugar donde vivir. */
 	.promotur-breadcrumb { display: none; }
 
-	/* Objetivos táctiles cómodos: buena parte del público es mayor. */
+	/* Objetivos táctiles cómodos: buena parte del público es mayor y trabaja
+	   con el teléfono en la mano, muchas veces al sol y en el campo. Nada que
+	   se toque baja de 44px de alto. */
 	.promotur-nav__item { padding: 12px; }
+	.promotur-subnav__item { display: flex; align-items: center; min-height: 44px; }
 	.promotur-iconbtn, .promotur-hamburger { width: 44px; height: 44px; }
-	.promotur-btn { padding: .8em 1.2em; }
 	.promotur-userchip { padding: 5px; }
+
+	.promotur-btn { min-height: 44px; padding: .8em 1.2em; }
+	.promotur-btn--small { min-height: 44px; padding: .5em 1em; font-size: .88rem; }
+	.promotur-lang { display: inline-flex; align-items: center; min-height: 44px; padding: 0 .7em; }
+	.promotur-seg__item { display: inline-flex; align-items: center; min-height: 44px; }
+	/* El caret abre el submenú y es lo más chico que hay: se le da su propia
+	   área de toque sin agrandar el dibujo. */
+	.promotur-nav__caret { display: grid; place-items: center; width: 44px; height: 44px; margin: -12px -12px -12px 0; }
+	.promotur-auth__links a { display: inline-flex; align-items: center; min-height: 44px; }
+	.promotur-check input { width: 22px; height: 22px; }
+	.promotur-linklist a { display: flex; align-items: center; min-height: 44px; padding: 4px 0; }
+	.promotur-app input, .promotur-app select, .promotur-app textarea { min-height: 44px; }
 }
 
 /* ---------------------------------------------------------------------------
@@ -496,6 +511,10 @@ body.promotur-nav-open .promotur-sidebar { transform: translateX(0); }
 .promotur-row__title { font-weight: 600; }
 .promotur-row__meta { color: var(--texto-debil); font-size: .82rem; }
 
+.promotur-linklist { margin: .6rem 0 0; padding: 0; list-style: none; }
+.promotur-linklist a { display: block; padding: 8px 0; color: var(--texto-2); font-size: .9rem; }
+.promotur-linklist a:hover { color: var(--texto); }
+
 .promotur-empty-box { padding: 40px 24px; text-align: center; }
 .promotur-empty-box p { margin: 0 0 1rem; color: var(--texto-2); }
 
@@ -560,6 +579,12 @@ body.promotur-nav-open .promotur-sidebar { transform: translateX(0); }
 @media (min-width: 1000px) {
 	.promotur-editor { grid-template-columns: 1fr 310px; }
 	.promotur-editor__side { position: sticky; top: calc(var(--topbar) + 16px); }
+}
+/* En una sola columna el checklist se iría al fondo, después de todo el
+   formulario: justo lo que hay que ver ANTES de empezar a completar, y lo que
+   dice si ya se puede enviar. Va primero. */
+@media (max-width: 999px) {
+	.promotur-editor__side { order: -1; }
 }
 .promotur-editor__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 

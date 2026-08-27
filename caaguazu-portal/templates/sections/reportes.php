@@ -35,7 +35,7 @@ $body = function () use ( $health, $autores ) {
 		<div class="promotur-card">
 			<strong><?php echo esc_html( count( $health['sin_foto'] ) ); ?></strong> <?php esc_html_e( 'fichas publicadas sin portada', 'caaguazu-portal' ); ?>
 			<?php if ( $health['sin_foto'] ) : ?>
-				<ul class="promotur-muted">
+				<ul class="promotur-linklist">
 					<?php foreach ( array_slice( $health['sin_foto'], 0, 6 ) as $p ) : ?>
 						<li><a href="<?php echo esc_url( promotur_url( 'panel/editor/' . $p->ID ) ); ?>"><?php echo esc_html( get_the_title( $p ) ); ?></a></li>
 					<?php endforeach; ?>
@@ -45,7 +45,7 @@ $body = function () use ( $health, $autores ) {
 		<div class="promotur-card">
 			<strong><?php echo esc_html( count( $health['viejas'] ) ); ?></strong> <?php esc_html_e( 'fichas sin verificar hace +6 meses', 'caaguazu-portal' ); ?>
 			<?php if ( $health['viejas'] ) : ?>
-				<ul class="promotur-muted">
+				<ul class="promotur-linklist">
 					<?php foreach ( array_slice( $health['viejas'], 0, 6 ) as $p ) : ?>
 						<li><a href="<?php echo esc_url( promotur_url( 'panel/editor/' . $p->ID ) ); ?>"><?php echo esc_html( get_the_title( $p ) ); ?></a></li>
 					<?php endforeach; ?>
