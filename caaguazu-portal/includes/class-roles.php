@@ -80,6 +80,14 @@ class PROMOTUR_Roles {
 			'editor'         => 'promotur_edit_destino',
 			'captura'        => 'promotur_create_draft',
 			'mis-contenidos' => 'promotur_create_draft',
+			// Los tres tipos de contenido comparten sección de lista y de
+			// edición: /articulos y /articulos/<id>, /recorridos y
+			// /recorridos/<id>. El inventario es la lista de fichas publicadas
+			// del departamento, y la puede mirar cualquiera del panel: es de
+			// donde los recorridos sacan sus paradas.
+			'inventario'     => 'promotur_view_panel',
+			'articulos'      => 'promotur_create_draft',
+			'recorridos'     => 'promotur_create_draft',
 			'revision'       => 'promotur_review_content',
 			'tareas'         => 'promotur_view_own_tasks',
 			'equipo'         => 'promotur_manage_team',
@@ -88,13 +96,14 @@ class PROMOTUR_Roles {
 			'estructura'     => 'promotur_manage_structure',
 		);
 
-		// La pantalla que controla la app sólo existe si la app existe: sin el
-		// plugin de la API, la sección no se registra y su ruta cae en el 404
-		// del panel en vez de abrir un formulario que no guardaría en ningún
-		// lado.
-		if ( promotur_app_api_activa() ) {
-			$secciones['app'] = 'promotur_manage_app';
-		}
+		/*
+		 * La sección «App» está desconectada a propósito (ver
+		 * promotur_app_api_activa() en helpers.php). Su código sigue en el
+		 * repo —includes/class-app-control.php y templates/sections/app.php—
+		 * para poder volver a enchufarla de una línea cuando se resuelva lo
+		 * que la rompía; mientras tanto su ruta cae en el 404 del panel, que
+		 * es mejor que una pantalla que revienta.
+		 */
 
 		return $secciones;
 	}

@@ -3,10 +3,10 @@ Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 3.0.0
+Stable tag: 3.2.0
 License: GPLv2 or later
 
-Panel autenticado tipo app (PWA) bajo /turismo-panel, con enrutador propio, login propio, roles y flujo editorial (fichas de destino: borrador → revisión → publicación).
+Panel autenticado tipo app (PWA) bajo /turismo-panel, con enrutador propio, login propio, roles y flujo editorial para las tres cosas que la app muestra: fichas del inventario turístico, artículos y recorridos.
 
 == Description ==
 
@@ -56,6 +56,53 @@ llamen los tags.
 * Repo privado: definir `PROMOTUR_GITHUB_TOKEN` (PAT de solo lectura) en `wp-config.php`.
 
 == Changelog ==
+
+= 3.2.0 =
+* **Artículos.** El panel gana la sección donde se escriben las notas que la app
+  muestra: ante título, título, foto de portada con su pie, autor o autores,
+  subtítulo, entradilla, cuerpo y fuentes, más categoría y etiquetas. Pasan por
+  el mismo flujo de aprobación del staff que una ficha. El CPT
+  `promotur_articulo` se muda desde `caaguazu-app-api` sin cambiar de nombre, así
+  que no se pierde nada de lo ya cargado.
+* **Recorridos.** Se arman eligiendo sitios del inventario turístico —no
+  escribiendo lugares de nuevo—, hasta nueve, cada uno con el texto que lo
+  acompaña (la historia, el dato curioso), un audio o video propio, y botones
+  para subirlo o bajarlo en el orden del paseo. El recorrido entero puede llevar
+  además sus audios y videos, y vincularse con artículos ya publicados. Mismo
+  flujo editorial. La app recibe la ruta ya armada como enlace de Google Maps.
+* **Inventario turístico.** Sección nueva: el catálogo de fichas publicadas del
+  departamento, con sus datos. Es de donde los recorridos toman sus paradas, y
+  hacía falta poder verlo entero antes de armar uno.
+* **El flujo editorial deja de ser sólo de fichas.** Estados, checklist, cola de
+  revisión, notificaciones, búsqueda, «Mis contenidos», reportes y portafolio
+  miran ahora los tres tipos. Cada tipo declara qué campos tiene y qué mínimos
+  exige; no hay un solo `if` por tipo en el flujo.
+* **La ubicación de una ficha se carga con un enlace de Google Maps**, y las
+  coordenadas quedan de alternativa. El pin se saca del enlace cuando el enlace
+  lo trae (los cuatro formatos que escribe Google están cubiertos); si es un
+  enlace corto, el panel lo dice y pide las coordenadas a mano. La app se apoya
+  en Google Maps para llevar a la gente hasta el lugar, así que el enlace es el
+  dato que de verdad se usa.
+* **Se van cinco campos de la ficha**: cómo llegar, referencia, temporada ideal,
+  servicios y duración sugerida. Se llenaban con frases genéricas que no ayudaban
+  a decidir nada, y cómo llegar lo resuelve el enlace de Google Maps mejor que un
+  párrafo. Los datos ya cargados **no se borran**: la ficha deja de pedirlos, de
+  mostrarlos y de publicarlos, y el valor queda en su meta.
+* **La sección App queda fuera de circulación.** Llamaba a tres métodos de
+  `caaguazu-app-api` que existen desde su versión 0.2.0, contra la 0.1.0 que hay
+  instalada — y `class_exists()` no distingue una versión de otra, así que la
+  pantalla moría con un error fatal apenas se abría. El código queda en el repo,
+  con su plantilla y una guarda, para volver a enchufarlo de una línea.
+* **`tools/verificar-logica.php`**: comprobaciones de las dos funciones que
+  transforman un dato en vez de moverlo —el parseo del enlace de Google Maps y la
+  normalización de roles del CEAD—, que son las dos que fallan en silencio si se
+  equivocan. `npm run verificar` las corre.
+* La vista previa sin WordPress (`tools/vista-previa-panel.php`) acepta ahora el
+  segmento de detalle, así las secciones que hacen de lista y de editor a la vez
+  se pueden mirar de las dos formas. La auditoría móvil pasó de 15 pantallas a
+  22 con eso, y destapó dos objetivos táctiles por debajo de 44px que nunca se
+  habían medido: el «← Volver» de las vistas de detalle (21px) y los motivos de
+  un clic de la revisión (30px). Los dos arreglados.
 
 = 3.0.0 =
 * **El panel entero se muda a `/turismo-panel`**: secciones, acceso (`/turismo-panel/entrar`), invitaciones (`/turismo-panel/i/<token>`) y PWA (`manifest.webmanifest`, `sw.js`, `icon-<n>.png`, `offline`) cuelgan de ahí. Las rutas viejas —`/turismo/panel`, `/czu-login`, `/registro`, `/recuperar`, `/salir`, `/i/<token>` y los archivos `promotur-*` de la raíz— responden 301 a su equivalente nueva, así no se rompen las invitaciones ya enviadas ni la PWA instalada.

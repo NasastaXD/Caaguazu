@@ -10,7 +10,8 @@ $can_review = caaguazu_account_can( 'promotor', 'promotur_review_content' );
 $can_draft  = caaguazu_account_can( 'promotor', 'promotur_create_draft' );
 
 /**
- * Cuenta destinos por estado (y dueño opcional). El dueño se filtra por el
+ * Cuenta contenido por estado (y dueño opcional), de los tres tipos: lo que
+ * alguien tiene a medias no viene ordenado por tipo. El dueño se filtra por el
  * meta de dueño real (ver PROMOTUR_Destinos::OWNER_META), no por post_author.
  */
 $count_by = function ( $estado, $owner = 0 ) {
@@ -20,7 +21,7 @@ $count_by = function ( $estado, $owner = 0 ) {
 		$meta_query[] = array( 'key' => PROMOTUR_Destinos::OWNER_META, 'value' => $owner );
 	}
 	$q = new WP_Query( array(
-		'post_type'      => PROMOTUR_Destinos::CPT,
+		'post_type'      => PROMOTUR_Editorial::cpts(),
 		'post_status'    => 'any',
 		'posts_per_page' => 1,
 		'fields'         => 'ids',

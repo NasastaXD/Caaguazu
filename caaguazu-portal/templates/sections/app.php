@@ -8,6 +8,31 @@
  */
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
+/*
+ * ESTA PANTALLA ESTÁ FUERA DE CIRCULACIÓN.
+ *
+ * La sección «app» no está registrada (ver PROMOTUR_Roles::sections()) y su
+ * clase no se carga, así que esta plantilla no se alcanza por ninguna ruta del
+ * panel. Queda en el repo con su código intacto para poder volver a
+ * enchufarla; esta guarda existe para que, si alguien la vuelve a rutear sin
+ * cargar la clase, vea un cartel en vez de un error fatal.
+ */
+if ( ! class_exists( 'PROMOTUR_App_Control' ) ) {
+	$page_title = __( 'App', 'caaguazu-portal' );
+	$body = function () {
+		?>
+		<div class="promotur-card promotur-empty-box">
+			<div class="promotur-eyebrow"><?php esc_html_e( 'Fuera de servicio', 'caaguazu-portal' ); ?></div>
+			<h2 class="promotur-h2"><?php esc_html_e( 'La cabina de mando de la app está desconectada', 'caaguazu-portal' ); ?></h2>
+			<p class="promotur-muted"><?php esc_html_e( 'Los textos y los medios de la aplicación se editan por ahora desde la administración del sitio. Se vuelve a enchufar cuando la API de la app esté en la versión que esta pantalla necesita.', 'caaguazu-portal' ); ?></p>
+			<a class="promotur-btn promotur-btn--primary" href="<?php echo esc_url( promotur_url( 'panel' ) ); ?>"><?php esc_html_e( 'Volver al inicio del panel', 'caaguazu-portal' ); ?></a>
+		</div>
+		<?php
+	};
+	include PROMOTUR_DIR . 'templates/shell.php';
+	return;
+}
+
 $locales = PROMOTUR_App_Control::locales();
 $idioma  = isset( $_GET['idioma'] ) ? sanitize_key( wp_unslash( $_GET['idioma'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
 if ( ! in_array( $idioma, $locales, true ) ) {

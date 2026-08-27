@@ -159,21 +159,26 @@ class PROMOTUR_Stats {
 	/* ----- Producción ----- */
 
 	/**
-	 * Cuenta destinos de un autor por estado de publicación. Filtra por el
-	 * meta de dueño real (`_caaguazu_owner`), no por post_author (que en
-	 * todo destino creado desde el panel apunta al usuario de servicio).
+	 * Cuenta lo que produjo un autor —fichas, artículos y recorridos— por
+	 * estado de publicación. Filtra por el meta de dueño real
+	 * (`_caaguazu_owner`), no por post_author (que en todo lo creado desde el
+	 * panel apunta al usuario de servicio).
 	 *
 	 * @param int $account_id
 	 */
 	public static function author_counts( $account_id ) {
 		$meta_query = array( array( 'key' => PROMOTUR_Destinos::OWNER_META, 'value' => (int) $account_id ) );
-		$pub = new WP_Query( array( 'post_type' => PROMOTUR_Destinos::CPT, 'post_status' => 'publish', 'meta_query' => $meta_query, 'posts_per_page' => 1, 'fields' => 'ids' ) ); // phpcs:ignore WordPress.DB.SlowDBQuery
-		$all = new WP_Query( array( 'post_type' => PROMOTUR_Destinos::CPT, 'post_status' => array( 'publish', 'draft', 'pending' ), 'meta_query' => $meta_query, 'posts_per_page' => 1, 'fields' => 'ids' ) ); // phpcs:ignore WordPress.DB.SlowDBQuery
+		$pub = new WP_Query( array( 'post_type' => PROMOTUR_Editorial::cpts(), 'post_status' => 'publish', 'meta_query' => $meta_query, 'posts_per_page' => 1, 'fields' => 'ids' ) ); // phpcs:ignore WordPress.DB.SlowDBQuery
+		$all = new WP_Query( array( 'post_type' => PROMOTUR_Editorial::cpts(), 'post_status' => array( 'publish', 'draft', 'pending' ), 'meta_query' => $meta_query, 'posts_per_page' => 1, 'fields' => 'ids' ) ); // phpcs:ignore WordPress.DB.SlowDBQuery
 		return array( 'publicadas' => (int) $pub->found_posts, 'total' => (int) $all->found_posts );
 	}
 
 	/**
-	 * Salud del contenido: publicados sin portada y desactualizados (> N meses).
+	 * Salud del contenido: fichas publicadas sin portada y desactualizadas
+	 * (> N meses). Mira sólo las fichas a propósito: la portada de un artículo
+	 * es obligatoria para enviarlo, así que no puede faltar, y un recorrido no
+	 * se "desactualiza" con el tiempo — se desactualiza cuando cambia una de
+	 * sus paradas, que es otra pregunta.
 	 *
 	 * @return array{ sin_foto:WP_Post[], viejas:WP_Post[] }
 	 */

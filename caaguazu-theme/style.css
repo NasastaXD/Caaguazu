@@ -3,7 +3,7 @@ Theme Name: Caaguazú
 Theme URI: https://caaguazu.net
 Author: Thiago Juan Manuel Ávalos Crosta
 Description: Portal de Caaguazú — página única de obra mientras el sitio se reconstruye desde cero. Sin dependencias, sin JavaScript, sin pedidos externos.
-Version: 5.0.2
+Version: 5.0.3
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
@@ -41,8 +41,11 @@ body {
 	-webkit-font-smoothing: antialiased;
 }
 
-/* Aros finos de fondo, como los trazos sueltos de la referencia. Gradientes
-   CSS: cero imágenes, cero pedidos de red. */
+/* Un aro fino de fondo, y nada más. Eran tres —dos de ellos cruzando la
+   tarjeta— y competían con lo único que la página tiene para decir. Queda el
+   de abajo a la derecha, a un tercio de su intensidad: se intuye en el
+   margen y no se lee como un dibujo. Sigue siendo un gradiente CSS: cero
+   imágenes, cero pedidos de red. */
 body::before {
 	content: "";
 	position: fixed;
@@ -50,9 +53,7 @@ body::before {
 	z-index: 0;
 	pointer-events: none;
 	background-image:
-		radial-gradient(circle at -4% 14%, transparent 168px, rgba(120, 138, 224, .22) 168px 170px, transparent 171px),
-		radial-gradient(circle at 104% 88%, transparent 210px, rgba(120, 138, 224, .18) 210px 212px, transparent 213px),
-		radial-gradient(circle at 88% 6%,  transparent 96px,  rgba(120, 138, 224, .16) 96px 98px,   transparent 99px);
+		radial-gradient(circle at 104% 88%, transparent 210px, rgba(120, 138, 224, .07) 210px 212px, transparent 213px);
 }
 
 /* ---------------------------------------------------------------------------

@@ -2,8 +2,8 @@
 /**
  * Plugin Name:       Caaguazú Portal — Promotores Turísticos
  * Plugin URI:        https://turismo.caaguazu.net
- * Description:       Panel autenticado tipo app bajo /turismo-panel, instalable como PWA, con flujo editorial borrador → revisión → publicación, y la cabina de mando de la app móvil (textos, medios y categorías). Corre sobre rutas propias y no depende del theme: trae su propio CSS y su propia tipografía, y desencola los del theme activo en sus rutas. La identidad de los promotores corre sobre el sistema de cuentas universal (caaguazu-cuentas): no son usuarios de WordPress.
- * Version:           3.1.1
+ * Description:       Panel autenticado tipo app bajo /turismo-panel, instalable como PWA, donde el equipo escribe las tres cosas que la aplicación muestra —fichas del inventario turístico, artículos y recorridos— con un mismo flujo editorial: borrador → revisión → publicación. Corre sobre rutas propias y no depende del theme: trae su propio CSS y su propia tipografía, y desencola los del theme activo en sus rutas. La identidad de los promotores corre sobre el sistema de cuentas universal (caaguazu-cuentas): no son usuarios de WordPress.
+ * Version:           3.2.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Requires Plugins:  caaguazu-cuentas
@@ -17,7 +17,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'PROMOTUR_VERSION', '3.1.1' );
+define( 'PROMOTUR_VERSION', '3.2.0' );
 define( 'PROMOTUR_DB_VERSION', 2 ); // se incrementa cuando cambia la estructura de datos.
 define( 'PROMOTUR_FILE', __FILE__ );
 define( 'PROMOTUR_DIR', plugin_dir_path( __FILE__ ) );
@@ -55,12 +55,18 @@ require_once PROMOTUR_DIR . 'includes/class-auth.php';
 require_once PROMOTUR_DIR . 'includes/class-admin.php';
 require_once PROMOTUR_DIR . 'includes/class-notifications.php';
 require_once PROMOTUR_DIR . 'includes/class-destinos.php';
+require_once PROMOTUR_DIR . 'includes/class-articulos.php';
+require_once PROMOTUR_DIR . 'includes/class-recorridos.php';
 require_once PROMOTUR_DIR . 'includes/class-editorial.php';
 require_once PROMOTUR_DIR . 'includes/class-ajax.php';
 require_once PROMOTUR_DIR . 'includes/class-tareas.php';
 require_once PROMOTUR_DIR . 'includes/class-stats.php';
 require_once PROMOTUR_DIR . 'includes/class-gestion-ajax.php';
-require_once PROMOTUR_DIR . 'includes/class-app-control.php';
+/*
+ * class-app-control.php NO se carga: la sección «App» está fuera de
+ * circulación (ver promotur_app_api_activa() en includes/helpers.php). El
+ * archivo queda en el repo, con su plantilla, para volver a enchufarlo.
+ */
 require_once PROMOTUR_DIR . 'includes/class-cuenta.php';
 require_once PROMOTUR_DIR . 'includes/class-medios.php';
 require_once PROMOTUR_DIR . 'includes/class-estructura.php';
@@ -130,12 +136,13 @@ function promotur_boot() {
 	PROMOTUR_Auth::instance();
 	PROMOTUR_Notifications::instance();
 	PROMOTUR_Destinos::instance();
+	PROMOTUR_Articulos::instance();
+	PROMOTUR_Recorridos::instance();
 	PROMOTUR_Editorial::instance();
 	PROMOTUR_Ajax::instance();
 	PROMOTUR_Tareas::instance();
 	PROMOTUR_Stats::instance();
 	PROMOTUR_Gestion_Ajax::instance();
-	PROMOTUR_App_Control::instance();
 	PROMOTUR_Cuenta::instance();
 	PROMOTUR_Medios::instance();
 	PROMOTUR_Estructura::instance();

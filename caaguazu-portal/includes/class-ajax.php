@@ -1,6 +1,20 @@
 <?php
 /**
- * Handlers AJAX del flujo editorial: guardar/enviar ficha, asignar, aprobar/devolver, subir medios.
+ * Handlers del flujo editorial: guardar y enviar contenido, asignar, aprobar,
+ * devolver y subir medios.
+ *
+ * Un solo par de handlers —`save_contenido` / `submit_contenido`— para los tres
+ * tipos de contenido del panel. La alternativa era tener `save_destino`,
+ * `save_articulo` y `save_recorrido` con el 90 % del código repetido, y con eso
+ * viene lo de siempre: se arregla un permiso en uno y se olvida en los otros
+ * dos. Lo que cambia por tipo está declarado en la clase del tipo (qué campos
+ * tiene) y en un método corto por tipo acá abajo (qué guarda que no sea un
+ * campo suelto: las paradas de un recorrido, la portada de un artículo).
+ *
+ * `save_destino` y `submit_destino` siguen registrados como alias del genérico.
+ * No es cortesía: la cola de capturas de la Salida de campo vive en el
+ * `localStorage` del teléfono de cada promotor y sincroniza contra ese nombre.
+ * Cambiarlo perdería capturas que ya están hechas y todavía no subieron.
  */
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
@@ -18,12 +32,15 @@ class PROMOTUR_Ajax {
 
 	private function __construct() {
 		$map = array(
-			'save_destino'   => 'save_destino',
-			'submit_destino' => 'submit_destino',
-			'assign_review'  => 'assign_review',
-			'approve'        => 'approve',
-			'return_changes' => 'return_changes',
-			'upload_media'   => 'upload_media',
+			'save_contenido'   => 'save_contenido',
+			'submit_contenido' => 'submit_contenido',
+			// Alias históricos (ver la cabecera del archivo).
+			'save_destino'     => 'save_contenido',
+			'submit_destino'   => 'submit_contenido',
+			'assign_review'    => 'assign_review',
+			'approve'          => 'approve',
+			'return_changes'   => 'return_changes',
+			'upload_media'     => 'upload_media',
 		);
 		// Puerta propia del panel (`/turismo-panel/datos/…`), no `admin-ajax.php`:
 		// `wp_ajax_*` sólo corre para usuarios de WordPress, y acá la identidad
@@ -45,15 +62,18 @@ class PROMOTUR_Ajax {
 		}
 	}
 
-	private function can_edit_post( $post_id ) {
-		$post = get_post( $post_id );
-		if ( ! $post || PROMOTUR_Destinos::CPT !== $post->post_type ) { return false; }
-		if ( caaguazu_account_can( 'promotor', 'promotur_review_content' ) ) { return true; }
-		$owner  = PROMOTUR_Destinos::owner_account_id( $post_id );
-		$mine   = caaguazu_account_id();
-		// > 0 en ambos lados a propósito: dos IDs sin resolver (0 === 0)
-		// nunca deben leerse como "es mío".
-		return $owner > 0 && $mine > 0 && $owner === $mine;
+	/**
+	 * El tipo que viene en el pedido. Sin `tipo`, es una ficha: es lo que
+	 * mandan los alias viejos y la cola de capturas.
+	 *
+	 * @return string
+	 */
+	private function tipo_del_pedido() {
+		$tipo = isset( $_POST['tipo'] ) ? sanitize_key( wp_unslash( $_POST['tipo'] ) ) : 'destino'; // phpcs:ignore WordPress.Security.NonceVerification
+		if ( ! PROMOTUR_Editorial::clase( $tipo ) ) {
+			wp_send_json_error( array( 'message' => __( 'Ese tipo de contenido no existe.', 'caaguazu-portal' ) ), 400 );
+		}
+		return $tipo;
 	}
 
 	/**
@@ -71,43 +91,64 @@ class PROMOTUR_Ajax {
 	}
 
 	/* ------------------------------------------------------------------ */
-	public function save_destino() {
+
+	/**
+	 * Guarda (o crea) una pieza de contenido de cualquiera de los tres tipos.
+	 */
+	public function save_contenido() {
 		$this->guard( 'promotur_edit_destino' );
+
+		$tipo  = $this->tipo_del_pedido();
+		$clase = PROMOTUR_Editorial::clase( $tipo );
+		$cpt   = constant( $clase . '::CPT' );
 
 		$post_id = (int) ( $_POST['post_id'] ?? 0 );
 		$title   = sanitize_text_field( wp_unslash( $_POST['titulo'] ?? '' ) );
 		$content = wp_kses_post( wp_unslash( $_POST['descripcion'] ?? '' ) );
+		$excerpt = sanitize_textarea_field( wp_unslash( $_POST['entradilla'] ?? '' ) );
 
 		if ( $post_id ) {
-			if ( ! $this->can_edit_post( $post_id ) ) {
-				wp_send_json_error( array( 'message' => __( 'No podés editar esta ficha.', 'caaguazu-portal' ) ), 403 );
+			if ( get_post_type( $post_id ) !== $cpt || ! promotur_puede_editar_contenido( $post_id ) ) {
+				wp_send_json_error( array( 'message' => __( 'No podés editar esto.', 'caaguazu-portal' ) ), 403 );
 			}
-			wp_update_post( array( 'ID' => $post_id, 'post_title' => $title, 'post_content' => $content ) );
+			$campos = array( 'ID' => $post_id, 'post_title' => $title, 'post_content' => $content );
+			// El extracto sólo se pisa si el formulario lo trae: el editor de
+			// ficha no tiene ese campo y no debe borrarlo de rebote.
+			if ( isset( $_POST['entradilla'] ) ) {
+				$campos['post_excerpt'] = $excerpt;
+			}
+			wp_update_post( $campos );
 		} else {
 			// post_author: usuario de servicio (WordPress exige un autor
 			// válido, pero ninguna persona del panel es ya un usuario de WP).
-			// El dueño real queda en OWNER_META, resuelto por account_id.
+			// El dueño real queda en el meta de cuenta.
 			$post_id = wp_insert_post( array(
-				'post_type'    => PROMOTUR_Destinos::CPT,
+				'post_type'    => $cpt,
 				'post_status'  => 'draft',
 				'post_title'   => $title ? $title : __( '(sin título)', 'caaguazu-portal' ),
 				'post_content' => $content,
+				'post_excerpt' => $excerpt,
 				'post_author'  => caaguazu_service_user_id(),
 			) );
 			if ( is_wp_error( $post_id ) ) {
 				wp_send_json_error( array( 'message' => $post_id->get_error_message() ) );
 			}
-			PROMOTUR_Destinos::set_owner( $post_id, caaguazu_account_id() );
+			promotur_set_owner( $post_id, caaguazu_account_id() );
 			if ( ! get_post_meta( $post_id, '_promotur_estado', true ) ) {
 				update_post_meta( $post_id, '_promotur_estado', 'borrador' );
 			}
+			if ( 'recorrido' === $tipo ) {
+				// Marca al recorrido como del equipo, para distinguirlo de los
+				// que arma la gente en la app.
+				update_post_meta( $post_id, PROMOTUR_Recorridos::META_TIPO, 'prehecho' );
+			}
 			if ( class_exists( 'PROMOTUR_Audit' ) ) {
-				PROMOTUR_Audit::log( 'destino_created', array( 'entity_type' => 'destino', 'entity_id' => (int) $post_id, 'payload' => array( 'title' => $title ) ) );
+				PROMOTUR_Audit::log( $tipo . '_created', array( 'entity_type' => $tipo, 'entity_id' => (int) $post_id, 'payload' => array( 'title' => $title ) ) );
 			}
 		}
 
-		// Guardar metadatos del modelo.
-		foreach ( PROMOTUR_Destinos::flat_fields() as $key => $def ) {
+		// Metadatos del modelo del tipo.
+		foreach ( call_user_func( array( $clase, 'flat_fields' ) ) as $key => $def ) {
 			if ( ! isset( $_POST['meta'][ $key ] ) ) { continue; }
 			$value = $this->sanitize_field( $def['type'], $_POST['meta'][ $key ] );
 			if ( '' === $value || null === $value ) {
@@ -117,96 +158,229 @@ class PROMOTUR_Ajax {
 			}
 		}
 
-		// Taxonomías opcionales.
+		// Taxonomías. Categoría es jerárquica (IDs); las etiquetas se escriben
+		// sueltas, separadas por comas, y wp_set_object_terms crea las que
+		// falten — que es cómo se etiqueta una nota mientras se la escribe.
 		if ( isset( $_POST['categoria'] ) ) {
 			wp_set_object_terms( $post_id, array_map( 'intval', (array) $_POST['categoria'] ), 'promotur_categoria' );
 		}
+		if ( isset( $_POST['zona'] ) ) {
+			wp_set_object_terms( $post_id, array_map( 'intval', (array) $_POST['zona'] ), 'promotur_zona' );
+		}
+		if ( isset( $_POST['etiquetas'] ) ) {
+			$crudas    = sanitize_text_field( wp_unslash( $_POST['etiquetas'] ) );
+			$etiquetas = array_values( array_filter( array_map( 'trim', explode( ',', $crudas ) ) ) );
+			wp_set_object_terms( $post_id, $etiquetas, 'promotur_etiqueta' );
+		}
 
-		// Confianza progresiva: editar una ficha PUBLICADA sin nivel suficiente la deja
-		// en re-revisión (sin bajarla del aire); con nivel Jr+ la edición es directa.
+		// Lo propio de cada tipo.
+		$extra = array();
+		switch ( $tipo ) {
+			case 'destino':
+				$extra = $this->guardar_extras_destino( $post_id );
+				break;
+			case 'articulo':
+				$extra = $this->guardar_extras_articulo( $post_id );
+				break;
+			case 'recorrido':
+				$extra = $this->guardar_extras_recorrido( $post_id );
+				break;
+		}
+
+		// Confianza progresiva: editar algo PUBLICADO sin nivel suficiente lo deja
+		// en re-revisión (sin bajarlo del aire); con nivel Jr+ la edición es directa.
 		$message = __( 'Borrador guardado.', 'caaguazu-portal' );
-		$owner   = PROMOTUR_Destinos::owner_account_id( $post_id );
 		$mine    = caaguazu_account_id();
 		if ( 'publicado' === PROMOTUR_Editorial::get_estado( $post_id )
-			&& $owner > 0 && $mine > 0 && $owner === $mine
+			&& promotur_es_mio( $post_id )
 			&& ! PROMOTUR_Stats::can_edit_published( $mine ) ) {
 			update_post_meta( $post_id, '_promotur_estado', 'en_revision' ); // sigue público (post_status intacto)
 			update_post_meta( $post_id, '_promotur_reedit', 1 );
-			$message = __( 'Guardado. Como editaste una ficha publicada, tendrá que pasar por una nueva revisión.', 'caaguazu-portal' );
+			$message = __( 'Guardado. Como editaste algo ya publicado, tendrá que pasar por una nueva revisión.', 'caaguazu-portal' );
 		}
 
-		$checklist = PROMOTUR_Editorial::checklist( $post_id );
-		wp_send_json_success( array(
+		wp_send_json_success( array_merge( array(
 			'post_id'   => $post_id,
-			'checklist' => $checklist,
-			'complete'  => PROMOTUR_Editorial::is_complete( $post_id ),
+			'tipo'      => $tipo,
+			'checklist' => PROMOTUR_Editorial::checklist( $post_id, $tipo ),
+			'complete'  => PROMOTUR_Editorial::is_complete( $post_id, $tipo ),
 			'message'   => $message,
-		) );
+		), $extra ) );
 	}
 
 	/* ------------------------------------------------------------------ */
-	public function submit_destino() {
-		$this->guard( 'promotur_create_draft' );
-		$post_id = (int) ( $_POST['post_id'] ?? 0 );
-		if ( ! $post_id || ! $this->can_edit_post( $post_id ) ) {
-			wp_send_json_error( array( 'message' => __( 'La ficha no es válida.', 'caaguazu-portal' ) ), 403 );
+
+	/**
+	 * Ficha: derivar el pin del enlace de Google Maps.
+	 *
+	 * Se hace al guardar y no al leer para que el pin quede escrito en su meta:
+	 * el mapa de la app consulta latitud y longitud con una `meta_query` de
+	 * rango (el bbox), y eso no se puede hacer sobre un valor que se calcula al
+	 * vuelo. Sólo se completa lo que está vacío — un pin corregido a mano gana
+	 * siempre sobre el que trae el enlace.
+	 *
+	 * @param int $post_id
+	 * @return array datos extra para la respuesta
+	 */
+	private function guardar_extras_destino( $post_id ) {
+		$maps = (string) get_post_meta( $post_id, '_promotur_maps', true );
+		if ( '' === $maps ) {
+			return array();
 		}
-		if ( ! PROMOTUR_Editorial::is_complete( $post_id ) ) {
+		$lat = (string) get_post_meta( $post_id, '_promotur_lat', true );
+		$lng = (string) get_post_meta( $post_id, '_promotur_lng', true );
+		if ( '' !== $lat && '' !== $lng ) {
+			return array();
+		}
+		$coord = PROMOTUR_Destinos::coords_desde_maps( $maps );
+		if ( ! $coord ) {
+			// Un enlace corto no trae el punto. No es un error: se avisa para
+			// que quien carga sepa por qué le siguen pidiendo las coordenadas.
+			return array( 'aviso_maps' => __( 'De ese enlace no pudimos sacar el pin (los enlaces cortos no lo traen). Cargá la latitud y la longitud a mano, o pegá el enlace largo.', 'caaguazu-portal' ) );
+		}
+		update_post_meta( $post_id, '_promotur_lat', $coord['lat'] );
+		update_post_meta( $post_id, '_promotur_lng', $coord['lng'] );
+		return array( 'coordenadas' => $coord );
+	}
+
+	/**
+	 * Artículo: la portada se guarda además como imagen destacada.
+	 *
+	 * Dos lugares para la misma foto porque hay dos pantallas que la buscan en
+	 * lugares distintos: el editor del panel la guarda en su meta, y wp-admin
+	 * —y cualquier cosa de WordPress que muestre una miniatura— mira la imagen
+	 * destacada. Escribir las dos evita que la nota aparezca sin foto en una de
+	 * las dos.
+	 *
+	 * @param int $post_id
+	 * @return array
+	 */
+	private function guardar_extras_articulo( $post_id ) {
+		$att = (int) get_post_meta( $post_id, '_articulo_portada', true );
+		if ( $att > 0 ) {
+			set_post_thumbnail( $post_id, $att );
+		} else {
+			delete_post_thumbnail( $post_id );
+		}
+		return array();
+	}
+
+	/**
+	 * Recorrido: paradas, medios y artículos vinculados.
+	 *
+	 * @param int $post_id
+	 * @return array
+	 */
+	private function guardar_extras_recorrido( $post_id ) {
+		$extra = array();
+
+		$att = (int) get_post_meta( $post_id, '_recorrido_portada', true );
+		if ( $att > 0 ) {
+			set_post_thumbnail( $post_id, $att );
+		}
+
+		if ( isset( $_POST['paradas'] ) ) {
+			$enviadas = (array) wp_unslash( $_POST['paradas'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+			$guardadas = PROMOTUR_Recorridos::guardar_paradas( $post_id, $enviadas );
+			// Contar las que llegaron con un sitio elegido, no las filas del
+			// formulario: una fila en blanco no es una parada descartada.
+			$con_sitio = 0;
+			foreach ( $enviadas as $fila ) {
+				if ( is_array( $fila ) && ! empty( $fila['ref_id'] ) ) { $con_sitio++; }
+			}
+			if ( $con_sitio > count( $guardadas ) ) {
+				$extra['aviso_paradas'] = sprintf(
+					/* translators: %d = tope de paradas */
+					__( 'Un recorrido lleva hasta %d paradas, y sin repetir el mismo sitio. Guardamos las que entraron.', 'caaguazu-portal' ),
+					PROMOTUR_Recorridos::MAX_PARADAS
+				);
+			}
+		}
+
+		if ( isset( $_POST['medios'] ) ) {
+			PROMOTUR_Recorridos::guardar_medios( $post_id, (array) wp_unslash( $_POST['medios'] ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+		}
+		// El campo llega siempre (aunque vacío) para poder desvincular todos.
+		PROMOTUR_Recorridos::guardar_articulos( $post_id, isset( $_POST['articulos'] ) ? (array) $_POST['articulos'] : array() );
+
+		return $extra;
+	}
+
+	/* ------------------------------------------------------------------ */
+
+	public function submit_contenido() {
+		$this->guard( 'promotur_create_draft' );
+
+		$tipo    = $this->tipo_del_pedido();
+		$clase   = PROMOTUR_Editorial::clase( $tipo );
+		$post_id = (int) ( $_POST['post_id'] ?? 0 );
+
+		if ( ! $post_id || get_post_type( $post_id ) !== constant( $clase . '::CPT' ) || ! promotur_puede_editar_contenido( $post_id ) ) {
+			wp_send_json_error( array( 'message' => __( 'Esto no se puede enviar.', 'caaguazu-portal' ) ), 403 );
+		}
+		if ( ! PROMOTUR_Editorial::is_complete( $post_id, $tipo ) ) {
 			wp_send_json_error( array(
-				'message'   => __( 'Faltan datos obligatorios. Completá el checklist antes de enviarla.', 'caaguazu-portal' ),
-				'checklist' => PROMOTUR_Editorial::checklist( $post_id ),
+				'message'   => __( 'Faltan datos obligatorios. Completá el checklist antes de enviar.', 'caaguazu-portal' ),
+				'checklist' => PROMOTUR_Editorial::checklist( $post_id, $tipo ),
 			) );
 		}
+
+		$vuelta = promotur_url( 'panel/mis-contenidos' );
+
 		// Confianza progresiva: nivel "De confianza" publica directo (con auditoría).
 		if ( PROMOTUR_Stats::can_publish_directly( caaguazu_account_id() ) ) {
 			PROMOTUR_Editorial::set_estado( $post_id, 'publicado' );
 			PROMOTUR_Editorial::add_feedback( $post_id, caaguazu_account_id(), __( 'Publicación directa por nivel de confianza. Se hará una auditoría posterior.', 'caaguazu-portal' ) );
-			wp_send_json_success( array( 'message' => __( '¡Publicado! Se aplicó tu nivel de confianza.', 'caaguazu-portal' ), 'redirect' => promotur_url( 'panel/mis-contenidos' ) ) );
+			wp_send_json_success( array( 'message' => __( '¡Publicado! Se aplicó tu nivel de confianza.', 'caaguazu-portal' ), 'redirect' => $vuelta ) );
 		}
+
 		PROMOTUR_Editorial::set_estado( $post_id, 'enviado' );
-		wp_send_json_success( array( 'message' => __( '¡Ficha enviada a revisión!', 'caaguazu-portal' ), 'redirect' => promotur_url( 'panel/mis-contenidos' ) ) );
+		wp_send_json_success( array( 'message' => __( '¡Enviado a revisión!', 'caaguazu-portal' ), 'redirect' => $vuelta ) );
 	}
 
 	/* ------------------------------------------------------------------ */
+
+	/**
+	 * El post que viene en el pedido, si es contenido del panel.
+	 *
+	 * @return int
+	 */
+	private function post_en_revision() {
+		$post_id = (int) ( $_POST['post_id'] ?? 0 );
+		if ( ! $post_id || ! in_array( get_post_type( $post_id ), PROMOTUR_Editorial::cpts(), true ) ) {
+			wp_send_json_error( array( 'message' => __( 'Eso no existe o no es contenido del panel.', 'caaguazu-portal' ) ) );
+		}
+		return $post_id;
+	}
+
 	public function assign_review() {
 		$this->guard( 'promotur_review_content' );
-		$post_id = (int) ( $_POST['post_id'] ?? 0 );
-		if ( ! $post_id || PROMOTUR_Destinos::CPT !== get_post_type( $post_id ) ) {
-			wp_send_json_error( array( 'message' => __( 'La ficha no es válida.', 'caaguazu-portal' ) ) );
-		}
+		$post_id = $this->post_en_revision();
 		PROMOTUR_Editorial::set_estado( $post_id, 'en_revision', caaguazu_account_id() );
 		wp_send_json_success( array( 'message' => __( 'Te asignaste la revisión.', 'caaguazu-portal' ) ) );
 	}
 
-	/* ------------------------------------------------------------------ */
 	public function approve() {
 		$this->guard( 'promotur_publish_destino' );
-		$post_id = (int) ( $_POST['post_id'] ?? 0 );
-		if ( ! $post_id || PROMOTUR_Destinos::CPT !== get_post_type( $post_id ) ) {
-			wp_send_json_error( array( 'message' => __( 'La ficha no es válida.', 'caaguazu-portal' ) ) );
-		}
+		$post_id = $this->post_en_revision();
 		$comment = sanitize_textarea_field( wp_unslash( $_POST['comment'] ?? '' ) );
 		if ( $comment ) {
 			PROMOTUR_Editorial::add_feedback( $post_id, caaguazu_account_id(), $comment );
 		}
 		PROMOTUR_Editorial::set_estado( $post_id, 'publicado' );
-		wp_send_json_success( array( 'message' => __( 'Ficha aprobada y publicada.', 'caaguazu-portal' ), 'redirect' => promotur_url( 'panel/revision' ) ) );
+		wp_send_json_success( array( 'message' => __( 'Aprobado y publicado.', 'caaguazu-portal' ), 'redirect' => promotur_url( 'panel/revision' ) ) );
 	}
 
-	/* ------------------------------------------------------------------ */
 	public function return_changes() {
 		$this->guard( 'promotur_review_content' );
-		$post_id = (int) ( $_POST['post_id'] ?? 0 );
+		$post_id = $this->post_en_revision();
 		$comment = sanitize_textarea_field( wp_unslash( $_POST['comment'] ?? '' ) );
-		if ( ! $post_id || PROMOTUR_Destinos::CPT !== get_post_type( $post_id ) ) {
-			wp_send_json_error( array( 'message' => __( 'La ficha no es válida.', 'caaguazu-portal' ) ) );
-		}
 		if ( '' === $comment ) {
 			wp_send_json_error( array( 'message' => __( 'Escribí los comentarios para el autor.', 'caaguazu-portal' ) ) );
 		}
 		PROMOTUR_Editorial::add_feedback( $post_id, caaguazu_account_id(), $comment );
 		PROMOTUR_Editorial::set_estado( $post_id, 'necesita_cambios' );
-		wp_send_json_success( array( 'message' => __( 'Ficha devuelta al autor con comentarios.', 'caaguazu-portal' ), 'redirect' => promotur_url( 'panel/revision' ) ) );
+		wp_send_json_success( array( 'message' => __( 'Devuelto al autor con comentarios.', 'caaguazu-portal' ), 'redirect' => promotur_url( 'panel/revision' ) ) );
 	}
 
 	/* ------------------------------------------------------------------ */

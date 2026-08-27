@@ -1,6 +1,6 @@
 <?php
 /**
- * Resultados de búsqueda del panel (sobre destinos).
+ * Resultados de búsqueda del panel, sobre los tres tipos de contenido.
  */
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
@@ -8,7 +8,7 @@ $q = isset( $_GET['q'] ) ? sanitize_text_field( wp_unslash( $_GET['q'] ) ) : '';
 $results = array();
 if ( '' !== $q ) {
 	$results = get_posts( array(
-		'post_type'      => PROMOTUR_Destinos::CPT,
+		'post_type'      => PROMOTUR_Editorial::cpts(),
 		'post_status'    => 'any',
 		's'              => $q,
 		'posts_per_page' => 50,
@@ -20,7 +20,7 @@ $body = function () use ( $q, $results ) {
 	?>
 	<h2 class="promotur-h2"><?php esc_html_e( 'Buscar', 'caaguazu-portal' ); ?></h2>
 	<?php if ( '' === $q ) : ?>
-		<p class="promotur-muted"><?php esc_html_e( 'Escribí algo en el buscador de arriba para encontrar fichas.', 'caaguazu-portal' ); ?></p>
+		<p class="promotur-muted"><?php esc_html_e( 'Escribí algo en el buscador de arriba para encontrar fichas, artículos o recorridos.', 'caaguazu-portal' ); ?></p>
 	<?php else : ?>
 		<p class="promotur-muted">
 			<?php
@@ -33,9 +33,14 @@ $body = function () use ( $q, $results ) {
 		<?php else : ?>
 			<div class="promotur-list">
 				<?php foreach ( $results as $p ) :
-					$estado = PROMOTUR_Editorial::get_estado( $p->ID ); ?>
-					<a class="promotur-row" href="<?php echo esc_url( promotur_url( 'panel/editor/' . $p->ID ) ); ?>">
-						<span class="promotur-row__main"><span class="promotur-row__title"><?php echo esc_html( get_the_title( $p ) ); ?></span></span>
+					$estado = PROMOTUR_Editorial::get_estado( $p->ID );
+					$url    = PROMOTUR_Editorial::url_editor( $p );
+					if ( '' === $url ) { continue; } ?>
+					<a class="promotur-row" href="<?php echo esc_url( $url ); ?>">
+						<span class="promotur-row__main">
+							<span class="promotur-row__title"><?php echo esc_html( get_the_title( $p ) ); ?></span>
+							<span class="promotur-row__meta"><?php echo esc_html( PROMOTUR_Editorial::tipo_label( PROMOTUR_Editorial::tipo_de( $p ) ) ); ?></span>
+						</span>
 						<span class="promotur-pill <?php echo esc_attr( PROMOTUR_Editorial::estado_class( $estado ) ); ?>"><?php echo esc_html( PROMOTUR_Editorial::estado_label( $estado ) ); ?></span>
 					</a>
 				<?php endforeach; ?>

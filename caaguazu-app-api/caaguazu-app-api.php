@@ -3,7 +3,7 @@
  * Plugin Name:       Caaguazú App API
  * Plugin URI:        https://caaguazu.net
  * Description:       Capa REST que consume la app Android (Turismo App Czu). Expone el contenido turístico y la identidad del ecosistema bajo /wp-json/czu-app/v1/, sin depender del theme ni del sitio público — la app sigue funcionando aunque la web se rehaga entera.
- * Version:           0.2.0
+ * Version:           0.3.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Requires Plugins:  caaguazu-cuentas, caaguazu-portal
@@ -26,15 +26,21 @@
  *   - No renderiza HTML propio. Solo JSON.
  *   - Lee el contenido de donde ya vive (caaguazu-portal) en vez de duplicarlo.
  *
- * Lo que sí aporta de nuevo son las entidades que el panel todavía no tenía
- * (Evento, Recorrido, Artículo) y los campos que la app necesita y no existían
- * (rango de precio, artículos relacionados, icono/color por categoría).
+ * Lo que sí aporta son los campos que la app necesita y no existían (rango de
+ * precio, artículos relacionados, icono y color por categoría) y el CPT Evento.
+ *
+ * Artículo y Recorrido nacieron acá y se mudaron a `caaguazu-portal`: los dos
+ * son contenido humano con flujo editorial —se escriben, se revisan, los
+ * aprueba el staff— y eso es lo que hace el panel. Mientras vivían acá, había
+ * que cargarlos desde wp-admin y el flujo de revisión no los alcanzaba. El
+ * `post_type` no cambió, así que no se perdió nada; esta capa los lee y los
+ * sirve, y conserva un registro de respaldo por si corriera sin el panel.
  * ---------------------------------------------------------------------------
  */
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'CZUAPI_VERSION', '0.2.0' );
+define( 'CZUAPI_VERSION', '0.3.0' );
 define( 'CZUAPI_FILE', __FILE__ );
 define( 'CZUAPI_DIR', plugin_dir_path( __FILE__ ) );
 define( 'CZUAPI_BASENAME', plugin_basename( __FILE__ ) );
@@ -86,8 +92,10 @@ function czuapi_boot() {
 		return;
 	}
 
-	// CPTs propios: se registran siempre (no solo en REST) para que el panel
-	// y wp-admin puedan verlos.
+	// CPTs: se registran siempre (no solo en REST) para que wp-admin pueda
+	// verlos. Evento es de esta capa; Artículo y Recorrido los registra el
+	// panel y acá sólo queda su respaldo, que no hace nada si el panel llegó
+	// primero.
 	CZUAPI_Eventos::instance();
 	CZUAPI_Articulos::instance();
 	CZUAPI_Recorridos::instance();
@@ -116,11 +124,8 @@ function czuapi_register_routes() {
 /**
  * Migración al detectar cambio de versión (sin re-activar).
  *
- * Refresca además las rewrite rules: este plugin registra tres CPTs propios
- * (evento, artículo, recorrido) con sus slugs, y en un upgrade —a diferencia de
- * una activación— nadie las vuelve a generar. En admin_init y no en
- * plugins_loaded, que corre en cada visita pública: mismo criterio que
- * caaguazu-portal.
+ * Refresca además las rewrite rules. En admin_init y no en plugins_loaded, que
+ * corre en cada visita pública: mismo criterio que caaguazu-portal.
  */
 function czuapi_maybe_upgrade() {
 	if ( get_option( 'czuapi_version' ) === CZUAPI_VERSION ) {

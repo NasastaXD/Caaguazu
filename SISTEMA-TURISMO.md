@@ -274,7 +274,7 @@ Sistema de identidad **deliberadamente separado de `wp_users`**. La razón: que 
 
 **Bypass de administrador:** los administradores de WordPress no se migran a cuentas propias a propósito — siguen entrando por wp-admin y conservan acceso total a cualquier panel.
 
-### 6.2 `caaguazu-sso-cead` (v1.0.0)
+### 6.2 `caaguazu-sso-cead` (v1.1.0)
 
 Acceso de un clic desde el panel del colegio CEAD (curso de Servicios Turísticos) al panel de promotores.
 
@@ -302,8 +302,8 @@ Por la URL viaja **solo un código sin significado**. Los datos de la persona (e
 
 **Reglas de negocio decididas:**
 
-- Un email que **ya tiene cuenta** en el portal sin vincular se **rechaza**, no se vincula solo. Vincular automáticamente por email sería la puerta de un robo de cuenta: quien controle esa dirección en el CEAD pasaría a manejar la cuenta existente con todos sus permisos. Un admin lo vincula a mano desde **Herramientas → Vincular cuenta CEAD**.
-- Mapeo de roles: `alumno_turismo` → Mini Promotor, `docente_turismo` → Promotor. Un rol que el CEAD mande y no esté en ese mapa se rechaza — no se inventa un permiso.
+- Un email que **ya tiene cuenta** en el portal sin vincular se **rechaza**, no se vincula solo. Vincular automáticamente por email sería la puerta de un robo de cuenta: quien controle esa dirección en el CEAD pasaría a manejar la cuenta existente con todos sus permisos. Un admin lo vincula a mano desde **Herramientas → Acceso desde el CEAD**.
+- Mapeo de roles: quien cursa entra como Mini Promotor, quien enseña como Promotor. Un rol que el CEAD mande y no caiga en el mapa se rechaza — no se inventa un permiso. **Desde v1.1.0 el mapa dejó de ser una constante de dos entradas**: el CEAD es un WordPress y manda roles de WordPress (`alumno`, `cead_alumno`, `subscriber`, `Docente`), ninguno de los cuales era `alumno_turismo`. Ahora los nombres se comparan normalizados (sin acentos, sin mayúsculas, sin el prefijo del colegio ni el sufijo del curso) y el mapa se edita desde **Herramientas → Acceso desde el CEAD**. Los roles administrativos del colegio siguen sin entrar, a propósito.
 - Entran al panel `promotor` que ya existe, no a uno aparte.
 - Las cuentas creadas por SSO llevan una contraseña aleatoria de 64 caracteres que nunca se muestra: la cuenta existe y entra por SSO, pero no hay ninguna contraseña real que adivinar.
 - Sesión **sin "recordarme"** — el acceso vive del vínculo con el CEAD.
@@ -320,6 +320,10 @@ define( 'CEAD_TUR_SSO_URL', 'https://cead.caaguazu.net/wp-json/cead-sso/v1/redee
 El secreto va igual en los dos sitios (uno firma, el otro verifica); las URLs son cruzadas (cada sitio guarda la dirección del otro).
 
 > **Estado actual: inactivo.** El endpoint `/wp-json/cead-sso/v1/redeem` de `cead.caaguazu.net` **todavía no existe** — devuelve 404 `rest_no_route`. La mitad emisora no está construida, así que el SSO no puede funcionar aunque se configuren las constantes. El plugin activa igual y avisa en wp-admin; `/acceso-cead` responde 503.
+>
+> Desde v1.1.0 esto se comprueba sin adivinar: **Herramientas → Acceso desde el CEAD** revisa las cinco piezas de este lado (plugins, constantes, regla de reescritura, panel registrado y mapa de roles) y tiene un botón que prueba el endpoint del colegio con un código inválido, distinguiendo «no existe» de «existe y rechaza la firma» de «funciona».
+
+> **El código de este plugin ahora está en el repo.** Hasta acá vivía sólo como un `.zip` subido a mano, sin fuente que revisar: arreglarle el mapeo de roles obligaba a editar un binario. Se sacó a `caaguazu-sso-cead/` y su zip lo arma `bin/build-zip.sh sso`, como los otros tres componentes.
 
 ### 6.3 `caaguazu-app-api` (v0.1.0)
 
@@ -453,7 +457,7 @@ El código tiene 21 páginas. El header y el README de `caaguazu-turismo` dicen 
 | Cambiar roles o permisos del panel | `caaguazu-portal/includes/class-roles.php` (fuente única) |
 | Cambiar cómo se ve el panel | `caaguazu-portal/templates/` — o sobrescribir desde el theme en `/<theme>/promotur/` |
 | Cambiar el mapeo de roles del CEAD | `caaguazu-sso-cead/includes/class-link.php`, constante `ROLE_MAP` |
-| Vincular a mano una cuenta del CEAD | wp-admin → **Herramientas → Vincular cuenta CEAD** |
+| Vincular a mano una cuenta del CEAD | wp-admin → **Herramientas → Acceso desde el CEAD** |
 
 ---
 

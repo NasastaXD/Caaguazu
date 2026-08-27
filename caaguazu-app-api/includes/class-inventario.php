@@ -135,6 +135,7 @@ class CZUAPI_Inventario {
 			'categoria'       => czuapi_primer_termino( $id, CZUAPI_Taxonomias::TAX_CATEGORIA ),
 			'zona'            => czuapi_primer_termino( $id, CZUAPI_Taxonomias::TAX_ZONA ),
 			'coordenadas'     => $this->coordenadas( $id ),
+			'google_maps'     => $this->google_maps( $id ),
 			'portada'         => $this->portada( $id ),
 			'rango_precio'    => $this->rango_precio( $id ),
 			'horario_resumen' => (string) get_post_meta( $id, '_promotur_horario', true ),
@@ -163,21 +164,35 @@ class CZUAPI_Inventario {
 			'zona'        => czuapi_primer_termino( $id, CZUAPI_Taxonomias::TAX_ZONA ),
 			'etiquetas'   => $this->etiquetas( $id ),
 			'coordenadas' => $this->coordenadas( $id ),
+			// El enlace de Google Maps es ahora el modo principal de cargar la
+			// ubicación en el panel, y el que la app usa para llevar a la
+			// gente hasta el lugar. Viene siempre que haya ubicación: si el
+			// promotor cargó sólo coordenadas, el panel arma el enlace con el
+			// pin, así el cliente tiene un solo camino y no dos.
+			'google_maps' => $this->google_maps( $id ),
 			'portada'     => $this->portada( $id ),
 			'galeria'     => $this->galeria( $id ),
 			'video'       => $m( '_promotur_video' ) ? $m( '_promotur_video' ) : null,
+			/*
+			 * `practicos` y `acceso` adelgazaron: se fueron `duracion`,
+			 * `servicios`, `temporada`, `como_llegar` y `referencia`.
+			 *
+			 * No es una poda de la API sino del modelo: esos cinco campos
+			 * salieron de la ficha porque se llenaban con frases genéricas que
+			 * no ayudaban a decidir nada. Cómo llegar lo resuelve
+			 * `google_maps`, que es lo que la app abre de todos modos.
+			 *
+			 * Las claves desaparecen del objeto en vez de venir vacías: una
+			 * clave con cadena vacía se sigue pintando como una fila en blanco
+			 * en la ficha, y eso es peor que no estar.
+			 */
 			'practicos'   => array(
 				'horario'      => $m( '_promotur_horario' ),
 				'costo'        => $m( '_promotur_costo' ),
 				'rango_precio' => $this->rango_precio( $id ),
-				'duracion'     => $m( '_promotur_duracion' ),
-				'servicios'    => $m( '_promotur_servicios' ),
-				'temporada'    => $m( '_promotur_temporada' ),
 				'contacto'     => $m( '_promotur_contacto' ),
 			),
 			'acceso'      => array(
-				'como_llegar'   => $m( '_promotur_como_llegar' ),
-				'referencia'    => $m( '_promotur_referencia' ),
 				'estado_camino' => $m( '_promotur_estado_camino' ),
 				'accesibilidad' => $m( '_promotur_accesibilidad' ),
 			),
@@ -229,6 +244,29 @@ class CZUAPI_Inventario {
 	/* --------------------------------------------------------------------- */
 	/*  Piezas                                                                */
 	/* --------------------------------------------------------------------- */
+
+	/**
+	 * El enlace de Google Maps de una ficha, o null.
+	 *
+	 * Se delega en el panel (`PROMOTUR_Destinos::maps_url()`) y no se
+	 * reimplementa acá: el panel es el que sabe si el promotor pegó un enlace
+	 * o cargó coordenadas, y cuál gana. El fallback existe por si esta capa
+	 * corre contra una versión del panel anterior a ese método — la API no
+	 * puede caerse porque el otro plugin todavía no se actualizó.
+	 *
+	 * @return string|null
+	 */
+	private function google_maps( $id ) {
+		if ( method_exists( 'PROMOTUR_Destinos', 'maps_url' ) ) {
+			$url = PROMOTUR_Destinos::maps_url( $id );
+			return $url ? $url : null;
+		}
+		$coord = $this->coordenadas( $id );
+		if ( ! $coord ) {
+			return null;
+		}
+		return 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode( $coord['lat'] . ',' . $coord['lng'] );
+	}
 
 	/**
 	 * @return array|null { lat, lng }

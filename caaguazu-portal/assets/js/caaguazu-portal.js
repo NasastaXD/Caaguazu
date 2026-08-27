@@ -144,7 +144,7 @@
 				if (item.lat) { fd.append('meta[_promotur_lat]', item.lat); }
 				if (item.lng) { fd.append('meta[_promotur_lng]', item.lng); }
 				if (attachmentId) { fd.append('meta[_promotur_portada]', attachmentId); }
-				ajax('save_destino', fd).then(function (r) {
+				ajax('save_contenido', fd).then(function (r) {
 					if (r.success) { setQ(getQ().filter(function (x) { return x.id !== item.id; })); }
 					syncOne(q, i + 1);
 				}).catch(function () { syncOne(q, i + 1); });
@@ -309,22 +309,39 @@
 		}
 	}
 
-	/* ---------- Editor ---------- */
+	/* ---------- Editor ----------
+	 *
+	 * Uno solo para los tres tipos de contenido. El tipo viaja en un campo
+	 * oculto del formulario, así que acá no hay ninguna rama por tipo: lo que
+	 * cambia es qué campos tiene el formulario, y de eso se ocupa el servidor.
+	 */
 	function initEditor() {
 		var form = document.querySelector('[data-editor-form]');
 		if (!form) { return; }
 		var msg = form.querySelector('[data-form-msg]');
+
+		initParadas(form);
 
 		// Checklist en vivo.
 		function refreshChecklist() {
 			document.querySelectorAll('[data-checklist-key]').forEach(function (li) {
 				var key = li.getAttribute('data-checklist-key');
 				var field = form.querySelector('[data-check="' + cssEscape(key) + '"]');
-				var done = field && String(field.value || '').trim() !== '';
+				var done;
+				if (!field) { return; }
+				if (field.hasAttribute('data-paradas-lista')) {
+					// Las paradas no son un campo con valor: el mínimo es
+					// cuántas hay con un sitio elegido.
+					done = contarParadas(field) >= 2;
+				} else {
+					done = String(field.value || '').trim() !== '';
+				}
 				li.classList.toggle('is-done', !!done);
 			});
 		}
 		form.addEventListener('input', refreshChecklist);
+		form.addEventListener('change', refreshChecklist);
+		form.addEventListener('promotur:paradas', refreshChecklist);
 		refreshChecklist();
 
 		// Subida de imágenes.
@@ -367,7 +384,7 @@
 		function save() {
 			var fd = new FormData(form);
 			setMsg(i18n.sending, '');
-			return ajax('save_destino', fd).then(function (res) {
+			return ajax('save_contenido', fd).then(function (res) {
 				if (!res.success) { setMsg((res.data && res.data.message) || i18n.error, 'is-error'); return res; }
 				var pid = form.querySelector('[name="post_id"]');
 				if (pid && res.data.post_id) { pid.value = res.data.post_id; }
@@ -390,10 +407,18 @@
 				setBusy(true);
 				save().then(function (res) {
 					if (!res || !res.success) { setBusy(false); return; }
-					if (action === 'save') { setMsg(res.data.message || i18n.saved, 'is-success'); setBusy(false); return; }
-					// submit
+					// Los avisos del servidor que no son errores —el enlace
+					// corto de Maps del que no salió el pin, las paradas que no
+					// entraron— se dicen acá y no se tragan.
+					var aviso = res.data.aviso_maps || res.data.aviso_paradas || '';
+					if (action === 'save') {
+						setMsg(aviso || res.data.message || i18n.saved, aviso ? '' : 'is-success');
+						setBusy(false);
+						return;
+					}
 					var pid = form.querySelector('[name="post_id"]').value;
-					ajax('submit_destino', { post_id: pid }).then(function (r2) {
+					var tipoInput = form.querySelector('[name="tipo"]');
+					ajax('submit_contenido', { post_id: pid, tipo: tipoInput ? tipoInput.value : 'destino' }).then(function (r2) {
 						setBusy(false);
 						if (!r2.success) { setMsg((r2.data && r2.data.message) || i18n.missing, 'is-error'); if (r2.data && r2.data.checklist) { renderChecklist(r2.data.checklist); } return; }
 						setMsg(r2.data.message, 'is-success');
@@ -405,6 +430,106 @@
 
 		function setBusy(b) { form.querySelectorAll('[data-action]').forEach(function (x) { x.disabled = b; }); }
 		function setMsg(text, cls) { if (msg) { msg.textContent = text; msg.className = 'promotur-form-msg ' + (cls || ''); } }
+	}
+
+	/** Cuántas paradas tienen un sitio elegido de verdad. */
+	function contarParadas(lista) {
+		var n = 0;
+		lista.querySelectorAll('[data-parada-sitio]').forEach(function (sel) {
+			if (sel.value) { n++; }
+		});
+		return n;
+	}
+
+	/* ---------- Armador de paradas ----------
+	 *
+	 * El orden ES el contenido de un recorrido, así que mover una parada tiene
+	 * que ser una operación de un toque y verse al instante. Se hace moviendo
+	 * el nodo entero en el DOM —no reordenando datos y redibujando— para que
+	 * lo que la persona escribió en el textarea viaje con su parada.
+	 *
+	 * Después de cada movimiento se renumeran dos cosas: el número que se ve, y
+	 * el índice dentro del `name` de cada campo (`paradas[2][texto]`). El
+	 * servidor igual renumera al guardar, pero si los índices se repitieran, el
+	 * navegador mandaría dos valores para la misma clave y una parada pisaría a
+	 * la otra antes de llegar.
+	 */
+	function initParadas(form) {
+		var caja = form.querySelector('[data-paradas]');
+		if (!caja) { return; }
+
+		var lista = caja.querySelector('[data-paradas-lista]');
+		var molde = caja.querySelector('[data-parada-molde]');
+		var agregar = caja.querySelector('[data-parada-agregar]');
+		var msg = caja.querySelector('[data-paradas-msg]');
+		var max = parseInt(caja.getAttribute('data-paradas-max'), 10) || 9;
+		var textoLleno = caja.getAttribute('data-paradas-lleno') || '';
+
+		function filas() { return Array.prototype.slice.call(lista.querySelectorAll('[data-parada]')); }
+
+		function renumerar() {
+			filas().forEach(function (fila, i) {
+				var n = fila.querySelector('[data-parada-n]');
+				if (n) { n.textContent = String(i + 1); }
+				fila.querySelectorAll('[name]').forEach(function (campo) {
+					campo.name = campo.name.replace(/^paradas\[[^\]]*\]/, 'paradas[' + i + ']');
+				});
+			});
+			if (agregar) { agregar.disabled = filas().length >= max; }
+			if (msg) {
+				msg.textContent = filas().length >= max ? textoLleno : '';
+				msg.className = 'promotur-form-msg';
+			}
+			form.dispatchEvent(new Event('promotur:paradas'));
+		}
+
+		function enganchar(fila) {
+			var mover = function (delta) {
+				var todas = filas();
+				var i = todas.indexOf(fila);
+				var j = i + delta;
+				if (j < 0 || j >= todas.length) { return; }
+				if (delta < 0) { lista.insertBefore(fila, todas[j]); }
+				else { lista.insertBefore(todas[j], fila); }
+				renumerar();
+				// Devolver el foco al botón que se tocó: si no, después de
+				// mover una parada con el teclado el foco se pierde y hay que
+				// volver a tabular desde arriba.
+				var boton = fila.querySelector(delta < 0 ? '[data-parada-subir]' : '[data-parada-bajar]');
+				if (boton) { boton.focus(); }
+			};
+			var subir = fila.querySelector('[data-parada-subir]');
+			var bajar = fila.querySelector('[data-parada-bajar]');
+			var quitar = fila.querySelector('[data-parada-quitar]');
+			if (subir) { subir.addEventListener('click', function () { mover(-1); }); }
+			if (bajar) { bajar.addEventListener('click', function () { mover(1); }); }
+			if (quitar) {
+				quitar.addEventListener('click', function () {
+					fila.parentNode.removeChild(fila);
+					renumerar();
+				});
+			}
+		}
+
+		filas().forEach(enganchar);
+
+		if (agregar && molde) {
+			agregar.addEventListener('click', function () {
+				if (filas().length >= max) { return; }
+				var html = molde.innerHTML.replace(/__i__/g, String(filas().length));
+				var temp = document.createElement('div');
+				temp.innerHTML = html;
+				var fila = temp.querySelector('[data-parada]');
+				if (!fila) { return; }
+				lista.appendChild(fila);
+				enganchar(fila);
+				renumerar();
+				var sel = fila.querySelector('[data-parada-sitio]');
+				if (sel) { sel.focus(); }
+			});
+		}
+
+		renumerar();
 	}
 
 	/* ---------- Revisión ---------- */

@@ -32,10 +32,10 @@ class PROMOTUR_Notifications {
 		$uid   = caaguazu_account_id();
 		if ( ! $uid && ! caaguazu_wp_admin_bypass() ) { return $items; }
 
-		// Para revisores: fichas que esperan revisión.
+		// Para revisores: lo que espera revisión, de los tres tipos.
 		if ( caaguazu_account_can( 'promotor', 'promotur_review_content' ) ) {
 			$pending = get_posts( array(
-				'post_type'      => 'promotur_destino',
+				'post_type'      => PROMOTUR_Editorial::cpts(),
 				'post_status'    => array( 'draft', 'pending' ),
 				'posts_per_page' => 10,
 				'meta_key'       => '_promotur_estado',
@@ -53,10 +53,10 @@ class PROMOTUR_Notifications {
 			}
 		}
 
-		// Para autores: sus fichas que necesitan cambios (filtra por el meta
-		// de dueño real, no por post_author — ver PROMOTUR_Destinos::OWNER_META).
+		// Para autores: lo suyo que necesita cambios (filtra por el meta de
+		// dueño real, no por post_author — ver PROMOTUR_Destinos::OWNER_META).
 		$mine = $uid ? get_posts( array(
-			'post_type'      => 'promotur_destino',
+			'post_type'      => PROMOTUR_Editorial::cpts(),
 			'post_status'    => array( 'draft', 'pending' ),
 			'posts_per_page' => 10,
 			'fields'         => 'ids',
@@ -72,7 +72,7 @@ class PROMOTUR_Notifications {
 				'title' => sprintf( __( '«%s» necesita algunos cambios', 'caaguazu-portal' ), get_the_title( $pid ) ),
 				'time'  => (int) get_post_modified_time( 'U', true, $pid ),
 				'when'  => human_time_diff( (int) get_post_modified_time( 'U', true, $pid ) ) . ' ' . __( 'atrás', 'caaguazu-portal' ),
-				'url'   => promotur_url( 'panel/editor/' . $pid ),
+				'url'   => PROMOTUR_Editorial::url_editor( $pid ),
 			);
 		}
 
@@ -106,12 +106,12 @@ class PROMOTUR_Notifications {
 	}
 
 	/**
-	 * Cantidad de fichas en la cola de revisión (para el badge del sidebar).
+	 * Cuánto hay en la cola de revisión (para el badge del sidebar).
 	 */
 	public static function review_queue_count() {
 		if ( ! caaguazu_account_can( 'promotor', 'promotur_review_content' ) ) { return 0; }
 		$q = new WP_Query( array(
-			'post_type'      => 'promotur_destino',
+			'post_type'      => PROMOTUR_Editorial::cpts(),
 			'post_status'    => array( 'draft', 'pending' ),
 			'meta_query'     => array( array( 'key' => '_promotur_estado', 'value' => array( 'enviado', 'en_revision' ), 'compare' => 'IN' ) ),
 			'posts_per_page' => 1,
