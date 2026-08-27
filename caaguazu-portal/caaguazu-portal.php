@@ -141,22 +141,36 @@ function promotur_boot() {
 add_action( 'plugins_loaded', 'promotur_boot' );
 
 /**
- * Auto re-flush de rewrite rules si cambió la versión (upgrades sin re-activar).
- * En `admin_init`, no en `plugins_loaded`: ese hook corre en CADA visita pública
- * (antes de que los CPTs terminen de registrar sus propias reglas en `init`), así
- * que un flush ahí reconstruye el rewrite_rules con reglas incompletas y lo hace
- * en el camino caliente de cualquier visitante anónimo. Mismo patrón de catch-up
- * ya usado en caaguazu-turismo/includes/tourism-seeder.php.
+ * Las reglas de reescritura del panel, presentes siempre.
+ *
+ * Antes esto corría sólo en `admin_init` y sólo al cambiar de versión, y eso
+ * tenía un agujero que se veía en la cara: hasta que alguien entrara a
+ * wp-admin, `/turismo-panel` no existía como regla, WordPress lo resolvía como
+ * 404 y el theme —que hoy tiene una sola plantilla— pintaba la página de obra
+ * encima del panel. Lo mismo pasaba después de restaurar una base, de cambiar
+ * los enlaces permanentes, o de instalar el plugin sin pasar por el escritorio.
+ *
+ * Ahora se comprueba en `init` que la regla base esté realmente guardada, y si
+ * no está se vacía una vez. `get_option( 'rewrite_rules' )` está en el
+ * autoload, así que la comprobación no agrega una consulta; el flush, que sí
+ * es caro, sólo ocurre cuando falta de verdad.
  */
-function promotur_maybe_flush_rewrite_rules() {
-	if ( get_option( 'promotur_version' ) === PROMOTUR_VERSION ) {
+function promotur_asegurar_rewrite_rules() {
+	$version_nueva = get_option( 'promotur_version' ) !== PROMOTUR_VERSION;
+
+	$reglas  = get_option( 'rewrite_rules' );
+	$falta   = ! is_array( $reglas ) || ! isset( $reglas[ '^' . PROMOTUR_BASE . '/?$' ] );
+
+	if ( ! $version_nueva && ! $falta ) {
 		return;
 	}
-	PROMOTUR_Router::add_rewrite_rules();
+
 	flush_rewrite_rules();
 	update_option( 'promotur_version', PROMOTUR_VERSION );
 }
-add_action( 'admin_init', 'promotur_maybe_flush_rewrite_rules' );
+// Prioridad 20: después de que el router (10) y los CPTs registraron las suyas,
+// para que el flush escriba el juego completo y no uno a medias.
+add_action( 'init', 'promotur_asegurar_rewrite_rules', 20 );
 
 /**
  * Traducciones.
