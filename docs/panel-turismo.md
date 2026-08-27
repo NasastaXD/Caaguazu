@@ -347,7 +347,7 @@ El criterio fue uno solo, verificable: **¿la app lo consume?** La API de la app
 
 Dos consecuencias que conviene tener presentes:
 
-- **El destino dejó de ser una página web.** El CPT pasó a `public => false`: se sirve por `/wp-json/czu-app/v1/inventario`, no por `/destino/<slug>`. Si siguiera siendo público, esa URL la dibujaría el theme del sitio —hoy una página de obra— y Google indexaría fichas que no se ven. Sigue editándose en el panel y en wp-admin, y sigue teniendo estados. El día que el sitio nuevo quiera fichas públicas, es volver a `'public' => true` y escribirle su plantilla.
+- **El destino dejó de ser una página web.** El CPT pasó a `public => false`: se sirve por `/wp-json/czu-app/v1/inventario`, no por `/destino/<slug>`. Si siguiera siendo público, esa URL la dibujaría el theme del sitio —hoy una página de obra— y Google indexaría fichas que no se ven. Sigue teniendo estados, y desde v3.2.1 se edita **sólo** en el panel: la pantalla nativa de wp-admin (lista + editor de bloques), que hasta esa versión seguía viva por detrás sin que nadie la usara, queda apagada (`'show_ui' => false`) — lo mismo para Artículos, Recorridos y las tres taxonomías. El día que el sitio nuevo quiera fichas públicas, es volver a `'public' => true` y escribirle su plantilla.
 - **Leaflet por CDN desapareció solo**, porque vivía en la vitrina. El verificador de diseño quedó **sin un solo aviso**.
 
 El panel bajó de 16 secciones a 14, y de 608 textos a 481.

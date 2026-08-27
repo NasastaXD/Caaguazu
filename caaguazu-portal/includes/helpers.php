@@ -583,33 +583,6 @@ function promotur_nav_pie() {
 }
 
 /**
- * Lista plana de todos los items del menú (grupos + hijos + pie).
- *
- * Se conserva porque es el contrato viejo del filtro `promotur_nav_items` y
- * porque hay pantallas que sólo necesitan "todos los destinos posibles" sin
- * importarles el agrupamiento.
- *
- * @return array[]
- */
-function promotur_nav_items() {
-	$items = array();
-	foreach ( promotur_nav_grupos() as $grupo ) {
-		foreach ( $grupo['items'] as $item ) {
-			$hijos = isset( $item['hijos'] ) ? $item['hijos'] : array();
-			unset( $item['hijos'] );
-			$items[] = $item;
-			foreach ( $hijos as $hijo ) {
-				$items[] = $hijo;
-			}
-		}
-	}
-	foreach ( promotur_nav_pie() as $item ) {
-		$items[] = $item;
-	}
-	return apply_filters( 'promotur_nav_items', $items );
-}
-
-/**
  * ¿Esta ruta del menú es la que se está viendo?
  *
  * @param string $route ej. 'panel/equipo'
@@ -622,19 +595,6 @@ function promotur_route_activa( $route ) {
 		return 'home' === $actual;
 	}
 	return '' !== $actual && 0 === strpos( $actual, $seg );
-}
-
-/**
- * Teléfono de la cuenta actual (columna `phone` de caaguazu_accounts).
- *
- * @return string
- */
-function promotur_user_phone() {
-	if ( ! function_exists( 'caaguazu_current_account' ) ) {
-		return '';
-	}
-	$account = caaguazu_current_account();
-	return $account ? (string) $account['phone'] : '';
 }
 
 /**

@@ -83,11 +83,10 @@ class PROMOTUR_Destinos {
 			'public'             => false,
 			'publicly_queryable' => false,
 			'exclude_from_search'=> true,
-			'show_ui'            => true,
+			// El panel es la única pantalla de edición: la nativa de wp-admin
+			// (lista + editor de bloques) queda apagada.
+			'show_ui'            => false,
 			'show_in_rest'       => true,
-			'show_in_menu'       => true,
-			'menu_icon'          => 'dashicons-palmtree',
-			'menu_position'      => 26,
 			'has_archive'        => false,
 			'rewrite'            => false,
 			'supports'        => array( 'title', 'editor', 'thumbnail', 'excerpt', 'author' ),
@@ -102,10 +101,13 @@ class PROMOTUR_Destinos {
 		$common = array(
 			'hierarchical'       => true,
 			'show_in_rest'       => true,
-			'show_admin_column'  => true,
 			'public'             => false,
 			'publicly_queryable' => false,
-			'show_ui'            => true,
+			// Categorías, zonas y etiquetas se administran en Estructura, dentro
+			// del panel: la pantalla nativa de wp-admin (edit-tags.php) queda
+			// apagada, y con ella la columna que sólo esa pantalla mostraba.
+			'show_ui'            => false,
+			'show_admin_column'  => false,
 			'rewrite'            => false,
 		);
 		register_taxonomy( 'promotur_categoria', self::CPT, array_merge( $common, array(

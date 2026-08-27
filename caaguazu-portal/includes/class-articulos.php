@@ -109,11 +109,10 @@ class PROMOTUR_Articulos {
 			'public'             => false,
 			'publicly_queryable' => false,
 			'exclude_from_search'=> true,
-			'show_ui'            => true,
+			// El panel es la única pantalla de edición: la nativa de wp-admin
+			// (lista + editor de bloques) queda apagada.
+			'show_ui'            => false,
 			'show_in_rest'       => false,
-			'show_in_menu'       => true,
-			'menu_icon'          => 'dashicons-media-document',
-			'menu_position'      => 27,
 			'has_archive'        => false,
 			'rewrite'            => false,
 			'supports'           => array( 'title', 'editor', 'thumbnail', 'excerpt', 'author' ),

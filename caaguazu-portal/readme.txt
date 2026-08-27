@@ -3,36 +3,37 @@ Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 3.2.0
+Stable tag: 3.2.1
 License: GPLv2 or later
 
 Panel autenticado tipo app (PWA) bajo /turismo-panel, con enrutador propio, login propio, roles y flujo editorial para las tres cosas que la app muestra: fichas del inventario turístico, artículos y recorridos.
 
 == Description ==
 
-Plugin del Portal de Promotores Turísticos de Caaguazú. Monta un panel sobre rutas propias
-(no usa el theme para el panel) con sensación de aplicación: sidebar + topbar + contenido,
-instalable como PWA, con modo claro/oscuro y los colores del sitio heredados vía tokens CSS.
+Plugin del Portal de Promotores Turísticos de Caaguazú. Panel autenticado tipo
+app bajo `/turismo-panel`, con enrutador, login y sesión propios —no depende
+de usuarios de WordPress, corre sobre el sistema de cuentas universal
+`caaguazu-cuentas`—, instalable como PWA, con modo claro/oscuro y un sistema
+de diseño propio (tokens, tipografía autohospedada): no hereda nada del theme
+activo, y desencola su CSS en las rutas del panel.
 
-**Fase 0 — Framework del panel**
-* Enrutador propio (rewrite rules) con guards: `/czu-login`, `/registro`, `/recuperar`, `/recuperar/restablecer`, `/salir`, invitación `/i/{token}`, PWA (`/promotur-manifest.webmanifest`, `/promotur-sw.js`, `/promotur-icon-{n}.png`, `/promotur-offline`) y panel `/panel/...`.
-* Shell único + contrato de página (`$page_title` + `$body` + `include shell.php`).
-* Sidebar y topbar dinámicos, gateados por capability (no por rol).
-* Tokens CSS que heredan del theme con fallback; modo claro/oscuro persistente.
-* PWA instalable con lectura offline; override de templates desde el theme en `/<theme>/promotur/<ruta>.php`.
-* Roles: Promotor, Mini Promotor, Visitante (capabilities `promotur_*`).
+El equipo escribe ahí las tres cosas que la app muestra —fichas del
+inventario turístico, artículos y recorridos— con un mismo flujo editorial:
+borrador → enviar → cola de revisión (asignarme) → aprobar/devolver con
+feedback → publicado. wp-admin no interviene: ni la edición de contenido, ni
+la cuenta, ni la galería, ni la estructura (categorías/zonas/etiquetas), ni el
+equipo (roles, suspensión, invitaciones) tienen pantalla ahí. Lo único que
+queda en wp-admin es el registro de auditoría y las actualizaciones del
+plugin, y ninguna de las dos cosas la necesita nadie del equipo.
 
-**Fase 1 — MVP editorial**
-* CPT Destino (ficha guiada) + taxonomías (categoría, zona, etiqueta).
-* Editor con checklist de mínimos en vivo (bloquea el envío si falta algo) + subida de fotos + geolocalización.
-* Flujo: borrador → enviar → cola de revisión (asignarme) → aprobar/devolver con feedback → publicado.
-* "Mis contenidos" (Mini Promotor) y "Cola de revisión" (Promotor) funcionando.
+Roles: Promotor, Mini Promotor, Visitante (capabilities `promotur_*`).
 
 == Instalación ==
 
-1. Subir `caaguazu-portal` a `/wp-content/plugins/` y activar.
+1. Subir `caaguazu-portal` a `/wp-content/plugins/` y activar (necesita el
+   plugin `caaguazu-cuentas` activo).
 2. Se crean los roles y se vacían (flush) las rewrite rules automáticamente.
-3. Entrar a `/czu-login`, crear una cuenta o iniciar sesión, e ir a `/panel`.
+3. Entrar a `/turismo-panel/entrar`, con una cuenta creada por invitación.
 
 Convive con el plugin `caaguazu-locales` sin colisiones (prefijos distintos).
 
@@ -56,6 +57,24 @@ llamen los tags.
 * Repo privado: definir `PROMOTUR_GITHUB_TOKEN` (PAT de solo lectura) en `wp-config.php`.
 
 == Changelog ==
+
+= 3.2.1 =
+* **Se apaga la pantalla nativa de wp-admin para Destinos, Artículos y
+  Recorridos** (lista + editor de bloques) y para sus tres taxonomías —el
+  panel es la única pantalla de edición desde la v3.0.0, pero la de
+  wp-admin seguía viva por detrás sin que nadie la usara: cualquier usuario
+  de WordPress con permiso de Autor podía editar contenido del panel sin
+  pasar por el flujo editorial ni quedar en la auditoría.
+* **`PROMOTUR_Audit::post_actions()` cubre los tres tipos.** Desde que
+  Artículos y Recorridos entraron al flujo editorial (v3.2.0), sus eventos
+  —creado, enviado, aprobado, publicado— quedaban afuera de la pestaña
+  "Contenido" del registro de wp-admin: la lista de acciones sólo tenía las
+  cinco de `destino_*`. Ahora se arma sola a partir de los tipos que declara
+  `PROMOTUR_Editorial`.
+* Dos funciones sin ningún llamador (`promotur_nav_items()`,
+  `promotur_user_phone()`) y la descripción del plugin en este archivo, que
+  todavía hablaba de tokens heredados del theme y de rutas de antes de la
+  v3.0.0.
 
 = 3.2.0 =
 * **Artículos.** El panel gana la sección donde se escriben las notas que la app
