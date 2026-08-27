@@ -34,9 +34,15 @@ El panel no autentica ni guarda identidad por su cuenta: todo eso corre sobre `c
 
 El theme y el panel se actualizan solos en producción desde los GitHub Releases de este repo. Cada uno tiene su versión, su tag y su zip; **cada release lleva un solo zip, y cada updater se queda con el release que trae el suyo.**
 
-1. Subir el `Version:` del componente que cambió (`caaguazu-theme/style.css` o `caaguazu-portal/caaguazu-portal.php`).
-2. Al mergear a `main`, [`.github/workflows/release.yml`](.github/workflows/release.yml) arma su zip y publica el Release. Si la versión no subió, el tag ya existe y no hace nada.
+1. Subir el `Version:` del componente que cambió — y en los tres plugins, también su constante (`PROMOTUR_VERSION`, `CZUAPI_VERSION`, `CEADSSO_VERSION`), que llevan el número dos veces.
+2. [`.github/workflows/release.yml`](.github/workflows/release.yml) arma el zip y publica el Release. Si la versión no subió, el tag ya existe y no hace nada.
 3. El sitio lo ve dentro de las 12 h, o al toque desde el botón de comprobar (barra de admin para el theme, *Portal Turismo → Actualizaciones* para el panel).
+
+**Los cuatro componentes publican**: theme, panel, API de la app y SSO CEAD. Los dos últimos no se auto-actualizan —su release es para descargar y subir a mano—, pero tener el zip publicado es lo que hace que se puedan probar sin armarlo.
+
+### Sacar un release sin mergear
+
+El workflow se dispara de dos formas: **al mergear a `main`**, y **a mano** desde Actions → *Publicar releases* → *Run workflow*, eligiendo la rama y qué componente publicar. Lo segundo es lo que permite probar una rama antes de aprobarla: hasta que existió, testear un cambio en revisión obligaba a armar el zip a mano o a esperar el merge.
 
 Para armar los zips a mano: `bash bin/build-zip.sh` (o `bash bin/build-zip.sh portal`, `app-api`, `sso`).
 
@@ -44,7 +50,7 @@ Para armar los zips a mano: `bash bin/build-zip.sh` (o `bash bin/build-zip.sh po
 
 ### Un tag por componente
 
-Los tags son **`theme-X.Y.Z`** y **`portal-X.Y.Z`**. No es cosmético: hasta acá los dos usaban `vX.Y.Z`, y el repo ya traía los tags `v1.x` a `v5.0.1` del sistema viejo. Cuando al theme le tocó `5.0.1` y al panel `3.1.0`, los dos tags ya existían y **ninguno de los dos releases llegó a publicarse**. Con un prefijo por componente, cada serie es suya y no se cruza ni con la otra ni con la historia vieja.
+Los tags son **`theme-X.Y.Z`**, **`portal-X.Y.Z`**, **`app-api-X.Y.Z`** y **`sso-X.Y.Z`**. No es cosmético: hasta acá theme y panel usaban los dos `vX.Y.Z`, y el repo ya traía los tags `v1.x` a `v5.0.1` del sistema viejo. Cuando al theme le tocó `5.0.1` y al panel `3.1.0`, los dos tags ya existían y **ninguno de los dos releases llegó a publicarse**. Con un prefijo por componente, cada serie es suya y no se cruza ni con la otra ni con la historia vieja.
 
 Los dos updaters sacan la versión del final del tag, y siguen aceptando los `vX.Y.Z` de antes para no perder de vista lo ya publicado.
 

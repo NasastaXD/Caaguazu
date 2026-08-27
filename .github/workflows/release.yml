@@ -1,8 +1,8 @@
 name: Publicar releases
 
-# En este repo conviven dos cosas que se instalan por separado y se actualizan
-# solas: el theme del sitio publico y el plugin del panel de promotores. Cada
-# uno tiene su propia version, su propio tag y su propio zip.
+# En este repo conviven cuatro cosas que se instalan por separado: el theme del
+# sitio publico, el plugin del panel de promotores, la API de la app y el SSO
+# del CEAD. Cada uno tiene su propia version, su propio tag y su propio zip.
 #
 # La regla que hace que convivan sin pisarse: **cada release lleva un solo
 # zip**, y cada updater se queda con el release que trae EL SUYO
@@ -10,16 +10,34 @@ name: Publicar releases
 # caaguazu-portal.php). Asi el updater del theme no confunde un release del
 # plugin con uno suyo, ni al reves, sin depender de como se llamen los tags.
 #
-# Cada job arma su release solo si su tag todavia no existe, o sea: solo cuando
-# subio el numero de version en el header correspondiente. No hace falta
-# taggear a mano.
+# Cada componente publica solo si su tag todavia no existe, o sea: solo cuando
+# subio el numero de version en su header. No hace falta taggear a mano.
 #
-# Cada componente tiene su propio prefijo de tag: theme-X.Y.Z y portal-X.Y.Z.
-# No es cosmetico. Antes los dos usaban vX.Y.Z, y el repo ya traia los tags
-# v1.x a v5.0.1 del sistema viejo: cuando al theme le toco 5.0.1 y al panel
-# 3.1.0, los dos tags ya existian y ninguno de los dos releases se publico
-# nunca. Con un prefijo por componente cada serie es suya y no se cruza ni con
-# la otra ni con la historia vieja.
+# Cada componente tiene su propio prefijo de tag: theme-X.Y.Z, portal-X.Y.Z,
+# app-api-X.Y.Z y sso-X.Y.Z. No es cosmetico. Antes theme y portal usaban los
+# dos vX.Y.Z, y el repo ya traia los tags v1.x a v5.0.1 del sistema viejo:
+# cuando al theme le toco 5.0.1 y al panel 3.1.0, los dos tags ya existian y
+# ninguno de los dos releases se publico nunca. Con un prefijo por componente
+# cada serie es suya y no se cruza ni con la otra ni con la historia vieja.
+#
+# ---------------------------------------------------------------------------
+# POR QUE HAY UN BOTON PARA DISPARARLO A MANO
+#
+# Hasta aca esto corria SOLO al mergear a main. Eso alcanza para publicar, pero
+# no para probar: mientras una rama esta en revision no hay ningun zip que
+# bajar, y quien tiene que testear termina armandolo a mano o esperando el
+# merge. `workflow_dispatch` deja pedir el release desde la pestaña Actions,
+# eligiendo la rama y que componente publicar.
+#
+# ---------------------------------------------------------------------------
+# LOS CUATRO SON UNA MATRIZ, NO CUATRO JOBS COPIADOS
+#
+# Eran dos jobs casi identicos; con cuatro, la copia se paga en el primer
+# arreglo que se hace en uno y se olvida en los otros tres. Sumar un
+# componente ahora es agregar cuatro lineas a `include`.
+#
+# `fail-fast: false` a proposito: que el theme falle no puede impedir que salga
+# el release del panel.
 
 on:
   push:
@@ -27,91 +45,106 @@ on:
     paths:
       - 'caaguazu-theme/style.css'
       - 'caaguazu-portal/caaguazu-portal.php'
+      - 'caaguazu-app-api/caaguazu-app-api.php'
+      - 'caaguazu-sso-cead/caaguazu-sso-cead.php'
+  workflow_dispatch:
+    inputs:
+      componente:
+        description: 'Que publicar (se publica solo si su version subio)'
+        type: choice
+        default: todos
+        options:
+          - todos
+          - theme
+          - portal
+          - app-api
+          - sso
 
 permissions:
   contents: write
 
 jobs:
-  theme:
+  publicar:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - componente: theme
+            archivo: caaguazu-theme/style.css
+            zip: caaguazu-theme.zip
+            titulo: Theme
+          - componente: portal
+            archivo: caaguazu-portal/caaguazu-portal.php
+            zip: caaguazu-portal.zip
+            titulo: Panel
+          - componente: app-api
+            archivo: caaguazu-app-api/caaguazu-app-api.php
+            zip: caaguazu-app-api.zip
+            titulo: API de la app
+          - componente: sso
+            archivo: caaguazu-sso-cead/caaguazu-sso-cead.php
+            zip: caaguazu-sso-cead.zip
+            titulo: SSO CEAD
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Leer version del theme
-        id: version
+      # En un push va la matriz entera; en un disparo a mano, solo lo que se
+      # eligio. El resto de los pasos cuelga de esto en vez de que haya cuatro
+      # jobs con condiciones distintas.
+      - name: Le toca a este componente
+        id: toca
         run: |
-          VERSION=$(grep -m1 '^Version:' caaguazu-theme/style.css | sed -E 's/Version:[[:space:]]*//' | tr -d '\r')
+          ELEGIDO="${{ github.event.inputs.componente }}"
+          if [ -z "$ELEGIDO" ] || [ "$ELEGIDO" = "todos" ] || [ "$ELEGIDO" = "${{ matrix.componente }}" ]; then
+            echo "si=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "si=false" >> "$GITHUB_OUTPUT"
+            echo "No toca: se pidio '$ELEGIDO'."
+          fi
+
+      # Un solo patron para los cuatro: el theme escribe `Version:` al principio
+      # de la linea (style.css) y los tres plugins lo escriben dentro del
+      # docblock (` * Version:`). -m1 se queda con el header y no con el
+      # define() que repite el numero mas abajo.
+      - name: Leer la version
+        id: version
+        if: steps.toca.outputs.si == 'true'
+        run: |
+          VERSION=$(grep -m1 -E '^[[:space:]*]*Version:' "${{ matrix.archivo }}" | sed -E 's/.*Version:[[:space:]]*//' | tr -d '\r')
           if [ -z "$VERSION" ]; then
-            echo "No se encontro la linea Version: en style.css" >&2
+            echo "No se encontro la linea Version: en ${{ matrix.archivo }}" >&2
             exit 1
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "tag=theme-$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=${{ matrix.componente }}-$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Verificar si el tag ya existe
         id: check
+        if: steps.toca.outputs.si == 'true'
         run: |
           if git rev-parse "${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "El tag ${{ steps.version.outputs.tag }} ya existe: no hay nada que publicar."
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Armar el zip del theme
-        if: steps.check.outputs.exists == 'false'
-        run: bash bin/build-zip.sh theme
+      - name: Armar el zip
+        if: steps.toca.outputs.si == 'true' && steps.check.outputs.exists == 'false'
+        run: bash bin/build-zip.sh ${{ matrix.componente }}
 
       - name: Crear Release y subir el zip
-        if: steps.check.outputs.exists == 'false'
+        if: steps.toca.outputs.si == 'true' && steps.check.outputs.exists == 'false'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "${{ steps.version.outputs.tag }}" \
-            caaguazu-theme.zip \
-            --title "Theme ${{ steps.version.outputs.version }}" \
-            --generate-notes
-
-  portal:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Leer version del plugin
-        id: version
-        run: |
-          VERSION=$(grep -m1 '^ \* Version:' caaguazu-portal/caaguazu-portal.php | sed -E 's/.*Version:[[:space:]]*//' | tr -d '\r')
-          if [ -z "$VERSION" ]; then
-            echo "No se encontro la linea Version: en caaguazu-portal.php" >&2
-            exit 1
-          fi
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "tag=portal-$VERSION" >> "$GITHUB_OUTPUT"
-
-      - name: Verificar si el tag ya existe
-        id: check
-        run: |
-          if git rev-parse "${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Armar el zip del plugin
-        if: steps.check.outputs.exists == 'false'
-        run: bash bin/build-zip.sh portal
-
-      - name: Crear Release y subir el zip
-        if: steps.check.outputs.exists == 'false'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release create "${{ steps.version.outputs.tag }}" \
-            caaguazu-portal.zip \
-            --title "Panel ${{ steps.version.outputs.version }}" \
+            "${{ matrix.zip }}" \
+            --target "${{ github.sha }}" \
+            --title "${{ matrix.titulo }} ${{ steps.version.outputs.version }}" \
             --generate-notes
