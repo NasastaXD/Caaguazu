@@ -76,6 +76,7 @@ class PROMOTUR_Assets {
 				'saved'    => __( 'Guardado', 'caaguazu-portal' ),
 				'confirm'  => __( '¿Querés confirmar esta acción?', 'caaguazu-portal' ),
 				'missing'  => __( 'Faltan algunos datos obligatorios.', 'caaguazu-portal' ),
+				'photoUploaded' => __( 'Foto subida.', 'caaguazu-portal' ),
 			),
 		) );
 	}
