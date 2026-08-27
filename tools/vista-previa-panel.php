@@ -185,6 +185,14 @@ class PROMOTUR_Acciones {
 	public static function token( $ambito = 'panel' ) { return 'token-de-prueba'; }
 	public static function campos( $ambito = 'panel' ) { echo '<input type="hidden" name="promotur_token" value="token-de-prueba">'; }
 }
+class PROMOTUR_Equipo {
+	const CAP = 'promotur_manage_team';
+	public static function invitaciones_abiertas() {
+		return array(
+			array( 'id' => 3, 'role' => 'promotur_mini', 'expires_at' => gmdate( 'Y-m-d H:i:s', time() + 9 * DAY_IN_SECONDS ) ),
+		);
+	}
+}
 class PROMOTUR_Estructura {
 	const CAP = 'promotur_manage_structure';
 	public static function grupos() {

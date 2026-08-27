@@ -794,6 +794,11 @@ html.promotur-no-splash .promotur-splash { display: none; }
    teléfono un renglón de texto es un blanco de 17px. */
 .promotur-nota-enlace { display: inline-flex; align-items: center; min-height: 44px; }
 
+/* Los controles de una persona del equipo. Separados del resto de su tarjeta
+   por una línea: cambiar un rol o suspender a alguien no es lo mismo que leer
+   cuánto publicó. */
+.promotur-mod__gestion { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--linea); }
+
 @media print {
 	.promotur-sidebar, .promotur-topbar, .promotur-splash, .promotur-backdrop, .promotur-bottomnav { display: none !important; }
 	.promotur-main { margin: 0 !important; }

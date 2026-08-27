@@ -1,12 +1,21 @@
 <?php
-/** Equipo: usuarios por rol, producción, nivel de confianza e invitaciones. */
+/**
+ * Equipo: quién entra al panel, con qué rol, qué produce y qué invitaciones
+ * quedan abiertas.
+ *
+ * Cambiar el rol, suspender y sacar del panel se hacía en wp-admin, sobre
+ * usuarios de WordPress que los promotores no tienen. Se hace acá, sobre la
+ * cuenta y su permiso, que es lo que de verdad decide quién entra.
+ */
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-$roles  = PROMOTUR_Roles::roles();
-$levels = PROMOTUR_Stats::levels();
+$roles       = PROMOTUR_Roles::roles();
+$levels      = PROMOTUR_Stats::levels();
+$administra  = promotur_can( PROMOTUR_Equipo::CAP );
+$invitaciones = $administra ? PROMOTUR_Equipo::invitaciones_abiertas() : array();
 
 $page_title = __( 'Equipo', 'caaguazu-portal' );
-$body = function () use ( $roles, $levels ) {
+$body = function () use ( $roles, $levels, $administra, $invitaciones ) {
 	?>
 	<div class="promotur-eyebrow"><?php esc_html_e( 'Tu equipo', 'caaguazu-portal' ); ?></div>
 	<h2 class="promotur-h2"><?php esc_html_e( 'Equipo', 'caaguazu-portal' ); ?></h2>
@@ -26,7 +35,7 @@ $body = function () use ( $roles, $levels ) {
 	</div>
 
 	<?php foreach ( $roles as $role_key => $def ) :
-		$users = promotur_team_members( $role_key );
+		$users = promotur_team_members( $role_key, $administra );
 		if ( empty( $users ) ) { continue; }
 		$is_mini = ( 'promotur_mini' === $role_key );
 		?>
@@ -63,10 +72,82 @@ $body = function () use ( $roles, $levels ) {
 							<span class="promotur-form-msg" data-form-msg aria-live="polite"></span>
 						</div>
 					<?php endif; ?>
+
+					<?php if ( $administra && (int) $u['id'] !== (int) caaguazu_account_id() ) : ?>
+						<?php $suspendida = isset( $u['status'] ) && 'active' !== $u['status']; ?>
+						<div class="promotur-mod__gestion">
+							<?php if ( $suspendida ) : ?>
+								<span class="promotur-pill is-changes"><?php esc_html_e( 'Suspendida', 'caaguazu-portal' ); ?></span>
+							<?php endif; ?>
+
+							<form class="promotur-inline-form" method="post"
+								  action="<?php echo esc_url( PROMOTUR_Acciones::url( 'equipo_rol' ) ); ?>">
+								<?php PROMOTUR_Acciones::campos(); ?>
+								<input type="hidden" name="cuenta" value="<?php echo esc_attr( $u['id'] ); ?>">
+								<select name="rol" aria-label="<?php esc_attr_e( 'Rol', 'caaguazu-portal' ); ?>">
+									<?php foreach ( $roles as $rk => $rd ) : ?>
+										<option value="<?php echo esc_attr( $rk ); ?>" <?php selected( $u['role'], $rk ); ?>><?php echo esc_html( $rd['label'] ); ?></option>
+									<?php endforeach; ?>
+								</select>
+								<button type="submit" class="promotur-btn promotur-btn--ghost promotur-btn--small"><?php esc_html_e( 'Cambiar rol', 'caaguazu-portal' ); ?></button>
+							</form>
+
+							<form method="post" action="<?php echo esc_url( PROMOTUR_Acciones::url( 'equipo_estado' ) ); ?>">
+								<?php PROMOTUR_Acciones::campos(); ?>
+								<input type="hidden" name="cuenta" value="<?php echo esc_attr( $u['id'] ); ?>">
+								<button type="submit" class="promotur-btn promotur-btn--ghost promotur-btn--small">
+									<?php echo $suspendida ? esc_html__( 'Reactivar', 'caaguazu-portal' ) : esc_html__( 'Suspender', 'caaguazu-portal' ); ?>
+								</button>
+							</form>
+
+							<form method="post" action="<?php echo esc_url( PROMOTUR_Acciones::url( 'equipo_quitar' ) ); ?>"
+								  data-confirmar="<?php esc_attr_e( 'Deja de tener acceso al panel. Su cuenta y lo que publicó quedan como están. ¿Seguimos?', 'caaguazu-portal' ); ?>">
+								<?php PROMOTUR_Acciones::campos(); ?>
+								<input type="hidden" name="cuenta" value="<?php echo esc_attr( $u['id'] ); ?>">
+								<button type="submit" class="promotur-btn promotur-btn--peligro promotur-btn--small"><?php esc_html_e( 'Sacar del panel', 'caaguazu-portal' ); ?></button>
+							</form>
+						</div>
+					<?php endif; ?>
 				</div>
 			<?php endforeach; ?>
 		</div>
 	<?php endforeach; ?>
+
+	<?php if ( $administra ) : ?>
+		<h3 class="promotur-h3 promotur-mt"><?php esc_html_e( 'Invitaciones abiertas', 'caaguazu-portal' ); ?></h3>
+		<div class="promotur-card">
+			<?php if ( empty( $invitaciones ) ) : ?>
+				<p class="promotur-muted"><?php esc_html_e( 'No hay ninguna esperando. Los enlaces que crees acá arriba aparecen en esta lista hasta que alguien los use o se venzan.', 'caaguazu-portal' ); ?></p>
+			<?php else : ?>
+				<div class="promotur-list">
+					<?php foreach ( $invitaciones as $inv ) : ?>
+						<div class="promotur-termino">
+							<span class="promotur-termino__nombre">
+								<?php echo esc_html( PROMOTUR_Roles::label( $inv['role'] ) ); ?>
+							</span>
+							<span class="promotur-termino__uso">
+								<span class="promotur-muted">
+									<?php
+									printf(
+										/* translators: %s = fecha en que vence la invitación */
+										esc_html__( 'Vence el %s', 'caaguazu-portal' ),
+										esc_html( date_i18n( 'j \d\e F', strtotime( $inv['expires_at'] ) ) )
+									);
+									?>
+								</span>
+								<form method="post" action="<?php echo esc_url( PROMOTUR_Acciones::url( 'invitacion_revocar' ) ); ?>"
+									  data-confirmar="<?php esc_attr_e( 'El enlace deja de servir. ¿Seguimos?', 'caaguazu-portal' ); ?>">
+									<?php PROMOTUR_Acciones::campos(); ?>
+									<input type="hidden" name="invitacion" value="<?php echo esc_attr( $inv['id'] ); ?>">
+									<button type="submit" class="promotur-btn promotur-btn--peligro promotur-btn--small"><?php esc_html_e( 'Revocar', 'caaguazu-portal' ); ?></button>
+								</form>
+							</span>
+						</div>
+					<?php endforeach; ?>
+				</div>
+			<?php endif; ?>
+		</div>
+	<?php endif; ?>
 	<?php
 };
 

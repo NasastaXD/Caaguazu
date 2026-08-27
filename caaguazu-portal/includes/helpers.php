@@ -31,18 +31,24 @@ function promotur_account_display_name( $account_id, $fallback = '—' ) {
  * asignarse esto" vive en `caaguazu_grants`, no en `wp_users`.
  *
  * @param string|string[]|null $roles rol o roles a filtrar (null = todos los roles del panel)
- * @return array[] { id (int, ID de cuenta), email, display_name, role }
+ * @param bool                 $incluir_suspendidas sumar las cuentas suspendidas
+ * @return array[] { id (int, ID de cuenta), email, display_name, status, role }
  */
-function promotur_team_members( $roles = null ) {
+function promotur_team_members( $roles = null, $incluir_suspendidas = false ) {
 	if ( ! class_exists( 'Caaguazu_Cuentas_Install' ) ) { return array(); }
 	global $wpdb;
 	$t     = Caaguazu_Cuentas_Install::tables();
 	$roles = $roles ? (array) $roles : null;
 
-	$sql    = "SELECT a.id, a.email, a.display_name, g.role
+	$sql    = "SELECT a.id, a.email, a.display_name, a.status, g.role
 		FROM {$t['grants']} g
 		INNER JOIN {$t['accounts']} a ON a.id = g.account_id
-		WHERE g.panel = %s AND g.status = 'active' AND a.status = 'active'";
+		WHERE g.panel = %s AND g.status = 'active'";
+	// Las suspendidas se piden a propósito: si no aparecen, nadie las puede
+	// reactivar desde el panel.
+	if ( ! $incluir_suspendidas ) {
+		$sql .= " AND a.status = 'active'";
+	}
 	$params = array( 'promotor' );
 	if ( $roles ) {
 		$placeholders = implode( ',', array_fill( 0, count( $roles ), '%s' ) );
@@ -124,42 +130,23 @@ function promotur_template( $route, $vars = array() ) {
 }
 
 /**
- * Rol del portal "más alto" de una cuenta (o '').
+ * Rol de la cuenta actual en el panel, o ''.
  *
- * Sin argumento: resuelve la cuenta ACTUAL del sistema de cuentas universal
- * (caaguazu-cuentas), o cae en el bypass de administrador de WP si no hay
- * cuenta propia logueada. Con un $user_id explícito: uso legado de
- * wp-admin (class-admin.php lista todavía usuarios de WordPress con roles
- * promotur_* — pantalla no migrada aún, ver README de caaguazu-cuentas).
+ * Antes esto aceptaba un ID de usuario de WordPress, para la pantalla de
+ * wp-admin que listaba usuarios de WordPress con roles `promotur_*`. Esa
+ * pantalla ya no existe —el equipo se administra en el panel, sobre cuentas—,
+ * así que la rama legada se fue con ella. El rol sale del permiso de la cuenta
+ * sobre el panel y de ningún otro lado.
  *
- * @param int|null $user_id ID de usuario de WordPress (uso legado, no de cuenta).
  * @return string
  */
-function promotur_user_role( $user_id = null ) {
-	if ( null === $user_id ) {
-		if ( function_exists( 'caaguazu_account_id' ) && caaguazu_account_id() > 0 ) {
-			$grant = Caaguazu_Cuentas_Panels::instance()->get_grant( caaguazu_account_id(), 'promotor' );
-			return ( $grant && 'active' === $grant['status'] ) ? (string) $grant['role'] : '';
-		}
-		// Sin cuenta propia: ¿es un administrador de WP con acceso vía bypass?
-		return current_user_can( 'manage_options' ) ? 'promotur_promotor' : '';
+function promotur_user_role() {
+	if ( function_exists( 'caaguazu_account_id' ) && caaguazu_account_id() > 0 ) {
+		$grant = Caaguazu_Cuentas_Panels::instance()->get_grant( caaguazu_account_id(), 'promotor' );
+		return ( $grant && 'active' === $grant['status'] ) ? (string) $grant['role'] : '';
 	}
-
-	$user = get_userdata( $user_id );
-	if ( ! $user || ! $user->exists() ) {
-		return '';
-	}
-	$priority = array( 'promotur_promotor', 'promotur_mini', 'promotur_visitante' );
-	foreach ( $priority as $role ) {
-		if ( in_array( $role, (array) $user->roles, true ) ) {
-			return $role;
-		}
-	}
-	// Admin u otros con acceso al panel pero sin rol de portal.
-	if ( user_can( $user, 'manage_options' ) ) {
-		return 'promotur_promotor';
-	}
-	return '';
+	// Sin cuenta propia: un administrador del sitio entrando por el bypass.
+	return current_user_can( 'manage_options' ) ? 'promotur_promotor' : '';
 }
 
 /**
@@ -400,16 +387,14 @@ function promotur_route_activa( $route ) {
 /**
  * Teléfono de la cuenta actual (columna `phone` de caaguazu_accounts).
  *
- * @param int|null $user_id ID de usuario de WordPress (uso legado; ignorado
- *                          para la cuenta actual, que ya no es un WP user).
  * @return string
  */
-function promotur_user_phone( $user_id = null ) {
-	if ( null === $user_id && function_exists( 'caaguazu_current_account' ) ) {
-		$account = caaguazu_current_account();
-		return $account ? (string) $account['phone'] : '';
+function promotur_user_phone() {
+	if ( ! function_exists( 'caaguazu_current_account' ) ) {
+		return '';
 	}
-	return $user_id ? (string) get_user_meta( $user_id, '_promotur_phone', true ) : '';
+	$account = caaguazu_current_account();
+	return $account ? (string) $account['phone'] : '';
 }
 
 /**
