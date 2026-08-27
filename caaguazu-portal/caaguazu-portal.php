@@ -3,7 +3,7 @@
  * Plugin Name:       Caaguazú Portal — Promotores Turísticos
  * Plugin URI:        https://turismo.caaguazu.net
  * Description:       Panel autenticado tipo app bajo /turismo-panel, instalable como PWA, con flujo editorial borrador → revisión → publicación, y la cabina de mando de la app móvil (textos, medios y categorías). Corre sobre rutas propias y no depende del theme: trae su propio CSS y su propia tipografía, y desencola los del theme activo en sus rutas. La identidad de los promotores corre sobre el sistema de cuentas universal (caaguazu-cuentas): no son usuarios de WordPress.
- * Version:           3.1.0
+ * Version:           3.1.1
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Requires Plugins:  caaguazu-cuentas
@@ -17,7 +17,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'PROMOTUR_VERSION', '3.1.0' );
+define( 'PROMOTUR_VERSION', '3.1.1' );
 define( 'PROMOTUR_DB_VERSION', 2 ); // se incrementa cuando cambia la estructura de datos.
 define( 'PROMOTUR_FILE', __FILE__ );
 define( 'PROMOTUR_DIR', plugin_dir_path( __FILE__ ) );
@@ -257,6 +257,31 @@ function promotur_updater() {
 				}
 			}
 			return false;
+		} );
+	}
+
+	/**
+	 * La versión que anuncia el tag del release.
+	 *
+	 * Los tags de este repo son `portal-3.1.1` y `theme-5.0.2`: uno por
+	 * componente. Antes eran `vX.Y.Z` para los dos, y ahí estaba el problema —
+	 * el repo ya traía los tags `v1.x` a `v5.0.1` del sistema viejo, así que
+	 * cuando al panel le tocó `v3.1.0` el release no se publicó nunca: el tag
+	 * ya existía.
+	 *
+	 * El detalle que obliga a este filtro: la librería saca la versión del tag
+	 * con `ltrim( $tag, 'v' )`, y su plan B —leer el header `Version:` del
+	 * archivo principal en el repo— no funciona acá porque el plugin vive en
+	 * una subcarpeta y ella lo busca en la raíz. Sin esto, un tag
+	 * `portal-3.1.1` se leería como versión «portal-3.1.1» y ninguna
+	 * instalación vería jamás la actualización.
+	 */
+	if ( method_exists( $updater, 'addResultFilter' ) ) {
+		$updater->addResultFilter( function ( $info ) {
+			if ( isset( $info->version ) && preg_match( '/(\d+(?:\.\d+)*(?:[-+][A-Za-z0-9.]+)?)$/', (string) $info->version, $m ) ) {
+				$info->version = $m[1];
+			}
+			return $info;
 		} );
 	}
 

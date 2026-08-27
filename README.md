@@ -22,7 +22,7 @@ El panel no autentica ni guarda identidad por su cuenta: todo eso corre sobre `c
 
 | Pieza | Plugin | Estado |
 | --- | --- | --- |
-| Panel de promotor | `caaguazu-portal` | acá, reworkeado (v3.1.0) |
+| Panel de promotor | `caaguazu-portal` | acá, reworkeado (v3.1.1) |
 | Identidad, sesión y permisos | `caaguazu-cuentas` | dependencia dura |
 | Acceso de un clic desde el CEAD | `caaguazu-sso-cead` | funciona sin cambios |
 | Negocios, reservas y reseñas | `caaguazu-locales` | independiente |
@@ -33,9 +33,17 @@ El panel no autentica ni guarda identidad por su cuenta: todo eso corre sobre `c
 El theme y el panel se actualizan solos en producción desde los GitHub Releases de este repo. Cada uno tiene su versión, su tag y su zip; **cada release lleva un solo zip, y cada updater se queda con el release que trae el suyo.**
 
 1. Subir el `Version:` del componente que cambió (`caaguazu-theme/style.css` o `caaguazu-portal/caaguazu-portal.php`).
-2. Al mergear a `main`, [`.github/workflows/release.yml`](.github/workflows/release.yml) arma su zip y publica el Release `vX.Y.Z`. Si la versión no subió, el tag ya existe y no hace nada.
+2. Al mergear a `main`, [`.github/workflows/release.yml`](.github/workflows/release.yml) arma su zip y publica el Release. Si la versión no subió, el tag ya existe y no hace nada.
 3. El sitio lo ve dentro de las 12 h, o al toque desde el botón de comprobar (barra de admin para el theme, *Portal Turismo → Actualizaciones* para el panel).
 
 Para armar los zips a mano: `bash bin/build-zip.sh` (o `bash bin/build-zip.sh portal`).
 
-> Las dos series de versiones no deben cruzarse: el theme va por 5.x y el panel por 3.x. Si coincidieran, el job falla porque el tag ya existe.
+### Un tag por componente
+
+Los tags son **`theme-X.Y.Z`** y **`portal-X.Y.Z`**. No es cosmético: hasta acá los dos usaban `vX.Y.Z`, y el repo ya traía los tags `v1.x` a `v5.0.1` del sistema viejo. Cuando al theme le tocó `5.0.1` y al panel `3.1.0`, los dos tags ya existían y **ninguno de los dos releases llegó a publicarse**. Con un prefijo por componente, cada serie es suya y no se cruza ni con la otra ni con la historia vieja.
+
+Los dos updaters sacan la versión del final del tag, y siguen aceptando los `vX.Y.Z` de antes para no perder de vista lo ya publicado.
+
+> El updater del panel necesita un detalle extra: la librería que usa (plugin-update-checker) saca la versión del tag con `ltrim( $tag, 'v' )`, y su plan B —leer el header `Version:` del archivo principal— no le sirve acá porque el plugin vive en una subcarpeta y ella lo busca en la raíz. Por eso `caaguazu-portal.php` corrige la versión con `addResultFilter()`.
+
+> **Una sola vez:** lo que hay instalado hoy en producción trae los updaters viejos, que no reconocen los tags nuevos. Este primer par de releases hay que instalarlo a mano (subir los dos zips desde WordPress). De ahí en adelante las actualizaciones vuelven a ser automáticas.
