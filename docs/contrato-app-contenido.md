@@ -248,7 +248,26 @@ GET /articulos             lista paginada
 GET /articulos/{id}        la nota completa
 ```
 
-Filtros de `/articulos`: `categoria`, `etiqueta`, `pagina`, `por_pagina`.
+Filtros de `/articulos`: `categoria`, `etiqueta`, `buscar`, `pagina`, `por_pagina`.
+
+### 2.0 `buscar` es texto libre, no por tag
+
+`buscar` (en `/articulos` desde 0.5.1, ya existía en `/inventario`) busca en
+título y cuerpo, como el buscador nativo de WordPress — **no filtra por
+etiqueta.** No es una limitación arbitraria: ni la lista de `/inventario` ni
+la de `/articulos` traen las etiquetas del post —sólo el detalle las tiene—,
+así que resolver "buscame las notas etiquetadas «con niños»" en la lista
+pagaría el precio de cargar cada post entero sólo para mirarle las
+etiquetas. Si en algún momento hace falta buscar de verdad por tag, el
+camino es sumar `etiquetas` al payload de lista de los dos endpoints y
+filtrar ahí — no está hecho todavía.
+
+**Si vas a conectar esto a un campo de texto que dispara en cada tecla:**
+esperá a que la persona deje de tipear antes de pedir — 300–400ms desde la
+última letra alcanza y sobra — o vas a mandar un pedido por carácter. Esto
+es enteramente del lado del cliente; la API no hace nada especial para
+soportarlo (no hay throttling ni rate-limit pensado para eso), así que si no
+lo hacés en el cliente, no lo hace nadie.
 
 ### 2.1 Las ocho piezas
 

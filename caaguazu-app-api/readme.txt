@@ -2,7 +2,7 @@
 Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 0.5.0
+Stable tag: 0.5.1
 License: GPLv2 or later
 
 Capa REST que consume la app Android de turismo (Turismo App Czu).
@@ -53,7 +53,7 @@ Namespace: `/wp-json/czu-app/v1/`
 * `GET /mapa/markers`
 * `GET /recorridos` — filtros: `pagina`, `por_pagina` · `GET /recorridos/{id}`
 * `GET·POST·PUT·DELETE /mis-recorridos` — requiere token
-* `GET /articulos`, `GET /articulos/{id}` — filtros: `categoria`, `etiqueta`, `pagina`, `por_pagina`
+* `GET /articulos`, `GET /articulos/{id}` — filtros: `categoria`, `etiqueta`, `buscar`, `pagina`, `por_pagina`
 
 = Interfaz =
 * `GET /strings/{locale}` — `es`, `en`, `gn`
@@ -104,6 +104,21 @@ de evento.
 1. Requiere `caaguazu-cuentas` y `caaguazu-portal` activos.
 2. Subir a `/wp-content/plugins/` y activar. Crea sus dos tablas.
 3. Cargar icono y color de cada categoría en **Destinos → Categorías**.
+
+== Cambios del contrato en 0.5.1 ==
+
+* **`GET /articulos` suma el filtro `buscar`**, con el mismo comportamiento
+  que ya tenía `/inventario`: texto libre sobre título y cuerpo. Se pidió
+  como búsqueda "por tags", pero ni la lista de `/inventario` ni la de
+  `/articulos` traen las etiquetas del post —sólo el detalle las tiene—, así
+  que filtrar la lista por tag ahí pagaría el precio de cargar cada post
+  entero para revisárselas. Queda como texto libre; si en algún momento hace
+  falta filtrar de verdad por etiqueta en la lista, hay que sumar
+  `etiquetas` al payload de lista de los dos endpoints primero. Ver
+  `docs/contrato-app-contenido.md` §2.0.
+* Nota para quien conecte esto a un campo de texto: esperá ~350ms desde la
+  última letra antes de pedir. Es enteramente del lado del cliente, la API
+  no hace nada especial para eso.
 
 == Cambios del contrato en 0.5.0 ==
 

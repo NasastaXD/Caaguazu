@@ -80,6 +80,7 @@ class CZUAPI_Articulos {
 			'args'                => array(
 				'categoria'  => array( 'type' => 'integer' ),
 				'etiqueta'   => array( 'type' => 'integer' ),
+				'buscar'     => array( 'type' => 'string' ),
 				'pagina'     => array( 'type' => 'integer', 'default' => 1 ),
 				'por_pagina' => array( 'type' => 'integer', 'default' => 20 ),
 			),
@@ -124,6 +125,18 @@ class CZUAPI_Articulos {
 		}
 		if ( $tax_query ) {
 			$args['tax_query'] = $tax_query; // phpcs:ignore WordPress.DB.SlowDBQuery
+		}
+
+		/*
+		 * `buscar` es texto libre, no por etiqueta: el resumen de artículo no
+		 * trae las etiquetas del post —sólo el detalle las tiene, igual que en
+		 * inventario— así que filtrar la lista por tag no se puede resolver
+		 * acá sin pagar el precio de cargar cada post entero para mirarle las
+		 * etiquetas. Busca en título, entradilla y cuerpo, como el buscador
+		 * nativo de WordPress.
+		 */
+		if ( $request->get_param( 'buscar' ) ) {
+			$args['s'] = sanitize_text_field( (string) $request->get_param( 'buscar' ) );
 		}
 
 		$q     = new WP_Query( $args );

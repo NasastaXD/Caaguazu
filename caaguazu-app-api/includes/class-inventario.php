@@ -87,6 +87,10 @@ class CZUAPI_Inventario {
 		if ( $tax_query ) {
 			$args['tax_query'] = $tax_query; // phpcs:ignore WordPress.DB.SlowDBQuery
 		}
+		// Texto libre, no por etiqueta: la lista no trae las etiquetas de la
+		// ficha —sólo el detalle las tiene— así que filtrar acá por tag
+		// pagaría el precio de cargar cada post entero para revisárselas.
+		// Busca en título y cuerpo, como el buscador nativo de WordPress.
 		if ( $request->get_param( 'buscar' ) ) {
 			$args['s'] = sanitize_text_field( (string) $request->get_param( 'buscar' ) );
 		}
