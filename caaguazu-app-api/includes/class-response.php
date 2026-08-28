@@ -52,8 +52,12 @@ class CZUAPI_Response {
 	 * Respuesta con ETag. Si el cliente mandó If-None-Match y coincide,
 	 * devuelve 304 sin cuerpo.
 	 *
-	 * Lo usan /strings y /media-manifest, que la app pide en cada arranque:
-	 * sin esto se descargarían enteros cada vez.
+	 * Lo usan /strings y /media-manifest, que la app pide en cada arranque
+	 * y sin esto se descargarían enteros cada vez; y desde la 0.5.0 también
+	 * los cuatro endpoints de contenido (inventario, artículos, recorridos,
+	 * eventos, lista y detalle) por el mismo motivo — con la salvedad de que
+	 * un recorrido de usuario nunca pasa por acá: es de una sola cuenta, y
+	 * `Cache-Control: public` no correspondería.
 	 *
 	 * @param mixed            $data
 	 * @param WP_REST_Request  $request

@@ -80,7 +80,6 @@ function salida() {
 			'_promotur_tipo_item'      => array( 'json' => 'tipo_item',           'donde' => 'los dos' ),
 			'_promotur_evento_inicio'  => array( 'json' => 'fechas.inicio',       'donde' => 'los dos' ),
 			'_promotur_evento_fin'     => array( 'json' => 'fechas.fin',          'donde' => 'los dos' ),
-			'_promotur_gancho'         => array( 'json' => 'gancho',              'donde' => 'los dos' ),
 			'_promotur_portada'        => array( 'json' => 'portada',             'donde' => 'los dos' ),
 			'_promotur_credito_fotos'  => array( 'json' => 'portada.credito',     'donde' => 'los dos' ),
 			'_promotur_video'          => array( 'json' => 'video',               'donde' => 'detalle' ),
@@ -88,7 +87,6 @@ function salida() {
 			'_promotur_lat'            => array( 'json' => 'coordenadas.lat',     'donde' => 'los dos' ),
 			'_promotur_lng'            => array( 'json' => 'coordenadas.lng',     'donde' => 'los dos' ),
 			'_promotur_estado_camino'  => array( 'json' => 'acceso.estado_camino','donde' => 'detalle' ),
-			'_promotur_accesibilidad'  => array( 'json' => 'acceso.accesibilidad','donde' => 'detalle' ),
 			'_promotur_horario'        => array( 'json' => 'practicos.horario',   'donde' => 'detalle; en la lista, `horario_resumen`' ),
 			'_promotur_costo'          => array( 'json' => 'practicos.costo',     'donde' => 'detalle' ),
 			'_promotur_rango_precio'   => array( 'json' => 'rango_precio',        'donde' => 'los dos (en el detalle, dentro de `practicos`)' ),
@@ -118,7 +116,7 @@ function extras() {
 	return array(
 		'ficha' => array(
 			array( 'post_title',                'titulo',                 'texto',    'El nombre del lugar o del evento.' ),
-			array( 'post_content',              'articulo_html',          'HTML',     'La descripción larga, ya renderizada.' ),
+			array( 'post_content',              'descripcion',            'HTML',     'La descripción larga, ya renderizada. Se llamaba `articulo_html` —nombre copiado sin pensar de Artículos— hasta la 0.5.0; la app la buscaba como `descripcion` y no la encontraba.' ),
 			array( 'post_modified_gmt',         'actualizado',            'ISO 8601', 'Con esto y `/sync` la app sabe qué volver a bajar.' ),
 			array( '_promotur_galeria',         'galeria[]',              'imagen[]', 'IDs de adjuntos; sale resuelta a objetos imagen.' ),
 			array( '_promotur_articulos_rel',   'articulos_relacionados[]', 'ref[]',  'IDs de artículo; sale con id, título y portada.' ),

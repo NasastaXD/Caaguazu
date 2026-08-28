@@ -140,8 +140,6 @@ $body = function () use ( $sitios, $busqueda ) {
 		<div class="promotur-list">
 			<?php foreach ( $sitios as $p ) :
 				$cat    = get_the_terms( $p->ID, 'promotur_categoria' );
-				$zona   = get_the_terms( $p->ID, 'promotur_zona' );
-				$gancho = (string) get_post_meta( $p->ID, '_promotur_gancho', true );
 				$partes = array();
 				// Cuándo pasa va primero cuando la ficha es un evento: en una
 				// lista de lugares, la fecha es lo que distingue a los que hay
@@ -153,9 +151,7 @@ $body = function () use ( $sitios, $busqueda ) {
 						? sprintf( __( 'Evento · %s', 'caaguazu-portal' ), date_i18n( 'j M Y, H:i', $marca ) )
 						: __( 'Evento · sin fecha', 'caaguazu-portal' );
 				}
-				if ( $cat && ! is_wp_error( $cat ) )   { $partes[] = $cat[0]->name; }
-				if ( $zona && ! is_wp_error( $zona ) ) { $partes[] = $zona[0]->name; }
-				if ( $gancho )                          { $partes[] = $gancho; }
+				if ( $cat && ! is_wp_error( $cat ) ) { $partes[] = $cat[0]->name; }
 				?>
 				<a class="promotur-row" href="<?php echo esc_url( promotur_url( 'panel/inventario/' . $p->ID ) ); ?>">
 					<span class="promotur-row__main">

@@ -2,7 +2,7 @@
 Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 0.4.0
+Stable tag: 0.6.0
 License: GPLv2 or later
 
 Capa REST que consume la app Android de turismo (Turismo App Czu).
@@ -46,15 +46,15 @@ Namespace: `/wp-json/czu-app/v1/`
 
 = Contenido =
 * `GET /categorias` — con icono, color y PNG de marcador
-* `GET /zonas`
-* `GET /inventario` — filtros: `categoria`, `zona`, `bbox`, `buscar`, `pagina`, `por_pagina`
+* `GET /etiquetas` — catálogo de tags, para armar chips de filtro
+* `GET /inventario` — filtros: `categoria`, `etiqueta`, `bbox`, `buscar`, `tipo_item`, `pagina`, `por_pagina`
 * `GET /inventario/{id}`
-* `GET /eventos` — filtros: `desde`, `hasta`, `categoria`
+* `GET /eventos` — filtros: `desde`, `hasta`, `categoria`, `pagina`, `por_pagina`
 * `GET /eventos/{id}`
 * `GET /mapa/markers`
-* `GET /recorridos`, `GET /recorridos/{id}`
+* `GET /recorridos` — filtros: `pagina`, `por_pagina` · `GET /recorridos/{id}`
 * `GET·POST·PUT·DELETE /mis-recorridos` — requiere token
-* `GET /articulos`, `GET /articulos/{id}` — filtros: `categoria`, `etiqueta`
+* `GET /articulos`, `GET /articulos/{id}` — filtros: `categoria`, `etiqueta`, `buscar`, `pagina`, `por_pagina`
 
 = Interfaz =
 * `GET /strings/{locale}` — `es`, `en`, `gn`
@@ -92,11 +92,90 @@ de navegador y un token de teléfono tienen ciclos de vida distintos — cerrar
 sesión en la web no debe desloguear el celular. Misma disciplina: se guarda
 solo el hash SHA-256, nunca el token.
 
+**`/mapa/markers` precarga meta y términos a propósito.** La consulta pide
+sólo IDs (`fields => 'ids'`), y eso es justo lo que la hace liviana — pero
+WP_Query se salta el precargado automático de metas y términos cuando pide
+sólo IDs. Sin `update_meta_cache()`/`update_object_term_cache()` antes del
+loop, cada pin dispara sus propias consultas; con cien sitios no se nota, con
+varios miles sí. Mismo motivo detrás del `update_meta_cache()` en los markers
+de evento.
+
 == Instalación ==
 
 1. Requiere `caaguazu-cuentas` y `caaguazu-portal` activos.
 2. Subir a `/wp-content/plugins/` y activar. Crea sus dos tablas.
 3. Cargar icono y color de cada categoría en **Destinos → Categorías**.
+
+== Cambios del contrato en 0.6.0 ==
+
+Búsqueda por tag de verdad, la que 0.5.1 dejó pendiente.
+
+* **`GET /etiquetas` es nuevo**: catálogo completo de etiquetas (id, slug,
+  nombre, cantidad), como ya tenía `/categorias`. Sin esto no había forma de
+  que el cliente supiera qué ids existen para armar un selector.
+* **`etiqueta` es filtro nuevo en `GET /inventario`** (ya existía en
+  `/articulos`): filtra por id exacto de etiqueta, con `tax_query`, igual de
+  barato que el filtro `categoria` que ya tenía. Esto es lo que hace posible
+  "buscar por tag" de verdad — `buscar` (texto libre) sigue sin matchear
+  nombres de etiqueta, y no lo va a hacer: son dos mecanismos distintos.
+* **La lista de `/inventario` y de `/articulos` ahora trae `etiquetas`** en
+  cada ítem (antes sólo el detalle la tenía). Es gratis: `WP_Query` ya
+  precarga los términos de toda la página en una sola consulta, así que
+  mostrar el chip de tag en la tarjeta de lista no agrega ninguna consulta
+  extra ni obliga a pedir el detalle primero.
+
+Ver `docs/contrato-app-contenido.md` §2.0 para el detalle completo, con la
+diferencia entre `etiqueta` (exacta, para un selector de chips) y `buscar`
+(texto libre, con la recomendación de los 350ms de espera del lado del
+cliente).
+
+== Cambios del contrato en 0.5.1 ==
+
+* **`GET /articulos` suma el filtro `buscar`**, con el mismo comportamiento
+  que ya tenía `/inventario`: texto libre sobre título y cuerpo. Se pidió
+  como búsqueda "por tags", pero ni la lista de `/inventario` ni la de
+  `/articulos` traen las etiquetas del post —sólo el detalle las tiene—, así
+  que filtrar la lista por tag ahí pagaría el precio de cargar cada post
+  entero para revisárselas. Queda como texto libre; si en algún momento hace
+  falta filtrar de verdad por etiqueta en la lista, hay que sumar
+  `etiquetas` al payload de lista de los dos endpoints primero. Ver
+  `docs/contrato-app-contenido.md` §2.0.
+* Nota para quien conecte esto a un campo de texto: esperá ~350ms desde la
+  última letra antes de pedir. Es enteramente del lado del cliente, la API
+  no hace nada especial para eso.
+
+== Cambios del contrato en 0.5.0 ==
+
+Están detallados, con payloads, en `docs/contrato-app-contenido.md`. La lista
+completa de campos, generada desde el código, está en
+`docs/datos-para-la-app.md`.
+
+* **Se retira Zona.** `GET /zonas` deja de existir, `/inventario` pierde el
+  filtro `zona` y el objeto `zona` de la lista y el detalle, y `/eventos` deja
+  de traer la taxonomía en sus términos. El departamento es chico y el enlace
+  de Google Maps de cada ficha ya dice dónde queda; la taxonomía sigue
+  registrada del lado del panel, sólo se dejó de exponer acá.
+* **Se retiran `gancho` y `accesibilidad` de la ficha**, siguiendo a la poda
+  del modelo en `caaguazu-portal` 3.5.0: no le aportaban nada a la app que el
+  título, la portada y el enlace de Maps no dieran ya. En `/eventos`, la
+  tarjeta de un evento cargado como ficha (`origen: "ficha"`) ahora arma
+  `resumen` con la descripción en vez del gancho retirado.
+* **La descripción de la ficha se llama `descripcion`, no `articulo_html`.**
+  Era un bug, no un cambio de diseño: el nombre se copió sin pensar de la
+  respuesta de Artículos al armar el detalle de ficha, y la app la buscaba
+  como `descripcion` — esa clave nunca existió y la descripción nunca
+  llegaba. `articulo_html` sigue viajando igual en Recorrido y en el evento
+  legado (`/eventos/{id}` con `origen: "evento_legado"`): ahí sí es un
+  artículo, el nombre no está mal.
+* **`GET /recorridos` ahora pagina**, con el mismo sobre que ya usaban
+  inventario y artículos (`{ items, total, pagina, por_pagina }`) y los
+  mismos parámetros `pagina`/`por_pagina`. Antes devolvía un array plano con
+  tope fijo de 50 sin forma de pedir el resto.
+* **ETag y `Cache-Control` en los ocho endpoints de contenido** (lista y
+  detalle de inventario, artículos, recorridos y eventos), como ya tenían
+  `/categorias`, `/mapa/markers`, `/strings` y `/media-manifest`. Mandá
+  `If-None-Match`: si no cambió, la respuesta es `304` sin cuerpo. No aplica
+  al detalle de un recorrido de usuario (es de una sola cuenta).
 
 == Cambios del contrato en 0.4.0 ==
 

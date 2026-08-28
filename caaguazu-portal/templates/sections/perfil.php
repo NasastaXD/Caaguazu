@@ -92,11 +92,7 @@ $body = function () use ( $identity, $uid, $pub, $is_mini ) {
 		</div>
 	<?php endif; ?>
 
-	<?php if ( 0 === $uid ) : ?>
-		<p class="promotur-muted promotur-mt">
-			<?php esc_html_e( 'Estás entrando como administrador del sitio, con acceso prestado. Este acceso no tiene cuenta del panel, así que no hay datos que editar acá.', 'caaguazu-portal' ); ?>
-		</p>
-	<?php else : ?>
+	<?php if ( 0 !== $uid ) : ?>
 
 		<h3 class="promotur-h3 promotur-mt"><?php esc_html_e( 'Mis datos', 'caaguazu-portal' ); ?></h3>
 		<div class="promotur-card">
@@ -123,7 +119,7 @@ $body = function () use ( $identity, $uid, $pub, $is_mini ) {
 				</div>
 
 				<label class="promotur-field">
-					<span><?php esc_html_e( 'Foto', 'caaguazu-portal' ); ?> <em><?php esc_html_e( 'opcional', 'caaguazu-portal' ); ?></em></span>
+					<span><?php esc_html_e( 'Foto', 'caaguazu-portal' ); ?> <em><?php esc_html_e( 'opcional, JPG/PNG/WEBP, hasta 5 MB', 'caaguazu-portal' ); ?></em></span>
 					<input type="file" name="foto" accept="image/jpeg,image/png,image/webp">
 				</label>
 				<p class="promotur-form-msg"><?php esc_html_e( 'Con el correo entrás al panel: si lo cambiás, la próxima vez iniciás sesión con el nuevo.', 'caaguazu-portal' ); ?></p>

@@ -182,9 +182,6 @@ class PROMOTUR_Ajax {
 		if ( isset( $_POST['categoria'] ) ) {
 			wp_set_object_terms( $post_id, array_map( 'intval', (array) $_POST['categoria'] ), 'promotur_categoria' );
 		}
-		if ( isset( $_POST['zona'] ) ) {
-			wp_set_object_terms( $post_id, array_map( 'intval', (array) $_POST['zona'] ), 'promotur_zona' );
-		}
 		if ( isset( $_POST['etiquetas'] ) ) {
 			$crudas    = sanitize_text_field( wp_unslash( $_POST['etiquetas'] ) );
 			$etiquetas = array_values( array_filter( array_map( 'trim', explode( ',', $crudas ) ) ) );

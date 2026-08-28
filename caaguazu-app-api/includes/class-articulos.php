@@ -80,6 +80,7 @@ class CZUAPI_Articulos {
 			'args'                => array(
 				'categoria'  => array( 'type' => 'integer' ),
 				'etiqueta'   => array( 'type' => 'integer' ),
+				'buscar'     => array( 'type' => 'string' ),
 				'pagina'     => array( 'type' => 'integer', 'default' => 1 ),
 				'por_pagina' => array( 'type' => 'integer', 'default' => 20 ),
 			),
@@ -117,7 +118,7 @@ class CZUAPI_Articulos {
 		// y un lugar marcados «con niños» se encuentran entre sí.
 		if ( $request->get_param( 'etiqueta' ) ) {
 			$tax_query[] = array(
-				'taxonomy' => 'promotur_etiqueta',
+				'taxonomy' => CZUAPI_Taxonomias::TAX_ETIQUETA,
 				'field'    => 'term_id',
 				'terms'    => (int) $request->get_param( 'etiqueta' ),
 			);
@@ -126,15 +127,28 @@ class CZUAPI_Articulos {
 			$args['tax_query'] = $tax_query; // phpcs:ignore WordPress.DB.SlowDBQuery
 		}
 
+		/*
+		 * `buscar` es texto libre, no por etiqueta: el resumen de artículo no
+		 * trae las etiquetas del post —sólo el detalle las tiene, igual que en
+		 * inventario— así que filtrar la lista por tag no se puede resolver
+		 * acá sin pagar el precio de cargar cada post entero para mirarle las
+		 * etiquetas. Busca en título, entradilla y cuerpo, como el buscador
+		 * nativo de WordPress.
+		 */
+		if ( $request->get_param( 'buscar' ) ) {
+			$args['s'] = sanitize_text_field( (string) $request->get_param( 'buscar' ) );
+		}
+
 		$q     = new WP_Query( $args );
 		$items = array();
 		foreach ( $q->posts as $post ) {
 			$items[] = $this->resumen( $post );
 		}
 
-		return new WP_REST_Response(
+		return CZUAPI_Response::with_etag(
 			CZUAPI_Response::paginado( $items, $q->found_posts, $pagina, $por_pagina ),
-			200
+			$request,
+			60
 		);
 	}
 
@@ -149,11 +163,10 @@ class CZUAPI_Articulos {
 		$out['cuerpo_html']  = apply_filters( 'the_content', $post->post_content );
 		$out['fuentes']      = $this->fuentes( $post->ID );
 		$out['categoria']    = czuapi_primer_termino( $post->ID, CZUAPI_Taxonomias::TAX_CATEGORIA );
-		$out['etiquetas']    = $this->etiquetas( $post->ID );
 		$out['relacionados'] = $this->relacionados( $post->ID );
 		$out['actualizado']  = czuapi_fecha( $post->post_modified_gmt );
 
-		return new WP_REST_Response( $out, 200 );
+		return CZUAPI_Response::with_etag( $out, $request, 180 );
 	}
 
 	/**
@@ -172,6 +185,11 @@ class CZUAPI_Articulos {
 			'antetitulo' => (string) get_post_meta( $id, self::META_ANTETITULO, true ),
 			'titulo'     => get_the_title( $post ),
 			'subtitulo'  => (string) get_post_meta( $id, self::META_SUBTITULO, true ),
+			// Se movió acá desde el detalle: al ser la misma forma en lista y
+			// detalle (ver docblock arriba), no había motivo para que sólo el
+			// detalle la tuviera. Barata por la misma razón que en inventario:
+			// WP_Query ya precargó los términos de toda la página.
+			'etiquetas'  => $this->etiquetas( $id ),
 			// `entradilla` es el párrafo de arranque escrito por la redacción
 			// (el post_excerpt). Se llamaba `bajada` hasta acá: se renombró
 			// para hablar el mismo idioma que el panel, donde el campo se
@@ -248,7 +266,7 @@ class CZUAPI_Articulos {
 	 * @return array[]
 	 */
 	private function etiquetas( $id ) {
-		$terms = get_the_terms( $id, 'promotur_etiqueta' );
+		$terms = get_the_terms( $id, CZUAPI_Taxonomias::TAX_ETIQUETA );
 		if ( ! $terms || is_wp_error( $terms ) ) {
 			return array();
 		}

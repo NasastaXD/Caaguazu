@@ -73,7 +73,6 @@ dice cuál de las dos es.
 | Tipo | `_promotur_tipo_item` | opción (`sitio` · `evento`) | sí | `tipo_item` | los dos |
 | Empieza | `_promotur_evento_inicio` | fecha y hora | sí, sólo en eventos | `fechas.inicio` | los dos |
 | Termina | `_promotur_evento_fin` | fecha y hora | no, sólo en eventos | `fechas.fin` | los dos |
-| Gancho (una línea) | `_promotur_gancho` | texto | sí | `gancho` | los dos |
 | Foto de portada | `_promotur_portada` | imagen | sí | `portada` | los dos |
 | Crédito de las fotos | `_promotur_credito_fotos` | texto | sí | `portada.credito` | los dos |
 | Video (URL, opcional) | `_promotur_video` | URL | no | `video` | detalle |
@@ -81,8 +80,7 @@ dice cuál de las dos es.
 | Latitud (alternativa al enlace) | `_promotur_lat` | número | no | `coordenadas.lat` | los dos |
 | Longitud (alternativa al enlace) | `_promotur_lng` | número | no | `coordenadas.lng` | los dos |
 | Estado del camino | `_promotur_estado_camino` | opción (`asfalto` · `ripio` · `tierra`) | no | `acceso.estado_camino` | detalle |
-| Accesibilidad | `_promotur_accesibilidad` | texto | no | `acceso.accesibilidad` | detalle |
-| Horario y mejor momento para visitar | `_promotur_horario` | texto | sí | `practicos.horario` | detalle; en la lista, `horario_resumen` |
+| Horario | `_promotur_horario` | texto | sí | `practicos.horario` | detalle; en la lista, `horario_resumen` |
 | Costo / entrada | `_promotur_costo` | texto | sí | `practicos.costo` | detalle |
 | Rango de precio | `_promotur_rango_precio` | opción (`0` · `1` · `2` · `3` · `4`) | no | `rango_precio` | los dos (en el detalle, dentro de `practicos`) |
 | Contacto del lugar | `_promotur_contacto` | texto | no | `practicos.contacto` | detalle |
@@ -94,7 +92,7 @@ dice cuál de las dos es.
 | De dónde sale | Sale como | Tipo | Nota |
 | --- | --- | --- | --- |
 | `post_title` | `titulo` | texto | El nombre del lugar o del evento. |
-| `post_content` | `articulo_html` | HTML | La descripción larga, ya renderizada. |
+| `post_content` | `descripcion` | HTML | La descripción larga, ya renderizada. Se llamaba `articulo_html` —nombre copiado sin pensar de Artículos— hasta la 0.5.0; la app la buscaba como `descripcion` y no la encontraba. |
 | `post_modified_gmt` | `actualizado` | ISO 8601 | Con esto y `/sync` la app sabe qué volver a bajar. |
 | `_promotur_galeria` | `galeria[]` | imagen[] | IDs de adjuntos; sale resuelta a objetos imagen. |
 | `_promotur_articulos_rel` | `articulos_relacionados[]` | ref[] | IDs de artículo; sale con id, título y portada. |
@@ -274,3 +272,5 @@ meta por si alguna vez hace falta recuperarlo, pero nada lo lee.
 - `_promotur_temporada`
 - `_promotur_servicios`
 - `_promotur_duracion`
+- `_promotur_gancho`
+- `_promotur_accesibilidad`

@@ -15,6 +15,22 @@ class PROMOTUR_Cuenta {
 	/** Meta de la cuenta donde guardamos el adjunto de la foto. */
 	const META_FOTO = 'promotur_foto';
 
+	/** Meta de la cuenta con la fecha en que se subió esa foto (timestamp). */
+	const META_FOTO_SUBIDA_EN = 'promotur_foto_subida_en';
+
+	/** Nadie sube una foto de perfil más pesada que esto. */
+	const FOTO_MAX_BYTES = 5 * 1024 * 1024;
+
+	/**
+	 * Cuánto dura una foto sin renovar antes de borrarse sola —salvo la de un
+	 * Promotor, que no vence nunca—. Tres años: ni tan corto que borre la foto
+	 * de alguien activo, ni tan largo que el servidor junte fotos de gente que
+	 * ya no está.
+	 */
+	const FOTO_VIDA_DIAS = 1095;
+
+	const CRON_LIMPIAR_FOTOS = 'promotur_limpiar_fotos_vencidas';
+
 	private static $instance = null;
 
 	public static function instance() {
@@ -27,6 +43,18 @@ class PROMOTUR_Cuenta {
 	private function __construct() {
 		PROMOTUR_Acciones::formulario( 'perfil', array( $this, 'guardar_perfil' ) );
 		PROMOTUR_Acciones::formulario( 'clave', array( $this, 'cambiar_clave' ) );
+
+		add_action( self::CRON_LIMPIAR_FOTOS, array( $this, 'limpiar_fotos_vencidas' ) );
+		// Se re-arma solo en cada carga si por lo que sea no está programado
+		// —igual que las rewrite rules del router—, para no depender de que
+		// el hook de activación llegue a correr en cada instalación.
+		add_action( 'init', array( $this, 'asegurar_cron' ) );
+	}
+
+	public function asegurar_cron() {
+		if ( ! wp_next_scheduled( self::CRON_LIMPIAR_FOTOS ) ) {
+			wp_schedule_event( time() + HOUR_IN_SECONDS, 'daily', self::CRON_LIMPIAR_FOTOS );
+		}
 	}
 
 	/** ¿Hay cuenta propia? (un administrador de WP entra por bypass y no tiene). */
@@ -101,6 +129,9 @@ class PROMOTUR_Cuenta {
 		if ( ! in_array( $tipo['ext'], array( 'jpg', 'jpeg', 'png', 'webp' ), true ) ) {
 			return new WP_Error( 'formato', __( 'La foto tiene que ser JPG, PNG o WEBP.', 'caaguazu-portal' ) );
 		}
+		if ( (int) $_FILES['foto']['size'] > self::FOTO_MAX_BYTES ) {
+			return new WP_Error( 'tamano', __( 'La foto pesa más de 5 MB. Subí una más liviana.', 'caaguazu-portal' ) );
+		}
 
 		require_once ABSPATH . 'wp-admin/includes/image.php';
 		require_once ABSPATH . 'wp-admin/includes/file.php';
@@ -115,7 +146,68 @@ class PROMOTUR_Cuenta {
 			wp_update_post( array( 'ID' => $adjunto, 'post_author' => caaguazu_service_user_id() ) );
 		}
 		caaguazu_account_meta_set( $this->cuenta_id(), self::META_FOTO, (int) $adjunto );
+		caaguazu_account_meta_set( $this->cuenta_id(), self::META_FOTO_SUBIDA_EN, time() );
 		return true;
+	}
+
+	/* ----------------------------------------------------------------------
+	 * Retención de fotos
+	 * -------------------------------------------------------------------- */
+
+	/**
+	 * Corre una vez por día (`self::CRON_LIMPIAR_FOTOS`). Borra la foto de
+	 * perfil de las cuentas que la subieron hace más de `FOTO_VIDA_DIAS` y no
+	 * son Promotor —Mini Promotor y Visitante, cuyo paso por el equipo suele
+	 * ser más corto—. Un Promotor no tiene vencimiento: es quien de verdad
+	 * usa el panel día a día.
+	 *
+	 * No hay tabla que liste "cuentas con esta meta": el metadata de
+	 * caaguazu-cuentas es un JSON por fila, así que se recorren las cuentas
+	 * que lo tienen seteado —pocas decenas en este proyecto, un recorrido
+	 * diario no pesa nada— en vez de mantener un índice aparte para esto.
+	 */
+	public function limpiar_fotos_vencidas() {
+		if ( ! class_exists( 'Caaguazu_Cuentas_Install' ) || ! class_exists( 'Caaguazu_Cuentas_Panels' ) ) {
+			return;
+		}
+		global $wpdb;
+		$tabla = Caaguazu_Cuentas_Install::tables()['accounts'];
+
+		// Prefiltro por LIKE: descarta rápido las cuentas sin foto sin tener
+		// que decodificar JSON de todas. Lo que importa lo confirma el
+		// json_decode de abajo, este LIKE nunca decide solo.
+		$filas = $wpdb->get_results( // phpcs:ignore WordPress.DB
+			$wpdb->prepare( "SELECT id, metadata FROM {$tabla} WHERE metadata LIKE %s", '%"' . self::META_FOTO . '"%' ) // phpcs:ignore WordPress.DB
+		);
+		if ( ! $filas ) {
+			return;
+		}
+
+		$limite = time() - self::FOTO_VIDA_DIAS * DAY_IN_SECONDS;
+		foreach ( $filas as $fila ) {
+			$meta = json_decode( (string) $fila->metadata, true );
+			if ( ! is_array( $meta ) || empty( $meta[ self::META_FOTO ] ) ) {
+				continue;
+			}
+			$subida = isset( $meta[ self::META_FOTO_SUBIDA_EN ] ) ? (int) $meta[ self::META_FOTO_SUBIDA_EN ] : 0;
+			// Sin fecha de subida (foto de antes de esta versión): se le
+			// pone la de hoy en vez de borrarla de sorpresa, y se la
+			// vuelve a mirar dentro de FOTO_VIDA_DIAS.
+			if ( ! $subida ) {
+				caaguazu_account_meta_set( (int) $fila->id, self::META_FOTO_SUBIDA_EN, time() );
+				continue;
+			}
+			if ( $subida > $limite ) {
+				continue;
+			}
+			$grant = Caaguazu_Cuentas_Panels::instance()->get_grant( (int) $fila->id, 'promotor' );
+			if ( $grant && 'promotur_promotor' === $grant['role'] ) {
+				continue;
+			}
+			wp_delete_attachment( (int) $meta[ self::META_FOTO ], true );
+			caaguazu_account_meta_delete( (int) $fila->id, self::META_FOTO );
+			caaguazu_account_meta_delete( (int) $fila->id, self::META_FOTO_SUBIDA_EN );
+		}
 	}
 
 	/* ----------------------------------------------------------------------

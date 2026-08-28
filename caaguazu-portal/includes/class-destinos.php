@@ -118,6 +118,10 @@ class PROMOTUR_Destinos {
 		register_taxonomy( 'promotur_categoria', self::CPT, array_merge( $common, array(
 			'labels' => array( 'name' => __( 'Categorías', 'caaguazu-portal' ), 'singular_name' => __( 'Categoría', 'caaguazu-portal' ) ),
 		) ) );
+		// promotur_zona sigue registrada —no se borra una taxonomía con datos
+		// cargados sin que alguien lo decida— pero ya no se edita ni se
+		// muestra en ningún lado: el departamento es chico y el enlace de
+		// Google Maps de cada ficha dice dónde queda mejor que un distrito.
 		register_taxonomy( 'promotur_zona', self::CPT, array_merge( $common, array(
 			'labels' => array( 'name' => __( 'Zonas', 'caaguazu-portal' ), 'singular_name' => __( 'Zona', 'caaguazu-portal' ) ),
 		) ) );
@@ -184,7 +188,6 @@ class PROMOTUR_Destinos {
 			'identidad' => array(
 				'label'  => __( 'Identidad', 'caaguazu-portal' ),
 				'fields' => array(
-					'_promotur_gancho'        => array( 'label' => __( 'Gancho (una línea)', 'caaguazu-portal' ), 'type' => 'text', 'req' => true ),
 					'_promotur_portada'       => array( 'label' => __( 'Foto de portada', 'caaguazu-portal' ), 'type' => 'image', 'req' => true ),
 					'_promotur_credito_fotos' => array( 'label' => __( 'Crédito de las fotos', 'caaguazu-portal' ), 'type' => 'text', 'req' => true ),
 					'_promotur_video'         => array( 'label' => __( 'Video (URL, opcional)', 'caaguazu-portal' ), 'type' => 'url', 'req' => false ),
@@ -228,7 +231,6 @@ class PROMOTUR_Destinos {
 						'req'   => false,
 					),
 					'_promotur_estado_camino' => array( 'label' => __( 'Estado del camino', 'caaguazu-portal' ), 'type' => 'select', 'req' => false, 'options' => array( 'asfalto' => 'Asfalto', 'ripio' => 'Ripio', 'tierra' => 'Tierra' ) ),
-					'_promotur_accesibilidad' => array( 'label' => __( 'Accesibilidad', 'caaguazu-portal' ), 'type' => 'text', 'req' => false ),
 				),
 			),
 			/*
@@ -242,7 +244,7 @@ class PROMOTUR_Destinos {
 			'practicos' => array(
 				'label'  => __( 'Datos prácticos', 'caaguazu-portal' ),
 				'fields' => array(
-					'_promotur_horario'   => array( 'label' => __( 'Horario y mejor momento para visitar', 'caaguazu-portal' ), 'type' => 'text', 'req' => true ),
+					'_promotur_horario'   => array( 'label' => __( 'Horario', 'caaguazu-portal' ), 'type' => 'text', 'req' => true ),
 					'_promotur_costo'     => array( 'label' => __( 'Costo / entrada', 'caaguazu-portal' ), 'type' => 'text', 'req' => true ),
 					// Rango de precio como número, ADEMÁS del texto libre de
 					// arriba y no en su reemplazo: la app necesita filtrar por
@@ -293,6 +295,14 @@ class PROMOTUR_Destinos {
 			'_promotur_temporada',
 			'_promotur_servicios',
 			'_promotur_duracion',
+			// El gancho no aportaba nada que la tarjeta de la app no sacara ya
+			// del título y la portada, y era un campo obligatorio más entre
+			// quien carga la ficha y publicarla.
+			'_promotur_gancho',
+			// La accesibilidad se llenaba con frases sueltas sin ningún criterio
+			// común ("rampa", "difícil para sillas de ruedas", "fácil"), así que
+			// la app no podía hacer nada con el dato salvo mostrarlo tal cual.
+			'_promotur_accesibilidad',
 		);
 	}
 
