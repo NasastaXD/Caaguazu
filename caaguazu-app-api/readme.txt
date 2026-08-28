@@ -2,7 +2,7 @@
 Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 0.3.0
+Stable tag: 0.4.0
 License: GPLv2 or later
 
 Capa REST que consume la app Android de turismo (Turismo App Czu).
@@ -98,6 +98,32 @@ solo el hash SHA-256, nunca el token.
 2. Subir a `/wp-content/plugins/` y activar. Crea sus dos tablas.
 3. Cargar icono y color de cada categoría en **Destinos → Categorías**.
 
+== Cambios del contrato en 0.4.0 ==
+
+Están detallados, con payloads, en `docs/contrato-app-contenido.md` §1.5. La
+lista completa de campos, generada desde el código, está en
+`docs/datos-para-la-app.md`.
+
+* **Un evento es una ficha con fechas.** La ficha suma `tipo_item` (`sitio` o
+  `evento`) y `fechas` (`inicio`, `fin`, `en_curso`, `terminado`), en la lista,
+  en el detalle y en los markers. `/inventario` acepta `?tipo_item=` para
+  filtrar; `sitio` incluye todo lo cargado antes de que el tipo existiera.
+* **`/eventos` mezcla dos fuentes y lo dice.** Los eventos que salen de una
+  ficha vienen con `origen: "ficha"` y su `ficha_id`; los del CPT
+  `promotur_evento`, con `origen: "evento_legado"`. `/eventos/{id}` responde a
+  los dos: si el id es una ficha, devuelve la ficha entera y no una versión
+  recortada.
+* **Un evento de `origen: ficha` sincroniza en `inventario`**, no en `eventos`,
+  porque es una ficha. Para la caché local conviene clonar `inventario` y armar
+  la agenda en el teléfono: así funciona sin conexión.
+* **Las paradas de un recorrido reconocen los eventos nuevos.** Una parada que
+  referencia una ficha de tipo evento trae ahora `inicio` y `fin`, y sigue
+  trayendo coordenadas, costo, horario y enlace de Maps como cualquier ficha.
+* **Nada dejó de venir.** Un cliente 0.3.0 sigue funcionando: `tipo_item` vale
+  `"sitio"` en todo lo que ya tenía. Lo que cambia es que `/inventario` puede
+  devolver eventos — si la pantalla de inventario no los quiere mezclados,
+  `?tipo_item=sitio`.
+
 == Cambios del contrato en 0.3.0 ==
 
 Están detallados, con payloads, en `docs/contrato-app-contenido.md`.
@@ -116,6 +142,10 @@ Están detallados, con payloads, en `docs/contrato-app-contenido.md`.
 
 * Escritura desde la app (`POST /contenido`) para que un promotor cargue
   fichas desde el teléfono. La lectura ya está; falta el alta.
+* El CPT `promotur_evento` es sólo de lectura en la práctica: no se carga más
+  desde ningún lado. Se puede retirar cuando lo que quedó cargado ahí se haya
+  vuelto a cargar como ficha, o cuando pase la retención de lápidas y ningún
+  teléfono lo tenga en caché.
 * Pantalla de panel para editar textos e imágenes de UI. Existió (sección
   «App» de `caaguazu-portal`) y está desconectada: llamaba a `get_strings()`,
   `get_manifest()` y `set_manifest()`, que existen desde 0.2.0, contra una

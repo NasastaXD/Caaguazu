@@ -383,6 +383,7 @@
 		var msg = form.querySelector('[data-form-msg]');
 
 		initParadas(form);
+		initTipoItem(form);
 
 		// Checklist en vivo.
 		function refreshChecklist() {
@@ -492,6 +493,33 @@
 
 		function setBusy(b) { form.querySelectorAll('[data-action]').forEach(function (x) { x.disabled = b; }); }
 		function setMsg(text, cls) { if (msg) { msg.textContent = text; msg.className = 'promotur-form-msg ' + (cls || ''); } }
+	}
+
+	/* ---------- Sitio o evento ----------
+	 *
+	 * Los campos marcados `data-solo="evento"` —la fecha y la hora— sólo tienen
+	 * sentido en un evento. Se ocultan en vez de deshabilitarse para que no
+	 * ocupen lugar en una ficha que no los usa, y siguen viajando en el envío:
+	 * si alguien cargó una fecha y después cambió el tipo a sitio, el dato no
+	 * se pierde por haber tocado un desplegable.
+	 *
+	 * Esto es comodidad de pantalla y nada más: quien decide si la fecha es
+	 * obligatoria es el checklist del servidor, que vuelve a mirar el tipo.
+	 */
+	function initTipoItem(form) {
+		var selector = form.querySelector('[data-tipo-item]');
+		if (!selector) { return; }
+		var condicionales = form.querySelectorAll('[data-solo]');
+		if (!condicionales.length) { return; }
+
+		function aplicar() {
+			var tipo = selector.value;
+			condicionales.forEach(function (campo) {
+				campo.hidden = campo.getAttribute('data-solo') !== tipo;
+			});
+		}
+		selector.addEventListener('change', aplicar);
+		aplicar();
 	}
 
 	/** Cuántas paradas tienen un sitio elegido de verdad. */

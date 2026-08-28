@@ -205,6 +205,14 @@ Los enlaces cortos (`maps.app.goo.gl`) no traen el punto: resolverlos exigiría 
 
 Se fueron cinco campos de la ficha —cómo llegar, referencia, temporada ideal, servicios y duración sugerida—: se llenaban con frases genéricas que no ayudaban a decidir nada. **Los datos ya cargados no se borran**, sólo dejan de pedirse, de mostrarse y de publicarse (ver `PROMOTUR_Destinos::campos_retirados()`).
 
+### Sitio o evento
+
+Una ficha empieza declarando **qué es**: un sitio (está siempre) o un evento (pasa en una fecha). Es el primer campo del formulario porque cambia el resto: un evento pide día y hora de inicio, y de cierre si lo tiene; un sitio no ve esos campos. Todo lo demás —gancho, foto, ubicación, costo, horario, fuentes, flujo editorial— se carga exactamente igual, porque un evento **es** un lugar con fechas.
+
+Antes los eventos eran otro tipo de contenido, en `caaguazu-app-api`, cargable sólo desde wp-admin y con la mitad de los campos: sin gancho, sin galería, sin fuentes y sin pasar por revisión. Duplicar el modelo entero para agregarle dos fechas costaba mantener dos editores y dos checklists que se iban a separar con el tiempo. Lo que ya está cargado ahí se sigue sirviendo —los teléfonos lo tienen en caché y sacarlo de la API lo haría desaparecer sin lápida—, pero no se carga más por ahí.
+
+Que un campo aplique o no según el tipo no es cosa del formulario: `PROMOTUR_Destinos::aplica_campo()` lo decide, el editor lo usa para mostrar y esconder, y el checklist de mínimos lo usa para no exigir la fecha de un evento a una ficha que es un sitio. Si sólo lo supiera el formulario, un sitio no se podría publicar nunca.
+
 ### Los recorridos
 
 Un recorrido no es un conjunto de lugares: es una **secuencia**. Cambiar el tercero por el quinto cambia el paseo, así que el orden se guarda explícito y el editor tiene botones para subir y bajar cada parada — no un menú escondido ni algo que aparezca al pasar el mouse, porque en un teléfono no hay mouse y reordenar es la operación principal.
@@ -234,7 +242,7 @@ Dos detalles de cómo está hecho:
 
 **Artículos y Recorridos ya están en el panel** (v3.2.0). Los dos nacieron como CPTs de `caaguazu-app-api` y estaban al revés: son contenido humano que se escribe, se revisa y aprueba el staff, o sea exactamente lo que hace el panel, y mientras vivían allá había que cargarlos desde wp-admin sin pasar por ninguna revisión. Se mudaron sin cambiar de `post_type`, así que no se perdió nada, y la API se corrió: si el panel está activo, no vuelve a registrarlos.
 
-Lo que **no** controla el panel todavía: los Eventos, que se siguen cargando desde wp-admin.
+Los **Eventos** también se cargan desde el panel desde la v3.4.0: son una ficha con tipo `evento`. El tipo de contenido viejo de `caaguazu-app-api` queda para lo ya cargado, y no se le agrega nada nuevo.
 
 ---
 
@@ -298,7 +306,18 @@ Comprueba las **dos únicas funciones del ecosistema que transforman un dato en 
 
 Los casos son los reales: los cuatro formatos de enlace que escribe Google (incluido el corto, que no trae el punto, y uno con la latitud fuera del planeta), y las formas en que un WordPress escribe el nombre de un rol. Corre sin WordPress: probar esto no puede costar levantar un sitio.
 
-`npm run verificar` corre los dos, más la auditoría móvil.
+Y un tercero, que no comprueba código sino que **el documento de datos no quede viejo**:
+
+```bash
+php tools/inventario-de-datos.php              # regenera docs/datos-para-la-app.md
+php tools/inventario-de-datos.php --verificar   # falla si quedó viejo
+```
+
+La lista de campos que la app tiene que poder clonar sale de `fields()` de cada modelo —el mismo array que dibuja el formulario—, así que no puede desfasarse del panel. Lo que la herramienta sí decide a mano es **cómo sale cada campo por la API**, y eso lo mantiene honesto de dos maneras: un campo nuevo en el modelo sin una fila que diga si sale a la app hace fallar la verificación, y una fila que diga que sale una meta que `caaguazu-app-api` no nombra en ningún lado, también.
+
+Un documento con la lista de campos escrito a mano queda viejo el día que alguien agrega un campo, y el que se entera es quien programa la app, tres semanas después, cuando le falta un dato que la web ya tenía.
+
+`npm run verificar` corre los tres, más la auditoría móvil.
 
 Y para mirar una pantalla sin levantar un WordPress:
 

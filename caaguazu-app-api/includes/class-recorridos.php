@@ -451,7 +451,19 @@ class CZUAPI_Recorridos {
 				continue;
 			}
 
-			$es_evento = ( CZUAPI_Eventos::CPT === $post->post_type );
+			/*
+			 * Una parada puede ser tres cosas y no dos: una ficha de sitio,
+			 * una ficha de evento —que desde que la ficha tiene tipo de item
+			 * es como se carga un evento— y un evento del CPT viejo.
+			 *
+			 * La distinción que importa acá es de dónde salen los datos, no
+			 * qué es la parada: la ficha de evento es una ficha, así que trae
+			 * coordenadas, costo, horario y enlace de Maps como cualquier
+			 * otra; lo único que agrega son sus fechas. El evento viejo es el
+			 * que tiene el modelo aparte.
+			 */
+			$viejo  = ( CZUAPI_Eventos::CPT === $post->post_type );
+			$fechas = $this->fechas_parada( $ref_id, $viejo );
 
 			$out[] = array(
 				'orden'      => (int) $p['orden'],
@@ -461,17 +473,17 @@ class CZUAPI_Recorridos {
 				'titulo'     => get_the_title( $post ),
 				'portada'    => czuapi_imagen( (int) get_post_thumbnail_id( $ref_id ), '', 'medium' ),
 				'categoria'  => czuapi_primer_termino( $ref_id, CZUAPI_Taxonomias::TAX_CATEGORIA ),
-				'coordenadas'=> $es_evento
+				'coordenadas'=> $viejo
 					? $this->coord_evento( $ref_id )
 					: $this->coord_destino( $ref_id ),
-				'costo'      => $es_evento
+				'costo'      => $viejo
 					? (string) get_post_meta( $ref_id, CZUAPI_Eventos::META_COSTO, true )
 					: (string) get_post_meta( $ref_id, '_promotur_costo', true ),
-				'horario'    => $es_evento ? null : (string) get_post_meta( $ref_id, '_promotur_horario', true ),
-				'inicio'     => $es_evento ? czuapi_fecha( (string) get_post_meta( $ref_id, CZUAPI_Eventos::META_INICIO, true ) ) : null,
-				'fin'        => $es_evento ? czuapi_fecha( (string) get_post_meta( $ref_id, CZUAPI_Eventos::META_FIN, true ) ) : null,
+				'horario'    => $viejo ? null : (string) get_post_meta( $ref_id, '_promotur_horario', true ),
+				'inicio'     => $fechas['inicio'],
+				'fin'        => $fechas['fin'],
 				// El enlace de la ficha, para abrir esa parada suelta en Maps.
-				'google_maps'=> $es_evento ? null : $this->maps_destino( $ref_id ),
+				'google_maps'=> $viejo ? null : $this->maps_destino( $ref_id ),
 				// Lo que el equipo escribió PARA esta parada dentro de este
 				// recorrido: no es la descripción de la ficha, es por qué el
 				// lugar está acá y qué contar cuando se llega.
@@ -480,6 +492,31 @@ class CZUAPI_Recorridos {
 			);
 		}
 		return $out;
+	}
+
+	/**
+	 * Cuándo pasa una parada, si es que pasa en una fecha. Las dos claves
+	 * vienen siempre —en `null` cuando la parada es un sitio— para que la app
+	 * lea todas las paradas igual.
+	 *
+	 * @param int  $ref_id
+	 * @param bool $viejo  si la parada es del CPT `promotur_evento`
+	 * @return array { inicio, fin }
+	 */
+	private function fechas_parada( $ref_id, $viejo ) {
+		if ( $viejo ) {
+			return array(
+				'inicio' => czuapi_fecha( (string) get_post_meta( $ref_id, CZUAPI_Eventos::META_INICIO, true ) ),
+				'fin'    => czuapi_fecha( (string) get_post_meta( $ref_id, CZUAPI_Eventos::META_FIN, true ) ),
+			);
+		}
+		if ( 'evento' !== (string) get_post_meta( $ref_id, '_promotur_tipo_item', true ) ) {
+			return array( 'inicio' => null, 'fin' => null );
+		}
+		return array(
+			'inicio' => czuapi_fecha( (string) get_post_meta( $ref_id, '_promotur_evento_inicio', true ) ),
+			'fin'    => czuapi_fecha( (string) get_post_meta( $ref_id, '_promotur_evento_fin', true ) ),
+		);
 	}
 
 	/**

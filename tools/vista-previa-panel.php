@@ -267,8 +267,23 @@ class PROMOTUR_Destinos {
 	public static function owner_account_id( $post_id ) { return 7; }
 	/* Los campos son los reales: si la maqueta dibujara otros, serviría para
 	   juzgar una pantalla que no existe. */
+	const META_TIPO_ITEM = '_promotur_tipo_item';
+	const META_INICIO    = '_promotur_evento_inicio';
+	const META_FIN       = '_promotur_evento_fin';
+	public static function tipo_item( $post_id ) { return 'sitio'; }
+	public static function aplica_campo( $def, $post_id ) {
+		return empty( $def['solo'] ) || $def['solo'] === self::tipo_item( $post_id );
+	}
 	public static function fields() {
 		return array(
+			'que_es' => array(
+				'label'  => 'Qué es',
+				'fields' => array(
+					'_promotur_tipo_item' => array( 'label' => 'Tipo', 'type' => 'select', 'req' => true, 'options' => array( 'sitio' => 'Sitio — está siempre', 'evento' => 'Evento — pasa en una fecha' ), 'ayuda' => 'Un evento es un lugar con fecha: la fiesta patronal, una feria, un festival.' ),
+					'_promotur_evento_inicio' => array( 'label' => 'Empieza', 'type' => 'datetime', 'req' => true, 'solo' => 'evento', 'ayuda' => 'Día y hora de inicio.' ),
+					'_promotur_evento_fin'    => array( 'label' => 'Termina', 'type' => 'datetime', 'req' => false, 'solo' => 'evento' ),
+				),
+			),
 			'identidad' => array(
 				'label'  => 'Identidad',
 				'fields' => array(

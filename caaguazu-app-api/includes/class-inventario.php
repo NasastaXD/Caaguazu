@@ -44,6 +44,7 @@ class CZUAPI_Inventario {
 				'zona'       => array( 'type' => 'integer' ),
 				'bbox'       => array( 'type' => 'string' ),  // "minLng,minLat,maxLng,maxLat"
 				'buscar'     => array( 'type' => 'string' ),
+				'tipo_item'  => array( 'type' => 'string' ),  // sitio | evento
 				'pagina'     => array( 'type' => 'integer', 'default' => 1 ),
 				'por_pagina' => array( 'type' => 'integer', 'default' => 20 ),
 			),
@@ -98,13 +99,38 @@ class CZUAPI_Inventario {
 			$args['s'] = sanitize_text_field( (string) $request->get_param( 'buscar' ) );
 		}
 
+		/*
+		 * Un solo `meta_query` armado en un lugar: el filtro por tipo y el
+		 * recuadro del mapa pueden llegar juntos, y asignar cada uno por su lado
+		 * hacía que el segundo pisara al primero sin que nadie se enterara.
+		 */
+		$meta_query = array();
+
+		$tipo_item = sanitize_key( (string) $request->get_param( 'tipo_item' ) );
+		if ( in_array( $tipo_item, array( 'sitio', 'evento' ), true ) ) {
+			/*
+			 * «sitio» incluye las fichas sin el meta cargado: son las de antes
+			 * de que el tipo existiera, y todas eran sitios. Filtrar por
+			 * igualdad estricta las dejaría afuera de su propia colección.
+			 */
+			$meta_query[] = ( 'evento' === $tipo_item )
+				? array( 'key' => PROMOTUR_Destinos::META_TIPO_ITEM, 'value' => 'evento' )
+				: array(
+					'relation' => 'OR',
+					array( 'key' => PROMOTUR_Destinos::META_TIPO_ITEM, 'value' => 'evento', 'compare' => '!=' ),
+					array( 'key' => PROMOTUR_Destinos::META_TIPO_ITEM, 'compare' => 'NOT EXISTS' ),
+				);
+		}
+
 		$bbox = $this->parse_bbox( (string) $request->get_param( 'bbox' ) );
 		if ( $bbox ) {
-			$args['meta_query'] = array( // phpcs:ignore WordPress.DB.SlowDBQuery
-				'relation' => 'AND',
-				array( 'key' => '_promotur_lat', 'value' => array( $bbox['min_lat'], $bbox['max_lat'] ), 'type' => 'DECIMAL(10,6)', 'compare' => 'BETWEEN' ),
-				array( 'key' => '_promotur_lng', 'value' => array( $bbox['min_lng'], $bbox['max_lng'] ), 'type' => 'DECIMAL(10,6)', 'compare' => 'BETWEEN' ),
-			);
+			$meta_query[] = array( 'key' => '_promotur_lat', 'value' => array( $bbox['min_lat'], $bbox['max_lat'] ), 'type' => 'DECIMAL(10,6)', 'compare' => 'BETWEEN' );
+			$meta_query[] = array( 'key' => '_promotur_lng', 'value' => array( $bbox['min_lng'], $bbox['max_lng'] ), 'type' => 'DECIMAL(10,6)', 'compare' => 'BETWEEN' );
+		}
+
+		if ( $meta_query ) {
+			$meta_query['relation'] = 'AND';
+			$args['meta_query']     = $meta_query; // phpcs:ignore WordPress.DB.SlowDBQuery
 		}
 
 		$q     = new WP_Query( $args );
@@ -130,6 +156,12 @@ class CZUAPI_Inventario {
 		return array(
 			'id'              => (int) $id,
 			'tipo'            => 'destino',
+			// Sitio o evento. `tipo` sigue diciendo de qué colección salió
+			// esto —y vale `destino` para los dos— mientras que `tipo_item`
+			// dice qué es. Se separan a propósito: un cliente que ya filtraba
+			// por `tipo` no cambia de comportamiento al aparecer los eventos.
+			'tipo_item'       => $this->tipo_item( $id ),
+			'fechas'          => $this->fechas( $id ),
 			'titulo'          => get_the_title( $post ),
 			'gancho'          => (string) get_post_meta( $id, '_promotur_gancho', true ),
 			'categoria'       => czuapi_primer_termino( $id, CZUAPI_Taxonomias::TAX_CATEGORIA ),
@@ -158,6 +190,8 @@ class CZUAPI_Inventario {
 		return new WP_REST_Response( array(
 			'id'          => $id,
 			'tipo'        => 'destino',
+			'tipo_item'   => $this->tipo_item( $id ),
+			'fechas'      => $this->fechas( $id ),
 			'titulo'      => get_the_title( $post ),
 			'gancho'      => $m( '_promotur_gancho' ),
 			'categoria'   => czuapi_primer_termino( $id, CZUAPI_Taxonomias::TAX_CATEGORIA ),
@@ -227,6 +261,9 @@ class CZUAPI_Inventario {
 			$out[]   = array(
 				'id'        => (int) $id,
 				'tipo'      => 'destino',
+				// El pin de un evento se dibuja distinto al de un sitio, y el
+				// mapa no puede pedir el detalle de cada uno para saber cuál es.
+				'tipo_item' => $this->tipo_item( $id ),
 				'lat'       => $coord['lat'],
 				'lng'       => $coord['lng'],
 				'categoria' => $cat ? $cat['id'] : null,
@@ -244,6 +281,50 @@ class CZUAPI_Inventario {
 	/* --------------------------------------------------------------------- */
 	/*  Piezas                                                                */
 	/* --------------------------------------------------------------------- */
+
+	/**
+	 * Sitio o evento.
+	 *
+	 * @return string
+	 */
+	private function tipo_item( $id ) {
+		if ( method_exists( 'PROMOTUR_Destinos', 'tipo_item' ) ) {
+			return PROMOTUR_Destinos::tipo_item( $id );
+		}
+		return 'evento' === get_post_meta( $id, '_promotur_tipo_item', true ) ? 'evento' : 'sitio';
+	}
+
+	/**
+	 * Cuándo pasa, si es un evento. `null` en un sitio: un sitio no tiene
+	 * fechas, y devolver un objeto con dos nulos adentro obligaría al cliente a
+	 * mirar dos niveles para saber lo mismo.
+	 *
+	 * @return array|null { inicio, fin, en_curso, terminado }
+	 */
+	private function fechas( $id ) {
+		if ( 'evento' !== $this->tipo_item( $id ) ) {
+			return null;
+		}
+		$inicio = (string) get_post_meta( $id, '_promotur_evento_inicio', true );
+		$fin    = (string) get_post_meta( $id, '_promotur_evento_fin', true );
+		if ( '' === $inicio ) {
+			return null;
+		}
+
+		// Un evento sin fecha de fin dura ese día: es lo que la gente quiere
+		// decir cuando carga sólo el inicio, y deja que «terminado» signifique
+		// algo en vez de ser siempre falso.
+		$ts_inicio = strtotime( $inicio . ' UTC' );
+		$ts_fin    = '' !== $fin ? strtotime( $fin . ' UTC' ) : strtotime( gmdate( 'Y-m-d 23:59:59', $ts_inicio ) . ' UTC' );
+		$ahora     = time();
+
+		return array(
+			'inicio'    => czuapi_fecha( $inicio ),
+			'fin'       => '' !== $fin ? czuapi_fecha( $fin ) : null,
+			'en_curso'  => ( $ahora >= $ts_inicio && $ahora <= $ts_fin ),
+			'terminado' => ( $ahora > $ts_fin ),
+		);
+	}
 
 	/**
 	 * El enlace de Google Maps de una ficha, o null.

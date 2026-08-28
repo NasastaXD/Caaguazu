@@ -215,6 +215,25 @@ function promotur_current_identity() {
 }
 
 /**
+ * Una fecha guardada, en el formato que pide `<input type="datetime-local">`.
+ *
+ * La base guarda `2026-09-14 19:00:00` y el input quiere `2026-09-14T19:00`.
+ * Sin esta traducción el campo se dibuja vacío aunque el dato esté, y quien
+ * edita la ficha vuelve a cargar la fecha creyendo que se perdió.
+ *
+ * @param string $valor
+ * @return string
+ */
+function promotur_datetime_input( $valor ) {
+	$valor = trim( (string) $valor );
+	if ( '' === $valor ) {
+		return '';
+	}
+	$marca = strtotime( $valor );
+	return $marca ? gmdate( 'Y-m-d\TH:i', $marca ) : '';
+}
+
+/**
  * El bloque de acciones del editor: qué se puede hacer con esta pieza además
  * de seguir escribiéndola.
  *
@@ -298,6 +317,10 @@ function promotur_campo( $key, $def, $valor ) {
 	// obligatorio él mismo — el enlace de Google Maps, que cumple un mínimo
 	// que también se puede cumplir con las coordenadas.
 	$check = ( $req || ! empty( $def['check'] ) ) ? ' data-check="' . esc_attr( $key ) . '"' : '';
+	// El selector de tipo de ficha gobierna qué campos se ven.
+	if ( class_exists( 'PROMOTUR_Destinos' ) && PROMOTUR_Destinos::META_TIPO_ITEM === $key ) {
+		$check .= ' data-tipo-item';
+	}
 	$nombre = 'meta[' . $key . ']';
 	// El campo de foto NO se envuelve en un <label>: adentro lleva otro
 	// <label> —el que dispara el selector de archivos— y un <label> dentro de
@@ -305,8 +328,12 @@ function promotur_campo( $key, $def, $valor ) {
 	// anuncian dos etiquetas para el mismo control. Los demás campos sí, que
 	// es lo que hace que se pueda tocar el texto para enfocar el control.
 	$caja = ( 'image' === $tipo ) ? 'div' : 'label';
+	// `solo` marca un campo que aplica a un solo tipo de ficha (las fechas de
+	// un evento). El JavaScript lo muestra u oculta según lo elegido, y el
+	// servidor no confía en eso: el checklist vuelve a preguntar.
+	$solo = isset( $def['solo'] ) ? ' data-solo="' . esc_attr( $def['solo'] ) . '"' : '';
 	?>
-	<<?php echo esc_html( $caja ); ?> class="promotur-field promotur-field--<?php echo esc_attr( $tipo ); ?>">
+	<<?php echo esc_html( $caja ); ?> class="promotur-field promotur-field--<?php echo esc_attr( $tipo ); ?>"<?php echo $solo; // phpcs:ignore WordPress.Security.EscapeOutput ?>>
 		<span><?php echo esc_html( $def['label'] ); ?><?php echo $req ? ' <em>*</em>' : ''; ?></span>
 		<?php
 		switch ( $tipo ) :
@@ -320,6 +347,9 @@ function promotur_campo( $key, $def, $valor ) {
 						<option value="<?php echo esc_attr( $ov ); ?>" <?php selected( (string) $valor, (string) $ov ); ?>><?php echo esc_html( $ol ); ?></option>
 					<?php endforeach; ?>
 				</select>
+				<?php break;
+			case 'datetime': ?>
+				<input type="datetime-local" name="<?php echo esc_attr( $nombre ); ?>" value="<?php echo esc_attr( promotur_datetime_input( (string) $valor ) ); ?>"<?php echo $check; // phpcs:ignore WordPress.Security.EscapeOutput ?>>
 				<?php break;
 			case 'coord': ?>
 				<input type="text" inputmode="decimal" name="<?php echo esc_attr( $nombre ); ?>" value="<?php echo esc_attr( (string) $valor ); ?>" data-coord="<?php echo esc_attr( '_promotur_lat' === $key ? 'lat' : 'lng' ); ?>"<?php echo $check; // phpcs:ignore WordPress.Security.EscapeOutput ?>>

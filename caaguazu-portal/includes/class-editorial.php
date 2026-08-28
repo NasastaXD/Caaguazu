@@ -330,6 +330,16 @@ class PROMOTUR_Editorial {
 
 		foreach ( call_user_func( array( $clase, 'flat_fields' ) ) as $key => $def ) {
 			if ( empty( $def['req'] ) ) { continue; }
+			/*
+			 * Un campo puede no aplicarle a esta pieza: la fecha de inicio es
+			 * obligatoria en un evento y no existe en un sitio. Sin esto,
+			 * «Empieza» quedaría como un mínimo sin cumplir en toda ficha que
+			 * no sea un evento y ninguna se podría enviar jamás.
+			 */
+			if ( method_exists( $clase, 'aplica_campo' )
+				&& ! call_user_func( array( $clase, 'aplica_campo' ), $def, $post_id ) ) {
+				continue;
+			}
 			$val  = $post_id ? get_post_meta( $post_id, $key, true ) : '';
 			$items[] = array(
 				'key'   => $key,

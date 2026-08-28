@@ -3,7 +3,7 @@ Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 3.3.0
+Stable tag: 3.4.0
 License: GPLv2 or later
 
 Panel autenticado tipo app (PWA) bajo /turismo-panel, con enrutador propio, login propio, roles y flujo editorial para las tres cosas que la app muestra: fichas del inventario turístico, artículos y recorridos.
@@ -57,6 +57,25 @@ llamen los tags.
 * Repo privado: definir `PROMOTUR_GITHUB_TOKEN` (PAT de solo lectura) en `wp-config.php`.
 
 == Changelog ==
+
+= 3.4.0 =
+* **La ficha ahora es de sitio o de evento.** Es el primer campo del formulario,
+  porque cambia el resto: un evento pide día y hora de inicio, y de cierre si lo
+  tiene; un sitio no ve esos campos. Todo lo demás se carga igual, porque un
+  evento **es** un lugar con fechas: tiene gancho, foto, ubicación, costo,
+  horario, fuentes y flujo editorial exactamente como cualquier ficha.
+* **Los eventos dejan de vivir en wp-admin.** Eran un tipo de contenido aparte
+  en `caaguazu-app-api`, con la mitad de los campos —sin gancho, sin galería,
+  sin fuentes— y sin pasar por revisión. Lo ya cargado ahí se sigue sirviendo a
+  la app; lo nuevo se carga acá.
+* **El checklist de mínimos entiende el tipo.** `aplica_campo()` decide si un
+  campo corresponde, y lo usan las dos partes: el editor para mostrarlo o
+  esconderlo, y el checklist para no exigirle a un sitio la fecha de un evento.
+  Si sólo lo supiera el formulario, un sitio no se podría publicar nunca.
+* **Un documento de datos que no puede quedar viejo.**
+  `tools/inventario-de-datos.php` genera `docs/datos-para-la-app.md` leyendo el
+  modelo real, y `npm run verificar` falla si el archivo quedó atrasado o si se
+  agregó un campo sin decidir si sale a la app.
 
 = 3.3.0 =
 * **Se puede deshacer.** Hasta acá el panel sabía llevar algo de borrador a
