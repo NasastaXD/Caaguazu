@@ -212,6 +212,40 @@
 		});
 	}
 
+	/* ---------- Submenú del lateral ---------- */
+	function initSubnav() {
+		document.querySelectorAll('[data-subnav-toggle]').forEach(function (caret) {
+			var panel = document.getElementById(caret.getAttribute('data-subnav-toggle'));
+			if (!panel) { return; }
+			function alternar(e) {
+				// El caret vive dentro del enlace del padre: si no frenamos el
+				// clic, abrir el submenú navega a la sección.
+				e.preventDefault();
+				e.stopPropagation();
+				var abierto = !panel.hidden;
+				panel.hidden = abierto;
+				caret.setAttribute('aria-expanded', abierto ? 'false' : 'true');
+			}
+			caret.addEventListener('click', alternar);
+			caret.addEventListener('keydown', function (e) {
+				if (e.key === 'Enter' || e.key === ' ') { alternar(e); }
+			});
+		});
+	}
+
+	/* ---------- Atajos de teclado ---------- */
+	function initAtajos() {
+		// ⌘K / Ctrl+K enfoca el buscador — el mismo atajo que anuncia la tecla
+		// dibujada al lado del campo. Un atajo anunciado y no implementado es
+		// peor que no anunciarlo.
+		document.addEventListener('keydown', function (e) {
+			if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+				var campo = document.querySelector('[data-buscador]');
+				if (campo) { e.preventDefault(); campo.focus(); campo.select(); }
+			}
+		});
+	}
+
 	/* ---------- Splash ---------- */
 	function initSplash() {
 		var splash = document.querySelector('[data-splash]');
@@ -359,7 +393,7 @@
 					if (!res.success) { setMsg((res.data && res.data.message) || i18n.error, 'is-error'); return; }
 					value.value = res.data.id;
 					if (preview && res.data.thumb) { preview.style.backgroundImage = 'url(' + res.data.thumb + ')'; }
-					setMsg('', '');
+					setMsg(i18n.photoUploaded, 'is-success');
 					refreshChecklist();
 				}).catch(function () { setMsg(i18n.error, 'is-error'); });
 			});

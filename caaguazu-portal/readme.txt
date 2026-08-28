@@ -3,7 +3,7 @@ Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 3.2.1
+Stable tag: 3.2.2
 License: GPLv2 or later
 
 Panel autenticado tipo app (PWA) bajo /turismo-panel, con enrutador propio, login propio, roles y flujo editorial para las tres cosas que la app muestra: fichas del inventario turístico, artículos y recorridos.
@@ -57,6 +57,23 @@ llamen los tags.
 * Repo privado: definir `PROMOTUR_GITHUB_TOKEN` (PAT de solo lectura) en `wp-config.php`.
 
 == Changelog ==
+
+= 3.2.2 =
+* **Guardar borrador, enviar a revisión, aprobar/devolver, tareas y la
+  captura offline no funcionaban: ningún botón de esas pantallas respondía
+  al clic.** La causa era una sola: `initSubnav()` e `initAtajos()` (el
+  submenú del lateral y el atajo ⌘K/Ctrl+K) se llamaban al cargar la página
+  pero no estaban definidas en ningún lado —una poda de código de la v3.0.0
+  les borró el cuerpo y se olvidó de sacar el llamado—, así que el
+  navegador tiraba `initSubnav is not defined` a mitad de la secuencia de
+  arranque y todo lo que venía después en esa lista —el editor, la
+  revisión, la gestión de tareas, la captura de campo— nunca llegaba a
+  engancharse. Verificado con un navegador real: antes del arreglo, un
+  click en "Guardar borrador" no disparaba ningún pedido; después, sí.
+* **Subir una foto no avisaba si había salido bien.** El caso de éxito
+  borraba el mensaje en vez de escribir uno; la única señal era la miniatura
+  cambiando en un recuadro de 64px, fácil de no ver. Ahora dice "Foto
+  subida."
 
 = 3.2.1 =
 * **Se apaga la pantalla nativa de wp-admin para Destinos, Artículos y
