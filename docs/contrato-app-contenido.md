@@ -78,7 +78,7 @@ GET /inventario/{id}       la ficha completa
 GET /mapa/markers          sólo pines, para el mapa
 ```
 
-Filtros de `/inventario`: `categoria`, `zona`, `bbox`, `buscar`, `tipo_item`,
+Filtros de `/inventario`: `categoria`, `bbox`, `buscar`, `tipo_item`,
 `pagina`, `por_pagina`.
 
 ### 1.1 La ubicación: enlace primero, coordenadas después
@@ -134,9 +134,7 @@ Prevé ese caso.
   "tipo_item": "sitio",
   "fechas": null,
   "titulo": "…",
-  "gancho": "…",
   "categoria": { "id": 12, "nombre": "Paisaje Natural", "color": "#2E7D32" },
-  "zona": { "id": 3, "nombre": "…" },
   "etiquetas": [ { "id": 51, "slug": "con-ninos", "nombre": "Con niños" } ],
   "coordenadas": { "lat": -25.4669, "lng": -56.0175 },
   "google_maps": "https://www.google.com/maps/…",
@@ -150,10 +148,9 @@ Prevé ese caso.
     "contacto": "…"
   },
   "acceso": {
-    "estado_camino": "asfalto",
-    "accesibilidad": "…"
+    "estado_camino": "asfalto"
   },
-  "articulo_html": "…",
+  "descripcion": "…",
   "articulos_relacionados": [ { "id": 55, "titulo": "…", "portada": { … } } ],
   "fuentes": "…",
   "autor": { "id": 41, "nombre": "…" },
@@ -351,9 +348,13 @@ Una ruta armada con sitios del inventario, en un orden pensado, con la historia
 de cada parada al lado.
 
 ```
-GET /recorridos            los prehechos publicados
+GET /recorridos            lista paginada de los prehechos publicados
 GET /recorridos/{id}       uno completo
 ```
+
+Filtros de `/recorridos`: `pagina`, `por_pagina`. Hasta la 0.5.0 devolvía un
+array sin paginar, con tope fijo de 50 — el recorrido 51 no existía para nadie.
+Ahora es una lista paginada como `/inventario` y `/articulos`: ver §3.3.
 
 ### 3.1 Qué es y qué no
 
@@ -418,8 +419,9 @@ paradas.**
 }
 ```
 
-`GET /recorridos` devuelve un array con los campos de arriba de `paradas`
-(hasta `cantidad_paradas`): lo justo para la tarjeta.
+`GET /recorridos` devuelve el sobre paginado (`{ items, total, pagina,
+por_pagina }`) con los campos de arriba de `paradas` (hasta
+`cantidad_paradas`) en cada `item`: lo justo para la tarjeta.
 
 ### 3.4 `texto` y `disponible`, parada por parada
 
@@ -492,6 +494,71 @@ se guardan.
                          │   /recorridos    │
                          └──────────────────┘
 ```
+
+### 4.1 Caché: ETag en todo, desde la 0.5.0
+
+Los ocho endpoints de contenido —lista y detalle de inventario, artículos,
+recorridos y eventos— mandan `ETag` y `Cache-Control: public, max-age=…`
+(60s en las listas, 180s en los detalles; markers, categorías, strings y
+media-manifest ya lo hacían). Mandá `If-None-Match` con el `ETag` que
+recibiste: si no cambió, la respuesta es un `304` sin cuerpo, y eso es todo
+lo que hace falta para no volver a bajar una ficha que no se tocó.
+
+La única excepción a propósito es el detalle de un **recorrido de usuario**
+(`/recorridos/{id}` cuando es tuyo, y todo `/mis-recorridos`): no lleva
+`ETag` ni `Cache-Control`, porque es de una sola cuenta y `public` no le
+corresponde.
+
+Esto es acumulativo con `/sync` (§4.2), no un reemplazo: `/sync` te dice
+*qué* cambió; el ETag evita bajar de nuevo lo que ya tenías cuando lo pedís
+igual, por ejemplo al reabrir el detalle de algo que ya estaba en la lista.
+
+### 4.2 `/sync`: el delta, para no bajar todo de nuevo
+
+```
+GET /sync?since=2026-08-21T00:00:00Z
+```
+
+Sin `since`, o con uno más viejo que lo que se conserva (90 días): recarga
+completa. Si tenías algo cacheado y hace más de 90 días que no sincronizás,
+asumí que está desactualizado y volvé a pedir todo por los endpoints
+normales.
+
+```json
+{
+  "desde": "2026-08-21T00:00:00+00:00",
+  "hasta": "2026-08-28T14:03:00+00:00",
+  "cambiados": {
+    "inventario": [12, 45, 88],
+    "eventos":    [],
+    "articulos":  [201],
+    "recorridos": []
+  },
+  "eliminados": {
+    "inventario": [7],
+    "eventos":    [],
+    "articulos":  [],
+    "recorridos": []
+  },
+  "completo": false
+}
+```
+
+- **`cambiados`** son IDs, no objetos: con la lista en la mano, pedís el
+  detalle de cada uno por su endpoint normal (que ya viene con ETag, así que
+  si además no cambió nada raro, ni siquiera baja el cuerpo).
+- **`eliminados` es la razón de que este endpoint exista.** Algo sale de acá
+  cuando deja de estar publicado —despublicado, archivado, borrado o
+  mandado a la papelera—, no sólo cuando se borra de la base. Si tu caché
+  local sólo mira altas y cambios, una ficha despublicada se queda
+  mostrándose para siempre. Sacá esos IDs de tu caché.
+- **`completo: true`** es la señal de "tirá todo y empezá de nuevo": pasa
+  cuando el `since` es más viejo que la lápida más antigua que el servidor
+  todavía tiene, porque en ese caso no se puede garantizar que la lista de
+  bajas esté completa. Cuando viene así, `cambiados` y `eliminados` llegan
+  vacíos — no los uses, andá a los endpoints normales.
+- Guardá `hasta` como tu próximo `since`. No uses la hora del teléfono: el
+  servidor puede estar en otro huso o con el reloj corrido.
 
 Tres reglas que valen para las tres entidades:
 

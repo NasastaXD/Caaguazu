@@ -33,7 +33,9 @@ $body = function () use ( $grupos, $puede ) {
 		<?php $terminos = PROMOTUR_Estructura::terminos( $tax ); ?>
 
 		<h3 class="promotur-h3 promotur-mt"><?php echo esc_html( $grupo['titulo'] ); ?></h3>
-		<p class="promotur-muted"><?php echo esc_html( $grupo['ayuda'] ); ?></p>
+		<?php if ( ! empty( $grupo['ayuda'] ) ) : ?>
+			<p class="promotur-muted"><?php echo esc_html( $grupo['ayuda'] ); ?></p>
+		<?php endif; ?>
 
 		<div class="promotur-card">
 			<?php if ( empty( $terminos ) ) : ?>

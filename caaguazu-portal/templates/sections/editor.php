@@ -72,7 +72,6 @@ $body = function () use ( $post, $post_id, $estado, $checklist, $feedback, $grou
 				<div class="promotur-grid promotur-grid--2">
 					<?php
 					promotur_select_taxonomia( 'promotur_categoria', $post_id, 'categoria', __( 'Categoría', 'caaguazu-portal' ) );
-					promotur_select_taxonomia( 'promotur_zona', $post_id, 'zona', __( 'Zona', 'caaguazu-portal' ) );
 					?>
 					<label class="promotur-field">
 						<span><?php esc_html_e( 'Etiquetas', 'caaguazu-portal' ); ?></span>

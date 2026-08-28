@@ -132,9 +132,10 @@ class CZUAPI_Articulos {
 			$items[] = $this->resumen( $post );
 		}
 
-		return new WP_REST_Response(
+		return CZUAPI_Response::with_etag(
 			CZUAPI_Response::paginado( $items, $q->found_posts, $pagina, $por_pagina ),
-			200
+			$request,
+			60
 		);
 	}
 
@@ -153,7 +154,7 @@ class CZUAPI_Articulos {
 		$out['relacionados'] = $this->relacionados( $post->ID );
 		$out['actualizado']  = czuapi_fecha( $post->post_modified_gmt );
 
-		return new WP_REST_Response( $out, 200 );
+		return CZUAPI_Response::with_etag( $out, $request, 180 );
 	}
 
 	/**

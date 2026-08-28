@@ -1,14 +1,19 @@
 <?php
 /**
- * Categorías y zonas para la app.
+ * Categorías para la app.
  *
- * Las taxonomías ya existen en caaguazu-portal (`promotur_categoria`,
- * `promotur_zona`); lo que no existía es la presentación que la app necesita:
- * un icono y un color por categoría, y un PNG de marcador pre-renderizado.
+ * La taxonomía ya existe en caaguazu-portal (`promotur_categoria`); lo que no
+ * existía es la presentación que la app necesita: un icono y un color por
+ * categoría, y un PNG de marcador pre-renderizado.
  *
  * El marcador se sirve pre-renderizado a propósito: componer el pin en el
  * cliente obliga a cada plataforma a reimplementar el mismo dibujo y a que el
  * color viaje dos veces. Del lado servidor se resuelve una vez.
+ *
+ * La zona (`promotur_zona`) dejó de exponerse: el departamento es chico y el
+ * enlace de Google Maps de cada ficha dice dónde queda mejor que un distrito.
+ * La taxonomía sigue registrada del lado del panel —no se borra un dato
+ * cargado sin que alguien lo decida— pero ya no tiene endpoint ni columna acá.
  */
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
@@ -18,7 +23,6 @@ class CZUAPI_Taxonomias {
 	private static $instance = null;
 
 	const TAX_CATEGORIA = 'promotur_categoria';
-	const TAX_ZONA      = 'promotur_zona';
 
 	const META_ICONO  = 'czuapi_icono';
 	const META_COLOR  = 'czuapi_color';
@@ -119,14 +123,6 @@ class CZUAPI_Taxonomias {
 			'callback'            => array( $this, 'categorias' ),
 			'permission_callback' => '__return_true',
 		) );
-
-		// Pedido por el lado de la app: las zonas se usan como filtro en
-		// /inventario y aparecen en la ficha, pero no había forma de listarlas.
-		register_rest_route( CZUAPI_NS, '/zonas', array(
-			'methods'             => 'GET',
-			'callback'            => array( $this, 'zonas' ),
-			'permission_callback' => '__return_true',
-		) );
 	}
 
 	public function categorias( $request ) {
@@ -158,26 +154,4 @@ class CZUAPI_Taxonomias {
 		return CZUAPI_Response::with_etag( $out, $request, 600 );
 	}
 
-	public function zonas( $request ) {
-		$terms = get_terms( array(
-			'taxonomy'   => self::TAX_ZONA,
-			'hide_empty' => false,
-		) );
-		if ( is_wp_error( $terms ) ) {
-			$terms = array();
-		}
-
-		$out = array();
-		foreach ( $terms as $t ) {
-			$out[] = array(
-				'id'     => (int) $t->term_id,
-				'slug'   => $t->slug,
-				'nombre' => $t->name,
-				'padre'  => $t->parent ? (int) $t->parent : null,
-				'total'  => (int) $t->count,
-			);
-		}
-
-		return CZUAPI_Response::with_etag( $out, $request, 600 );
-	}
 }

@@ -2,7 +2,7 @@
 Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 0.4.0
+Stable tag: 0.5.0
 License: GPLv2 or later
 
 Capa REST que consume la app Android de turismo (Turismo App Czu).
@@ -46,15 +46,14 @@ Namespace: `/wp-json/czu-app/v1/`
 
 = Contenido =
 * `GET /categorias` — con icono, color y PNG de marcador
-* `GET /zonas`
-* `GET /inventario` — filtros: `categoria`, `zona`, `bbox`, `buscar`, `pagina`, `por_pagina`
+* `GET /inventario` — filtros: `categoria`, `bbox`, `buscar`, `tipo_item`, `pagina`, `por_pagina`
 * `GET /inventario/{id}`
-* `GET /eventos` — filtros: `desde`, `hasta`, `categoria`
+* `GET /eventos` — filtros: `desde`, `hasta`, `categoria`, `pagina`, `por_pagina`
 * `GET /eventos/{id}`
 * `GET /mapa/markers`
-* `GET /recorridos`, `GET /recorridos/{id}`
+* `GET /recorridos` — filtros: `pagina`, `por_pagina` · `GET /recorridos/{id}`
 * `GET·POST·PUT·DELETE /mis-recorridos` — requiere token
-* `GET /articulos`, `GET /articulos/{id}` — filtros: `categoria`, `etiqueta`
+* `GET /articulos`, `GET /articulos/{id}` — filtros: `categoria`, `etiqueta`, `pagina`, `por_pagina`
 
 = Interfaz =
 * `GET /strings/{locale}` — `es`, `en`, `gn`
@@ -92,11 +91,52 @@ de navegador y un token de teléfono tienen ciclos de vida distintos — cerrar
 sesión en la web no debe desloguear el celular. Misma disciplina: se guarda
 solo el hash SHA-256, nunca el token.
 
+**`/mapa/markers` precarga meta y términos a propósito.** La consulta pide
+sólo IDs (`fields => 'ids'`), y eso es justo lo que la hace liviana — pero
+WP_Query se salta el precargado automático de metas y términos cuando pide
+sólo IDs. Sin `update_meta_cache()`/`update_object_term_cache()` antes del
+loop, cada pin dispara sus propias consultas; con cien sitios no se nota, con
+varios miles sí. Mismo motivo detrás del `update_meta_cache()` en los markers
+de evento.
+
 == Instalación ==
 
 1. Requiere `caaguazu-cuentas` y `caaguazu-portal` activos.
 2. Subir a `/wp-content/plugins/` y activar. Crea sus dos tablas.
 3. Cargar icono y color de cada categoría en **Destinos → Categorías**.
+
+== Cambios del contrato en 0.5.0 ==
+
+Están detallados, con payloads, en `docs/contrato-app-contenido.md`. La lista
+completa de campos, generada desde el código, está en
+`docs/datos-para-la-app.md`.
+
+* **Se retira Zona.** `GET /zonas` deja de existir, `/inventario` pierde el
+  filtro `zona` y el objeto `zona` de la lista y el detalle, y `/eventos` deja
+  de traer la taxonomía en sus términos. El departamento es chico y el enlace
+  de Google Maps de cada ficha ya dice dónde queda; la taxonomía sigue
+  registrada del lado del panel, sólo se dejó de exponer acá.
+* **Se retiran `gancho` y `accesibilidad` de la ficha**, siguiendo a la poda
+  del modelo en `caaguazu-portal` 3.5.0: no le aportaban nada a la app que el
+  título, la portada y el enlace de Maps no dieran ya. En `/eventos`, la
+  tarjeta de un evento cargado como ficha (`origen: "ficha"`) ahora arma
+  `resumen` con la descripción en vez del gancho retirado.
+* **La descripción de la ficha se llama `descripcion`, no `articulo_html`.**
+  Era un bug, no un cambio de diseño: el nombre se copió sin pensar de la
+  respuesta de Artículos al armar el detalle de ficha, y la app la buscaba
+  como `descripcion` — esa clave nunca existió y la descripción nunca
+  llegaba. `articulo_html` sigue viajando igual en Recorrido y en el evento
+  legado (`/eventos/{id}` con `origen: "evento_legado"`): ahí sí es un
+  artículo, el nombre no está mal.
+* **`GET /recorridos` ahora pagina**, con el mismo sobre que ya usaban
+  inventario y artículos (`{ items, total, pagina, por_pagina }`) y los
+  mismos parámetros `pagina`/`por_pagina`. Antes devolvía un array plano con
+  tope fijo de 50 sin forma de pedir el resto.
+* **ETag y `Cache-Control` en los ocho endpoints de contenido** (lista y
+  detalle de inventario, artículos, recorridos y eventos), como ya tenían
+  `/categorias`, `/mapa/markers`, `/strings` y `/media-manifest`. Mandá
+  `If-None-Match`: si no cambió, la respuesta es `304` sin cuerpo. No aplica
+  al detalle de un recorrido de usuario (es de una sola cuenta).
 
 == Cambios del contrato en 0.4.0 ==
 

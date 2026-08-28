@@ -3,7 +3,7 @@ Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 3.4.0
+Stable tag: 3.5.0
 License: GPLv2 or later
 
 Panel autenticado tipo app (PWA) bajo /turismo-panel, con enrutador propio, login propio, roles y flujo editorial para las tres cosas que la app muestra: fichas del inventario turístico, artículos y recorridos.
@@ -21,7 +21,7 @@ El equipo escribe ahí las tres cosas que la app muestra —fichas del
 inventario turístico, artículos y recorridos— con un mismo flujo editorial:
 borrador → enviar → cola de revisión (asignarme) → aprobar/devolver con
 feedback → publicado. wp-admin no interviene: ni la edición de contenido, ni
-la cuenta, ni la galería, ni la estructura (categorías/zonas/etiquetas), ni el
+la cuenta, ni la galería, ni la estructura (categorías/etiquetas), ni el
 equipo (roles, suspensión, invitaciones) tienen pantalla ahí. Lo único que
 queda en wp-admin es el registro de auditoría y las actualizaciones del
 plugin, y ninguna de las dos cosas la necesita nadie del equipo.
@@ -57,6 +57,36 @@ llamen los tags.
 * Repo privado: definir `PROMOTUR_GITHUB_TOKEN` (PAT de solo lectura) en `wp-config.php`.
 
 == Changelog ==
+
+= 3.5.0 =
+* **Se sacaron Gancho y Accesibilidad de la ficha.** No le hacían falta a la
+  app: el gancho no decía nada que el título y la portada no dijeran ya, y
+  la accesibilidad se llenaba con frases sueltas sin ningún criterio común.
+  El valor cargado sigue en su meta —no se borra un dato sin que alguien lo
+  decida—, sólo se dejó de pedir y de mostrar.
+* **Se sacó el concepto de Zona.** El departamento es chico y el enlace de
+  Google Maps de cada ficha ya dice dónde queda. La taxonomía sigue
+  registrada por las mismas razones que arriba, pero ya no se edita ni se
+  muestra en ningún lado del panel.
+* **La descripción de la ficha ahora coincide con lo que la app busca.**
+  Era un bug del lado de la API, no del panel: viajaba con el nombre
+  `articulo_html`, copiado sin pensar del formato de Artículos. Ver el
+  changelog de `caaguazu-app-api` 0.5.0.
+* Se sacó la línea de "acceso prestado" de Mi perfil: no cumplía ninguna
+  función, sólo generaba dudas.
+* Se sacaron las dos ayudas redundantes de Estructura (qué es una categoría,
+  qué es una etiqueta): repetían lo que el nombre del campo ya decía.
+* "Actividad reciente" ahora explica qué mide la métrica, con un subtítulo
+  arriba del gráfico.
+* El ícono de documento de la barra inferior se veía estirado hacia arriba
+  cuando no estaba seleccionado; la barra es un poco más ancha de los
+  costados.
+* Mi perfil: la foto de cuenta ahora tiene tope de 5 MB, y se borra sola a
+  los 1095 días de subida —excepto la de un Promotor, que no vence—.
+* Ayuda se reescribió entera: describía un sitio público, reseñas y una
+  curaduría que dejaron de existir hace versiones. Ahora lista las secciones
+  reales, tomadas del mismo registro de permisos que decide qué puede abrir
+  cada quien —una sección que no ves en el menú tampoco aparece acá—.
 
 = 3.4.0 =
 * **La ficha ahora es de sitio o de evento.** Es el primer campo del formulario,

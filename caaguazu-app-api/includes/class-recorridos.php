@@ -80,6 +80,10 @@ class CZUAPI_Recorridos {
 			'methods'             => 'GET',
 			'callback'            => array( $this, 'lista' ),
 			'permission_callback' => '__return_true',
+			'args'                => array(
+				'pagina'     => array( 'type' => 'integer', 'default' => 1 ),
+				'por_pagina' => array( 'type' => 'integer', 'default' => 20 ),
+			),
 		) );
 
 		register_rest_route( CZUAPI_NS, '/recorridos/(?P<id>\d+)', array(
@@ -120,9 +124,17 @@ class CZUAPI_Recorridos {
 	/* --------------------------------------------------------------------- */
 
 	public function lista( $request ) {
-		$posts = get_posts( array_merge( czuapi_args_publicado(), array(
+		$pagina     = max( 1, (int) $request->get_param( 'pagina' ) );
+		$por_pagina = min( 100, max( 1, (int) $request->get_param( 'por_pagina' ) ) );
+
+		// Antes traía hasta 50 y ahí se cortaba, sin página siguiente y sin
+		// forma de saber que faltaban: el equipo no tiene 50 recorridos
+		// prehechos hoy, pero el día que los tenga, el 51 desaparecía sin que
+		// nada lo avisara. Paginado como el resto de las listas.
+		$q = new WP_Query( array_merge( czuapi_args_publicado(), array(
 			'post_type'      => self::CPT,
-			'posts_per_page' => 50,
+			'posts_per_page' => $por_pagina,
+			'paged'          => $pagina,
 			'meta_query'     => array( array( // phpcs:ignore WordPress.DB.SlowDBQuery
 				'key'   => self::META_TIPO,
 				'value' => 'prehecho',
@@ -130,10 +142,15 @@ class CZUAPI_Recorridos {
 		) ) );
 
 		$out = array();
-		foreach ( $posts as $post ) {
+		foreach ( $q->posts as $post ) {
 			$out[] = $this->formato( $post, false );
 		}
-		return new WP_REST_Response( $out, 200 );
+
+		return CZUAPI_Response::with_etag(
+			CZUAPI_Response::paginado( $out, $q->found_posts, $pagina, $por_pagina ),
+			$request,
+			60
+		);
 	}
 
 	public function detalle( $request ) {
@@ -150,11 +167,15 @@ class CZUAPI_Recorridos {
 			if ( $cuenta <= 0 || (int) get_post_meta( $post->ID, self::META_CUENTA, true ) !== $cuenta ) {
 				return CZUAPI_Response::no_encontrado();
 			}
-		} elseif ( 'publish' !== $post->post_status ) {
+			// Sin ETag/Cache-Control acá: `with_etag` manda `public`, y esto es
+			// de una sola cuenta. Lo mismo vale para mis_lista/crear/actualizar.
+			return new WP_REST_Response( $this->formato( $post, true ), 200 );
+		}
+		if ( 'publish' !== $post->post_status ) {
 			return CZUAPI_Response::no_encontrado();
 		}
 
-		return new WP_REST_Response( $this->formato( $post, true ), 200 );
+		return CZUAPI_Response::with_etag( $this->formato( $post, true ), $request, 180 );
 	}
 
 	/* --------------------------------------------------------------------- */

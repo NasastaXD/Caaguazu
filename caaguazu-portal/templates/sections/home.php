@@ -84,6 +84,7 @@ $body = function () use ( $identity, $pulse, $serie, $tope, $can_draft, $can_rev
 			<?php echo promotur_icon( 'chart' ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 			<span><?php esc_html_e( 'Actividad reciente', 'caaguazu-portal' ); ?></span>
 		</div>
+		<p class="promotur-muted" style="margin:0 0 -4px"><?php esc_html_e( 'Fichas, artículos y recorridos creados, enviados o publicados en los últimos 7 días.', 'caaguazu-portal' ); ?></p>
 		<div class="promotur-stat__caja">
 			<span class="promotur-stat__n"><?php echo esc_html( number_format_i18n( $serie['total'] ) ); ?></span>
 

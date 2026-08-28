@@ -64,7 +64,7 @@ class CZUAPI_Eventos {
 			'supports'        => array( 'title', 'editor', 'thumbnail', 'excerpt' ),
 			'has_archive'     => false,
 			'rewrite'         => array( 'slug' => 'evento' ),
-			'taxonomies'      => array( CZUAPI_Taxonomias::TAX_CATEGORIA, CZUAPI_Taxonomias::TAX_ZONA ),
+			'taxonomies'      => array( CZUAPI_Taxonomias::TAX_CATEGORIA ),
 		) );
 
 		foreach ( array( self::META_INICIO, self::META_FIN, self::META_COSTO ) as $key ) {
@@ -134,9 +134,10 @@ class CZUAPI_Eventos {
 		$total = count( $items );
 		$pagos = array_slice( $items, ( $pagina - 1 ) * $por_pagina, $por_pagina );
 
-		return new WP_REST_Response(
+		return CZUAPI_Response::with_etag(
 			CZUAPI_Response::paginado( array_values( $pagos ), $total, $pagina, $por_pagina ),
-			200
+			$request,
+			60
 		);
 	}
 
@@ -235,7 +236,7 @@ class CZUAPI_Eventos {
 		if ( self::CPT !== $post->post_type ) {
 			return CZUAPI_Response::no_encontrado();
 		}
-		return new WP_REST_Response( $this->formato( $post, true ), 200 );
+		return CZUAPI_Response::with_etag( $this->formato( $post, true ), $request, 180 );
 	}
 
 	/**
@@ -272,7 +273,10 @@ class CZUAPI_Eventos {
 			'costo'     => (string) get_post_meta( $id, '_promotur_costo', true ),
 			'categoria' => czuapi_primer_termino( $id, CZUAPI_Taxonomias::TAX_CATEGORIA ),
 			'portada'   => czuapi_imagen( (int) get_post_thumbnail_id( $id ) ),
-			'resumen'   => (string) get_post_meta( $id, '_promotur_gancho', true ),
+			// Antes leía el gancho, que se sacó de la ficha por redundante.
+			// El resumen de tarjeta ahora sale de la descripción, igual que
+			// en el evento del CPT viejo (`formato()` más abajo).
+			'resumen'   => get_the_excerpt( $post ),
 		);
 	}
 
@@ -372,6 +376,14 @@ class CZUAPI_Eventos {
 				'type'    => 'DATETIME',
 			) ),
 		) ) );
+
+		// Ver el comentario equivalente en CZUAPI_Inventario::markers(): sin
+		// esto, cada evento del mapa dispara sus propias consultas de meta y
+		// de categoría.
+		if ( $ids ) {
+			update_meta_cache( 'post', $ids );
+			update_object_term_cache( $ids, self::CPT );
+		}
 
 		$out = array();
 		foreach ( $ids as $id ) {

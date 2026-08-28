@@ -1,28 +1,48 @@
 <?php
-/** Ayuda / Acerca de: explica qué hace cada parte del portal. */
+/**
+ * Ayuda: qué hace cada sección, gateada por la misma capability que la
+ * sección de verdad.
+ *
+ * La lista de secciones sale de `PROMOTUR_Roles::sections()` —el mismo mapa
+ * que decide qué se puede abrir— y no de una copia escrita a mano: una copia
+ * se desactualiza sola apenas se agrega o se saca una sección, que es
+ * exactamente lo que le pasó a esta pantalla (llegó a describir un sitio
+ * público, reseñas y una curaduría que dejaron de existir hace versiones).
+ * Acá sólo se escribe a mano la descripción de cada una; cuáles existen y
+ * quién las ve lo decide el registro único.
+ */
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 $page_title = __( 'Ayuda', 'caaguazu-portal' );
 $body = function () {
-	// [ icono, título, descripción, cap-requerida (o '' para todos) ]
-	$bloques = array(
-		array( 'home',   __( 'Inicio', 'caaguazu-portal' ), __( 'Tu resumen del día: fichas que esperan revisión, contenido que necesita correcciones y accesos rápidos según tu rol.', 'caaguazu-portal' ), '' ),
-		array( 'edit',   __( 'Nueva ficha', 'caaguazu-portal' ), __( 'El editor guiado para crear destinos. Completá los campos y el checklist; el sistema te avisa si falta algo antes de enviar la ficha a revisión.', 'caaguazu-portal' ), 'promotur_edit_destino' ),
-		array( 'image',  __( 'Salida de campo', 'caaguazu-portal' ), __( 'Sacá fotos, anotá información y guardá la ubicación GPS mientras estás en el lugar, incluso sin señal. Después podés sincronizar todo como borrador cuando vuelva la conexión.', 'caaguazu-portal' ), 'promotur_create_draft' ),
-		array( 'doc',    __( 'Mis contenidos', 'caaguazu-portal' ), __( 'Todas tus fichas, ordenadas por estado: borrador, enviada, en revisión, necesita cambios o publicada.', 'caaguazu-portal' ), 'promotur_create_draft' ),
-		array( 'inbox',  __( 'Cola de revisión', 'caaguazu-portal' ), __( 'Para Promotores: revisá las fichas enviadas, asignate una, aprobala y publicala o devolvela con comentarios para que el autor haga los cambios necesarios.', 'caaguazu-portal' ), 'promotur_review_content' ),
-		array( 'tasks',  __( 'Tareas', 'caaguazu-portal' ), __( 'Asignaciones con fecha límite y una lista de lo que todavía falta cubrir. Los Mini Promotores pueden reclamar los huecos disponibles.', 'caaguazu-portal' ), 'promotur_view_own_tasks' ),
-		array( 'star',   __( 'Curaduría', 'caaguazu-portal' ), __( 'Elegí qué destinos aparecen destacados en la portada y configurá un banner de temporada. Los cambios se reflejan en la web pública sin tocar el código.', 'caaguazu-portal' ), 'promotur_curate_featured' ),
-		array( 'shield', __( 'Moderación', 'caaguazu-portal' ), __( 'Aprobá o descartá reseñas, respondé o derivá consultas de visitantes y atendé los reportes de información desactualizada.', 'caaguazu-portal' ), 'promotur_moderate' ),
-		array( 'team',   __( 'Equipo', 'caaguazu-portal' ), __( 'Gestioná a los Mini Promotores: revisá su producción, nivel de confianza y enlaces de invitación.', 'caaguazu-portal' ), 'promotur_manage_team' ),
-		array( 'chart',  __( 'Reportes', 'caaguazu-portal' ), __( 'Consultá la producción por autor, los destinos más vistos, las búsquedas sin resultado y el estado general del contenido.', 'caaguazu-portal' ), 'promotur_view_reports' ),
-		array( 'user',   __( 'Mi perfil', 'caaguazu-portal' ), __( 'Consultá tu portafolio público, las vistas de tus fichas y tu progreso de nivel de confianza.', 'caaguazu-portal' ), '' ),
+	/**
+	 * icono + rótulo (el mismo texto que usa el menú lateral) + descripción,
+	 * por sección. La clave tiene que ser una de PROMOTUR_Roles::sections();
+	 * una sección sin entrada acá se muestra igual, con su slug de rótulo y
+	 * sin descripción, en vez de desaparecer.
+	 */
+	$descripciones = array(
+		'home'           => array( 'home',   __( 'Inicio', 'caaguazu-portal' ),             __( 'Tu resumen del día: lo que espera revisión, lo que necesita correcciones tuyas, y accesos rápidos según tu rol.', 'caaguazu-portal' ) ),
+		'buscar'         => array( 'search', __( 'Buscar', 'caaguazu-portal' ),              __( 'Buscar entre las fichas, artículos y recorridos del panel.', 'caaguazu-portal' ) ),
+		'editor'         => array( 'edit',   __( 'Nueva ficha', 'caaguazu-portal' ),         __( 'El editor guiado de una ficha —un sitio o un evento con fecha—, con checklist de mínimos que avisa si falta algo antes de enviar a revisión.', 'caaguazu-portal' ) ),
+		'captura'        => array( 'image',  __( 'Salida de campo', 'caaguazu-portal' ),     __( 'Sacá una foto, anotá información y guardá la ubicación GPS en el lugar, incluso sin señal. Se sincroniza como borrador cuando vuelve la conexión.', 'caaguazu-portal' ) ),
+		'mis-contenidos' => array( 'doc',    __( 'Mis contenidos', 'caaguazu-portal' ),      __( 'Todo lo que cargaste —fichas, artículos, recorridos—, ordenado por estado, con filtro para ver lo archivado y lo borrado.', 'caaguazu-portal' ) ),
+		'inventario'     => array( 'pin',    __( 'Inventario turístico', 'caaguazu-portal' ), __( 'El catálogo de fichas publicadas del departamento. De acá se eligen las paradas al armar un recorrido.', 'caaguazu-portal' ) ),
+		'articulos'      => array( 'nota',   __( 'Artículos', 'caaguazu-portal' ),           __( 'Las notas que la app muestra: título, foto de portada, entradilla, cuerpo y fuentes. Pasan por el mismo flujo de revisión que una ficha.', 'caaguazu-portal' ) ),
+		'recorridos'     => array( 'ruta',   __( 'Recorridos', 'caaguazu-portal' ),          __( 'Se arman eligiendo sitios del inventario —hasta nueve—, cada uno con su propio texto, audio o video, en el orden del paseo.', 'caaguazu-portal' ) ),
+		'revision'       => array( 'inbox',  __( 'Cola de revisión', 'caaguazu-portal' ),    __( 'La cola de lo que espera revisión: asignate una pieza, aprobala y publicala, o devolvela al autor con comentarios.', 'caaguazu-portal' ) ),
+		'tareas'         => array( 'tasks',  __( 'Tareas', 'caaguazu-portal' ),              __( 'Encargos con fecha límite. Los Mini Promotores pueden reclamar los que están disponibles y marcarlos como hechos.', 'caaguazu-portal' ) ),
+		'equipo'         => array( 'team',   __( 'Equipo', 'caaguazu-portal' ),              __( 'Quién entra al panel, con qué rol y su nivel de confianza. Cambiar el rol, suspender, sacar del panel, e invitar gente nueva.', 'caaguazu-portal' ) ),
+		'reportes'       => array( 'chart',  __( 'Reportes', 'caaguazu-portal' ),            __( 'Producción por autor y salud del contenido: lo publicado sin portada, y lo que no se verifica hace más de seis meses.', 'caaguazu-portal' ) ),
+		'biblioteca'     => array( 'image',  __( 'Biblioteca', 'caaguazu-portal' ),          __( 'La galería de fotos del panel: subir de a tandas, describir, dar crédito y borrar.', 'caaguazu-portal' ) ),
+		'estructura'     => array( 'layout', __( 'Estructura', 'caaguazu-portal' ),          __( 'Las categorías y etiquetas de las fichas: crear, renombrar en su lugar, y borrar lo que no esté en uso.', 'caaguazu-portal' ) ),
+		'perfil'         => array( 'user',   __( 'Mi perfil', 'caaguazu-portal' ),           __( 'Tu cuenta —nombre, correo, teléfono, foto y contraseña—, tu nivel de confianza y el portafolio de lo que publicaste.', 'caaguazu-portal' ) ),
 	);
 	?>
 	<div class="promotur-eyebrow"><?php esc_html_e( 'Cómo funciona', 'caaguazu-portal' ); ?></div>
 	<h2 class="promotur-h2"><?php esc_html_e( '¿Qué hace cada sección?', 'caaguazu-portal' ); ?></h2>
 	<p class="promotur-muted" style="max-width:60ch">
-		<?php esc_html_e( 'Este es el portal de los Promotores Turísticos: una web turística pública con un espacio de trabajo editorial detrás. Los Mini Promotores crean las fichas de destino y los Promotores las revisan y publican.', 'caaguazu-portal' ); ?>
+		<?php esc_html_e( 'Este es el panel de los Promotores Turísticos: acá se escribe, se revisa y se publica todo lo que la app de Caaguazú muestra —fichas de destinos y eventos, artículos y recorridos—. Los Mini Promotores crean; los Promotores revisan y publican.', 'caaguazu-portal' ); ?>
 	</p>
 
 	<h3 class="promotur-h3"><?php esc_html_e( 'El flujo editorial', 'caaguazu-portal' ); ?></h3>
@@ -35,30 +55,38 @@ $body = function () {
 			<span class="promotur-pill is-published"><?php esc_html_e( 'Publicado', 'caaguazu-portal' ); ?></span>
 		</p>
 		<p class="promotur-muted" style="margin:.6rem 0 0">
-			<?php esc_html_e( 'Solo las fichas aprobadas por un Promotor llegan al público. La confianza se construye con cada aprobación: pasás de Aprendiz a Promotor Jr y luego a De confianza. Cada nivel te da más autonomía, como editar fichas publicadas sin una nueva revisión y, finalmente, publicar directamente.', 'caaguazu-portal' ); ?>
+			<?php esc_html_e( 'Solo lo aprobado por un Promotor llega a la app. La confianza se construye con cada aprobación: pasás de Aprendiz a Promotor Jr y luego a De confianza. Cada nivel da más autonomía, como editar algo publicado sin una nueva revisión y, en el último, publicar directamente.', 'caaguazu-portal' ); ?>
+		</p>
+		<p class="promotur-muted" style="margin:.6rem 0 0">
+			<?php esc_html_e( 'Lo publicado también se puede despublicar, archivar o mandar a la papelera —y volver atrás desde ahí—, siempre en dos pasos: primero hay que sacarlo del aire antes de poder borrarlo.', 'caaguazu-portal' ); ?>
 		</p>
 	</div>
 
 	<h3 class="promotur-h3"><?php esc_html_e( 'Las secciones', 'caaguazu-portal' ); ?></h3>
 	<div class="promotur-grid promotur-grid--2">
-		<?php foreach ( $bloques as $b ) :
-			if ( $b[3] && ! promotur_can( $b[3] ) ) { continue; } ?>
+		<?php foreach ( PROMOTUR_Roles::sections() as $slug => $cap ) :
+			if ( 'ayuda' === $slug ) { continue; } // no hace falta explicarse a sí misma.
+			if ( $cap && ! promotur_can( $cap ) ) { continue; }
+			$def = isset( $descripciones[ $slug ] ) ? $descripciones[ $slug ] : array( 'doc', ucfirst( str_replace( '-', ' ', $slug ) ), '' );
+			?>
 			<div class="promotur-card">
 				<div class="promotur-quick" style="border:0;padding:0;margin-bottom:.4rem">
-					<?php echo promotur_icon( $b[0] ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
-					<strong><?php echo esc_html( $b[1] ); ?></strong>
+					<?php echo promotur_icon( $def[0] ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
+					<strong><?php echo esc_html( $def[1] ); ?></strong>
 				</div>
-				<p class="promotur-muted" style="margin:0"><?php echo esc_html( $b[2] ); ?></p>
+				<?php if ( $def[2] ) : ?>
+					<p class="promotur-muted" style="margin:0"><?php echo esc_html( $def[2] ); ?></p>
+				<?php endif; ?>
 			</div>
 		<?php endforeach; ?>
 	</div>
 
 	<h3 class="promotur-h3"><?php esc_html_e( 'Extras', 'caaguazu-portal' ); ?></h3>
 	<ul class="promotur-muted">
-		<li><?php esc_html_e( 'Podés instalar el portal como app (PWA) y consultar parte del contenido sin conexión desde el menú lateral.', 'caaguazu-portal' ); ?></li>
-		<li><?php esc_html_e( 'Cada ficha pública puede tener reseñas, indicaciones para llegar, un código QR para imprimir y un botón para agregarla a «Mi viaje».', 'caaguazu-portal' ); ?></li>
+		<li><?php esc_html_e( 'Podés instalar el panel como app (PWA) desde el menú lateral.', 'caaguazu-portal' ); ?></li>
+		<li><?php esc_html_e( 'La salida de campo funciona sin conexión: lo que cargues se guarda en el teléfono y se sube solo cuando vuelve la señal.', 'caaguazu-portal' ); ?></li>
 		<li><?php esc_html_e( 'Podés cambiar entre modo claro y oscuro desde la barra superior.', 'caaguazu-portal' ); ?></li>
-		<li><?php esc_html_e( 'El acceso es solo por invitación. Pedí tu enlace al equipo de Turismo.', 'caaguazu-portal' ); ?></li>
+		<li><?php esc_html_e( 'El acceso es solo por invitación. Pedí tu enlace a quien coordina el equipo.', 'caaguazu-portal' ); ?></li>
 	</ul>
 	<?php
 };

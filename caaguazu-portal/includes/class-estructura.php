@@ -41,17 +41,10 @@ class PROMOTUR_Estructura {
 			'promotur_categoria' => array(
 				'titulo'   => __( 'Categorías', 'caaguazu-portal' ),
 				'singular' => __( 'Categoría', 'caaguazu-portal' ),
-				'ayuda'    => __( 'De qué tipo es el lugar: salto, museo, feria. La app agrupa por acá y les pone ícono y color.', 'caaguazu-portal' ),
-			),
-			'promotur_zona' => array(
-				'titulo'   => __( 'Zonas', 'caaguazu-portal' ),
-				'singular' => __( 'Zona', 'caaguazu-portal' ),
-				'ayuda'    => __( 'Dónde queda: el distrito o la región del departamento.', 'caaguazu-portal' ),
 			),
 			'promotur_etiqueta' => array(
 				'titulo'   => __( 'Etiquetas', 'caaguazu-portal' ),
 				'singular' => __( 'Etiqueta', 'caaguazu-portal' ),
-				'ayuda'    => __( 'Lo que no entra en las otras dos: «con niños», «gratis», «llega colectivo».', 'caaguazu-portal' ),
 			),
 		);
 	}

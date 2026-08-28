@@ -423,7 +423,11 @@ body.promotur-nav-open .promotur-sidebar { transform: translateX(0); }
 		justify-content: center;
 		min-width: 44px;
 		min-height: 44px;
-		padding: 0 11px;
+		/* El ícono de "Contenidos" es una hoja —más alto que ancho—, así que
+		   con el mismo aire a los costados que los íconos cuadrados se ve
+		   apretado y como estirado hacia arriba. Un poco más de padding
+		   horizontal le da el mismo respiro visual sin tocar su dibujo. */
+		padding: 0 13px;
 		border-radius: var(--r-full);
 		color: var(--texto-debil);
 		font-size: .82rem;

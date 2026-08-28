@@ -287,7 +287,6 @@ class PROMOTUR_Destinos {
 			'identidad' => array(
 				'label'  => 'Identidad',
 				'fields' => array(
-					'_promotur_gancho'        => array( 'label' => 'Gancho (una línea)', 'type' => 'text', 'req' => true ),
 					'_promotur_portada'       => array( 'label' => 'Foto de portada', 'type' => 'image', 'req' => true ),
 					'_promotur_credito_fotos' => array( 'label' => 'Crédito de las fotos', 'type' => 'text', 'req' => true ),
 					'_promotur_video'         => array( 'label' => 'Video (URL, opcional)', 'type' => 'url', 'req' => false ),
@@ -300,13 +299,12 @@ class PROMOTUR_Destinos {
 					'_promotur_lat'  => array( 'label' => 'Latitud (alternativa al enlace)', 'type' => 'coord', 'req' => false, 'ayuda' => 'Sólo si el enlace no alcanza.' ),
 					'_promotur_lng'  => array( 'label' => 'Longitud (alternativa al enlace)', 'type' => 'coord', 'req' => false ),
 					'_promotur_estado_camino' => array( 'label' => 'Estado del camino', 'type' => 'select', 'req' => false, 'options' => array( 'asfalto' => 'Asfalto', 'ripio' => 'Ripio', 'tierra' => 'Tierra' ) ),
-					'_promotur_accesibilidad' => array( 'label' => 'Accesibilidad', 'type' => 'text', 'req' => false ),
 				),
 			),
 			'practicos' => array(
 				'label'  => 'Datos prácticos',
 				'fields' => array(
-					'_promotur_horario'  => array( 'label' => 'Horario y mejor momento para visitar', 'type' => 'text', 'req' => true ),
+					'_promotur_horario'  => array( 'label' => 'Horario', 'type' => 'text', 'req' => true ),
 					'_promotur_costo'    => array( 'label' => 'Costo / entrada', 'type' => 'text', 'req' => true ),
 					'_promotur_contacto' => array( 'label' => 'Contacto del lugar', 'type' => 'text', 'req' => false ),
 				),
@@ -497,7 +495,6 @@ class PROMOTUR_Editorial {
 	public static function checklist( $post_id, $tipo = '' ) {
 		return array(
 			array( 'key' => 'titulo', 'label' => 'Nombre del lugar', 'done' => true ),
-			array( 'key' => '_promotur_gancho', 'label' => 'Gancho (una línea)', 'done' => true ),
 			array( 'key' => 'descripcion', 'label' => 'Descripción', 'done' => false ),
 			array( 'key' => '_promotur_portada', 'label' => 'Foto de portada', 'done' => false ),
 			array( 'key' => '_promotur_maps', 'label' => 'Ubicación (enlace de Google Maps o coordenadas)', 'done' => true ),

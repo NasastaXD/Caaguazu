@@ -41,7 +41,6 @@ class CZUAPI_Inventario {
 			'permission_callback' => '__return_true',
 			'args'                => array(
 				'categoria'  => array( 'type' => 'integer' ),
-				'zona'       => array( 'type' => 'integer' ),
 				'bbox'       => array( 'type' => 'string' ),  // "minLng,minLat,maxLng,maxLat"
 				'buscar'     => array( 'type' => 'string' ),
 				'tipo_item'  => array( 'type' => 'string' ),  // sitio | evento
@@ -83,13 +82,6 @@ class CZUAPI_Inventario {
 				'taxonomy' => CZUAPI_Taxonomias::TAX_CATEGORIA,
 				'field'    => 'term_id',
 				'terms'    => (int) $request->get_param( 'categoria' ),
-			);
-		}
-		if ( $request->get_param( 'zona' ) ) {
-			$tax_query[] = array(
-				'taxonomy' => CZUAPI_Taxonomias::TAX_ZONA,
-				'field'    => 'term_id',
-				'terms'    => (int) $request->get_param( 'zona' ),
 			);
 		}
 		if ( $tax_query ) {
@@ -139,9 +131,13 @@ class CZUAPI_Inventario {
 			$items[] = $this->item_lista( $post );
 		}
 
-		return new WP_REST_Response(
+		// ETag corto: la lista cambia cada vez que se publica o se despublica
+		// algo, así que no conviene guardarla mucho, pero sí ahorra el cuerpo
+		// entero cuando el cliente pide de nuevo la misma página sin cambios.
+		return CZUAPI_Response::with_etag(
 			CZUAPI_Response::paginado( $items, $q->found_posts, $pagina, $por_pagina ),
-			200
+			$request,
+			60
 		);
 	}
 
@@ -163,9 +159,7 @@ class CZUAPI_Inventario {
 			'tipo_item'       => $this->tipo_item( $id ),
 			'fechas'          => $this->fechas( $id ),
 			'titulo'          => get_the_title( $post ),
-			'gancho'          => (string) get_post_meta( $id, '_promotur_gancho', true ),
 			'categoria'       => czuapi_primer_termino( $id, CZUAPI_Taxonomias::TAX_CATEGORIA ),
-			'zona'            => czuapi_primer_termino( $id, CZUAPI_Taxonomias::TAX_ZONA ),
 			'coordenadas'     => $this->coordenadas( $id ),
 			'google_maps'     => $this->google_maps( $id ),
 			'portada'         => $this->portada( $id ),
@@ -187,15 +181,17 @@ class CZUAPI_Inventario {
 			return (string) get_post_meta( $id, $key, true );
 		};
 
-		return new WP_REST_Response( array(
+		// El detalle pesa más que un ítem de lista —galería, historia, artículos
+		// relacionados— y cambia menos seguido: una ficha publicada se edita de
+		// vez en cuando, no todo el tiempo. Un ETag más largo que el de la lista
+		// evita que la app la vuelva a bajar entera cada vez que la abre.
+		return CZUAPI_Response::with_etag( array(
 			'id'          => $id,
 			'tipo'        => 'destino',
 			'tipo_item'   => $this->tipo_item( $id ),
 			'fechas'      => $this->fechas( $id ),
 			'titulo'      => get_the_title( $post ),
-			'gancho'      => $m( '_promotur_gancho' ),
 			'categoria'   => czuapi_primer_termino( $id, CZUAPI_Taxonomias::TAX_CATEGORIA ),
-			'zona'        => czuapi_primer_termino( $id, CZUAPI_Taxonomias::TAX_ZONA ),
 			'etiquetas'   => $this->etiquetas( $id ),
 			'coordenadas' => $this->coordenadas( $id ),
 			// El enlace de Google Maps es ahora el modo principal de cargar la
@@ -209,12 +205,15 @@ class CZUAPI_Inventario {
 			'video'       => $m( '_promotur_video' ) ? $m( '_promotur_video' ) : null,
 			/*
 			 * `practicos` y `acceso` adelgazaron: se fueron `duracion`,
-			 * `servicios`, `temporada`, `como_llegar` y `referencia`.
+			 * `servicios`, `temporada`, `como_llegar`, `referencia`, y —en
+			 * esta misma poda— `gancho` y `accesibilidad`.
 			 *
-			 * No es una poda de la API sino del modelo: esos cinco campos
-			 * salieron de la ficha porque se llenaban con frases genéricas que
-			 * no ayudaban a decidir nada. Cómo llegar lo resuelve
-			 * `google_maps`, que es lo que la app abre de todos modos.
+			 * No es una poda de la API sino del modelo: esos campos salieron
+			 * de la ficha porque no le hacían falta a la app. Cómo llegar lo
+			 * resuelve `google_maps`, que es lo que la app abre de todos
+			 * modos; el gancho no decía nada que el título y la portada no
+			 * dijeran ya, y la accesibilidad se llenaba con frases sueltas sin
+			 * ningún criterio común.
 			 *
 			 * Las claves desaparecen del objeto en vez de venir vacías: una
 			 * clave con cadena vacía se sigue pintando como una fila en blanco
@@ -228,14 +227,17 @@ class CZUAPI_Inventario {
 			),
 			'acceso'      => array(
 				'estado_camino' => $m( '_promotur_estado_camino' ),
-				'accesibilidad' => $m( '_promotur_accesibilidad' ),
 			),
-			'articulo_html'          => apply_filters( 'the_content', $post->post_content ),
+			// Antes viajaba como `articulo_html` —el nombre se copió sin
+			// pensar de la respuesta de Artículos al armar esta, y una ficha
+			// no es un artículo—. La app no la estaba levantando: buscaba
+			// `descripcion` y esa clave nunca existió acá.
+			'descripcion'            => apply_filters( 'the_content', $post->post_content ),
 			'articulos_relacionados' => $this->articulos_relacionados( $id ),
 			'fuentes'                => $m( '_promotur_fuentes' ),
 			'autor'                  => czuapi_autor( $id ),
 			'actualizado'            => czuapi_fecha( $post->post_modified_gmt ),
-		), 200 );
+		), $request, 180 );
 	}
 
 	/**
@@ -254,6 +256,19 @@ class CZUAPI_Inventario {
 			'posts_per_page' => -1,
 			'fields'         => 'ids',
 		) ) );
+		/*
+		 * `fields => 'ids'` es justo lo que hace liviana esta consulta, pero
+		 * tiene un costo escondido: al pedir sólo IDs, WP_Query se salta el
+		 * precargado de metas y términos que hace con posts completos. Sin
+		 * este precargado, cada `get_post_meta()`/`get_the_terms()` del loop
+		 * de abajo dispara su propia consulta — con miles de sitios, miles de
+		 * consultas en una sola respuesta. Precargar acá, una vez, es la
+		 * diferencia entre dos consultas y dos mil.
+		 */
+		if ( $destinos ) {
+			update_meta_cache( 'post', $destinos );
+			update_object_term_cache( $destinos, PROMOTUR_Destinos::CPT );
+		}
 		foreach ( $destinos as $id ) {
 			$coord = $this->coordenadas( $id );
 			if ( ! $coord ) { continue; }

@@ -67,9 +67,14 @@ class PROMOTUR_Install {
 	}
 
 	/**
-	 * Desactivación: solo limpia las rewrite rules (no toca roles ni datos).
+	 * Desactivación: solo limpia las rewrite rules y el cron propio (no toca
+	 * roles ni datos).
 	 */
 	public static function deactivate() {
 		flush_rewrite_rules();
+		$vencido = wp_next_scheduled( PROMOTUR_Cuenta::CRON_LIMPIAR_FOTOS );
+		if ( $vencido ) {
+			wp_unschedule_event( $vencido, PROMOTUR_Cuenta::CRON_LIMPIAR_FOTOS );
+		}
 	}
 }
