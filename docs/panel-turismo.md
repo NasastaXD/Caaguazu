@@ -160,6 +160,39 @@ Lo único que cambia entre tipos es **qué mínimos hay que cumplir**, y eso lo 
 | Mínimos propios | gancho, portada, crédito, horario, costo, descripción y ubicación | autores, portada, pie de foto, fuentes, entradilla y cuerpo | portada, duración, introducción y dos paradas |
 | Se edita en | `/editor` | `/articulos` | `/recorridos` |
 
+### Y se puede deshacer
+
+El flujo de arriba llevaba en una sola dirección: de borrador a publicado, y de ahí nada. Una vez publicada una ficha, lo único que se podía hacer con ella era editarla — no había forma de sacarla de la app, ni de archivarla, ni de borrarla. Tres de los ocho estados declarados (`aprobado`, `despublicado`, `archivado`) eran además inalcanzables: tenían su pastilla de color y nada podía ponerlos.
+
+| Operación | De → a | Quién |
+| --- | --- | --- |
+| **Retirar de revisión** | enviado · en revisión → borrador | el dueño, o quien revisa |
+| **Despublicar** | publicado → despublicado | `promotur_publish_destino` |
+| **Volver a publicar** | despublicado · archivado · aprobado → publicado | `promotur_publish_destino` |
+| **Archivar** | cualquiera menos publicado → archivado | el dueño, o quien revisa |
+| **Borrar** | cualquiera menos publicado → papelera | el dueño, o quien revisa |
+| **Recuperar** | papelera → borrador | el dueño, o quien revisa |
+
+Cuatro decisiones que conviene tener presentes:
+
+- **Lo publicado no se borra de un clic.** Primero se despublica. Son dos pasos en vez de uno, y la fricción es a propósito: lo publicado lo está leyendo gente en la app. El rechazo dice exactamente qué hacer.
+- **Borrar es la papelera, no la nada.** `wp_trash_post()`, y se recupera desde el propio panel: nadie tiene que abrir wp-admin para deshacer un borrado. Es además lo que la app necesita — `CZUAPI_Sync` engancha ese hook y deja su lápida, así que el teléfono se entera de que eso dejó de existir. Un borrado a mano en la base no avisaría a nadie y la ficha seguiría en la caché de cada teléfono para siempre.
+- **Recuperar trae al taller, no al aire.** `wp_untrash_post()` devuelve el post a su estado anterior, que puede ser `publish` — y eso lo devolvería a la app de rebote, sin que nadie lo decidiera. Se fuerza a borrador.
+- **Una sola fuente para los botones y para el permiso.** `PROMOTUR_Editorial::transiciones()` declara qué se puede hacer; la UI dibuja lo que devuelve y el servidor rechaza lo que no esté ahí. Si la lista la arma la plantilla y el permiso lo comprueba el handler, los dos se separan: aparece un botón que da 403, o —peor— un handler que acepta algo que ningún botón ofrecía.
+
+### Quién publica sin pasar por revisión
+
+Conviene saberlo porque cambia quién mira la cola: **el paso de revisión no es obligatorio para todos.** `PROMOTUR_Stats::can_publish_directly()` deja publicar directo por dos caminos independientes:
+
+1. **Tener `promotur_publish_destino`** — que es una capability del rol **Promotor**. O sea: **todo Promotor publica lo suyo sin revisión**, y su contenido nunca entra a la cola.
+2. **Tener nivel de confianza «De confianza»** — con lo que un Mini Promotor, que no tiene esa capability, también publica directo.
+
+En los dos casos queda una entrada en el hilo de feedback («Publicación directa por nivel de confianza. Se hará una auditoría posterior») y su registro en auditoría, así que se puede revisar después — pero no antes.
+
+La consecuencia práctica: **la cola de revisión sólo se llena con lo que escriben los Mini Promotores en nivel Aprendiz.** Si se quiere que un Promotor pase por revisión, hay que sacarle `promotur_publish_destino` del rol; si se quiere lo contrario para un Mini Promotor puntual, se le sube el nivel desde Equipo.
+
+Lo mismo con editar lo ya publicado: `can_edit_published()` deja editar sin volver a revisión a quien revisa y a los niveles Jr y De confianza. Al resto, editar algo publicado lo devuelve a `en revisión` **sin bajarlo del aire**.
+
 Cada paso queda en el log de auditoría con quién, qué y cuándo, y la acción lleva el tipo adelante (`articulo_publicado`, `recorrido_enviado`) para que el registro siga diciendo qué se movió. Los estados tienen su pastilla de color, y el color viene del sistema de tokens (§5), no de un hex suelto.
 
 ### La ubicación de una ficha
@@ -171,6 +204,14 @@ El pin se sigue necesitando (el mapa de la app filtra por rango de latitud y lon
 Los enlaces cortos (`maps.app.goo.gl`) no traen el punto: resolverlos exigiría un pedido de red desde el servidor en medio de un guardado. Ahí el panel lo dice y quedan los campos de latitud y longitud.
 
 Se fueron cinco campos de la ficha —cómo llegar, referencia, temporada ideal, servicios y duración sugerida—: se llenaban con frases genéricas que no ayudaban a decidir nada. **Los datos ya cargados no se borran**, sólo dejan de pedirse, de mostrarse y de publicarse (ver `PROMOTUR_Destinos::campos_retirados()`).
+
+### Sitio o evento
+
+Una ficha empieza declarando **qué es**: un sitio (está siempre) o un evento (pasa en una fecha). Es el primer campo del formulario porque cambia el resto: un evento pide día y hora de inicio, y de cierre si lo tiene; un sitio no ve esos campos. Todo lo demás —gancho, foto, ubicación, costo, horario, fuentes, flujo editorial— se carga exactamente igual, porque un evento **es** un lugar con fechas.
+
+Antes los eventos eran otro tipo de contenido, en `caaguazu-app-api`, cargable sólo desde wp-admin y con la mitad de los campos: sin gancho, sin galería, sin fuentes y sin pasar por revisión. Duplicar el modelo entero para agregarle dos fechas costaba mantener dos editores y dos checklists que se iban a separar con el tiempo. Lo que ya está cargado ahí se sigue sirviendo —los teléfonos lo tienen en caché y sacarlo de la API lo haría desaparecer sin lápida—, pero no se carga más por ahí.
+
+Que un campo aplique o no según el tipo no es cosa del formulario: `PROMOTUR_Destinos::aplica_campo()` lo decide, el editor lo usa para mostrar y esconder, y el checklist de mínimos lo usa para no exigir la fecha de un evento a una ficha que es un sitio. Si sólo lo supiera el formulario, un sitio no se podría publicar nunca.
 
 ### Los recorridos
 
@@ -201,7 +242,7 @@ Dos detalles de cómo está hecho:
 
 **Artículos y Recorridos ya están en el panel** (v3.2.0). Los dos nacieron como CPTs de `caaguazu-app-api` y estaban al revés: son contenido humano que se escribe, se revisa y aprueba el staff, o sea exactamente lo que hace el panel, y mientras vivían allá había que cargarlos desde wp-admin sin pasar por ninguna revisión. Se mudaron sin cambiar de `post_type`, así que no se perdió nada, y la API se corrió: si el panel está activo, no vuelve a registrarlos.
 
-Lo que **no** controla el panel todavía: los Eventos, que se siguen cargando desde wp-admin.
+Los **Eventos** también se cargan desde el panel desde la v3.4.0: son una ficha con tipo `evento`. El tipo de contenido viejo de `caaguazu-app-api` queda para lo ya cargado, y no se le agrega nada nuevo.
 
 ---
 
@@ -265,7 +306,18 @@ Comprueba las **dos únicas funciones del ecosistema que transforman un dato en 
 
 Los casos son los reales: los cuatro formatos de enlace que escribe Google (incluido el corto, que no trae el punto, y uno con la latitud fuera del planeta), y las formas en que un WordPress escribe el nombre de un rol. Corre sin WordPress: probar esto no puede costar levantar un sitio.
 
-`npm run verificar` corre los dos, más la auditoría móvil.
+Y un tercero, que no comprueba código sino que **el documento de datos no quede viejo**:
+
+```bash
+php tools/inventario-de-datos.php              # regenera docs/datos-para-la-app.md
+php tools/inventario-de-datos.php --verificar   # falla si quedó viejo
+```
+
+La lista de campos que la app tiene que poder clonar sale de `fields()` de cada modelo —el mismo array que dibuja el formulario—, así que no puede desfasarse del panel. Lo que la herramienta sí decide a mano es **cómo sale cada campo por la API**, y eso lo mantiene honesto de dos maneras: un campo nuevo en el modelo sin una fila que diga si sale a la app hace fallar la verificación, y una fila que diga que sale una meta que `caaguazu-app-api` no nombra en ningún lado, también.
+
+Un documento con la lista de campos escrito a mano queda viejo el día que alguien agrega un campo, y el que se entera es quien programa la app, tres semanas después, cuando le falta un dato que la web ya tenía.
+
+`npm run verificar` corre los tres, más la auditoría móvil.
 
 Y para mirar una pantalla sin levantar un WordPress:
 

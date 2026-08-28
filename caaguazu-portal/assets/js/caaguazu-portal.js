@@ -71,6 +71,8 @@
 		initSubnav();
 		initAtajos();
 		initEditor();
+		initAcciones();
+		initPapelera();
 		initReview();
 		initGestion();
 		initCaptura();
@@ -381,6 +383,7 @@
 		var msg = form.querySelector('[data-form-msg]');
 
 		initParadas(form);
+		initTipoItem(form);
 
 		// Checklist en vivo.
 		function refreshChecklist() {
@@ -492,6 +495,33 @@
 		function setMsg(text, cls) { if (msg) { msg.textContent = text; msg.className = 'promotur-form-msg ' + (cls || ''); } }
 	}
 
+	/* ---------- Sitio o evento ----------
+	 *
+	 * Los campos marcados `data-solo="evento"` —la fecha y la hora— sólo tienen
+	 * sentido en un evento. Se ocultan en vez de deshabilitarse para que no
+	 * ocupen lugar en una ficha que no los usa, y siguen viajando en el envío:
+	 * si alguien cargó una fecha y después cambió el tipo a sitio, el dato no
+	 * se pierde por haber tocado un desplegable.
+	 *
+	 * Esto es comodidad de pantalla y nada más: quien decide si la fecha es
+	 * obligatoria es el checklist del servidor, que vuelve a mirar el tipo.
+	 */
+	function initTipoItem(form) {
+		var selector = form.querySelector('[data-tipo-item]');
+		if (!selector) { return; }
+		var condicionales = form.querySelectorAll('[data-solo]');
+		if (!condicionales.length) { return; }
+
+		function aplicar() {
+			var tipo = selector.value;
+			condicionales.forEach(function (campo) {
+				campo.hidden = campo.getAttribute('data-solo') !== tipo;
+			});
+		}
+		selector.addEventListener('change', aplicar);
+		aplicar();
+	}
+
 	/** Cuántas paradas tienen un sitio elegido de verdad. */
 	function contarParadas(lista) {
 		var n = 0;
@@ -590,6 +620,78 @@
 		}
 
 		renumerar();
+	}
+
+	/* ---------- Acciones sobre el estado ----------
+	 *
+	 * Despublicar, retirar de revisión, archivar y borrar. Los botones los
+	 * dibuja el servidor según lo que `PROMOTUR_Editorial::transiciones()`
+	 * permita, así que acá no hay ninguna regla: se manda lo que dice el botón
+	 * y el servidor vuelve a preguntar.
+	 *
+	 * La confirmación viaja en el propio botón (`data-confirmar-accion`) y no
+	 * en un texto genérico: «¿Seguro?» no es lo mismo que «esto está publicado
+	 * y la app lo está mostrando».
+	 */
+	function initAcciones() {
+		var caja = document.querySelector('[data-acciones]');
+		if (!caja) { return; }
+		var postId = caja.getAttribute('data-acciones');
+		var msg = caja.querySelector('[data-acciones-msg]');
+
+		function pedir(accion, datos, boton) {
+			var aviso = boton.getAttribute('data-confirmar-accion');
+			if (aviso && !window.confirm(aviso)) { return; }
+			botones(true);
+			decir(msg, i18n.sending, '');
+			ajax(accion, datos).then(function (r) {
+				if (!r.success) {
+					botones(false);
+					decir(msg, (r.data && r.data.message) || i18n.error, 'is-error');
+					return;
+				}
+				decir(msg, r.data.message || i18n.saved, 'is-success');
+				if (r.data.redirect) { window.location.href = r.data.redirect; return; }
+				// El estado cambió: lo que se puede hacer ahora es otra cosa,
+				// y el checklist y la pastilla también. Recargar es más honesto
+				// que remendar media pantalla a mano.
+				window.location.reload();
+			}).catch(function () {
+				botones(false);
+				decir(msg, i18n.error, 'is-error');
+			});
+		}
+
+		function botones(deshabilitar) {
+			caja.querySelectorAll('button').forEach(function (b) { b.disabled = deshabilitar; });
+		}
+
+		caja.querySelectorAll('[data-transicion]').forEach(function (btn) {
+			btn.addEventListener('click', function () {
+				pedir('cambiar_estado', { post_id: postId, transicion: btn.getAttribute('data-transicion') }, btn);
+			});
+		});
+
+		var borrar = caja.querySelector('[data-borrar]');
+		if (borrar) {
+			borrar.addEventListener('click', function () {
+				pedir('borrar_contenido', { post_id: postId }, borrar);
+			});
+		}
+	}
+
+	/* ---------- Papelera: recuperar ---------- */
+	function initPapelera() {
+		document.querySelectorAll('[data-restaurar]').forEach(function (btn) {
+			btn.addEventListener('click', function () {
+				btn.disabled = true;
+				ajax('restaurar_contenido', { post_id: btn.getAttribute('data-restaurar') }).then(function (r) {
+					if (r.success && r.data.redirect) { window.location.href = r.data.redirect; return; }
+					btn.disabled = false;
+					decir(btn.parentNode.querySelector('[data-form-msg]'), (r.data && r.data.message) || i18n.error, 'is-error');
+				}).catch(function () { btn.disabled = false; });
+			});
+		});
 	}
 
 	/* ---------- Revisión ---------- */

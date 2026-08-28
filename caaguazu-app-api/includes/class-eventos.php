@@ -1,16 +1,27 @@
 <?php
 /**
- * CPT Evento + endpoint.
+ * `/eventos`: lo que pasa en una fecha, venga de donde venga.
  *
- * Un evento es una categoría general aparte del atractivo: tiene fecha, y esa
- * fecha lo hace aparecer y desaparecer solo. Reusa el mismo flujo editorial y
- * las mismas taxonomías que los destinos.
+ * DOS FUENTES, UNA LISTA
  *
- * El lugar puede venir de dos formas: referenciando un destino ya cargado (lo
- * habitual — la fiesta es EN tal lugar) o con coordenadas propias, para
- * eventos que ocurren donde no hay ficha. La API resuelve las dos a un mismo
- * bloque `lugar` con lat/lng ya listas, para que el cliente no tenga que
- * ramificar.
+ * Desde que la ficha del panel tiene tipo de item, un evento se carga como
+ * ficha —con `_promotur_tipo_item = evento` y sus fechas— y así hereda el
+ * modelo entero: gancho, galería, fuentes, flujo editorial, enlace de Google
+ * Maps. Ese es el camino nuevo y el único que alguien puede usar hoy desde el
+ * panel.
+ *
+ * El CPT `promotur_evento` de este plugin es el camino viejo, editable sólo
+ * desde wp-admin y con la mitad de los campos. No se borra porque lo que ya
+ * está cargado ahí sigue existiendo y los teléfonos lo tienen en caché: sacarlo
+ * de la API lo haría desaparecer sin lápida. Así que `/eventos` mezcla las dos
+ * fuentes, las ordena por fecha de inicio y las devuelve con la misma forma. El
+ * cliente no tiene que saber de dónde salió cada una; si le importa, `origen`
+ * se lo dice.
+ *
+ * El lugar puede venir de tres formas: la ficha trae el suyo; el evento viejo
+ * puede referenciar un destino ya cargado (lo habitual — la fiesta es EN tal
+ * lugar) o tener coordenadas propias. La API resuelve las tres a un mismo
+ * bloque `lugar` con lat/lng ya listas, para que el cliente no ramifique.
  */
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
@@ -96,64 +107,185 @@ class CZUAPI_Eventos {
 		$pagina     = max( 1, (int) $request->get_param( 'pagina' ) );
 		$por_pagina = min( 100, max( 1, (int) $request->get_param( 'por_pagina' ) ) );
 
-		$meta_query = array();
-
 		// Por defecto: lo que todavía no terminó. Un evento pasado no le sirve
 		// a un turista, y hacer que el cliente filtre implica bajarlos todos.
 		$desde = $request->get_param( 'desde' );
 		$hasta = $request->get_param( 'hasta' );
+		$desde = $desde ? gmdate( 'Y-m-d H:i:s', strtotime( (string) $desde ) ) : gmdate( 'Y-m-d H:i:s' );
+		$hasta = $hasta ? gmdate( 'Y-m-d H:i:s', strtotime( (string) $hasta ) ) : '';
+		$cat   = (int) $request->get_param( 'categoria' );
 
-		$meta_query[] = array(
-			'key'     => self::META_INICIO,
-			'value'   => $desde ? gmdate( 'Y-m-d H:i:s', strtotime( (string) $desde ) ) : gmdate( 'Y-m-d H:i:s' ),
-			'compare' => '>=',
-			'type'    => 'DATETIME',
+		/*
+		 * Las dos fuentes se traen enteras y se paginan acá, en vez de pedirle a
+		 * la base una sola consulta: son dos CPT con metas de nombre distinto y
+		 * `WP_Query` no sabe ordenar por «esta meta o esta otra». El tope de 200
+		 * por fuente está muy por encima de lo que un departamento agenda en una
+		 * temporada, y evita que un error de carga se lleve puesta la memoria.
+		 */
+		$items = array_merge(
+			$this->de_fichas( $desde, $hasta, $cat ),
+			$this->de_cpt_viejo( $desde, $hasta, $cat )
 		);
-		if ( $hasta ) {
-			$meta_query[] = array(
-				'key'     => self::META_INICIO,
-				'value'   => gmdate( 'Y-m-d H:i:s', strtotime( (string) $hasta ) ),
-				'compare' => '<=',
-				'type'    => 'DATETIME',
-			);
-		}
 
-		$args = array_merge( czuapi_args_publicado(), array(
-			'post_type'      => self::CPT,
-			'posts_per_page' => $por_pagina,
-			'paged'          => $pagina,
-			'meta_key'       => self::META_INICIO, // phpcs:ignore WordPress.DB.SlowDBQuery
-			'orderby'        => 'meta_value',
-			'order'          => 'ASC',
-			'meta_query'     => $meta_query, // phpcs:ignore WordPress.DB.SlowDBQuery
-		) );
+		usort( $items, function ( $a, $b ) {
+			return strcmp( (string) $a['inicio'], (string) $b['inicio'] );
+		} );
 
-		if ( $request->get_param( 'categoria' ) ) {
-			$args['tax_query'] = array( array( // phpcs:ignore WordPress.DB.SlowDBQuery
-				'taxonomy' => CZUAPI_Taxonomias::TAX_CATEGORIA,
-				'field'    => 'term_id',
-				'terms'    => (int) $request->get_param( 'categoria' ),
-			) );
-		}
-
-		$q     = new WP_Query( $args );
-		$items = array();
-		foreach ( $q->posts as $post ) {
-			$items[] = $this->formato( $post, false );
-		}
+		$total = count( $items );
+		$pagos = array_slice( $items, ( $pagina - 1 ) * $por_pagina, $por_pagina );
 
 		return new WP_REST_Response(
-			CZUAPI_Response::paginado( $items, $q->found_posts, $pagina, $por_pagina ),
+			CZUAPI_Response::paginado( array_values( $pagos ), $total, $pagina, $por_pagina ),
 			200
 		);
 	}
 
+	/**
+	 * Los eventos que salieron de una ficha del panel.
+	 *
+	 * @param string $desde 'Y-m-d H:i:s'
+	 * @param string $hasta 'Y-m-d H:i:s' o ''
+	 * @param int    $cat   term_id de categoría, o 0
+	 * @return array[]
+	 */
+	private function de_fichas( $desde, $hasta, $cat ) {
+		$meta_query = array(
+			array( 'key' => PROMOTUR_Destinos::META_TIPO_ITEM, 'value' => 'evento' ),
+			array( 'key' => PROMOTUR_Destinos::META_INICIO, 'value' => $desde, 'compare' => '>=', 'type' => 'DATETIME' ),
+		);
+		if ( '' !== $hasta ) {
+			$meta_query[] = array( 'key' => PROMOTUR_Destinos::META_INICIO, 'value' => $hasta, 'compare' => '<=', 'type' => 'DATETIME' );
+		}
+		$meta_query['relation'] = 'AND';
+
+		$args = array_merge( czuapi_args_publicado(), array(
+			'post_type'      => PROMOTUR_Destinos::CPT,
+			'posts_per_page' => 200,
+			'meta_query'     => $meta_query, // phpcs:ignore WordPress.DB.SlowDBQuery
+		) );
+		if ( $cat ) {
+			$args['tax_query'] = array( array( // phpcs:ignore WordPress.DB.SlowDBQuery
+				'taxonomy' => CZUAPI_Taxonomias::TAX_CATEGORIA,
+				'field'    => 'term_id',
+				'terms'    => $cat,
+			) );
+		}
+
+		$out = array();
+		foreach ( get_posts( $args ) as $post ) {
+			$out[] = $this->formato_ficha( $post );
+		}
+		return $out;
+	}
+
+	/**
+	 * Los eventos del CPT viejo, los que se cargaron antes de que la ficha
+	 * tuviera tipo de item.
+	 *
+	 * @return array[]
+	 */
+	private function de_cpt_viejo( $desde, $hasta, $cat ) {
+		$meta_query = array(
+			array( 'key' => self::META_INICIO, 'value' => $desde, 'compare' => '>=', 'type' => 'DATETIME' ),
+		);
+		if ( '' !== $hasta ) {
+			$meta_query[] = array( 'key' => self::META_INICIO, 'value' => $hasta, 'compare' => '<=', 'type' => 'DATETIME' );
+			$meta_query['relation'] = 'AND';
+		}
+
+		$args = array_merge( czuapi_args_publicado(), array(
+			'post_type'      => self::CPT,
+			'posts_per_page' => 200,
+			'meta_query'     => $meta_query, // phpcs:ignore WordPress.DB.SlowDBQuery
+		) );
+		if ( $cat ) {
+			$args['tax_query'] = array( array( // phpcs:ignore WordPress.DB.SlowDBQuery
+				'taxonomy' => CZUAPI_Taxonomias::TAX_CATEGORIA,
+				'field'    => 'term_id',
+				'terms'    => $cat,
+			) );
+		}
+
+		$out = array();
+		foreach ( get_posts( $args ) as $post ) {
+			$out[] = $this->formato( $post, false );
+		}
+		return $out;
+	}
+
 	public function detalle( $request ) {
 		$post = get_post( (int) $request['id'] );
-		if ( ! $post || self::CPT !== $post->post_type || 'publish' !== $post->post_status ) {
+		if ( ! $post || 'publish' !== $post->post_status ) {
+			return CZUAPI_Response::no_encontrado();
+		}
+
+		/*
+		 * Un evento cargado como ficha tiene mucho más que contar que lo que
+		 * entra en la forma de evento —galería, fuentes, artículos vinculados—,
+		 * y eso ya lo sirve el detalle del inventario. Se delega en vez de
+		 * mantener dos detalles que dicen casi lo mismo y se desincronizan.
+		 */
+		if ( PROMOTUR_Destinos::CPT === $post->post_type ) {
+			if ( 'evento' !== $this->tipo_item( $post->ID ) ) {
+				return CZUAPI_Response::no_encontrado();
+			}
+			return CZUAPI_Inventario::instance()->detalle( $request );
+		}
+
+		if ( self::CPT !== $post->post_type ) {
 			return CZUAPI_Response::no_encontrado();
 		}
 		return new WP_REST_Response( $this->formato( $post, true ), 200 );
+	}
+
+	/**
+	 * Una ficha de tipo evento, con la forma de la lista de eventos.
+	 *
+	 * Los campos son los mismos que los del evento viejo para que el cliente
+	 * pinte una sola tarjeta; lo que se agrega es `origen` y `ficha_id`, que es
+	 * lo que necesita para saber que el detalle completo está en
+	 * `/inventario/{id}`.
+	 *
+	 * @param WP_Post $post
+	 * @return array
+	 */
+	private function formato_ficha( $post ) {
+		$id  = $post->ID;
+		$lat = get_post_meta( $id, '_promotur_lat', true );
+		$lng = get_post_meta( $id, '_promotur_lng', true );
+
+		return array(
+			'id'        => (int) $id,
+			'tipo'      => 'evento',
+			'origen'    => 'ficha',
+			'ficha_id'  => (int) $id,
+			'titulo'    => get_the_title( $post ),
+			'inicio'    => czuapi_fecha( (string) get_post_meta( $id, PROMOTUR_Destinos::META_INICIO, true ) ),
+			'fin'       => czuapi_fecha( (string) get_post_meta( $id, PROMOTUR_Destinos::META_FIN, true ) ),
+			'lugar'     => ( '' === $lat || '' === $lng ) ? null : array(
+				'ref_tipo' => 'destino',
+				'ref_id'   => (int) $id,
+				'nombre'   => get_the_title( $post ),
+				'lat'      => (float) $lat,
+				'lng'      => (float) $lng,
+			),
+			'costo'     => (string) get_post_meta( $id, '_promotur_costo', true ),
+			'categoria' => czuapi_primer_termino( $id, CZUAPI_Taxonomias::TAX_CATEGORIA ),
+			'portada'   => czuapi_imagen( (int) get_post_thumbnail_id( $id ) ),
+			'resumen'   => (string) get_post_meta( $id, '_promotur_gancho', true ),
+		);
+	}
+
+	/**
+	 * Sitio o evento, sin depender de que el panel esté al día.
+	 *
+	 * @return string
+	 */
+	private function tipo_item( $id ) {
+		if ( method_exists( 'PROMOTUR_Destinos', 'tipo_item' ) ) {
+			return PROMOTUR_Destinos::tipo_item( $id );
+		}
+		return 'evento' === get_post_meta( $id, '_promotur_tipo_item', true ) ? 'evento' : 'sitio';
 	}
 
 	/**
@@ -167,6 +299,8 @@ class CZUAPI_Eventos {
 		$out = array(
 			'id'        => (int) $id,
 			'tipo'      => 'evento',
+			'origen'    => 'evento_legado',
+			'ficha_id'  => null,
 			'titulo'    => get_the_title( $post ),
 			'inicio'    => czuapi_fecha( (string) get_post_meta( $id, self::META_INICIO, true ) ),
 			'fin'       => czuapi_fecha( (string) get_post_meta( $id, self::META_FIN, true ) ),
@@ -247,6 +381,7 @@ class CZUAPI_Eventos {
 			$out[] = array(
 				'id'        => (int) $id,
 				'tipo'      => 'evento',
+				'tipo_item' => 'evento',
 				'lat'       => (float) $lugar['lat'],
 				'lng'       => (float) $lugar['lng'],
 				'categoria' => $cat ? $cat['id'] : null,

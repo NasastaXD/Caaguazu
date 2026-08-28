@@ -19,6 +19,11 @@ class PROMOTUR_Destinos {
 	 */
 	const OWNER_META = '_caaguazu_owner';
 
+	/** Sitio o evento. Ver el grupo «Qué es» de fields(). */
+	const META_TIPO_ITEM = '_promotur_tipo_item';
+	const META_INICIO    = '_promotur_evento_inicio';
+	const META_FIN       = '_promotur_evento_fin';
+
 	public static function instance() {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -131,6 +136,51 @@ class PROMOTUR_Destinos {
 	 */
 	public static function fields() {
 		return array(
+			/*
+			 * QUÉ ES ESTA FICHA — sitio o evento.
+			 *
+			 * Va primero porque cambia el formulario: un evento pide fecha y
+			 * hora, un sitio no. Y son la misma ficha a propósito: un evento
+			 * ES un lugar con fechas. Tiene gancho, foto, ubicación, costo,
+			 * horario, fuentes y flujo editorial exactamente igual; lo único
+			 * que agrega es cuándo pasa.
+			 *
+			 * Antes los eventos vivían en un CPT aparte de la API
+			 * (`promotur_evento`), que se cargaba desde wp-admin y tenía la
+			 * mitad de los campos: sin gancho, sin galería, sin fuentes y sin
+			 * pasar por revisión. Duplicar el modelo para agregarle dos fechas
+			 * costaba mantener dos editores y dos checklists que se iban a
+			 * separar con el tiempo.
+			 */
+			'que_es' => array(
+				'label'  => __( 'Qué es', 'caaguazu-portal' ),
+				'fields' => array(
+					self::META_TIPO_ITEM => array(
+						'label'   => __( 'Tipo', 'caaguazu-portal' ),
+						'type'    => 'select',
+						'req'     => true,
+						'options' => array(
+							'sitio'  => __( 'Sitio — está siempre', 'caaguazu-portal' ),
+							'evento' => __( 'Evento — pasa en una fecha', 'caaguazu-portal' ),
+						),
+						'ayuda'   => __( 'Un evento es un lugar con fecha: la fiesta patronal, una feria, un festival. Todo lo demás se carga igual.', 'caaguazu-portal' ),
+					),
+					self::META_INICIO => array(
+						'label' => __( 'Empieza', 'caaguazu-portal' ),
+						'type'  => 'datetime',
+						'req'   => true,
+						'solo'  => 'evento',
+						'ayuda' => __( 'Día y hora de inicio.', 'caaguazu-portal' ),
+					),
+					self::META_FIN => array(
+						'label' => __( 'Termina', 'caaguazu-portal' ),
+						'type'  => 'datetime',
+						'req'   => false,
+						'solo'  => 'evento',
+						'ayuda' => __( 'Si dura un solo día, alcanza con la hora de cierre. Si es de varios días, poné el último.', 'caaguazu-portal' ),
+					),
+				),
+			),
 			'identidad' => array(
 				'label'  => __( 'Identidad', 'caaguazu-portal' ),
 				'fields' => array(
@@ -348,6 +398,38 @@ class PROMOTUR_Destinos {
 	 */
 	public static function tiene_ubicacion( $post_id ) {
 		return '' !== self::maps_url( $post_id );
+	}
+
+	/**
+	 * ¿Esta ficha es un sitio o un evento?
+	 *
+	 * Sin el meta cargado es un sitio: es lo que eran todas las fichas antes de
+	 * que el tipo existiera, y hacer que una ficha vieja se lea de golpe como
+	 * un evento sin fecha sería inventarle un dato.
+	 *
+	 * @param int $post_id
+	 * @return string 'sitio' | 'evento'
+	 */
+	public static function tipo_item( $post_id ) {
+		return 'evento' === get_post_meta( $post_id, self::META_TIPO_ITEM, true ) ? 'evento' : 'sitio';
+	}
+
+	/**
+	 * ¿Este campo aplica a esta ficha?
+	 *
+	 * Un campo con `solo => 'evento'` no se le pide a un sitio. Lo consulta el
+	 * checklist: si no, «Empieza» quedaría como un mínimo sin cumplir en toda
+	 * ficha que no sea un evento, y ninguna se podría enviar nunca.
+	 *
+	 * @param array $def
+	 * @param int   $post_id
+	 * @return bool
+	 */
+	public static function aplica_campo( $def, $post_id ) {
+		if ( empty( $def['solo'] ) ) {
+			return true;
+		}
+		return $def['solo'] === self::tipo_item( $post_id );
 	}
 
 	/**

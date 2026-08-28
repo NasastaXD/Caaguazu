@@ -233,6 +233,8 @@ $body = function () use ( $post, $post_id, $estado, $checklist, $feedback, $grup
 					<?php endforeach; ?>
 				</ul>
 			</div>
+
+			<?php promotur_acciones_de_estado( $post_id ); ?>
 		</aside>
 	</div>
 	<?php

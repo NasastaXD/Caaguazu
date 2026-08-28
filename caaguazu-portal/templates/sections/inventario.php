@@ -143,6 +143,16 @@ $body = function () use ( $sitios, $busqueda ) {
 				$zona   = get_the_terms( $p->ID, 'promotur_zona' );
 				$gancho = (string) get_post_meta( $p->ID, '_promotur_gancho', true );
 				$partes = array();
+				// Cuándo pasa va primero cuando la ficha es un evento: en una
+				// lista de lugares, la fecha es lo que distingue a los que hay
+				// que agarrar antes de que se terminen.
+				if ( 'evento' === PROMOTUR_Destinos::tipo_item( $p->ID ) ) {
+					$inicio = (string) get_post_meta( $p->ID, PROMOTUR_Destinos::META_INICIO, true );
+					$marca  = $inicio ? strtotime( $inicio ) : 0;
+					$partes[] = $marca
+						? sprintf( __( 'Evento · %s', 'caaguazu-portal' ), date_i18n( 'j M Y, H:i', $marca ) )
+						: __( 'Evento · sin fecha', 'caaguazu-portal' );
+				}
 				if ( $cat && ! is_wp_error( $cat ) )   { $partes[] = $cat[0]->name; }
 				if ( $zona && ! is_wp_error( $zona ) ) { $partes[] = $zona[0]->name; }
 				if ( $gancho )                          { $partes[] = $gancho; }

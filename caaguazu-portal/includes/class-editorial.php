@@ -172,13 +172,126 @@ class PROMOTUR_Editorial {
 		// tipo adelante —`articulo_publicado`, `recorrido_enviado`— para que
 		// el registro siga diciendo qué se movió y no sólo que algo se movió.
 		$tipo = self::tipo_de( $post_id );
-		if ( $tipo && class_exists( 'PROMOTUR_Audit' ) && in_array( $estado, array( 'enviado', 'publicado', 'necesita_cambios', 'aprobado' ), true ) ) {
+		if ( $tipo && class_exists( 'PROMOTUR_Audit' ) && in_array( $estado, array( 'enviado', 'publicado', 'necesita_cambios', 'aprobado', 'despublicado', 'archivado', 'borrador' ), true ) ) {
 			PROMOTUR_Audit::log( $tipo . '_' . $estado, array(
 				'entity_type' => $tipo,
 				'entity_id'   => (int) $post_id,
 				'payload'     => array( 'title' => get_the_title( $post_id ) ),
 			) );
 		}
+	}
+
+	/**
+	 * Qué se puede hacer con esta pieza, en este estado, con esta cuenta.
+	 *
+	 * FUENTE ÚNICA, y por un motivo que ya se pagó una vez: si la lista de
+	 * botones la arma la plantilla y el permiso lo comprueba el handler, los
+	 * dos se separan. Aparece un botón que da 403, o —peor— un handler que
+	 * acepta algo que ningún botón ofrecía. Acá se declara una vez y la
+	 * consumen los dos: la UI dibuja lo que devuelve esto, y el servidor
+	 * rechaza lo que no esté acá adentro.
+	 *
+	 * LAS REGLAS, Y POR QUÉ
+	 *
+	 *   Retirar        Lo mandé a revisión y me arrepentí. Vuelve a borrador,
+	 *                  y sólo mientras nadie lo aprobó: retirar algo ya
+	 *                  aprobado le borra el trabajo a quien lo revisó.
+	 *   Despublicar    Sale de la app y se conserva entero. Es la operación
+	 *                  que hacía falta y no existía: hasta ahora, lo único que
+	 *                  se podía hacer con algo publicado que estaba mal era
+	 *                  dejarlo publicado.
+	 *   Volver a publicar   Lo inverso, sin repetir la revisión.
+	 *   Archivar       Sale de circulación sin borrarse. Para lo que ya no va
+	 *                  pero no se quiere perder.
+	 *   Eliminar       A la papelera, no a la nada: se puede restaurar desde
+	 *                  el panel (ver `PROMOTUR_Estados::restaurar()`). NO se
+	 *                  ofrece sobre algo publicado — primero se despublica.
+	 *                  Son dos clics en vez de uno, y esa fricción es a
+	 *                  propósito: lo publicado lo está leyendo gente en la app.
+	 *
+	 * Quién: lo que toca la visibilidad pública —publicar, despublicar— pide
+	 * `promotur_publish_destino`. Lo demás lo puede el dueño sobre lo suyo, o
+	 * quien revisa sobre cualquier cosa.
+	 *
+	 * @param int $post_id
+	 * @return array clave => { label, estado, confirmar, peligro }
+	 */
+	public static function transiciones( $post_id ) {
+		$post_id = (int) $post_id;
+		if ( ! $post_id || ! self::tipo_de( $post_id ) ) {
+			return array();
+		}
+
+		$estado  = self::get_estado( $post_id );
+		$mio     = promotur_es_mio( $post_id );
+		$reviso  = promotur_can( 'promotur_review_content' );
+		$publico = promotur_can( 'promotur_publish_destino' );
+		$puedo   = $mio || $reviso;
+
+		if ( ! $puedo && ! $publico ) {
+			return array();
+		}
+
+		$out = array();
+
+		// Retirar de revisión: sólo mientras nadie lo aprobó.
+		if ( in_array( $estado, array( 'enviado', 'en_revision' ), true ) && $puedo ) {
+			$out['retirar'] = array(
+				'label'     => __( 'Retirar de revisión', 'caaguazu-portal' ),
+				'estado'    => 'borrador',
+				'confirmar' => __( '¿Sacarlo de la cola de revisión y volverlo a borrador?', 'caaguazu-portal' ),
+				'peligro'   => false,
+			);
+		}
+
+		if ( 'publicado' === $estado && $publico ) {
+			$out['despublicar'] = array(
+				'label'     => __( 'Despublicar', 'caaguazu-portal' ),
+				'estado'    => 'despublicado',
+				'confirmar' => __( 'Esto está publicado y la app lo está mostrando. ¿Sacarlo de circulación? El contenido se conserva entero.', 'caaguazu-portal' ),
+				'peligro'   => true,
+			);
+		}
+
+		if ( in_array( $estado, array( 'despublicado', 'archivado', 'aprobado' ), true ) && $publico ) {
+			$out['republicar'] = array(
+				'label'     => __( 'Publicar de nuevo', 'caaguazu-portal' ),
+				'estado'    => 'publicado',
+				'confirmar' => '',
+				'peligro'   => false,
+			);
+		}
+
+		if ( ! in_array( $estado, array( 'publicado', 'archivado' ), true ) && $puedo ) {
+			$out['archivar'] = array(
+				'label'     => __( 'Archivar', 'caaguazu-portal' ),
+				'estado'    => 'archivado',
+				'confirmar' => __( '¿Archivarlo? Sale de circulación y se puede recuperar cuando quieras.', 'caaguazu-portal' ),
+				'peligro'   => false,
+			);
+		}
+
+		return $out;
+	}
+
+	/**
+	 * ¿Se puede mandar a la papelera?
+	 *
+	 * Lo publicado no: primero se despublica. La fricción es a propósito —
+	 * borrar de un clic algo que la gente está leyendo en la app es el error
+	 * que no se puede deshacer con un «uy».
+	 *
+	 * @param int $post_id
+	 * @return bool
+	 */
+	public static function puede_borrar( $post_id ) {
+		if ( ! self::tipo_de( $post_id ) ) {
+			return false;
+		}
+		if ( 'publicado' === self::get_estado( $post_id ) ) {
+			return false;
+		}
+		return promotur_es_mio( $post_id ) || promotur_can( 'promotur_review_content' );
 	}
 
 	/**
@@ -217,6 +330,16 @@ class PROMOTUR_Editorial {
 
 		foreach ( call_user_func( array( $clase, 'flat_fields' ) ) as $key => $def ) {
 			if ( empty( $def['req'] ) ) { continue; }
+			/*
+			 * Un campo puede no aplicarle a esta pieza: la fecha de inicio es
+			 * obligatoria en un evento y no existe en un sitio. Sin esto,
+			 * «Empieza» quedaría como un mínimo sin cumplir en toda ficha que
+			 * no sea un evento y ninguna se podría enviar jamás.
+			 */
+			if ( method_exists( $clase, 'aplica_campo' )
+				&& ! call_user_func( array( $clase, 'aplica_campo' ), $def, $post_id ) ) {
+				continue;
+			}
 			$val  = $post_id ? get_post_meta( $post_id, $key, true ) : '';
 			$items[] = array(
 				'key'   => $key,

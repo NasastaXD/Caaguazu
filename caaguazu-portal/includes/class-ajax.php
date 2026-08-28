@@ -92,6 +92,18 @@ class PROMOTUR_Ajax {
 			// borrado del meta más abajo.
 			case 'image':    return (int) $raw > 0 ? (int) $raw : '';
 			case 'select':   return sanitize_key( wp_unslash( $raw ) );
+			/*
+			 * El navegador manda `2026-09-14T19:00`; se guarda `2026-09-14
+			 * 19:00:00`, que es el formato de fecha de WordPress y el que las
+			 * consultas por rango saben comparar. Lo que no parsea se descarta
+			 * en vez de guardarse: una fecha inválida en la base es peor que
+			 * una fecha ausente, porque ordena mal y no se nota.
+			 */
+			case 'datetime':
+				$crudo = trim( (string) wp_unslash( $raw ) );
+				if ( '' === $crudo ) { return ''; }
+				$marca = strtotime( $crudo );
+				return $marca ? gmdate( 'Y-m-d H:i:s', $marca ) : '';
 			default:         return sanitize_text_field( wp_unslash( $raw ) );
 		}
 	}

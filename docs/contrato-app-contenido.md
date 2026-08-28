@@ -2,15 +2,41 @@
 
 **Para:** quien construye la app Android.
 **De:** el lado del panel (WordPress en `caaguazu.net`).
-**Versión de la API:** `caaguazu-app-api` **0.3.0**, namespace `/wp-json/czu-app/v1/`.
+**Versión de la API:** `caaguazu-app-api` **0.4.0**, namespace `/wp-json/czu-app/v1/`.
 
 Este documento es el contrato de las **tres entidades de contenido**: el sitio
-turístico (la ficha), el artículo y el recorrido. Autenticación, mapa, eventos y
+turístico (la ficha), el artículo y el recorrido. Autenticación, mapa y
 sincronización están en [`BRIEF-AGENTE-APP-TURISMO.md`](../BRIEF-AGENTE-APP-TURISMO.md)
-y no se repiten acá.
+y no se repiten acá. Los eventos sí están acá desde 0.4.0, porque dejaron de ser
+una entidad aparte: un evento es una ficha con fechas (§1.5).
+
+La lista completa de campos, con el nombre que tiene cada uno adentro de
+WordPress y cuáles son obligatorios, está en
+[`datos-para-la-app.md`](datos-para-la-app.md) — ese archivo se genera desde el
+código, así que no puede quedar viejo.
 
 Todo lo que sigue es lectura. Nada de esto se escribe desde la app todavía
 (salvo los recorridos propios de cada persona, §3.6).
+
+---
+
+## 0.0. Lo que cambió en 0.4.0
+
+Un solo cambio, y es de modelo: **un evento es ahora una ficha con fechas.**
+
+| Entidad | Se suma | Se va | Se renombra |
+| --- | --- | --- | --- |
+| Sitio | `tipo_item`, `fechas`, filtro `?tipo_item=` | — | — |
+| Evento (`/eventos`) | `origen`, `ficha_id` | — | — |
+| Marker | `tipo_item` | — | — |
+| Parada | — | — | — |
+
+Nada dejó de venir, así que un cliente 0.3.0 sigue funcionando: `tipo_item` vale
+`"sitio"` en todo lo que ya tenías. Lo que cambia es que **`/inventario` ahora
+puede devolver eventos**, y si tu pantalla de inventario los muestra mezclados
+con los lugares, filtralos con `?tipo_item=sitio`.
+
+Todo el detalle está en §1.5.
 
 ---
 
@@ -52,8 +78,8 @@ GET /inventario/{id}       la ficha completa
 GET /mapa/markers          sólo pines, para el mapa
 ```
 
-Filtros de `/inventario`: `categoria`, `zona`, `bbox`, `buscar`, `pagina`,
-`por_pagina`.
+Filtros de `/inventario`: `categoria`, `zona`, `bbox`, `buscar`, `tipo_item`,
+`pagina`, `por_pagina`.
 
 ### 1.1 La ubicación: enlace primero, coordenadas después
 
@@ -105,6 +131,8 @@ Prevé ese caso.
 {
   "id": 41,
   "tipo": "destino",
+  "tipo_item": "sitio",
+  "fechas": null,
   "titulo": "…",
   "gancho": "…",
   "categoria": { "id": 12, "nombre": "Paisaje Natural", "color": "#2E7D32" },
@@ -156,6 +184,60 @@ Entero `0`–`4` (0 = gratis), o `null` si nadie lo cargó. Existe **además** d
 `practicos.costo`, no en su lugar: el número sirve para filtrar y pintar el
 indicador de la tarjeta, y el texto dice lo que un número no («entrada libre,
 estacionamiento 5.000 Gs»). No lo deduzcas del texto.
+
+---
+
+### 1.5 Un evento es una ficha con fechas
+
+Hasta 0.3.0 los eventos eran otra cosa: un tipo de contenido aparte, cargado
+desde la administración de WordPress, con la mitad de los campos de una ficha
+—sin gancho, sin galería, sin fuentes— y sin pasar por revisión. Se juntaron
+porque un evento **es** un lugar: tiene ubicación, foto, costo, horario y
+contacto exactamente igual. Lo único que agrega es cuándo pasa.
+
+Así que la ficha suma dos claves:
+
+```json
+"tipo_item": "evento",
+"fechas": {
+  "inicio":    "2026-03-14T19:00:00+00:00",
+  "fin":       "2026-03-16T23:59:59+00:00",
+  "en_curso":  false,
+  "terminado": false
+}
+```
+
+- **`tipo_item`** es `"sitio"` o `"evento"`, y viene siempre — también en la
+  lista y en los markers. En todo lo cargado antes de 0.4.0 vale `"sitio"`.
+- **`fechas`** es `null` en los sitios. En los eventos, `fin` puede ser `null`:
+  significa que dura ese día, y `en_curso` / `terminado` ya vienen resueltos con
+  esa regla para que no la implementes vos.
+- **`tipo` sigue diciendo `"destino"`** en las dos. Dice de qué colección salió
+  el objeto, no qué es; si filtrabas por `tipo`, no cambia nada.
+
+**Dos formas de pedir los eventos, y cuál conviene.**
+
+`GET /eventos` es la agenda: ordenada por fecha de inicio, y por defecto sólo lo
+que no terminó. Acepta `desde`, `hasta` y `categoria`. Mezcla los eventos que
+salen de una ficha con los del modelo viejo, y lo dice en `origen`:
+
+| `origen` | Qué es | El detalle completo está en |
+| --- | --- | --- |
+| `ficha` | Una ficha con `tipo_item: "evento"`. Es como se cargan hoy. | `/inventario/{id}` |
+| `evento_legado` | El modelo viejo. No se carga más; lo que ya existe se sigue sirviendo para no hacerlo desaparecer de los teléfonos que lo tienen. | `/eventos/{id}` |
+
+`GET /eventos/{id}` funciona con los dos: si el id es una ficha, devuelve la
+ficha completa (§1.2), no una versión recortada.
+
+**Para la caché local conviene el otro camino:** clonar `/inventario` entero y
+armar la agenda en el teléfono filtrando `tipo_item == "evento"` y ordenando por
+`fechas.inicio`. El motivo es `/sync`: **un evento de `origen: ficha` sincroniza
+en la colección `inventario`, no en `eventos`** —porque es una ficha—, y además
+así la agenda anda sin conexión, que es lo que un endpoint ordenado por fecha no
+te puede dar.
+
+En `/mapa/markers` los pines de ficha vienen con `tipo: "destino"` y su
+`tipo_item`; los del modelo viejo, con `tipo: "evento"`.
 
 ---
 
@@ -417,7 +499,8 @@ Tres reglas que valen para las tres entidades:
    del panel, y `post_status = publish` sólo lo alcanza lo que una persona
    aprobó. La API no reimplementa esa regla: la lee de donde ya está.
 2. **`/sync` cubre las tres**, con altas, cambios y bajas
-   (`inventario`, `articulos`, `recorridos`, `eventos`).
+   (`inventario`, `articulos`, `recorridos`, `eventos`). Los eventos que salen
+   de una ficha van en `inventario`, no en `eventos` (§1.5).
 3. **El autor visible nunca sale de `post_author`.**
 
 ---

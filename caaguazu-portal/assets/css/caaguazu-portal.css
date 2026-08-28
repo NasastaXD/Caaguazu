@@ -576,8 +576,13 @@ body.promotur-nav-open .promotur-sidebar { transform: translateX(0); }
 
 /* Segmentado: elegir entre pocas opciones sin gastar un desplegable. Hoy lo
    usa el selector de idioma de los textos de la app. */
-.promotur-seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: var(--r-full); background: var(--hueco); }
-.promotur-seg__item { padding: .3em .8em; border: 0; border-radius: var(--r-full); background: none; color: var(--texto-2); font: inherit; font-size: .8rem; font-weight: 600; text-decoration: none; cursor: pointer; }
+/* El segmentado se desplaza en vez de desbordar: con cinco opciones —el filtro
+   de Mis contenidos— no entra en un teléfono de 390px, y la regla del sistema
+   es que lo ancho scrollea dentro de su caja, no que la página se corra. Los
+   items no se encogen: un rótulo cortado no es una opción legible. */
+.promotur-seg { display: inline-flex; gap: 2px; max-width: 100%; padding: 3px; border-radius: var(--r-full); background: var(--hueco); overflow-x: auto; scrollbar-width: none; }
+.promotur-seg::-webkit-scrollbar { display: none; }
+.promotur-seg__item { flex: 0 0 auto; padding: .3em .8em; border: 0; border-radius: var(--r-full); background: none; color: var(--texto-2); font: inherit; font-size: .8rem; font-weight: 600; white-space: nowrap; text-decoration: none; cursor: pointer; }
 .promotur-seg__item.is-active { background: var(--tinta); color: var(--sobre-tinta); }
 
 /* ---------------------------------------------------------------------------
@@ -859,6 +864,19 @@ html.promotur-no-splash .promotur-splash { display: none; }
 
 .promotur-vinculos { display: grid; gap: 8px; margin-top: .6rem; grid-template-columns: 1fr; }
 @media (min-width: 700px) { .promotur-vinculos { grid-template-columns: repeat(2, 1fr); } }
+
+/* --------------------------------------------------------------------------
+ * Acciones sobre el estado
+ *
+ * Despublicar, archivar, borrar. Van al pie del panel lateral del editor, o
+ * sea después del checklist: primero lo que hay que completar, después lo que
+ * se puede deshacer. Las que sacan algo de circulación llevan el color de
+ * estado que corresponde —rojo—, y no como decoración: es la única señal de
+ * que ese botón hace algo que se nota afuera del panel.
+ * ------------------------------------------------------------------------ */
+
+.promotur-acciones { margin-top: var(--gap); }
+.promotur-acciones__botones { display: flex; flex-wrap: wrap; gap: 8px; margin-top: .8rem; }
 
 @media print {
 	.promotur-sidebar, .promotur-topbar, .promotur-splash, .promotur-backdrop, .promotur-bottomnav { display: none !important; }

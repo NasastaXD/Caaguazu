@@ -215,6 +215,85 @@ function promotur_current_identity() {
 }
 
 /**
+ * Una fecha guardada, en el formato que pide `<input type="datetime-local">`.
+ *
+ * La base guarda `2026-09-14 19:00:00` y el input quiere `2026-09-14T19:00`.
+ * Sin esta traducción el campo se dibuja vacío aunque el dato esté, y quien
+ * edita la ficha vuelve a cargar la fecha creyendo que se perdió.
+ *
+ * @param string $valor
+ * @return string
+ */
+function promotur_datetime_input( $valor ) {
+	$valor = trim( (string) $valor );
+	if ( '' === $valor ) {
+		return '';
+	}
+	$marca = strtotime( $valor );
+	return $marca ? gmdate( 'Y-m-d\TH:i', $marca ) : '';
+}
+
+/**
+ * El bloque de acciones del editor: qué se puede hacer con esta pieza además
+ * de seguir escribiéndola.
+ *
+ * Lo dibujan los tres editores —ficha, artículo y recorrido— y por eso vive
+ * acá: son las mismas acciones para los tres, y el estado de una pieza no
+ * depende de qué tipo sea.
+ *
+ * No decide nada: pregunta a `PROMOTUR_Editorial::transiciones()`, que es
+ * también a quien le pregunta el servidor cuando llega el clic. Un botón que
+ * aparece acá es un botón que el handler va a aceptar, y al revés.
+ *
+ * @param int $post_id 0 = pieza nueva, todavía no hay nada que hacer con ella
+ */
+function promotur_acciones_de_estado( $post_id ) {
+	$post_id = (int) $post_id;
+	if ( ! $post_id ) {
+		return;
+	}
+
+	$transiciones = PROMOTUR_Editorial::transiciones( $post_id );
+	$puede_borrar = PROMOTUR_Editorial::puede_borrar( $post_id );
+	$publicado    = 'publicado' === PROMOTUR_Editorial::get_estado( $post_id );
+
+	if ( ! $transiciones && ! $puede_borrar && ! $publicado ) {
+		return;
+	}
+	?>
+	<div class="promotur-card promotur-acciones" data-acciones="<?php echo esc_attr( $post_id ); ?>">
+		<h3 class="promotur-h3"><?php esc_html_e( 'Qué hacer con esto', 'caaguazu-portal' ); ?></h3>
+
+		<?php if ( $publicado ) : ?>
+			<p class="promotur-muted"><?php esc_html_e( 'Está publicado: la app lo está mostrando. Lo que edites y guardes se ve ahí.', 'caaguazu-portal' ); ?></p>
+		<?php endif; ?>
+
+		<div class="promotur-acciones__botones">
+			<?php foreach ( $transiciones as $clave => $t ) : ?>
+				<button type="button"
+				        class="promotur-btn <?php echo $t['peligro'] ? 'promotur-btn--peligro' : 'promotur-btn--ghost'; ?>"
+				        data-transicion="<?php echo esc_attr( $clave ); ?>"
+				        <?php if ( $t['confirmar'] ) : ?>data-confirmar-accion="<?php echo esc_attr( $t['confirmar'] ); ?>"<?php endif; ?>>
+					<?php echo esc_html( $t['label'] ); ?>
+				</button>
+			<?php endforeach; ?>
+
+			<?php if ( $puede_borrar ) : ?>
+				<button type="button" class="promotur-btn promotur-btn--peligro" data-borrar
+				        data-confirmar-accion="<?php esc_attr_e( '¿Borrarlo? Va a la papelera y lo podés recuperar desde Mis contenidos.', 'caaguazu-portal' ); ?>">
+					<?php esc_html_e( 'Borrar', 'caaguazu-portal' ); ?>
+				</button>
+			<?php elseif ( $publicado ) : ?>
+				<span class="promotur-ayuda"><?php esc_html_e( 'Para borrarlo, despublicalo primero.', 'caaguazu-portal' ); ?></span>
+			<?php endif; ?>
+		</div>
+
+		<span class="promotur-form-msg" data-acciones-msg aria-live="polite"></span>
+	</div>
+	<?php
+}
+
+/**
  * Dibuja UN campo del modelo de contenido, con su etiqueta, su ayuda y el
  * control que le corresponde al tipo.
  *
@@ -238,6 +317,10 @@ function promotur_campo( $key, $def, $valor ) {
 	// obligatorio él mismo — el enlace de Google Maps, que cumple un mínimo
 	// que también se puede cumplir con las coordenadas.
 	$check = ( $req || ! empty( $def['check'] ) ) ? ' data-check="' . esc_attr( $key ) . '"' : '';
+	// El selector de tipo de ficha gobierna qué campos se ven.
+	if ( class_exists( 'PROMOTUR_Destinos' ) && PROMOTUR_Destinos::META_TIPO_ITEM === $key ) {
+		$check .= ' data-tipo-item';
+	}
 	$nombre = 'meta[' . $key . ']';
 	// El campo de foto NO se envuelve en un <label>: adentro lleva otro
 	// <label> —el que dispara el selector de archivos— y un <label> dentro de
@@ -245,8 +328,12 @@ function promotur_campo( $key, $def, $valor ) {
 	// anuncian dos etiquetas para el mismo control. Los demás campos sí, que
 	// es lo que hace que se pueda tocar el texto para enfocar el control.
 	$caja = ( 'image' === $tipo ) ? 'div' : 'label';
+	// `solo` marca un campo que aplica a un solo tipo de ficha (las fechas de
+	// un evento). El JavaScript lo muestra u oculta según lo elegido, y el
+	// servidor no confía en eso: el checklist vuelve a preguntar.
+	$solo = isset( $def['solo'] ) ? ' data-solo="' . esc_attr( $def['solo'] ) . '"' : '';
 	?>
-	<<?php echo esc_html( $caja ); ?> class="promotur-field promotur-field--<?php echo esc_attr( $tipo ); ?>">
+	<<?php echo esc_html( $caja ); ?> class="promotur-field promotur-field--<?php echo esc_attr( $tipo ); ?>"<?php echo $solo; // phpcs:ignore WordPress.Security.EscapeOutput ?>>
 		<span><?php echo esc_html( $def['label'] ); ?><?php echo $req ? ' <em>*</em>' : ''; ?></span>
 		<?php
 		switch ( $tipo ) :
@@ -260,6 +347,9 @@ function promotur_campo( $key, $def, $valor ) {
 						<option value="<?php echo esc_attr( $ov ); ?>" <?php selected( (string) $valor, (string) $ov ); ?>><?php echo esc_html( $ol ); ?></option>
 					<?php endforeach; ?>
 				</select>
+				<?php break;
+			case 'datetime': ?>
+				<input type="datetime-local" name="<?php echo esc_attr( $nombre ); ?>" value="<?php echo esc_attr( promotur_datetime_input( (string) $valor ) ); ?>"<?php echo $check; // phpcs:ignore WordPress.Security.EscapeOutput ?>>
 				<?php break;
 			case 'coord': ?>
 				<input type="text" inputmode="decimal" name="<?php echo esc_attr( $nombre ); ?>" value="<?php echo esc_attr( (string) $valor ); ?>" data-coord="<?php echo esc_attr( '_promotur_lat' === $key ? 'lat' : 'lng' ); ?>"<?php echo $check; // phpcs:ignore WordPress.Security.EscapeOutput ?>>
