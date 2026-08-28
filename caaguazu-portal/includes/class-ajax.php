@@ -84,7 +84,13 @@ class PROMOTUR_Ajax {
 			case 'coord':    return '' === trim( (string) $raw ) ? '' : (float) $raw;
 			case 'url':      return esc_url_raw( wp_unslash( $raw ) );
 			case 'textarea': return sanitize_textarea_field( wp_unslash( $raw ) );
-			case 'image':    return (int) $raw;
+			// Un adjunto 0 no es un adjunto: es "no hay foto". Devolver el
+			// entero pelado hacía que se guardara el meta con valor 0, y el
+			// checklist —que sólo mira si el valor está vacío— daba la foto por
+			// cargada. Con eso, un artículo sin portada pasaba el mínimo y se
+			// podía enviar a revisión. La cadena vacía es la que dispara el
+			// borrado del meta más abajo.
+			case 'image':    return (int) $raw > 0 ? (int) $raw : '';
 			case 'select':   return sanitize_key( wp_unslash( $raw ) );
 			default:         return sanitize_text_field( wp_unslash( $raw ) );
 		}

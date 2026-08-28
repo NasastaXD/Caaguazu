@@ -3,7 +3,7 @@
  * Plugin Name:       Caaguazú Portal — Promotores Turísticos
  * Plugin URI:        https://turismo.caaguazu.net
  * Description:       Panel autenticado tipo app bajo /turismo-panel, instalable como PWA, donde el equipo escribe las tres cosas que la aplicación muestra —fichas del inventario turístico, artículos y recorridos— con un mismo flujo editorial: borrador → revisión → publicación. Corre sobre rutas propias y no depende del theme: trae su propio CSS y su propia tipografía, y desencola los del theme activo en sus rutas. La identidad de los promotores corre sobre el sistema de cuentas universal (caaguazu-cuentas): no son usuarios de WordPress.
- * Version:           3.2.2
+ * Version:           3.2.3
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Requires Plugins:  caaguazu-cuentas
@@ -17,7 +17,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'PROMOTUR_VERSION', '3.2.2' );
+define( 'PROMOTUR_VERSION', '3.2.3' );
 define( 'PROMOTUR_DB_VERSION', 2 ); // se incrementa cuando cambia la estructura de datos.
 define( 'PROMOTUR_FILE', __FILE__ );
 define( 'PROMOTUR_DIR', plugin_dir_path( __FILE__ ) );
@@ -174,8 +174,26 @@ add_action( 'plugins_loaded', 'promotur_boot' );
 function promotur_asegurar_rewrite_rules() {
 	$version_nueva = get_option( 'promotur_version' ) !== PROMOTUR_VERSION;
 
-	$reglas  = get_option( 'rewrite_rules' );
-	$falta   = ! is_array( $reglas ) || ! isset( $reglas[ '^' . PROMOTUR_BASE . '/?$' ] );
+	/*
+	 * SE COMPRUEBAN TODAS, NO UNA. Esto miraba sólo la regla del inicio del
+	 * panel, y ese atajo deja pasar el estado más difícil de diagnosticar que
+	 * tiene el plugin: con la regla base presente y la de
+	 * `/turismo-panel/datos/` ausente, las pantallas se dibujan perfecto y nada
+	 * de lo que se guarda funciona — la regla genérica de sección se come esas
+	 * URLs y el shell devuelve su página 404 en HTML, que el JavaScript no
+	 * puede parsear. Comprobar el juego completo cuesta lo mismo que comprobar
+	 * una: `rewrite_rules` ya está en memoria.
+	 */
+	$reglas = get_option( 'rewrite_rules' );
+	$falta  = ! is_array( $reglas );
+	if ( ! $falta ) {
+		foreach ( array_keys( PROMOTUR_Router::reglas() ) as $patron ) {
+			if ( ! isset( $reglas[ $patron ] ) ) {
+				$falta = true;
+				break;
+			}
+		}
+	}
 
 	if ( ! $version_nueva && ! $falta ) {
 		return;

@@ -14,13 +14,39 @@
 		else { document.addEventListener('DOMContentLoaded', fn); }
 	}
 
-	/** POST a admin-ajax. data: FormData u objeto plano. */
+	/**
+	 * POST a la puerta de datos del panel. data: FormData u objeto plano.
+	 *
+	 * La respuesta se lee como texto y recién después se parsea. Parece un
+	 * rodeo y no lo es: cuando el servidor devuelve algo que NO es JSON —una
+	 * página de error de PHP, un 404 en HTML, el aviso de un plugin de caché—
+	 * `r.json()` explota con «Unexpected token <», y el catch de quien llama lo
+	 * traduce a «Algo salió mal. Probá de nuevo.». Ese mensaje no distingue «tu
+	 * sesión venció» de «esta URL no existe», que son dos problemas con dos
+	 * arreglos distintos, y buscar a ciegas cuál de los dos es cuesta caro.
+	 *
+	 * Ahora el error dice el código HTTP y el principio de lo que vino. Es feo
+	 * a propósito: un error que no se puede diagnosticar cuesta más que uno feo.
+	 */
 	function ajax(action, data) {
 		var body;
 		if (data instanceof FormData) { body = data; }
 		else { body = new FormData(); Object.keys(data || {}).forEach(function (k) { body.append(k, data[k]); }); }
 		body.append('promotur_token', CFG.token);
-		return fetch(CFG.datosUrl + action, { method: 'POST', credentials: 'same-origin', body: body }).then(function (r) { return r.json(); });
+		return fetch(CFG.datosUrl + action, { method: 'POST', credentials: 'same-origin', body: body })
+			.then(function (r) {
+				return r.text().then(function (texto) {
+					try {
+						return JSON.parse(texto);
+					} catch (e) {
+						var pista = texto.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120);
+						return {
+							success: false,
+							data: { message: 'El servidor respondió ' + r.status + ' y no en el formato esperado. ' + (pista || 'Respuesta vacía.') }
+						};
+					}
+				});
+			});
 	}
 
 	/**
