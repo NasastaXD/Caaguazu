@@ -78,8 +78,8 @@ GET /inventario/{id}       la ficha completa
 GET /mapa/markers          sólo pines, para el mapa
 ```
 
-Filtros de `/inventario`: `categoria`, `bbox`, `buscar`, `tipo_item`,
-`pagina`, `por_pagina`.
+Filtros de `/inventario`: `categoria`, `etiqueta`, `bbox`, `buscar`,
+`tipo_item`, `pagina`, `por_pagina`.
 
 ### 1.1 La ubicación: enlace primero, coordenadas después
 
@@ -250,24 +250,31 @@ GET /articulos/{id}        la nota completa
 
 Filtros de `/articulos`: `categoria`, `etiqueta`, `buscar`, `pagina`, `por_pagina`.
 
-### 2.0 `buscar` es texto libre, no por tag
+### 2.0 Dos formas de encontrar por tema: `etiqueta` (exacta) y `buscar` (libre)
 
-`buscar` (en `/articulos` desde 0.5.1, ya existía en `/inventario`) busca en
-título y cuerpo, como el buscador nativo de WordPress — **no filtra por
-etiqueta.** No es una limitación arbitraria: ni la lista de `/inventario` ni
-la de `/articulos` traen las etiquetas del post —sólo el detalle las tiene—,
-así que resolver "buscame las notas etiquetadas «con niños»" en la lista
-pagaría el precio de cargar cada post entero sólo para mirarle las
-etiquetas. Si en algún momento hace falta buscar de verdad por tag, el
-camino es sumar `etiquetas` al payload de lista de los dos endpoints y
-filtrar ahí — no está hecho todavía.
+**`etiqueta`** (en `/inventario` y `/articulos` desde 0.6.0) filtra por el id
+exacto de una etiqueta — esto sí es "buscar por tag" de verdad, no una
+aproximación. `GET /etiquetas` da el catálogo completo (id, slug, nombre,
+cantidad) para armar los chips del filtro; no hace falta adivinar el id.
+Desde 0.6.0 la lista de los dos endpoints también trae `etiquetas` en cada
+ítem, así que un chip en la tarjeta de lista no obliga a pedir el detalle
+antes de poder mostrarlo.
 
-**Si vas a conectar esto a un campo de texto que dispara en cada tecla:**
-esperá a que la persona deje de tipear antes de pedir — 300–400ms desde la
-última letra alcanza y sobra — o vas a mandar un pedido por carácter. Esto
-es enteramente del lado del cliente; la API no hace nada especial para
-soportarlo (no hay throttling ni rate-limit pensado para eso), así que si no
-lo hacés en el cliente, no lo hace nadie.
+**`buscar`** (en `/articulos` desde 0.5.1, ya existía en `/inventario`) es
+texto libre sobre título y cuerpo, como el buscador nativo de WordPress —
+**no matchea el nombre de una etiqueta.** Si alguien escribe "con niños" en
+un campo de texto, no vas a encontrar por ahí las notas etiquetadas así; para
+eso está `etiqueta` arriba, con selección explícita del chip. Son dos
+mecanismos distintos a propósito: uno es exacto y estructurado, el otro es
+difuso y no sabe de taxonomías.
+
+**Si vas a conectar `buscar` a un campo de texto que dispara en cada
+tecla:** esperá a que la persona deje de tipear antes de pedir — 300–400ms
+desde la última letra alcanza y sobra — o vas a mandar un pedido por
+carácter. Esto es enteramente del lado del cliente; la API no hace nada
+especial para soportarlo (no hay throttling ni rate-limit pensado para eso),
+así que si no lo hacés en el cliente, no lo hace nadie. `etiqueta`, al ser
+una selección de chip y no tipeo libre, no necesita nada de esto.
 
 ### 2.1 Las ocho piezas
 
@@ -329,8 +336,9 @@ una decisión, no una casualidad. Si fueran dos, «Con niños» sería dos cosas
 distintas según de dónde la mires, y no se podría cruzar una nota con el lugar
 del que habla.
 
-Aprovechalo: `GET /articulos?etiqueta=51` y `GET /inventario` con la misma
-etiqueta te dan las dos caras del mismo tema.
+Aprovechalo: `GET /articulos?etiqueta=51` y `GET /inventario?etiqueta=51` te
+dan las dos caras del mismo tema. `GET /etiquetas` lista el catálogo completo
+— ver §2.0.
 
 ### 2.5 `GET /articulos/{id}`
 

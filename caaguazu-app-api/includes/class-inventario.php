@@ -41,6 +41,7 @@ class CZUAPI_Inventario {
 			'permission_callback' => '__return_true',
 			'args'                => array(
 				'categoria'  => array( 'type' => 'integer' ),
+				'etiqueta'   => array( 'type' => 'integer' ),
 				'bbox'       => array( 'type' => 'string' ),  // "minLng,minLat,maxLng,maxLat"
 				'buscar'     => array( 'type' => 'string' ),
 				'tipo_item'  => array( 'type' => 'string' ),  // sitio | evento
@@ -84,13 +85,23 @@ class CZUAPI_Inventario {
 				'terms'    => (int) $request->get_param( 'categoria' ),
 			);
 		}
+		// Filtrar por etiqueta exacta (un id de término, no texto): esto sí es
+		// "buscar por tag" de verdad, y no paga el precio de `buscar` — un
+		// tax_query es tan barato acá como el de categoría, arriba.
+		if ( $request->get_param( 'etiqueta' ) ) {
+			$tax_query[] = array(
+				'taxonomy' => CZUAPI_Taxonomias::TAX_ETIQUETA,
+				'field'    => 'term_id',
+				'terms'    => (int) $request->get_param( 'etiqueta' ),
+			);
+		}
 		if ( $tax_query ) {
 			$args['tax_query'] = $tax_query; // phpcs:ignore WordPress.DB.SlowDBQuery
 		}
-		// Texto libre, no por etiqueta: la lista no trae las etiquetas de la
-		// ficha —sólo el detalle las tiene— así que filtrar acá por tag
-		// pagaría el precio de cargar cada post entero para revisárselas.
-		// Busca en título y cuerpo, como el buscador nativo de WordPress.
+		// `buscar` sigue siendo texto libre sobre título y cuerpo, como el
+		// buscador nativo de WordPress: no matchea contra el nombre de una
+		// etiqueta. Para eso está `etiqueta` arriba, con el id exacto — el
+		// cliente lo resuelve mostrando chips de `GET /etiquetas`.
 		if ( $request->get_param( 'buscar' ) ) {
 			$args['s'] = sanitize_text_field( (string) $request->get_param( 'buscar' ) );
 		}
@@ -164,6 +175,12 @@ class CZUAPI_Inventario {
 			'fechas'          => $this->fechas( $id ),
 			'titulo'          => get_the_title( $post ),
 			'categoria'       => czuapi_primer_termino( $id, CZUAPI_Taxonomias::TAX_CATEGORIA ),
+			// Se suma acá —antes sólo la traía el detalle— para que un chip de
+			// tag en la tarjeta de lista no obligue a pedir el detalle antes
+			// de poder mostrarlo. Es barata: WP_Query ya precargó los términos
+			// de toda la página en una sola consulta, así que esto no agrega
+			// ninguna.
+			'etiquetas'       => $this->etiquetas( $id ),
 			'coordenadas'     => $this->coordenadas( $id ),
 			'google_maps'     => $this->google_maps( $id ),
 			'portada'         => $this->portada( $id ),
@@ -400,7 +417,7 @@ class CZUAPI_Inventario {
 	}
 
 	private function etiquetas( $id ) {
-		$terms = get_the_terms( $id, 'promotur_etiqueta' );
+		$terms = get_the_terms( $id, CZUAPI_Taxonomias::TAX_ETIQUETA );
 		if ( ! $terms || is_wp_error( $terms ) ) {
 			return array();
 		}

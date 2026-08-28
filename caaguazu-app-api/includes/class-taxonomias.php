@@ -24,6 +24,13 @@ class CZUAPI_Taxonomias {
 
 	const TAX_CATEGORIA = 'promotur_categoria';
 
+	/**
+	 * Sin icono, color ni marcador propios: a diferencia de categoría, una
+	 * etiqueta es sólo un chip de filtro («con niños», «gratis», «llega
+	 * colectivo»), no algo que se dibuje distinto en el mapa.
+	 */
+	const TAX_ETIQUETA = 'promotur_etiqueta';
+
 	const META_ICONO  = 'czuapi_icono';
 	const META_COLOR  = 'czuapi_color';
 	const META_MARKER = 'czuapi_marker_id'; // ID de adjunto del PNG
@@ -123,6 +130,12 @@ class CZUAPI_Taxonomias {
 			'callback'            => array( $this, 'categorias' ),
 			'permission_callback' => '__return_true',
 		) );
+
+		register_rest_route( CZUAPI_NS, '/etiquetas', array(
+			'methods'             => 'GET',
+			'callback'            => array( $this, 'etiquetas' ),
+			'permission_callback' => '__return_true',
+		) );
 	}
 
 	public function categorias( $request ) {
@@ -147,6 +160,39 @@ class CZUAPI_Taxonomias {
 				'icono'  => (string) get_term_meta( $t->term_id, self::META_ICONO, true ),
 				'color'  => (string) get_term_meta( $t->term_id, self::META_COLOR, true ),
 				'marker' => $marker ? $marker : null,
+				'total'  => (int) $t->count,
+			);
+		}
+
+		return CZUAPI_Response::with_etag( $out, $request, 600 );
+	}
+
+	/**
+	 * Las etiquetas, para armar los chips del filtro `etiqueta` de
+	 * /inventario y /articulos. Sin esto no hay forma de que el cliente sepa
+	 * qué ids existen — la ficha y la nota ya las traían, pero nunca hubo un
+	 * catálogo para elegir de antemano, como sí lo tiene categoría.
+	 *
+	 * A diferencia de /categorias, se pide `hide_empty`: una categoría vale
+	 * la pena mostrarla aunque hoy no tenga nada (es una estructura fija que
+	 * el staff decide), pero una etiqueta es ad hoc, y una que no etiqueta
+	 * nada todavía es ruido en un selector de filtro.
+	 */
+	public function etiquetas( $request ) {
+		$terms = get_terms( array(
+			'taxonomy'   => self::TAX_ETIQUETA,
+			'hide_empty' => true,
+		) );
+		if ( is_wp_error( $terms ) ) {
+			$terms = array();
+		}
+
+		$out = array();
+		foreach ( $terms as $t ) {
+			$out[] = array(
+				'id'     => (int) $t->term_id,
+				'slug'   => $t->slug,
+				'nombre' => $t->name,
 				'total'  => (int) $t->count,
 			);
 		}

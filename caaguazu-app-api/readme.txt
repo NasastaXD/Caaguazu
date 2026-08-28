@@ -2,7 +2,7 @@
 Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 0.5.1
+Stable tag: 0.6.0
 License: GPLv2 or later
 
 Capa REST que consume la app Android de turismo (Turismo App Czu).
@@ -46,7 +46,8 @@ Namespace: `/wp-json/czu-app/v1/`
 
 = Contenido =
 * `GET /categorias` — con icono, color y PNG de marcador
-* `GET /inventario` — filtros: `categoria`, `bbox`, `buscar`, `tipo_item`, `pagina`, `por_pagina`
+* `GET /etiquetas` — catálogo de tags, para armar chips de filtro
+* `GET /inventario` — filtros: `categoria`, `etiqueta`, `bbox`, `buscar`, `tipo_item`, `pagina`, `por_pagina`
 * `GET /inventario/{id}`
 * `GET /eventos` — filtros: `desde`, `hasta`, `categoria`, `pagina`, `por_pagina`
 * `GET /eventos/{id}`
@@ -104,6 +105,29 @@ de evento.
 1. Requiere `caaguazu-cuentas` y `caaguazu-portal` activos.
 2. Subir a `/wp-content/plugins/` y activar. Crea sus dos tablas.
 3. Cargar icono y color de cada categoría en **Destinos → Categorías**.
+
+== Cambios del contrato en 0.6.0 ==
+
+Búsqueda por tag de verdad, la que 0.5.1 dejó pendiente.
+
+* **`GET /etiquetas` es nuevo**: catálogo completo de etiquetas (id, slug,
+  nombre, cantidad), como ya tenía `/categorias`. Sin esto no había forma de
+  que el cliente supiera qué ids existen para armar un selector.
+* **`etiqueta` es filtro nuevo en `GET /inventario`** (ya existía en
+  `/articulos`): filtra por id exacto de etiqueta, con `tax_query`, igual de
+  barato que el filtro `categoria` que ya tenía. Esto es lo que hace posible
+  "buscar por tag" de verdad — `buscar` (texto libre) sigue sin matchear
+  nombres de etiqueta, y no lo va a hacer: son dos mecanismos distintos.
+* **La lista de `/inventario` y de `/articulos` ahora trae `etiquetas`** en
+  cada ítem (antes sólo el detalle la tenía). Es gratis: `WP_Query` ya
+  precarga los términos de toda la página en una sola consulta, así que
+  mostrar el chip de tag en la tarjeta de lista no agrega ninguna consulta
+  extra ni obliga a pedir el detalle primero.
+
+Ver `docs/contrato-app-contenido.md` §2.0 para el detalle completo, con la
+diferencia entre `etiqueta` (exacta, para un selector de chips) y `buscar`
+(texto libre, con la recomendación de los 350ms de espera del lado del
+cliente).
 
 == Cambios del contrato en 0.5.1 ==
 

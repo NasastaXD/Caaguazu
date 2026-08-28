@@ -118,7 +118,7 @@ class CZUAPI_Articulos {
 		// y un lugar marcados «con niños» se encuentran entre sí.
 		if ( $request->get_param( 'etiqueta' ) ) {
 			$tax_query[] = array(
-				'taxonomy' => 'promotur_etiqueta',
+				'taxonomy' => CZUAPI_Taxonomias::TAX_ETIQUETA,
 				'field'    => 'term_id',
 				'terms'    => (int) $request->get_param( 'etiqueta' ),
 			);
@@ -163,7 +163,6 @@ class CZUAPI_Articulos {
 		$out['cuerpo_html']  = apply_filters( 'the_content', $post->post_content );
 		$out['fuentes']      = $this->fuentes( $post->ID );
 		$out['categoria']    = czuapi_primer_termino( $post->ID, CZUAPI_Taxonomias::TAX_CATEGORIA );
-		$out['etiquetas']    = $this->etiquetas( $post->ID );
 		$out['relacionados'] = $this->relacionados( $post->ID );
 		$out['actualizado']  = czuapi_fecha( $post->post_modified_gmt );
 
@@ -186,6 +185,11 @@ class CZUAPI_Articulos {
 			'antetitulo' => (string) get_post_meta( $id, self::META_ANTETITULO, true ),
 			'titulo'     => get_the_title( $post ),
 			'subtitulo'  => (string) get_post_meta( $id, self::META_SUBTITULO, true ),
+			// Se movió acá desde el detalle: al ser la misma forma en lista y
+			// detalle (ver docblock arriba), no había motivo para que sólo el
+			// detalle la tuviera. Barata por la misma razón que en inventario:
+			// WP_Query ya precargó los términos de toda la página.
+			'etiquetas'  => $this->etiquetas( $id ),
 			// `entradilla` es el párrafo de arranque escrito por la redacción
 			// (el post_excerpt). Se llamaba `bajada` hasta acá: se renombró
 			// para hablar el mismo idioma que el panel, donde el campo se
@@ -262,7 +266,7 @@ class CZUAPI_Articulos {
 	 * @return array[]
 	 */
 	private function etiquetas( $id ) {
-		$terms = get_the_terms( $id, 'promotur_etiqueta' );
+		$terms = get_the_terms( $id, CZUAPI_Taxonomias::TAX_ETIQUETA );
 		if ( ! $terms || is_wp_error( $terms ) ) {
 			return array();
 		}
