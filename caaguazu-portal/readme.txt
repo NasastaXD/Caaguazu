@@ -3,7 +3,7 @@ Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 3.5.0
+Stable tag: 3.5.1
 License: GPLv2 or later
 
 Panel autenticado tipo app (PWA) bajo /turismo-panel, con enrutador propio, login propio, roles y flujo editorial para las tres cosas que la app muestra: fichas del inventario turístico, artículos y recorridos.
@@ -57,6 +57,13 @@ llamen los tags.
 * Repo privado: definir `PROMOTUR_GITHUB_TOKEN` (PAT de solo lectura) en `wp-config.php`.
 
 == Changelog ==
+
+= 3.5.1 =
+* Se saca «Etiquetas» del menú nativo de Entradas en wp-admin. Es la
+  taxonomía `post_tag` de fábrica de WordPress, sin relación con
+  `promotur_etiqueta` —la que arma y usa el panel—: nadie del equipo escribe
+  entradas nativas, así que ese menú era puro estorbo para quien entra a
+  wp-admin. La taxonomía sigue registrada, sólo se sacó el enlace del menú.
 
 = 3.5.0 =
 * **Se sacaron Gancho y Accesibilidad de la ficha.** No le hacían falta a la
