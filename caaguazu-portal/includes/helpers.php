@@ -215,6 +215,66 @@ function promotur_current_identity() {
 }
 
 /**
+ * El bloque de acciones del editor: qué se puede hacer con esta pieza además
+ * de seguir escribiéndola.
+ *
+ * Lo dibujan los tres editores —ficha, artículo y recorrido— y por eso vive
+ * acá: son las mismas acciones para los tres, y el estado de una pieza no
+ * depende de qué tipo sea.
+ *
+ * No decide nada: pregunta a `PROMOTUR_Editorial::transiciones()`, que es
+ * también a quien le pregunta el servidor cuando llega el clic. Un botón que
+ * aparece acá es un botón que el handler va a aceptar, y al revés.
+ *
+ * @param int $post_id 0 = pieza nueva, todavía no hay nada que hacer con ella
+ */
+function promotur_acciones_de_estado( $post_id ) {
+	$post_id = (int) $post_id;
+	if ( ! $post_id ) {
+		return;
+	}
+
+	$transiciones = PROMOTUR_Editorial::transiciones( $post_id );
+	$puede_borrar = PROMOTUR_Editorial::puede_borrar( $post_id );
+	$publicado    = 'publicado' === PROMOTUR_Editorial::get_estado( $post_id );
+
+	if ( ! $transiciones && ! $puede_borrar && ! $publicado ) {
+		return;
+	}
+	?>
+	<div class="promotur-card promotur-acciones" data-acciones="<?php echo esc_attr( $post_id ); ?>">
+		<h3 class="promotur-h3"><?php esc_html_e( 'Qué hacer con esto', 'caaguazu-portal' ); ?></h3>
+
+		<?php if ( $publicado ) : ?>
+			<p class="promotur-muted"><?php esc_html_e( 'Está publicado: la app lo está mostrando. Lo que edites y guardes se ve ahí.', 'caaguazu-portal' ); ?></p>
+		<?php endif; ?>
+
+		<div class="promotur-acciones__botones">
+			<?php foreach ( $transiciones as $clave => $t ) : ?>
+				<button type="button"
+				        class="promotur-btn <?php echo $t['peligro'] ? 'promotur-btn--peligro' : 'promotur-btn--ghost'; ?>"
+				        data-transicion="<?php echo esc_attr( $clave ); ?>"
+				        <?php if ( $t['confirmar'] ) : ?>data-confirmar-accion="<?php echo esc_attr( $t['confirmar'] ); ?>"<?php endif; ?>>
+					<?php echo esc_html( $t['label'] ); ?>
+				</button>
+			<?php endforeach; ?>
+
+			<?php if ( $puede_borrar ) : ?>
+				<button type="button" class="promotur-btn promotur-btn--peligro" data-borrar
+				        data-confirmar-accion="<?php esc_attr_e( '¿Borrarlo? Va a la papelera y lo podés recuperar desde Mis contenidos.', 'caaguazu-portal' ); ?>">
+					<?php esc_html_e( 'Borrar', 'caaguazu-portal' ); ?>
+				</button>
+			<?php elseif ( $publicado ) : ?>
+				<span class="promotur-ayuda"><?php esc_html_e( 'Para borrarlo, despublicalo primero.', 'caaguazu-portal' ); ?></span>
+			<?php endif; ?>
+		</div>
+
+		<span class="promotur-form-msg" data-acciones-msg aria-live="polite"></span>
+	</div>
+	<?php
+}
+
+/**
  * Dibuja UN campo del modelo de contenido, con su etiqueta, su ayuda y el
  * control que le corresponde al tipo.
  *

@@ -94,7 +94,7 @@ function date_i18n( $formato, $marca = null ) {
 	if ( 'D' === $formato ) { return $dias[ (int) gmdate( 'w', $marca ?: time() ) ]; }
 	return gmdate( $formato, $marca ?: time() );
 }
-function add_query_arg( ...$a ) { return isset( $a[2] ) ? $a[2] : ( is_string( end( $a ) ) ? end( $a ) : '#' ); }
+function add_query_arg( ...$a ) { return ( 3 === count( $a ) ? $a[2] : '#' ) . '?' . ( is_string( $a[0] ) ? $a[0] . '=' . $a[1] : '' ); }
 function remove_query_arg( ...$a ) { return '#'; }
 function is_admin() { return false; }
 function selected( $a, $b = true, $echo = true ) { $r = (string) $a === (string) $b ? ' selected' : ''; if ( $echo ) { echo $r; } return $r; }
@@ -489,6 +489,13 @@ class PROMOTUR_Editorial {
 		);
 	}
 	public static function is_complete( $post_id, $tipo = '' ) { return false; }
+	public static function transiciones( $post_id ) {
+		return array(
+			'despublicar' => array( 'label' => 'Despublicar', 'estado' => 'despublicado', 'confirmar' => 'Esto está publicado y la app lo está mostrando. ¿Sacarlo de circulación?', 'peligro' => true ),
+			'archivar'    => array( 'label' => 'Archivar', 'estado' => 'archivado', 'confirmar' => '¿Archivarlo?', 'peligro' => false ),
+		);
+	}
+	public static function puede_borrar( $post_id ) { return true; }
 	public static function get_feedback( $post_id ) {
 		// Objetos con la forma de un WP_Comment, que es lo que leen las
 		// plantillas (comment_author, comment_content, comment_date_gmt).
@@ -507,6 +514,10 @@ class PROMOTUR_Editorial {
 		$map = array( 'borrador' => 'Borrador', 'enviado' => 'Enviado', 'en_revision' => 'En revisión', 'necesita_cambios' => 'Necesita cambios', 'aprobado' => 'Aprobado', 'publicado' => 'Publicado' );
 		return isset( $map[ $e ] ) ? $map[ $e ] : $e;
 	}
+}
+class PROMOTUR_Estados {
+	public static function instance() { return new self(); }
+	public static function papelera( $limite = 50 ) { return array_slice( get_posts(), 0, 2 ); }
 }
 class PROMOTUR_PWA {
 	public static function chrome_color( $dark = false ) { return $dark ? '#101012' : '#ffffff'; }

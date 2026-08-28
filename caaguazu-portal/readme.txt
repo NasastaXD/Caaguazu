@@ -3,7 +3,7 @@ Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 3.2.3
+Stable tag: 3.3.0
 License: GPLv2 or later
 
 Panel autenticado tipo app (PWA) bajo /turismo-panel, con enrutador propio, login propio, roles y flujo editorial para las tres cosas que la app muestra: fichas del inventario turístico, artículos y recorridos.
@@ -57,6 +57,34 @@ llamen los tags.
 * Repo privado: definir `PROMOTUR_GITHUB_TOKEN` (PAT de solo lectura) en `wp-config.php`.
 
 == Changelog ==
+
+= 3.3.0 =
+* **Se puede deshacer.** Hasta acá el panel sabía llevar algo de borrador a
+  publicado y no sabía traerlo de vuelta: una vez publicada una ficha, lo único
+  que se podía hacer con ella era editarla. No había forma de sacarla de la app,
+  ni de archivarla, ni de borrarla. Ahora hay cinco operaciones nuevas —retirar
+  de revisión, despublicar, volver a publicar, archivar y borrar— más recuperar
+  lo borrado.
+* **Tres estados dejan de ser decorativos.** De los ocho que el flujo declara,
+  `aprobado`, `despublicado` y `archivado` eran inalcanzables: tenían su pastilla
+  de color y nada podía ponerlos. Ahora se llega a los tres.
+* **Borrar es la papelera, no la nada.** `wp_trash_post()`, recuperable desde el
+  propio panel — nadie tiene que abrir wp-admin para deshacer un borrado, que es
+  la regla que el plugin sostiene desde el cutover de identidad. Y es además lo
+  que la app necesita: `CZUAPI_Sync` engancha ese hook y deja su lápida, así que
+  el teléfono se entera de que eso dejó de existir.
+* **Lo publicado no se borra de un clic.** Primero se despublica. Son dos pasos
+  en vez de uno, y esa fricción es a propósito: lo publicado lo está leyendo
+  gente en la app. El mensaje del rechazo dice exactamente qué hacer.
+* **Una sola fuente para los botones y para el permiso.**
+  `PROMOTUR_Editorial::transiciones()` declara qué puede hacer esta cuenta con
+  esta pieza en este estado; la UI dibuja lo que devuelve y el servidor rechaza
+  lo que no esté ahí. Si la lista la arma la plantilla y el permiso lo comprueba
+  el handler, los dos se separan y aparece un botón que da 403 — o, peor, un
+  handler que acepta algo que ningún botón ofrecía.
+* **Mis contenidos gana un filtro por estado**, con papelera y archivados. Lo
+  archivado sale de la lista de «en curso» a propósito: si no, lo que se dejó de
+  lado sigue ocupando la pantalla que se abre para ver qué hay a medias.
 
 = 3.2.3 =
 * **La foto de portada se daba por cargada sin foto.** Un campo de imagen vacío
