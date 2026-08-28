@@ -3,7 +3,7 @@ Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 3.2.2
+Stable tag: 3.2.3
 License: GPLv2 or later
 
 Panel autenticado tipo app (PWA) bajo /turismo-panel, con enrutador propio, login propio, roles y flujo editorial para las tres cosas que la app muestra: fichas del inventario turístico, artículos y recorridos.
@@ -57,6 +57,33 @@ llamen los tags.
 * Repo privado: definir `PROMOTUR_GITHUB_TOKEN` (PAT de solo lectura) en `wp-config.php`.
 
 == Changelog ==
+
+= 3.2.3 =
+* **La foto de portada se daba por cargada sin foto.** Un campo de imagen vacío
+  se guardaba como el entero `0`, y el checklist de mínimos —que sólo mira si el
+  valor está vacío— lo tomaba por completo: un artículo sin portada pasaba el
+  mínimo y se podía enviar a revisión. Afectaba igual a la ficha y al recorrido.
+  Ahora un `0` se trata como lo que es —no hay foto— y el meta se borra.
+* **El error del JavaScript dice qué pasó.** Cuando la respuesta del servidor no
+  es JSON, en vez de «Algo salió mal. Probá de nuevo.» se muestra el código HTTP
+  y el principio de lo que vino. Ese mensaje no distinguía «tu sesión venció» de
+  «esta URL no existe», que son dos problemas con dos arreglos distintos.
+* **Las reglas de reescritura se comprueban todas, no una.**
+  `promotur_asegurar_rewrite_rules()` miraba sólo la del inicio del panel, y con
+  esa presente no volvía a regenerar el juego. Ese atajo deja pasar el estado más
+  difícil de diagnosticar que tiene el plugin: si falta la regla de
+  `/turismo-panel/datos/`, las pantallas se dibujan perfecto y nada de lo que se
+  guarda funciona. Las reglas viven ahora en un mapa (`PROMOTUR_Router::reglas()`)
+  que la guarda recorre entero, y el despacho tiene una red: si `/datos/` o
+  `/accion/` llegan igual al renderizador de secciones, se despachan como lo que
+  son en vez de devolver un 404 en HTML con status 200.
+* **El panel desencola el CSS del theme activo en sus rutas.** El theme 5.0.4 ya
+  dejó de encolarlo ahí, que arregló el síntoma; pero esa guarda vive en el
+  theme, y el theme es lo que se va a rehacer. La promesa del panel desde la
+  3.0.0 —«el sitio público se puede rehacer entero sin poder cambiarle la cara al
+  panel»— sólo se sostiene con la defensa de este lado. Se busca por origen y no
+  por nombre de handle. Con el theme actual no desencola nada: es una red, no un
+  parche.
 
 = 3.2.2 =
 * **Guardar borrador, enviar a revisión, aprobar/devolver, tareas y la

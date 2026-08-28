@@ -18,6 +18,68 @@ class PROMOTUR_Assets {
 
 	private function __construct() {
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue' ) );
+		/*
+		 * Prioridad 999: los themes encolan su hoja con la prioridad que se les
+		 * ocurra —el de este sitio usa 100— y desencolar algo antes de que se
+		 * encole no hace nada. Esta es la última palabra.
+		 */
+		add_action( 'wp_enqueue_scripts', array( $this, 'desencolar_el_theme' ), 999 );
+	}
+
+	/**
+	 * Saca de las rutas del panel cualquier hoja de estilo que venga del theme
+	 * activo.
+	 *
+	 * POR QUÉ ACÁ TAMBIÉN, SI EL THEME YA NO SE ENCOLA
+	 *
+	 * El theme 5.0.4 dejó de encolar su CSS en las rutas del panel, y eso
+	 * arregló el síntoma: los aros de la página de obra ya no se ven detrás del
+	 * panel. Pero esa guarda vive en el theme — y el theme es justamente lo que
+	 * se va a tirar y rehacer. El día que llegue el theme nuevo, la protección
+	 * se va con el viejo.
+	 *
+	 * La promesa que el panel viene haciendo desde la 3.0.0 —en su propia
+	 * descripción y en `docs/panel-turismo.md`— es más fuerte que eso: «el sitio
+	 * público se puede rehacer entero sin poder cambiarle la cara al panel». Eso
+	 * sólo se sostiene si la defensa está de este lado. Hasta ahora estaba
+	 * documentada y no implementada.
+	 *
+	 * Se busca por ORIGEN y no por nombre de handle (`caaguazu-obra`): el handle
+	 * es de este theme y de hoy, y la regla que hay que sostener es «el panel no
+	 * hereda del theme, sea cual sea». Con el theme actual esto no desencola
+	 * nada, porque ya no hay nada encolado: es una red, no un parche.
+	 */
+	public function desencolar_el_theme() {
+		if ( ! $this->is_portal_route() ) {
+			return;
+		}
+
+		$estilos = wp_styles();
+		if ( ! $estilos ) {
+			return;
+		}
+
+		$carpetas = array_unique( array(
+			get_stylesheet_directory_uri(),
+			get_template_directory_uri(),
+		) );
+
+		// Una copia de la cola: dequeue la modifica mientras se recorre.
+		foreach ( (array) $estilos->queue as $handle ) {
+			if ( ! isset( $estilos->registered[ $handle ] ) ) {
+				continue;
+			}
+			$src = (string) $estilos->registered[ $handle ]->src;
+			if ( '' === $src ) {
+				continue;
+			}
+			foreach ( $carpetas as $carpeta ) {
+				if ( $carpeta && 0 === strpos( $src, $carpeta ) ) {
+					wp_dequeue_style( $handle );
+					break;
+				}
+			}
+		}
 	}
 
 	/**

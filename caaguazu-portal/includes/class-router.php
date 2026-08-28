@@ -68,47 +68,69 @@ class PROMOTUR_Router {
 	}
 
 	/**
-	 * Reglas de reescritura.
+	 * Todas las reglas de reescritura del panel: patrón => destino.
 	 *
-	 * OJO con el orden: `add_rewrite_rule( …, 'top' )` **antepone**, así que la
-	 * última regla agregada es la primera en evaluarse. Por eso acá se agregan
-	 * de menos a más específica — al revés de como se leen.
+	 * Es un mapa y no una lista de llamadas sueltas para que se pueda
+	 * **verificar**: `promotur_asegurar_rewrite_rules()` recorre este mismo
+	 * mapa y comprueba que las reglas guardadas las tengan todas. Antes esa
+	 * comprobación miraba una sola —la del inicio del panel— y eso dejaba
+	 * pasar el peor estado posible: las páginas del panel se dibujan, pero
+	 * `/turismo-panel/datos/…` no existe como regla y se lo come la regla
+	 * genérica de sección. Ver el porqué en dispatch().
 	 *
-	 * Estático para reutilizar en la activación, antes del flush.
+	 * OJO CON EL ORDEN: `add_rewrite_rule( …, 'top' )` **antepone**, así que la
+	 * última regla agregada es la primera en evaluarse. Por eso el mapa va de
+	 * menos a más específica — al revés de como se leen.
+	 *
+	 * @return array patrón => destino
 	 */
-	public static function add_rewrite_rules() {
+	public static function reglas() {
 		$base = PROMOTUR_BASE;
 
-		// 1. Panel (lo más genérico: cualquier sección y su id opcional).
-		add_rewrite_rule( '^' . $base . '/(.+?)/?$', 'index.php?promotur_route=panel&promotur_sub=$matches[1]', 'top' );
-		add_rewrite_rule( '^' . $base . '/?$',       'index.php?promotur_route=panel', 'top' );
+		$reglas = array(
+			// 1. Panel (lo más genérico: cualquier sección y su id opcional).
+			'^' . $base . '/(.+?)/?$' => 'index.php?promotur_route=panel&promotur_sub=$matches[1]',
+			'^' . $base . '/?$'       => 'index.php?promotur_route=panel',
 
-		// 1.b Las dos puertas del panel: formularios y JavaScript. Van después
-		//     de la regla genérica de sección para que se evalúen antes que
-		//     ella (`'top'` antepone) y /turismo-panel/accion/x no se lea como
-		//     una sección llamada "accion".
-		add_rewrite_rule( '^' . $base . '/accion/([a-z0-9_-]+)/?$', 'index.php?promotur_route=accion&promotur_sub=$matches[1]', 'top' );
-		add_rewrite_rule( '^' . $base . '/datos/([a-z0-9_-]+)/?$',  'index.php?promotur_route=datos&promotur_sub=$matches[1]', 'top' );
+			// 1.b Las dos puertas del panel: formularios y JavaScript. Van
+			//     después de la regla genérica de sección para que se evalúen
+			//     antes que ella y /turismo-panel/accion/x no se lea como una
+			//     sección llamada "accion".
+			'^' . $base . '/accion/([a-z0-9_-]+)/?$' => 'index.php?promotur_route=accion&promotur_sub=$matches[1]',
+			'^' . $base . '/datos/([a-z0-9_-]+)/?$'  => 'index.php?promotur_route=datos&promotur_sub=$matches[1]',
 
-		// 2. Auth. El identificador interno de la ruta de login sigue siendo
-		//    'login' (query var, switch, template); sólo el slug público es
-		//    /entrar.
-		add_rewrite_rule( '^' . $base . '/entrar/?$',          'index.php?promotur_route=login', 'top' );
-		add_rewrite_rule( '^' . $base . '/registro/?$',        'index.php?promotur_route=registro', 'top' );
-		add_rewrite_rule( '^' . $base . '/recuperar/nueva/?$', 'index.php?promotur_route=restablecer', 'top' );
-		add_rewrite_rule( '^' . $base . '/recuperar/?$',       'index.php?promotur_route=recuperar', 'top' );
-		add_rewrite_rule( '^' . $base . '/salir/?$',           'index.php?promotur_route=salir', 'top' );
-		add_rewrite_rule( '^' . $base . '/i/([^/]+)/?$',       'index.php?promotur_route=registro&promotur_token=$matches[1]', 'top' );
+			// 2. Auth. El identificador interno de la ruta de login sigue
+			//    siendo 'login' (query var, switch, template); sólo el slug
+			//    público es /entrar.
+			'^' . $base . '/entrar/?$'          => 'index.php?promotur_route=login',
+			'^' . $base . '/registro/?$'        => 'index.php?promotur_route=registro',
+			'^' . $base . '/recuperar/nueva/?$' => 'index.php?promotur_route=restablecer',
+			'^' . $base . '/recuperar/?$'       => 'index.php?promotur_route=recuperar',
+			'^' . $base . '/salir/?$'           => 'index.php?promotur_route=salir',
+			'^' . $base . '/i/([^/]+)/?$'       => 'index.php?promotur_route=registro&promotur_token=$matches[1]',
 
-		// 3. PWA.
-		add_rewrite_rule( '^' . $base . '/manifest\.webmanifest$', 'index.php?promotur_route=pwa-manifest', 'top' );
-		add_rewrite_rule( '^' . $base . '/sw\.js$',                'index.php?promotur_route=pwa-sw', 'top' );
-		add_rewrite_rule( '^' . $base . '/icon-([0-9]+)\.png$',    'index.php?promotur_route=pwa-icon&promotur_size=$matches[1]', 'top' );
-		add_rewrite_rule( '^' . $base . '/offline/?$',             'index.php?promotur_route=pwa-offline', 'top' );
+			// 3. PWA.
+			'^' . $base . '/manifest\.webmanifest$' => 'index.php?promotur_route=pwa-manifest',
+			'^' . $base . '/sw\.js$'                => 'index.php?promotur_route=pwa-sw',
+			'^' . $base . '/icon-([0-9]+)\.png$'    => 'index.php?promotur_route=pwa-icon&promotur_size=$matches[1]',
+			'^' . $base . '/offline/?$'             => 'index.php?promotur_route=pwa-offline',
+		);
 
 		// 4. Rutas viejas → 301.
-		foreach ( self::legacy_map() as $pattern => $destino ) {
-			add_rewrite_rule( $pattern, 'index.php?promotur_route=legacy&promotur_sub=' . $destino, 'top' );
+		foreach ( self::legacy_map() as $patron => $destino ) {
+			$reglas[ $patron ] = 'index.php?promotur_route=legacy&promotur_sub=' . $destino;
+		}
+
+		return $reglas;
+	}
+
+	/**
+	 * Registra las reglas. Estático para reutilizar en la activación, antes
+	 * del flush.
+	 */
+	public static function add_rewrite_rules() {
+		foreach ( self::reglas() as $patron => $destino ) {
+			add_rewrite_rule( $patron, $destino, 'top' );
 		}
 	}
 
@@ -175,10 +197,39 @@ class PROMOTUR_Router {
 				exit;
 
 			case 'panel':
+				$sub   = (string) get_query_var( 'promotur_sub' );
+				$parts = '' === $sub ? array() : explode( '/', trim( $sub, '/' ) );
+
+				/*
+				 * RED DE SEGURIDAD, y no una cortesía.
+				 *
+				 * Si las reglas guardadas perdieron la de `/datos/` o la de
+				 * `/accion/` —una restauración de base, un plugin de caché que
+				 * se guardó un juego viejo, un flush a medias—, la regla
+				 * genérica de sección se come igual esas URLs y este case las
+				 * recibe como si `datos` fuera una sección. Lo que pasaba
+				 * entonces era lo peor de los dos mundos: el shell dibujaba su
+				 * página 404 **con status 200 y en HTML**, el JavaScript hacía
+				 * `r.json()` sobre eso, reventaba, y en pantalla salía «Algo
+				 * salió mal. Probá de nuevo.» — sin guardar, sin subir la foto
+				 * y sin decir por qué. Las páginas del panel seguían andando,
+				 * así que nada delataba el origen.
+				 *
+				 * `datos` y `accion` son palabras reservadas: no hay ni puede
+				 * haber una sección con esos nombres (ver
+				 * PROMOTUR_Roles::sections()). Si llegan hasta acá, es esto.
+				 */
+				$puertas = array( 'accion' => 'accion', 'datos' => 'datos' );
+				if ( isset( $parts[0], $parts[1] ) && isset( $puertas[ $parts[0] ] ) ) {
+					PROMOTUR_Acciones::instance()->despachar(
+						$puertas[ $parts[0] ],
+						sanitize_key( $parts[1] )
+					);
+					exit;
+				}
+
 				$this->guard_panel();
 				status_header( 200 );
-				$sub     = (string) get_query_var( 'promotur_sub' );
-				$parts   = '' === $sub ? array() : explode( '/', trim( $sub, '/' ) );
 				$section = ! empty( $parts[0] ) ? sanitize_key( $parts[0] ) : 'home';
 				$id      = isset( $parts[1] ) ? sanitize_text_field( $parts[1] ) : null;
 				PROMOTUR_Shell::instance()->render( $section, $id );
