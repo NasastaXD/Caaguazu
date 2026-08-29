@@ -11,6 +11,22 @@ class PROMOTUR_Notifications {
 	private static $instance = null;
 	const READ_META = 'promotur_notifs_read_at';
 
+	/**
+	 * Memo de get_items() para el pedido en curso.
+	 *
+	 * La barra superior pide la lista y el contador en la misma pantalla, y el
+	 * contador se calcula recorriendo la lista: sin esto, `get_items()` corre
+	 * dos veces enteras en cada carga de CUALQUIER página del panel —el topbar
+	 * está en el shell—. `null` es "todavía no se calculó"; una lista vacía es
+	 * un resultado válido y se memoriza igual.
+	 *
+	 * @var array[]|null
+	 */
+	private $items_memo = null;
+
+	/** Memo del contador de la cola, que piden el sidebar y también Inicio. */
+	private static $cola_memo = null;
+
 	public static function instance() {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -28,55 +44,75 @@ class PROMOTUR_Notifications {
 	 * @return array[] { icon, title, when, url, time }
 	 */
 	public function get_items() {
+		if ( null !== $this->items_memo ) {
+			return $this->items_memo;
+		}
+
 		$items = array();
 		$uid   = caaguazu_account_id();
-		if ( ! $uid && ! caaguazu_wp_admin_bypass() ) { return $items; }
+		if ( ! $uid && ! caaguazu_wp_admin_bypass() ) {
+			$this->items_memo = $items;
+			return $items;
+		}
 
 		// Para revisores: lo que espera revisión, de los tres tipos.
 		if ( caaguazu_account_can( 'promotor', 'promotur_review_content' ) ) {
+			/*
+			 * Sin `fields => 'ids'` a propósito. Con IDs pelados, WP_Query se
+			 * salta el precargado de posts, y después cada get_the_title() y
+			 * cada get_post_time() de este loop dispara su propia consulta.
+			 * Pidiendo los objetos, una sola consulta trae todo lo que el loop
+			 * necesita —y este loop corre en el shell, o sea en todas las
+			 * pantallas del panel—.
+			 */
 			$pending = get_posts( array(
 				'post_type'      => PROMOTUR_Editorial::cpts(),
 				'post_status'    => array( 'draft', 'pending' ),
 				'posts_per_page' => 10,
 				'meta_key'       => '_promotur_estado',
 				'meta_value'     => 'enviado',
-				'fields'         => 'ids',
 			) );
-			foreach ( $pending as $pid ) {
+			foreach ( $pending as $post ) {
+				// Una sola lectura de la fecha: `time` y `when` dicen lo mismo,
+				// uno para ordenar y el otro para mostrar.
+				$cuando = (int) get_post_time( 'U', true, $post );
 				$items[] = array(
 					'icon'  => 'inbox',
-					'title' => sprintf( __( '«%s» está esperando revisión', 'caaguazu-portal' ), get_the_title( $pid ) ),
-					'time'  => (int) get_post_time( 'U', true, $pid ),
-					'when'  => human_time_diff( (int) get_post_time( 'U', true, $pid ) ) . ' ' . __( 'atrás', 'caaguazu-portal' ),
-					'url'   => promotur_url( 'panel/revision/' . $pid ),
+					'title' => sprintf( __( '«%s» está esperando revisión', 'caaguazu-portal' ), get_the_title( $post ) ),
+					'time'  => $cuando,
+					'when'  => human_time_diff( $cuando ) . ' ' . __( 'atrás', 'caaguazu-portal' ),
+					'url'   => promotur_url( 'panel/revision/' . $post->ID ),
 				);
 			}
 		}
 
 		// Para autores: lo suyo que necesita cambios (filtra por el meta de
 		// dueño real, no por post_author — ver PROMOTUR_Destinos::OWNER_META).
+		// Objetos y no IDs, por el mismo motivo que arriba.
 		$mine = $uid ? get_posts( array(
 			'post_type'      => PROMOTUR_Editorial::cpts(),
 			'post_status'    => array( 'draft', 'pending' ),
 			'posts_per_page' => 10,
-			'fields'         => 'ids',
 			'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery
 				'relation' => 'AND',
 				array( 'key' => PROMOTUR_Destinos::OWNER_META, 'value' => $uid ),
 				array( 'key' => '_promotur_estado', 'value' => 'necesita_cambios' ),
 			),
 		) ) : array();
-		foreach ( $mine as $pid ) {
+		foreach ( $mine as $post ) {
+			$cuando  = (int) get_post_modified_time( 'U', true, $post );
 			$items[] = array(
 				'icon'  => 'edit',
-				'title' => sprintf( __( '«%s» necesita algunos cambios', 'caaguazu-portal' ), get_the_title( $pid ) ),
-				'time'  => (int) get_post_modified_time( 'U', true, $pid ),
-				'when'  => human_time_diff( (int) get_post_modified_time( 'U', true, $pid ) ) . ' ' . __( 'atrás', 'caaguazu-portal' ),
-				'url'   => PROMOTUR_Editorial::url_editor( $pid ),
+				'title' => sprintf( __( '«%s» necesita algunos cambios', 'caaguazu-portal' ), get_the_title( $post ) ),
+				'time'  => $cuando,
+				'when'  => human_time_diff( $cuando ) . ' ' . __( 'atrás', 'caaguazu-portal' ),
+				'url'   => PROMOTUR_Editorial::url_editor( $post ),
 			);
 		}
 
 		usort( $items, function ( $a, $b ) { return $b['time'] <=> $a['time']; } );
+
+		$this->items_memo = $items;
 		return $items;
 	}
 
@@ -109,7 +145,13 @@ class PROMOTUR_Notifications {
 	 * Cuánto hay en la cola de revisión (para el badge del sidebar).
 	 */
 	public static function review_queue_count() {
-		if ( ! caaguazu_account_can( 'promotor', 'promotur_review_content' ) ) { return 0; }
+		if ( null !== self::$cola_memo ) {
+			return self::$cola_memo;
+		}
+		if ( ! caaguazu_account_can( 'promotor', 'promotur_review_content' ) ) {
+			self::$cola_memo = 0;
+			return 0;
+		}
 		$q = new WP_Query( array(
 			'post_type'      => PROMOTUR_Editorial::cpts(),
 			'post_status'    => array( 'draft', 'pending' ),
@@ -118,7 +160,8 @@ class PROMOTUR_Notifications {
 			'fields'         => 'ids',
 			'no_found_rows'  => false,
 		) );
-		return (int) $q->found_posts;
+		self::$cola_memo = (int) $q->found_posts;
+		return self::$cola_memo;
 	}
 
 	/**
@@ -126,6 +169,9 @@ class PROMOTUR_Notifications {
 	 * PROMOTUR_Acciones.
 	 */
 	public function handle_mark_read() {
+		// El memo vale para un pedido; marcar como leído cambia el contador, así
+		// que se descarta antes de redirigir.
+		$this->items_memo = null;
 		$uid = caaguazu_account_id();
 		if ( $uid > 0 ) {
 			caaguazu_account_meta_set( $uid, self::READ_META, time() );

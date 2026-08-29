@@ -522,6 +522,50 @@ se guardan.
                          └──────────────────┘
 ```
 
+### 4.0 Los dos catálogos: `/categorias` y `/etiquetas`
+
+Se piden una vez al arrancar y se cachean (ETag, `max-age` 600). Son la
+fuente de los chips de filtro y de las pantallas por categoría.
+
+```
+GET /categorias
+GET /etiquetas
+```
+
+`GET /categorias` desde 0.7.0:
+
+```json
+[
+  {
+    "id": 12,
+    "slug": "sitio-natural",
+    "nombre": "Sitio Natural",
+    "descripcion": "Saltos, cerros y reservas del departamento.",
+    "imagen": { "url": "https://…", "w": 1600, "h": 900, "credito": "…", "alt": "…" },
+    "padre": null,
+    "icono": "nature",
+    "color": "#2E7D32",
+    "marker": "https://…/pin-natural.png",
+    "total": 14
+  }
+]
+```
+
+- **`descripcion`** (nueva en 0.7.0) es una o dos líneas para encabezar la
+  pantalla de la categoría. Viene **siempre**, como cadena vacía cuando nadie
+  la escribió — no `null`, así no hay que ramificar por tipo.
+- **`imagen`** (nueva en 0.7.0) es la foto que encabeza la categoría, con la
+  misma forma de imagen que usás en todo lo demás (`{url,w,h,credito,alt}`),
+  o `null` si no se cargó. **No confundir con `marker`**, que es el PNG chico
+  del pin en el mapa: son dos cosas distintas y siguen viniendo las dos.
+- El resto no cambió.
+
+**Ojo con el objeto `categoria` embebido en fichas y artículos** (el de
+`/inventario`, `/articulos`, etc.): ese es el resumen —`id`, `slug`,
+`nombre`, `color`— y **no** trae `descripcion` ni `imagen`, a propósito. Una
+lista de 100 fichas repetiría la misma descripción y la misma foto 100 veces.
+Cuando las necesites, cruzá por `id` contra el catálogo que ya cacheaste.
+
 ### 4.1 Caché: ETag en todo, desde la 0.5.0
 
 Los ocho endpoints de contenido —lista y detalle de inventario, artículos,

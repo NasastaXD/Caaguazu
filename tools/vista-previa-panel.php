@@ -219,20 +219,23 @@ class PROMOTUR_Estructura {
 	const CAP = 'promotur_manage_structure';
 	public static function grupos() {
 		return array(
-			'promotur_categoria' => array( 'titulo' => 'Categorías', 'singular' => 'Categoría', 'ayuda' => 'De qué tipo es el lugar: salto, museo, feria. La app agrupa por acá y les pone ícono y color.' ),
-			'promotur_zona'      => array( 'titulo' => 'Zonas', 'singular' => 'Zona', 'ayuda' => 'Dónde queda: el distrito o la región del departamento.' ),
-			'promotur_etiqueta'  => array( 'titulo' => 'Etiquetas', 'singular' => 'Etiqueta', 'ayuda' => 'Lo que no entra en las otras dos: «con niños», «gratis», «llega colectivo».' ),
+			'promotur_categoria' => array( 'titulo' => 'Categorías', 'singular' => 'Categoría', 'extras' => true ),
+			'promotur_etiqueta'  => array( 'titulo' => 'Etiquetas', 'singular' => 'Etiqueta', 'extras' => false ),
 		);
 	}
+	public static function tiene_extras( $tax ) {
+		$g = self::grupos();
+		return ! empty( $g[ $tax ]['extras'] );
+	}
+	public static function meta_imagen() { return 'czuapi_imagen_id'; }
 	public static function terminos( $tax ) {
 		$muestra = array(
-			'promotur_categoria' => array( array( 'Saltos de agua', 7 ), array( 'Ferias', 0 ) ),
-			'promotur_zona'      => array( array( 'Coronel Oviedo', 4 ), array( 'Yhú', 0 ) ),
-			'promotur_etiqueta'  => array( array( 'Con niños', 2 ) ),
+			'promotur_categoria' => array( array( 'Saltos de agua', 7, 'Cascadas y correntadas del departamento.' ), array( 'Ferias', 0, '' ) ),
+			'promotur_etiqueta'  => array( array( 'Con niños', 2, '' ) ),
 		);
 		$out = array();
 		foreach ( $muestra[ $tax ] as $i => $t ) {
-			$out[] = (object) array( 'term_id' => 100 + $i, 'name' => $t[0], 'count' => $t[1] );
+			$out[] = (object) array( 'term_id' => 100 + $i, 'name' => $t[0], 'count' => $t[1], 'description' => $t[2] );
 		}
 		return $out;
 	}

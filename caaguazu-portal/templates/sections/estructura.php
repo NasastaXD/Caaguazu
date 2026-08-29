@@ -30,7 +30,10 @@ $body = function () use ( $grupos, $puede ) {
 	<?php endif; ?>
 
 	<?php foreach ( $grupos as $tax => $grupo ) : ?>
-		<?php $terminos = PROMOTUR_Estructura::terminos( $tax ); ?>
+		<?php
+		$terminos = PROMOTUR_Estructura::terminos( $tax );
+		$extras   = PROMOTUR_Estructura::tiene_extras( $tax );
+		?>
 
 		<h3 class="promotur-h3 promotur-mt"><?php echo esc_html( $grupo['titulo'] ); ?></h3>
 		<?php if ( ! empty( $grupo['ayuda'] ) ) : ?>
@@ -52,6 +55,28 @@ $body = function () use ( $grupos, $puede ) {
 									<input type="hidden" name="term_id" value="<?php echo esc_attr( $termino->term_id ); ?>">
 									<input type="text" name="nombre" value="<?php echo esc_attr( $termino->name ); ?>"
 										   aria-label="<?php echo esc_attr( $grupo['singular'] ); ?>">
+									<?php if ( $extras ) : ?>
+										<?php
+										$img_id  = (int) get_term_meta( $termino->term_id, PROMOTUR_Estructura::meta_imagen(), true );
+										$img_url = $img_id ? wp_get_attachment_image_url( $img_id, 'medium' ) : '';
+										?>
+										<label class="promotur-field">
+											<span><?php esc_html_e( 'Descripción', 'caaguazu-portal' ); ?> <em><?php esc_html_e( 'una o dos líneas; encabeza la categoría en la app', 'caaguazu-portal' ); ?></em></span>
+											<textarea name="descripcion" rows="2"><?php echo esc_textarea( $termino->description ); ?></textarea>
+										</label>
+										<div class="promotur-field promotur-field--image">
+											<span><?php esc_html_e( 'Imagen', 'caaguazu-portal' ); ?></span>
+											<span class="promotur-upload" data-upload>
+												<input type="hidden" name="imagen" value="<?php echo esc_attr( $img_id ); ?>" data-upload-value>
+												<span class="promotur-upload__preview"<?php echo $img_url ? ' style="background-image:url(' . esc_url( $img_url ) . ')"' : ''; ?> data-upload-preview></span>
+												<label class="promotur-btn promotur-btn--ghost promotur-btn--small">
+													<input type="file" accept="image/*" hidden data-upload-input>
+													<?php esc_html_e( 'Subir foto', 'caaguazu-portal' ); ?>
+												</label>
+											</span>
+										</div>
+										<p class="promotur-form-msg" data-form-msg></p>
+									<?php endif; ?>
 									<button type="submit" class="promotur-btn promotur-btn--ghost promotur-btn--small"><?php esc_html_e( 'Guardar', 'caaguazu-portal' ); ?></button>
 								</form>
 							<?php else : ?>
