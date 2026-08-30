@@ -2,7 +2,7 @@
 Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 0.6.0
+Stable tag: 0.7.0
 License: GPLv2 or later
 
 Capa REST que consume la app Android de turismo (Turismo App Czu).
@@ -45,7 +45,7 @@ Namespace: `/wp-json/czu-app/v1/`
 * `GET  /auth/me`
 
 = Contenido =
-* `GET /categorias` — con icono, color y PNG de marcador
+* `GET /categorias` — con descripción, imagen, icono, color y PNG de marcador
 * `GET /etiquetas` — catálogo de tags, para armar chips de filtro
 * `GET /inventario` — filtros: `categoria`, `etiqueta`, `bbox`, `buscar`, `tipo_item`, `pagina`, `por_pagina`
 * `GET /inventario/{id}`
@@ -105,6 +105,26 @@ de evento.
 1. Requiere `caaguazu-cuentas` y `caaguazu-portal` activos.
 2. Subir a `/wp-content/plugins/` y activar. Crea sus dos tablas.
 3. Cargar icono y color de cada categoría en **Destinos → Categorías**.
+
+== Cambios del contrato en 0.7.0 ==
+
+Sólo suma campos: nada dejó de venir, así que un cliente 0.6.0 sigue andando.
+
+* **`GET /categorias` suma `descripcion`**, una o dos líneas para encabezar
+  la pantalla de la categoría en la app. Sale del campo `description` nativo
+  del término —no de un meta nuevo— y viene siempre: cadena vacía cuando
+  nadie la escribió, nunca `null`.
+* **`GET /categorias` suma `imagen`**, la foto que encabeza la categoría, con
+  la misma forma de imagen que el resto de la API (`{url,w,h,credito,alt}`)
+  o `null`. **No reemplaza a `marker`**: el marker es el PNG chico del pin
+  del mapa y sigue viniendo igual. Son dos cosas distintas.
+* Las dos se cargan desde el panel, en Estructura (`caaguazu-portal` 3.5.2).
+* El objeto `categoria` que va embebido en fichas y artículos **no** cambió:
+  sigue siendo el resumen (id, slug, nombre, color), sin descripción ni
+  imagen, para no repetir la misma foto en cada ítem de una lista. Quien las
+  necesite, cruza por `id` contra `/categorias`, que ya se cachea.
+
+Ver `docs/contrato-app-contenido.md` §4.0.
 
 == Cambios del contrato en 0.6.0 ==
 
