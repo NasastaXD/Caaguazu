@@ -663,6 +663,20 @@ if ( false !== strpos( $ruta, 'articulos' ) ) {
 // El estado activo del menú sale de la sección que se está dibujando.
 $GLOBALS['promotur_section'] = 0 === strpos( $ruta, 'sections/' ) ? substr( $ruta, strlen( 'sections/' ) ) : '';
 
+/*
+ * Crear cuenta se dibuja con una invitación válida. Sin esto la plantilla toma
+ * la rama de «necesitás una invitación» y devuelve tres renglones: se estaría
+ * mirando —y auditando— la pantalla que casi nadie ve, en vez del formulario
+ * que es el motivo por el que existe.
+ */
+if ( 'auth/registro' === $ruta ) {
+	$invite_status   = 'valid';
+	$invite_role     = 'Alumno';
+	$invite_role_key = 'promotur_mini';
+	$invite_vence    = gmdate( 'Y-m-d H:i:s', time() + 14 * DAY_IN_SECONDS );
+	$token           = 'token-de-muestra';
+}
+
 // La vista previa dibuja el estado de una plantilla concreta: el estado del
 // editorial de cada ficha lo pone el stub de get_posts(), no la base.
 require $plugin . 'templates/' . $ruta . '.php';

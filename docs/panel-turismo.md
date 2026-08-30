@@ -329,7 +329,19 @@ Comprueba las **dos únicas funciones del ecosistema que transforman un dato en 
 
 Los casos son los reales: los cuatro formatos de enlace que escribe Google (incluido el corto, que no trae el punto, y uno con la latitud fuera del planeta), y las formas en que un WordPress escribe el nombre de un rol. Corre sin WordPress: probar esto no puede costar levantar un sitio.
 
-Y un tercero, que no comprueba código sino que **el documento de datos no quede viejo**:
+Y un tercero, para lo que ninguno de los dos ve — **a dónde va cada URL**:
+
+```bash
+php tools/verificar-rutas.php
+```
+
+Comprueba las 28 URLs del panel contra `PROMOTUR_Router::reglas()` (el mapa de verdad, no una copia), y que el comodín de sección sea la última regla. El orden importa tanto como el contenido: WordPress se queda con la **primera** regla que matchea, y `^turismo-panel/(.+?)/?$` matchea cualquier cosa colgada de la base, así que todo lo que quede después es inalcanzable.
+
+Existe porque eso pasó. `add_rewrite_rule( …, 'top' )` no antepone regla por regla —`WP_Rewrite::add_rule()` hace `array_merge()`, que appendea dentro del grupo—, y el mapa estaba escrito de menos a más específico creyendo lo contrario. El comodín iba primero y se comía login, registro, recuperar, salir, el enlace de invitación y los cuatro recursos de la PWA: `/turismo-panel/entrar` caía en el guard del panel, que redirige a `/turismo-panel/entrar`, que volvía a caer en el guard. El navegador cortaba con «demasiadas redirecciones» y **nadie podía iniciar sesión**. Lo disimulaba que el panel andaba con la sesión ya abierta, y que `accion`/`datos` tienen una red de contención dentro de `dispatch()`.
+
+Un error de orden no tira ningún error: cambia en silencio a dónde va una URL. Por eso `promotur_asegurar_rewrite_rules()` ahora también compara el **orden** de las reglas guardadas contra el mapa, no sólo que estén todas — comprobar presencia sola era justo el punto ciego que dejó pasar esto.
+
+Y un cuarto, que no comprueba código sino que **el documento de datos no quede viejo**:
 
 ```bash
 php tools/inventario-de-datos.php              # regenera docs/datos-para-la-app.md

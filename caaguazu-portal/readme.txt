@@ -3,7 +3,7 @@ Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 3.9.0
+Stable tag: 3.9.1
 License: GPLv2 or later
 
 Panel autenticado tipo app (PWA) bajo /turismo-panel, con enrutador propio, login propio, roles y flujo editorial para las tres cosas que la app muestra: fichas del inventario turístico, artículos y recorridos.
@@ -57,6 +57,43 @@ llamen los tags.
 * Repo privado: definir `PROMOTUR_GITHUB_TOKEN` (PAT de solo lectura) en `wp-config.php`.
 
 == Changelog ==
+
+= 3.9.1 =
+* **Nadie podía iniciar sesión: «demasiadas redirecciones».** El mapa de reglas
+  de reescritura estaba ordenado al revés y el comodín de sección
+  (`^turismo-panel/(.+?)/?$`) quedaba primero, comiéndose TODO lo que viene
+  detrás: login, registro, recuperar contraseña, salir, el enlace de invitación
+  y los cuatro recursos de la PWA. Cada una de esas URLs caía en el guard del
+  panel, que redirige a login… que tampoco resolvía. El navegador rebotaba
+  hasta cortar.
+* La causa era un comentario equivocado en el propio código:
+  `add_rewrite_rule( …, 'top' )` NO antepone regla por regla —hace un
+  `array_merge` que appendea dentro del grupo—, así que dentro del grupo manda
+  el orden de inserción. El mapa estaba escrito de menos a más específico
+  creyendo lo contrario.
+* Lo disimulaba que el panel andaba con la sesión ya abierta (quien ya estaba
+  adentro no pasa por /entrar) y que guardar contenido funcionaba, porque
+  `accion` y `datos` tienen una red de contención dentro de `dispatch()`. Sólo
+  fallaba lo que exige entrar de cero — que es exactamente una invitación.
+* **`tools/verificar-rutas.php` es nuevo**: comprueba a dónde resuelve cada una
+  de las 28 URLs del panel, y que el comodín sea la última regla. Corre en
+  `npm run verificar`. Un error de orden no tira ningún error, cambia en
+  silencio a dónde va una URL.
+* `promotur_asegurar_rewrite_rules()` ahora compara también el **orden** de las
+  reglas guardadas, no sólo que estén todas: en el sitio afectado estaban las
+  22, mal ordenadas, y comprobar presencia sola no lo veía.
+* **La pantalla de crear cuenta explica el proceso.** Quien la abre casi
+  siempre llega de un enlace que le pasaron, no sabe qué es este panel y tiene
+  que decidir si deja su correo y su teléfono: ahora dice qué es el portal, con
+  qué rol va a entrar y qué va a poder hacer con él, los tres pasos del alta,
+  para qué sirve cada dato (y que el teléfono no se publica), y hasta cuándo
+  vale el enlace. Se suma a las pantallas que audita `auditar-movil.mjs`, que
+  no la miraba.
+* Una invitación agotada decía «El registro es solo por invitación» en vez de
+  «este enlace ya se usó las veces permitidas»: la plantilla seguía buscando el
+  estado `used`, renombrado a `agotada` en la 3.8.0.
+* El rol en el aviso de invitación válida se iba al costado de la frase:
+  `.promotur-notice` es un flex y el `<strong>` contaba como otro ítem.
 
 = 3.9.0 =
 * **Se saca el nivel de confianza.** Era un segundo eje de permisos, aparte

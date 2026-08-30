@@ -178,9 +178,13 @@ class PROMOTUR_Auth {
 		$row    = PROMOTUR_Invitations::find_by_token( $token );
 		$status = PROMOTUR_Invitations::status( $row );
 
-		$vars['token']         = $token;
-		$vars['invite_status'] = $status;            // valid|used|expired|revoked|invalid
-		$vars['invite_role']   = $row ? PROMOTUR_Roles::label( $row['role'] ) : '';
+		$vars['token']          = $token;
+		$vars['invite_status']  = $status;            // valid|agotada|expired|revoked|invalid
+		$vars['invite_role']    = $row ? PROMOTUR_Roles::label( $row['role'] ) : '';
+		// La clave del rol además de la etiqueta: la pantalla explica qué va a
+		// poder hacer la persona, y eso depende del rol, no de cómo se llame.
+		$vars['invite_role_key'] = $row ? (string) $row['role'] : '';
+		$vars['invite_vence']    = ( $row && ! empty( $row['expires_at'] ) ) ? (string) $row['expires_at'] : '';
 
 		if ( empty( $_POST['promotur_auth'] ) || 'registro' !== $_POST['promotur_auth'] ) {
 			return $vars;

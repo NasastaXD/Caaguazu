@@ -58,7 +58,10 @@ const PANTALLAS = [
 	'sections/revision', 'sections/revision 100',
 	'sections/tareas', 'sections/equipo', 'sections/reportes',
 	'sections/biblioteca', 'sections/estructura', 'sections/buscar', 'sections/perfil',
-	'sections/ayuda', 'auth/login',
+	// Crear cuenta es la primera pantalla que ve alguien invitado, y se abre
+	// casi siempre desde un enlace de WhatsApp en un teléfono. Estaba fuera de
+	// la lista, así que nadie comprobaba que entrara en 390px.
+	'sections/ayuda', 'auth/login', 'auth/registro',
 ];
 
 const dir = mkdtempSync( join( tmpdir(), 'czu-movil-' ) );

@@ -43,16 +43,21 @@ directamente**: `bash bin/build-zip.sh` los arma los cuatro (o
 ## Antes de dar nada por bueno
 
 ```bash
-npm run verificar   # diseño + lógica + las 22 pantallas en teléfono
+npm run verificar   # diseño + lógica + rutas + las 23 pantallas en teléfono
 ```
 
-Son tres cosas, y las tres salen con código 1 si algo falla:
+Son cuatro cosas, y las cuatro salen con código 1 si algo falla:
 
 - `tools/verificar-diseno.php` — las reglas del sistema de diseño del panel
   (colores, radios, sombras, tipografía, clases sin estilo, URLs a mano).
 - `tools/verificar-logica.php` — las dos únicas funciones que **transforman** un
   dato en vez de moverlo, que son las dos que fallan en silencio: el parseo del
   enlace de Google Maps y la normalización de roles del CEAD.
+- `tools/verificar-rutas.php` — a qué ruta resuelve cada URL del panel. El
+  comodín de sección convive con una docena de rutas específicas y WordPress se
+  queda con la primera que matchea, así que el **orden** del mapa de reglas es
+  parte de la definición: mal ordenado deja login, registro, el enlace de
+  invitación y la PWA inalcanzables, sin tirar ningún error.
 - `tools/auditar-movil.mjs` — nada se sale de la pantalla, nada que se toque
   baja de 44px.
 

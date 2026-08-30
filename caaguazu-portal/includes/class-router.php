@@ -78,9 +78,25 @@ class PROMOTUR_Router {
 	 * `/turismo-panel/datos/…` no existe como regla y se lo come la regla
 	 * genérica de sección. Ver el porqué en dispatch().
 	 *
-	 * OJO CON EL ORDEN: `add_rewrite_rule( …, 'top' )` **antepone**, así que la
-	 * última regla agregada es la primera en evaluarse. Por eso el mapa va de
-	 * menos a más específica — al revés de como se leen.
+	 * EL ORDEN ES EL DE ESTE ARRAY, Y VA DE LO MÁS ESPECÍFICO A LO MÁS
+	 * GENÉRICO. `add_rewrite_rule( …, 'top' )` NO antepone regla por regla:
+	 * `WP_Rewrite::add_rule()` hace `array_merge( $this->extra_rules_top,
+	 * array( $regex => $query ) )`, que **appendea** dentro del grupo. «top»
+	 * quiere decir que todo el grupo se evalúa antes que las reglas propias de
+	 * WordPress, no que cada regla nueva salte por encima de la anterior.
+	 * Dentro del grupo manda el orden de inserción, y WP se queda con la
+	 * primera que matchea.
+	 *
+	 * Este comentario decía lo contrario, y el mapa estaba escrito al revés
+	 * por creerlo: la regla genérica de sección quedaba primera y se comía
+	 * TODO —login, registro, recuperar, salir, el enlace de invitación y los
+	 * cuatro recursos de la PWA—. Cada una de esas URLs terminaba en el guard
+	 * del panel, que redirige a login… que tampoco resolvía, así que el
+	 * navegador rebotaba hasta cortar por «demasiadas redirecciones». Lo único
+	 * que lo disimulaba era que el panel ya andaba con la sesión abierta y que
+	 * `accion`/`datos` tienen una red de contención dentro de dispatch().
+	 *
+	 * Si se agrega una regla nueva: va ARRIBA de las dos genéricas del final.
 	 *
 	 * @return array patrón => destino
 	 */
@@ -88,14 +104,9 @@ class PROMOTUR_Router {
 		$base = PROMOTUR_BASE;
 
 		$reglas = array(
-			// 1. Panel (lo más genérico: cualquier sección y su id opcional).
-			'^' . $base . '/(.+?)/?$' => 'index.php?promotur_route=panel&promotur_sub=$matches[1]',
-			'^' . $base . '/?$'       => 'index.php?promotur_route=panel',
-
-			// 1.b Las dos puertas del panel: formularios y JavaScript. Van
-			//     después de la regla genérica de sección para que se evalúen
-			//     antes que ella y /turismo-panel/accion/x no se lea como una
-			//     sección llamada "accion".
+			// 1. Las dos puertas del panel: formularios y JavaScript. Antes que
+			//    la genérica de sección, para que /turismo-panel/accion/x no se
+			//    lea como una sección llamada "accion".
 			'^' . $base . '/accion/([a-z0-9_-]+)/?$' => 'index.php?promotur_route=accion&promotur_sub=$matches[1]',
 			'^' . $base . '/datos/([a-z0-9_-]+)/?$'  => 'index.php?promotur_route=datos&promotur_sub=$matches[1]',
 
@@ -116,10 +127,17 @@ class PROMOTUR_Router {
 			'^' . $base . '/offline/?$'             => 'index.php?promotur_route=pwa-offline',
 		);
 
-		// 4. Rutas viejas → 301.
+		// 4. Rutas viejas → 301. No arrancan con la base, así que no las tapa
+		//    la genérica de abajo; van acá igual para dejar el comodín último.
 		foreach ( self::legacy_map() as $patron => $destino ) {
 			$reglas[ $patron ] = 'index.php?promotur_route=legacy&promotur_sub=' . $destino;
 		}
+
+		// 5. Panel: el comodín. Va al final de todo, porque `(.+?)` matchea
+		//    cualquier cosa colgada de la base y dejaría sin efecto a todo lo
+		//    que venga después.
+		$reglas[ '^' . $base . '/?$' ]       = 'index.php?promotur_route=panel';
+		$reglas[ '^' . $base . '/(.+?)/?$' ] = 'index.php?promotur_route=panel&promotur_sub=$matches[1]';
 
 		return $reglas;
 	}

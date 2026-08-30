@@ -3,7 +3,7 @@
  * Plugin Name:       Caaguazú Portal — Promotores Turísticos
  * Plugin URI:        https://turismo.caaguazu.net
  * Description:       Panel autenticado tipo app bajo /turismo-panel, instalable como PWA, donde el equipo escribe las tres cosas que la aplicación muestra —fichas del inventario turístico, artículos y recorridos— con un mismo flujo editorial: borrador → revisión → publicación. Corre sobre rutas propias y no depende del theme: trae su propio CSS y su propia tipografía, y desencola los del theme activo en sus rutas. La identidad de los promotores corre sobre el sistema de cuentas universal (caaguazu-cuentas): no son usuarios de WordPress.
- * Version:           3.9.0
+ * Version:           3.9.1
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Requires Plugins:  caaguazu-cuentas
@@ -17,7 +17,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'PROMOTUR_VERSION', '3.9.0' );
+define( 'PROMOTUR_VERSION', '3.9.1' );
 define( 'PROMOTUR_DB_VERSION', 3 ); // se incrementa cuando cambia la estructura de datos.
 define( 'PROMOTUR_FILE', __FILE__ );
 define( 'PROMOTUR_DIR', plugin_dir_path( __FILE__ ) );
@@ -185,19 +185,34 @@ function promotur_asegurar_rewrite_rules() {
 	 * URLs y el shell devuelve su página 404 en HTML, que el JavaScript no
 	 * puede parsear. Comprobar el juego completo cuesta lo mismo que comprobar
 	 * una: `rewrite_rules` ya está en memoria.
+	 *
+	 * Y SE COMPRUEBA EL ORDEN, no sólo que estén. Comprobar presencia sola
+	 * también tenía un punto ciego, y costó caro: con el comodín de sección
+	 * guardado ANTES de las rutas de auth —todas presentes, todas inalcanzables
+	 * porque el comodín matchea primero— el login redirigía al login y el
+	 * navegador cortaba por «demasiadas redirecciones». Estaban las 22 reglas;
+	 * lo que estaba mal era en qué orden. WP se queda con la primera que
+	 * matchea, así que el orden ES parte de la definición.
 	 */
 	$reglas = get_option( 'rewrite_rules' );
-	$falta  = ! is_array( $reglas );
-	if ( ! $falta ) {
-		foreach ( array_keys( PROMOTUR_Router::reglas() ) as $patron ) {
+	$mal    = ! is_array( $reglas );
+	if ( ! $mal ) {
+		$esperadas = array_keys( PROMOTUR_Router::reglas() );
+		foreach ( $esperadas as $patron ) {
 			if ( ! isset( $reglas[ $patron ] ) ) {
-				$falta = true;
+				$mal = true;
 				break;
 			}
 		}
+		// Mismas reglas, mismo orden relativo entre ellas. Las de WordPress y
+		// las de otros plugins se ignoran: pueden estar intercaladas.
+		if ( ! $mal ) {
+			$guardadas = array_values( array_intersect( array_keys( $reglas ), $esperadas ) );
+			$mal       = ( $guardadas !== $esperadas );
+		}
 	}
 
-	if ( ! $version_nueva && ! $falta ) {
+	if ( ! $version_nueva && ! $mal ) {
 		return;
 	}
 
