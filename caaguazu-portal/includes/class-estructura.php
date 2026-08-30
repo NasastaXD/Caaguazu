@@ -41,12 +41,37 @@ class PROMOTUR_Estructura {
 			'promotur_categoria' => array(
 				'titulo'   => __( 'Categorías', 'caaguazu-portal' ),
 				'singular' => __( 'Categoría', 'caaguazu-portal' ),
+				// Una categoría tiene pantalla propia en la app, y esa pantalla
+				// necesita algo más que un nombre. Una etiqueta no: es un chip
+				// de filtro, y pedirle una foto y un párrafo a cada una sería
+				// trabajo que nadie va a hacer.
+				'extras'   => true,
 			),
 			'promotur_etiqueta' => array(
 				'titulo'   => __( 'Etiquetas', 'caaguazu-portal' ),
 				'singular' => __( 'Etiqueta', 'caaguazu-portal' ),
+				'extras'   => false,
 			),
 		);
+	}
+
+	/** ¿Esta taxonomía lleva descripción e imagen? */
+	public static function tiene_extras( $taxonomia ) {
+		$grupos = self::grupos();
+		return ! empty( $grupos[ $taxonomia ]['extras'] );
+	}
+
+	/**
+	 * La meta key donde vive el adjunto de la imagen de un término.
+	 *
+	 * La constante vive en `caaguazu-app-api`, que es quien define qué lee la
+	 * app. Si ese plugin no está, se usa el literal: el panel tiene que poder
+	 * guardar igual, y el día que la API vuelva encuentra el dato donde va.
+	 *
+	 * @return string
+	 */
+	public static function meta_imagen() {
+		return class_exists( 'CZUAPI_Taxonomias' ) ? CZUAPI_Taxonomias::META_IMAGEN : 'czuapi_imagen_id';
 	}
 
 	/** Los términos de una taxonomía, con cuántas fichas usan cada uno. */
@@ -107,11 +132,32 @@ class PROMOTUR_Estructura {
 			$this->volver( __( 'Escribí un nombre.', 'caaguazu-portal' ), 'error' );
 		}
 
-		$hecho = wp_update_term( $id, $tax, array( 'name' => $nombre ) );
+		$campos = array( 'name' => $nombre );
+
+		// Descripción e imagen sólo donde corresponden (ver grupos()). La
+		// descripción va al campo nativo del término y no a un meta propio:
+		// WordPress ya lo tiene, y tenerlo dos veces es tenerlo desincronizado.
+		if ( self::tiene_extras( $tax ) && isset( $_POST['descripcion'] ) ) {
+			$campos['description'] = sanitize_textarea_field( wp_unslash( $_POST['descripcion'] ) );
+		}
+
+		$hecho = wp_update_term( $id, $tax, $campos );
 		if ( is_wp_error( $hecho ) ) {
 			$this->volver( $hecho->get_error_message(), 'error' );
 		}
-		$this->volver( __( 'Listo, cambiamos el nombre.', 'caaguazu-portal' ) );
+
+		if ( self::tiene_extras( $tax ) && isset( $_POST['imagen'] ) ) {
+			$imagen = (int) $_POST['imagen'];
+			// Un 0 es «sin imagen» y borra el meta, en vez de guardar un cero
+			// que después hay que salir a interpretar.
+			if ( $imagen > 0 ) {
+				update_term_meta( $id, self::meta_imagen(), $imagen );
+			} else {
+				delete_term_meta( $id, self::meta_imagen() );
+			}
+		}
+
+		$this->volver( __( 'Listo, guardamos los cambios.', 'caaguazu-portal' ) );
 	}
 
 	public function borrar() {

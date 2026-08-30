@@ -3,7 +3,7 @@ Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 3.6.0
+Stable tag: 3.6.1
 License: GPLv2 or later
 
 Panel autenticado tipo app (PWA) bajo /turismo-panel, con enrutador propio, login propio, roles y flujo editorial para las tres cosas que la app muestra: fichas del inventario turístico, artículos y recorridos.
@@ -58,7 +58,7 @@ llamen los tags.
 
 == Changelog ==
 
-= 3.6.0 =
+= 3.6.1 =
 * **«Pegar datos» en los tres editores.** Un cuadro plegable arriba del
   formulario donde se pega un JSON y los valores se reparten solos en las
   casillas. Es para cuando el contenido ya está escrito en otro lado —un
@@ -75,6 +75,37 @@ llamen los tags.
   no reconoció, en vez de fallar en silencio.
 * La foto sigue subiéndose con su botón: un id de adjunto pegado a mano
   apuntaría a cualquier cosa que tenga ese id en la biblioteca.
+* **No instalar la 3.6.0.** Se publicó por error desde una rama que todavía no
+  tenía la 3.5.1 ni la 3.5.2, así que su zip no las trae: instalarla haría
+  retroceder el rendimiento del panel y devolvería el menú de Etiquetas a
+  wp-admin. Esta 3.6.1 es la misma función, ya sobre las dos.
+
+= 3.5.2 =
+* **El panel deja de hacer ~124 consultas de más en cada pantalla.** La barra
+  superior pedía la lista de notificaciones y después el contador de no
+  leídas, y el contador volvía a armar la lista entera: `get_items()` corría
+  dos veces por carga. Encima las dos consultas usaban `fields => 'ids'`, que
+  hace que WP_Query se saltee el precargado de posts, así que cada título y
+  cada fecha del listado disparaba su propia consulta. Como la barra vive en
+  el shell, eso lo pagaban **todas** las pantallas. Medido con las mismas
+  llamadas que hace el topbar: de 126 consultas a 3.
+* El contador de la cola de revisión se calcula una vez por carga y no dos
+  (lo piden el menú lateral e Inicio).
+* **Las categorías suman descripción e imagen**, que se editan en Estructura.
+  Una categoría tiene pantalla propia en la app y necesitaba algo más que un
+  nombre; una etiqueta no lleva ninguna de las dos, que es un chip de filtro.
+  La descripción usa el campo nativo del término —no un meta nuevo— para no
+  tener el mismo texto guardado en dos lugares.
+* El widget de subir fotos dejó de estar atado al editor de contenido: ahora
+  sirve en cualquier pantalla, que es lo que hizo falta para la imagen de la
+  categoría.
+
+= 3.5.1 =
+* Se saca «Etiquetas» del menú nativo de Entradas en wp-admin. Es la
+  taxonomía `post_tag` de fábrica de WordPress, sin relación con
+  `promotur_etiqueta` —la que arma y usa el panel—: nadie del equipo escribe
+  entradas nativas, así que ese menú era puro estorbo para quien entra a
+  wp-admin. La taxonomía sigue registrada, sólo se sacó el enlace del menú.
 
 = 3.5.0 =
 * **Se sacaron Gancho y Accesibilidad de la ficha.** No le hacían falta a la

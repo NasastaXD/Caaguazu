@@ -70,6 +70,7 @@
 		initServiceWorker();
 		initSubnav();
 		initAtajos();
+		initSubidas();
 		initEditor();
 		initAcciones();
 		initPapelera();
@@ -377,6 +378,44 @@
 	 * oculto del formulario, así que acá no hay ninguna rama por tipo: lo que
 	 * cambia es qué campos tiene el formulario, y de eso se ocupa el servidor.
 	 */
+	/* ---------- Subida de imágenes ----------
+	 *
+	 * Vivía dentro de initEditor() y por eso sólo andaba dentro del editor de
+	 * contenido. El mismo widget hace falta en Estructura —la imagen de una
+	 * categoría—, así que se busca en todo el documento y avisa con un evento
+	 * en vez de llamar directo al checklist, que es cosa del editor.
+	 */
+	function initSubidas() {
+		document.querySelectorAll('[data-upload]').forEach(function (box) {
+			var input = box.querySelector('[data-upload-input]');
+			var value = box.querySelector('[data-upload-value]');
+			var preview = box.querySelector('[data-upload-preview]');
+			if (!input || !value) { return; }
+
+			// El cartel de estado es el del formulario que contenga al widget,
+			// si es que tiene uno: fuera del editor puede no haber ninguno.
+			var form = box.closest('form');
+			var msg = form ? form.querySelector('[data-form-msg]') : null;
+			function di(texto, cls) {
+				if (msg) { msg.textContent = texto; msg.className = 'promotur-form-msg ' + (cls || ''); }
+			}
+
+			input.addEventListener('change', function () {
+				if (!input.files || !input.files[0]) { return; }
+				var fd = new FormData();
+				fd.append('file', input.files[0]);
+				di(i18n.sending, '');
+				ajax('upload_media', fd).then(function (res) {
+					if (!res.success) { di((res.data && res.data.message) || i18n.error, 'is-error'); return; }
+					value.value = res.data.id;
+					if (preview && res.data.thumb) { preview.style.backgroundImage = 'url(' + res.data.thumb + ')'; }
+					di(i18n.photoUploaded, 'is-success');
+					document.dispatchEvent(new CustomEvent('promotur:subida'));
+				}).catch(function () { di(i18n.error, 'is-error'); });
+			});
+		});
+	}
+
 	function initEditor() {
 		var form = document.querySelector('[data-editor-form]');
 		if (!form) { return; }
@@ -408,26 +447,10 @@
 		form.addEventListener('promotur:paradas', refreshChecklist);
 		refreshChecklist();
 
-		// Subida de imágenes.
-		form.querySelectorAll('[data-upload]').forEach(function (box) {
-			var input = box.querySelector('[data-upload-input]');
-			var value = box.querySelector('[data-upload-value]');
-			var preview = box.querySelector('[data-upload-preview]');
-			if (!input) { return; }
-			input.addEventListener('change', function () {
-				if (!input.files || !input.files[0]) { return; }
-				var fd = new FormData();
-				fd.append('file', input.files[0]);
-				setMsg(i18n.sending, '');
-				ajax('upload_media', fd).then(function (res) {
-					if (!res.success) { setMsg((res.data && res.data.message) || i18n.error, 'is-error'); return; }
-					value.value = res.data.id;
-					if (preview && res.data.thumb) { preview.style.backgroundImage = 'url(' + res.data.thumb + ')'; }
-					setMsg(i18n.photoUploaded, 'is-success');
-					refreshChecklist();
-				}).catch(function () { setMsg(i18n.error, 'is-error'); });
-			});
-		});
+		// La subida de imágenes la maneja initSubidas(), que corre para todo el
+		// documento: el mismo widget se usa fuera del editor (Estructura). Acá
+		// sólo queda enterarse para volver a marcar el checklist.
+		document.addEventListener('promotur:subida', refreshChecklist);
 
 		// Geolocalización.
 		var geoBtn = form.querySelector('[data-geolocate]');

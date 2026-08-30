@@ -34,6 +34,15 @@ class CZUAPI_Taxonomias {
 	const META_ICONO  = 'czuapi_icono';
 	const META_COLOR  = 'czuapi_color';
 	const META_MARKER = 'czuapi_marker_id'; // ID de adjunto del PNG
+	const META_IMAGEN = 'czuapi_imagen_id'; // ID de adjunto de la foto de portada
+
+	/*
+	 * La descripción no lleva meta propia: los términos de WordPress ya tienen
+	 * un campo `description` nativo, y usarlo evita dos lugares donde guardar
+	 * lo mismo. El `marker` es el PNG del pin en el mapa y la `imagen` es la
+	 * foto que encabeza la categoría en la app — son dos cosas distintas y por
+	 * eso son dos metas.
+	 */
 
 	public static function instance() {
 		if ( null === self::$instance ) {
@@ -63,11 +72,13 @@ class CZUAPI_Taxonomias {
 				'sanitize_callback' => 'sanitize_text_field',
 			) );
 		}
-		register_term_meta( self::TAX_CATEGORIA, self::META_MARKER, array(
-			'type'         => 'integer',
-			'single'       => true,
-			'show_in_rest' => false,
-		) );
+		foreach ( array( self::META_MARKER, self::META_IMAGEN ) as $key ) {
+			register_term_meta( self::TAX_CATEGORIA, $key, array(
+				'type'         => 'integer',
+				'single'       => true,
+				'show_in_rest' => false,
+			) );
+		}
 	}
 
 	/* --------------------------------------------------------------------- */
@@ -156,6 +167,15 @@ class CZUAPI_Taxonomias {
 				'id'     => (int) $t->term_id,
 				'slug'   => $t->slug,
 				'nombre' => $t->name,
+				// Una o dos líneas que explican de qué se trata la categoría,
+				// para encabezar su pantalla en la app. Cadena vacía —y no
+				// `null`— cuando nadie la escribió: el campo existe siempre,
+				// sólo puede estar en blanco.
+				'descripcion' => (string) $t->description,
+				// La foto que encabeza la categoría. Es la forma de imagen de
+				// siempre ({url,w,h,credito,alt}) o `null`; no confundir con
+				// `marker`, que es el PNG del pin del mapa.
+				'imagen' => czuapi_imagen( (int) get_term_meta( $t->term_id, self::META_IMAGEN, true ) ),
 				'padre'  => $t->parent ? (int) $t->parent : null,
 				'icono'  => (string) get_term_meta( $t->term_id, self::META_ICONO, true ),
 				'color'  => (string) get_term_meta( $t->term_id, self::META_COLOR, true ),

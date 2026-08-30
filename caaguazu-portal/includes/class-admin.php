@@ -33,7 +33,24 @@ class PROMOTUR_Admin {
 
 	private function __construct() {
 		add_action( 'admin_menu', array( $this, 'menu' ) );
+		add_action( 'admin_menu', array( $this, 'ocultar_tags_nativas' ), 999 );
 		add_action( 'admin_post_promotur_admin_updates', array( $this, 'handle_updates' ) );
+	}
+
+	/**
+	 * Saca «Etiquetas» del menú de Entradas.
+	 *
+	 * Es la taxonomía `post_tag` que trae WordPress de fábrica para el
+	 * `post_type` nativo `post` —nada que ver con `promotur_etiqueta`, la
+	 * que arma y usa el panel—. Nadie del equipo escribe entradas nativas
+	 * (el contenido real vive en los CPT propios), así que ese menú no
+	 * sirve para nada acá: sólo estorba a quien entra a wp-admin.
+	 *
+	 * No se desregistra la taxonomía —sigue funcionando si algo la usa
+	 * por debajo—, sólo se saca el enlace del menú.
+	 */
+	public function ocultar_tags_nativas() {
+		remove_submenu_page( 'edit.php', 'edit-tags.php?taxonomy=post_tag' );
 	}
 
 	/* ----- Menú ----- */
