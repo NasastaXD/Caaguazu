@@ -3,7 +3,7 @@ Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 3.9.2
+Stable tag: 3.9.3
 License: GPLv2 or later
 
 Panel autenticado tipo app (PWA) bajo /turismo-panel, con enrutador propio, login propio, roles y flujo editorial para las tres cosas que la app muestra: fichas del inventario turístico, artículos y recorridos.
@@ -59,6 +59,27 @@ llamen los tags.
 * Repo privado: definir `PROMOTUR_GITHUB_TOKEN` (PAT de solo lectura) en `wp-config.php`.
 
 == Changelog ==
+
+= 3.9.3 =
+* **El alta por invitación fallaba justo al enviar el formulario**, con
+  «Necesitás una invitación válida para registrarte» — aunque el enlace fuera
+  recién creado y la pantalla anterior lo hubiera dado por válido.
+* La causa: `promotur_token` era **dos cosas distintas con el mismo nombre**.
+  Por un lado la query var que transporta el token de la invitación en
+  `/turismo-panel/i/<token>`; por el otro el campo oculto de seguridad que
+  `PROMOTUR_Acciones::campos()` mete en TODOS los formularios del panel. Y
+  `WP::parse_request()` le da prioridad a `$_POST` por encima de lo que
+  matcheó la regla de reescritura: al enviar el alta, el HMAC de seguridad
+  ocupaba el lugar del token de la invitación, y buscar esa invitación no
+  encontraba ninguna.
+* Por eso sólo fallaba en el último paso: abrir el enlace es un GET, que no
+  manda ese campo, así que la pantalla se veía bien y el formulario aparecía.
+  El síntoma estaba a un paso de distancia de la causa.
+* La query var pasa a llamarse `promotur_invitacion`. **Las URLs no cambian**:
+  los enlaces ya repartidos siguen sirviendo igual.
+* `tools/verificar-rutas.php` comprueba ahora que ninguna query var se llame
+  como un campo de formulario del panel. Probado en las dos direcciones:
+  con el nombre viejo la verificación falla y sale con código 1.
 
 = 3.9.2 =
 * **El caché servía el bucle de redirecciones aunque la 3.9.1 ya lo hubiera

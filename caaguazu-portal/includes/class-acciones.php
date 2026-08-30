@@ -107,8 +107,8 @@ final class PROMOTUR_Acciones {
 
 	/** El token que viene en el pedido, sea campo o cabecera. */
 	private static function token_del_pedido() {
-		if ( isset( $_POST['promotur_token'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
-			return sanitize_text_field( wp_unslash( $_POST['promotur_token'] ) ); // phpcs:ignore WordPress.Security.NonceVerification
+		if ( isset( $_POST[ self::CAMPO_TOKEN ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
+			return sanitize_text_field( wp_unslash( $_POST[ self::CAMPO_TOKEN ] ) ); // phpcs:ignore WordPress.Security.NonceVerification
 		}
 		if ( isset( $_SERVER['HTTP_X_PROMOTUR_TOKEN'] ) ) {
 			return sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_PROMOTUR_TOKEN'] ) );
@@ -124,10 +124,24 @@ final class PROMOTUR_Acciones {
 		return promotur_url( $tipo . '/' . $nombre );
 	}
 
+	/**
+	 * Nombre del campo oculto de seguridad.
+	 *
+	 * Es una constante y no una cadena suelta para que se pueda comprobar que
+	 * NINGUNA query var del router se llame igual. Ese choque ya rompió algo:
+	 * la query var de la invitación se llamaba también `promotur_token`, y
+	 * `WP::parse_request()` le da prioridad a `$_POST` sobre lo que matcheó la
+	 * regla de reescritura — así que al enviar el formulario de alta, el HMAC
+	 * de este campo pisaba el token de la invitación y el registro fallaba con
+	 * «necesitás una invitación válida». Ver `tools/verificar-rutas.php`.
+	 */
+	const CAMPO_TOKEN = 'promotur_token';
+
 	/** El único campo oculto que un formulario del panel necesita. */
 	public static function campos( $ambito = 'panel' ) {
 		printf(
-			'<input type="hidden" name="promotur_token" value="%s">',
+			'<input type="hidden" name="%s" value="%s">',
+			esc_attr( self::CAMPO_TOKEN ),
 			esc_attr( self::token( $ambito ) )
 		);
 	}

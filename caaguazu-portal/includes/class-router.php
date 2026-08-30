@@ -35,12 +35,26 @@ class PROMOTUR_Router {
 
 	/**
 	 * Query vars propias.
+	 *
+	 * NINGUNA se puede llamar como un campo que viaje en un formulario del
+	 * panel. `WP::parse_request()` recorre las query vars públicas y le da
+	 * prioridad a `$_POST[ $var ]` por encima de lo que matcheó la regla de
+	 * reescritura, así que un campo del formulario con el mismo nombre que una
+	 * query var la pisa en cada envío.
+	 *
+	 * Eso pasó: la de la invitación se llamaba `promotur_token`, igual que el
+	 * campo de seguridad que `PROMOTUR_Acciones::campos()` mete en todos los
+	 * formularios. Al ABRIR el enlace de invitación andaba —un GET no manda ese
+	 * campo—, pero al ENVIAR el alta el HMAC de seguridad ocupaba el lugar del
+	 * token y el registro moría con «necesitás una invitación válida»: el
+	 * síntoma aparecía en el último paso y no se parecía a la causa.
+	 * `tools/verificar-rutas.php` comprueba que no vuelva a chocar.
 	 */
 	public function query_vars( $vars ) {
 		$vars[] = 'promotur_route';
 		$vars[] = 'promotur_sub';
 		$vars[] = 'promotur_size';
-		$vars[] = 'promotur_token';
+		$vars[] = 'promotur_invitacion';
 		return $vars;
 	}
 
@@ -118,7 +132,7 @@ class PROMOTUR_Router {
 			'^' . $base . '/recuperar/nueva/?$' => 'index.php?promotur_route=restablecer',
 			'^' . $base . '/recuperar/?$'       => 'index.php?promotur_route=recuperar',
 			'^' . $base . '/salir/?$'           => 'index.php?promotur_route=salir',
-			'^' . $base . '/i/([^/]+)/?$'       => 'index.php?promotur_route=registro&promotur_token=$matches[1]',
+			'^' . $base . '/i/([^/]+)/?$'       => 'index.php?promotur_route=registro&promotur_invitacion=$matches[1]',
 
 			// 3. PWA.
 			'^' . $base . '/manifest\.webmanifest$' => 'index.php?promotur_route=pwa-manifest',

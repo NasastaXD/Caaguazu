@@ -149,7 +149,8 @@ class PROMOTUR_Auth {
 	 * de que exista un usuario de WordPress.
 	 */
 	private function verify( $action ) {
-		$token = isset( $_POST['promotur_token'] ) ? sanitize_text_field( wp_unslash( $_POST['promotur_token'] ) ) : '';
+		$campo = PROMOTUR_Acciones::CAMPO_TOKEN;
+		$token = isset( $_POST[ $campo ] ) ? sanitize_text_field( wp_unslash( $_POST[ $campo ] ) ) : '';
 		return PROMOTUR_Acciones::token_valido( $token, $action );
 	}
 
@@ -178,7 +179,7 @@ class PROMOTUR_Auth {
 	/* ----- Registro (INVITE-ONLY) ----- */
 	private function process_register( $vars ) {
 		// Token de invitación (de la query var o del POST).
-		$token = sanitize_text_field( get_query_var( 'promotur_token' ) );
+		$token = sanitize_text_field( get_query_var( 'promotur_invitacion' ) );
 		if ( ! $token && isset( $_REQUEST['token'] ) ) {
 			$token = sanitize_text_field( wp_unslash( $_REQUEST['token'] ) );
 		}

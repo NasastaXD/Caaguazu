@@ -43,14 +43,15 @@ define( 'ABSPATH', __DIR__ );
 define( 'PROMOTUR_BASE', 'turismo-panel' );
 
 /*
- * Del router sólo se usa reglas(), que es estática y no toca WordPress. Se
- * carga la fuente sin su guarda de ABSPATH en vez de copiar el mapa acá:
- * una copia se desincroniza el día que alguien agregue una ruta, y esta
- * comprobación pasaría a verificar un mapa que ya no es el que corre.
+ * Se cargan las clases de verdad —no una copia del mapa— para que esta
+ * comprobación siga valiendo cuando alguien agregue una ruta: una copia se
+ * desincroniza y pasa a verificar un mapa que ya no es el que corre. Las dos
+ * son definiciones de clase que no ejecutan nada al cargarse, y su guarda de
+ * ABSPATH pasa porque está definida arriba.
  */
-$fuente = file_get_contents( dirname( __DIR__ ) . '/caaguazu-portal/includes/class-router.php' );
-$fuente = preg_replace( '/^\s*if \( ! defined\( \'ABSPATH\' \) \).*$/m', '', $fuente );
-eval( '?>' . $fuente );
+$incluye = dirname( __DIR__ ) . '/caaguazu-portal/includes/';
+require $incluye . 'class-router.php';
+require $incluye . 'class-acciones.php';
 
 /** Como WP::parse_request(): la primera regla que matchea, y gana. */
 function czu_resolver( array $reglas, $path ) {
@@ -78,8 +79,8 @@ $casos = array(
 	'turismo-panel/salir/'               => 'index.php?promotur_route=salir',
 
 	// El enlace de invitación, con y sin barra final: las dos formas circulan.
-	'turismo-panel/i/aB3xY9'             => 'index.php?promotur_route=registro&promotur_token=aB3xY9',
-	'turismo-panel/i/aB3xY9/'            => 'index.php?promotur_route=registro&promotur_token=aB3xY9',
+	'turismo-panel/i/aB3xY9'             => 'index.php?promotur_route=registro&promotur_invitacion=aB3xY9',
+	'turismo-panel/i/aB3xY9/'            => 'index.php?promotur_route=registro&promotur_invitacion=aB3xY9',
 
 	// PWA. Sin esto el service worker y el manifiesto devuelven HTML del panel.
 	'turismo-panel/manifest.webmanifest' => 'index.php?promotur_route=pwa-manifest',
@@ -138,6 +139,39 @@ if ( '^' . PROMOTUR_BASE . '/(.+?)/?$' === $ultima ) {
 	echo "\n " . $rojo . '✗' . $fin . "  el comodín de sección NO es la última regla\n";
 	echo '      ' . $gris . 'última: ' . $ultima . $fin . "\n";
 	echo '      ' . $gris . 'Todo lo que quede después de `(.+?)` es inalcanzable.' . $fin . "\n";
+}
+
+/*
+ * Y ninguna query var se puede llamar como un campo que viaje en un
+ * formulario del panel.
+ *
+ * `WP::parse_request()` recorre las query vars públicas y le da prioridad a
+ * `$_POST[ $var ]` sobre lo que matcheó la regla de reescritura. O sea que un
+ * campo del formulario con el mismo nombre que una query var la pisa en cada
+ * envío — y sólo en el envío, que es lo que lo vuelve difícil de encontrar.
+ *
+ * Pasó con el alta por invitación: la query var del token se llamaba
+ * `promotur_token`, igual que el campo de seguridad que va en todos los
+ * formularios. Abrir el enlace andaba (un GET no manda ese campo); completar
+ * el formulario y enviarlo moría con «necesitás una invitación válida»,
+ * porque el HMAC de seguridad había ocupado el lugar del token.
+ */
+$campos_de_formulario = array(
+	PROMOTUR_Acciones::CAMPO_TOKEN, // el oculto de seguridad, en todos
+	'promotur_auth',                // qué formulario de acceso se envió
+);
+$router  = new ReflectionClass( 'PROMOTUR_Router' );
+$vars    = ( $router->newInstanceWithoutConstructor() )->query_vars( array() );
+$chocan  = array_intersect( $vars, $campos_de_formulario );
+
+if ( empty( $chocan ) ) {
+	echo ' ' . $verde . '✓' . $fin . "  ninguna query var choca con un campo de formulario\n";
+} else {
+	$fallos++;
+	echo ' ' . $rojo . '✗' . $fin . "  hay query vars que se llaman igual que un campo de formulario\n";
+	foreach ( $chocan as $v ) {
+		echo '      ' . $gris . $v . ' — el POST la pisa y el valor de la URL se pierde' . $fin . "\n";
+	}
 }
 
 echo "\n";
