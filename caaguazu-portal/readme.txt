@@ -3,7 +3,7 @@ Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 3.5.0
+Stable tag: 3.6.0
 License: GPLv2 or later
 
 Panel autenticado tipo app (PWA) bajo /turismo-panel, con enrutador propio, login propio, roles y flujo editorial para las tres cosas que la app muestra: fichas del inventario turístico, artículos y recorridos.
@@ -57,6 +57,24 @@ llamen los tags.
 * Repo privado: definir `PROMOTUR_GITHUB_TOKEN` (PAT de solo lectura) en `wp-config.php`.
 
 == Changelog ==
+
+= 3.6.0 =
+* **«Pegar datos» en los tres editores.** Un cuadro plegable arriba del
+  formulario donde se pega un JSON y los valores se reparten solos en las
+  casillas. Es para cuando el contenido ya está escrito en otro lado —un
+  documento, una planilla, un archivo de la Municipalidad— y cargarlo era
+  copiar quince veces entre dos ventanas.
+* No guarda ni envía nada: deja el formulario lleno y editable, y quien carga
+  revisa y aprieta Guardar como siempre. El checklist y la validación del
+  servidor siguen siendo los mismos, que es lo que sostiene la calidad de lo
+  que se publica.
+* Las claves del JSON son los nombres de los campos, con el prefijo largo
+  (`_promotur_horario`) o sin él (`horario`), sin acentos ni mayúsculas que
+  importen. Los desplegables aceptan tanto el valor como el texto que se ve
+  («Sitio Natural», «Asfalto»). Al terminar dice cuántos campos llenó y cuáles
+  no reconoció, en vez de fallar en silencio.
+* La foto sigue subiéndose con su botón: un id de adjunto pegado a mano
+  apuntaría a cualquier cosa que tenga ese id en la biblioteca.
 
 = 3.5.0 =
 * **Se sacaron Gancho y Accesibilidad de la ficha.** No le hacían falta a la

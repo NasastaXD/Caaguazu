@@ -57,6 +57,8 @@ $body = function () use ( $post, $post_id, $estado, $checklist, $feedback, $grou
 			<input type="hidden" name="post_id" value="<?php echo esc_attr( $post_id ); ?>">
 			<input type="hidden" name="tipo" value="destino">
 
+			<?php promotur_pegar_datos( 'destino' ); ?>
+
 			<label class="promotur-field">
 				<span><?php esc_html_e( 'Nombre del destino', 'caaguazu-portal' ); ?> <em>*</em></span>
 				<input type="text" name="titulo" value="<?php echo esc_attr( $title ); ?>" data-check="titulo" required>

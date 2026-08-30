@@ -384,6 +384,7 @@
 
 		initParadas(form);
 		initTipoItem(form);
+		initPegarDatos(form);
 
 		// Checklist en vivo.
 		function refreshChecklist() {
@@ -520,6 +521,179 @@
 		}
 		selector.addEventListener('change', aplicar);
 		aplicar();
+	}
+
+	/* ---------- Pegar datos ----------
+	 *
+	 * Reparte un JSON en las casillas del formulario y para ahí. No guarda, no
+	 * envía y no habla con el servidor: deja el formulario lleno y editable,
+	 * que es lo que permite revisar antes de guardar. El guardado sigue siendo
+	 * el mismo de siempre, con su validación y su checklist.
+	 *
+	 * El índice de campos se arma leyendo el formulario, no con una lista
+	 * escrita acá: cada editor tiene sus campos y sus prefijos de meta
+	 * (`_promotur_` la ficha y el artículo, `_recorrido_` el recorrido), y una
+	 * lista a mano quedaría vieja el día que se agregue un campo. Así, un campo
+	 * nuevo en el modelo se puede pegar sin tocar este archivo.
+	 */
+	function initPegarDatos(form) {
+		var caja = form.querySelector('[data-pegar]');
+		if (!caja) { return; }
+		var entrada = caja.querySelector('[data-pegar-json]');
+		var boton = caja.querySelector('[data-pegar-aplicar]');
+		var msg = caja.querySelector('[data-pegar-msg]');
+		if (!entrada || !boton) { return; }
+
+		/* Un nombre comparable: sin acentos, sin mayúsculas y con un solo tipo
+		   de separador. Así «Rango de precio», «rango-precio» y «rango_precio»
+		   son la misma clave, que es como la escribe la gente. */
+		function normalizar(nombre) {
+			return String(nombre)
+				.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+				.toLowerCase()
+				.replace(/[^a-z0-9]+/g, '_')
+				.replace(/^_+|_+$/g, '');
+		}
+
+		/* Arma el índice clave → control. Cada meta entra dos veces: con su
+		   nombre completo (`_promotur_horario`) y sin el prefijo (`horario`).
+		   Si dos metas colapsaran en el mismo nombre corto, ese nombre corto
+		   se marca ambiguo y deja de servir: mejor no encontrar el campo que
+		   escribir en el equivocado. */
+		var indice = {};
+		function anotar(clave, control) {
+			var k = normalizar(clave);
+			if (!k) { return; }
+			if (Object.prototype.hasOwnProperty.call(indice, k) && indice[k] !== control) {
+				indice[k] = null;
+				return;
+			}
+			indice[k] = control;
+		}
+
+		form.querySelectorAll('[name]').forEach(function (control) {
+			var nombre = control.getAttribute('name');
+			// Las paradas y los medios son filas repetidas con índice
+			// (`paradas[0][texto]`): no son un campo con un nombre estable, y
+			// pegarlos pide un armador aparte.
+			if (/\[\d+\]/.test(nombre)) { return; }
+			var meta = nombre.match(/^meta\[(.+)\]$/);
+			if (meta) {
+				anotar(meta[1], control);
+				anotar(meta[1].replace(/^_[a-z0-9]+_/, ''), control);
+			} else if (nombre !== 'post_id' && nombre !== 'tipo') {
+				anotar(nombre, control);
+			}
+		});
+
+		/* Elige una opción de un <select>. Vale el valor tal cual
+		   («sitio», el id de un término) y también el texto que se ve, que es
+		   lo que alguien escribe cuando copia de una planilla: «Sitio Natural»,
+		   «Asfalto». El texto se compara normalizado y por prefijo, para que
+		   «Sitio» encuentre a «Sitio — está siempre». */
+		function elegirOpcion(select, valor) {
+			var buscado = normalizar(valor);
+			var i, opcion, texto;
+			for (i = 0; i < select.options.length; i++) {
+				if (select.options[i].value === String(valor)) { select.selectedIndex = i; return true; }
+			}
+			for (i = 0; i < select.options.length; i++) {
+				opcion = select.options[i];
+				if (!opcion.value) { continue; }
+				texto = normalizar(opcion.textContent);
+				if (texto === buscado || texto.indexOf(buscado + '_') === 0) { select.selectedIndex = i; return true; }
+			}
+			return false;
+		}
+
+		/* Un valor que llega como lista se junta en texto: en un textarea, como
+		   párrafos; en una casilla de un renglón —las etiquetas—, separado por
+		   comas, que es como las lee el servidor. */
+		function aTexto(valor, control) {
+			if (Array.isArray(valor)) {
+				return valor.join(control.tagName === 'TEXTAREA' ? '\n\n' : ', ');
+			}
+			if (valor === null || valor === undefined) { return ''; }
+			if (typeof valor === 'object') { return ''; }
+			return String(valor);
+		}
+
+		function aplicar() {
+			var crudo = entrada.value.trim();
+			if (!crudo) { decir(msg, 'Pegá el JSON en el cuadro de arriba.', 'is-error'); return; }
+
+			var datos;
+			try {
+				datos = JSON.parse(crudo);
+			} catch (e) {
+				decir(msg, 'Eso no es un JSON válido: ' + e.message, 'is-error');
+				return;
+			}
+			if (!datos || typeof datos !== 'object' || Array.isArray(datos)) {
+				decir(msg, 'El JSON tiene que ser un objeto con un campo por clave.', 'is-error');
+				return;
+			}
+
+			// `meta: { … }` se aplana contra el resto: es la forma en que salen
+			// los datos del propio modelo, y así se puede pegar tal cual.
+			var plano = {};
+			Object.keys(datos).forEach(function (clave) {
+				if (clave === 'meta' && datos.meta && typeof datos.meta === 'object' && !Array.isArray(datos.meta)) {
+					Object.keys(datos.meta).forEach(function (k) { plano[k] = datos.meta[k]; });
+					return;
+				}
+				plano[clave] = datos[clave];
+			});
+
+			var llenos = 0;
+			var tocados = [];
+			var desconocidas = [];
+			var noEntraron = [];
+
+			Object.keys(plano).forEach(function (clave) {
+				var k = normalizar(clave);
+				var control = Object.prototype.hasOwnProperty.call(indice, k) ? indice[k] : undefined;
+				if (control === undefined) { desconocidas.push(clave); return; }
+				if (control === null) { noEntraron.push(clave + ' (nombre ambiguo, usá el largo)'); return; }
+
+				// La foto es un id de adjunto que se consigue subiendo el
+				// archivo: escribir un número acá dejaría la ficha apuntando a
+				// cualquier cosa que tenga ese id en la biblioteca.
+				if (control.hasAttribute('data-upload-value')) {
+					noEntraron.push(clave + ' (la foto se sube con el botón)');
+					return;
+				}
+
+				var texto = aTexto(plano[clave], control);
+				if (control.tagName === 'SELECT') {
+					if (!elegirOpcion(control, texto)) {
+						noEntraron.push(clave + ' («' + texto + '» no es una opción)');
+						return;
+					}
+				} else {
+					control.value = texto;
+				}
+				llenos++;
+				tocados.push(control);
+			});
+
+			// Un solo aviso al final y no uno por campo: lo que escucha del
+			// otro lado es el checklist y el selector de sitio/evento, y les
+			// alcanza con enterarse una vez que el formulario cambió.
+			tocados.forEach(function (control) {
+				control.dispatchEvent(new Event('input', { bubbles: true }));
+				control.dispatchEvent(new Event('change', { bubbles: true }));
+			});
+
+			var partes = [llenos === 1 ? 'Llené 1 campo.' : 'Llené ' + llenos + ' campos.'];
+			if (noEntraron.length) { partes.push('No entraron: ' + noEntraron.join('; ') + '.'); }
+			if (desconocidas.length) { partes.push('No existen en este formulario: ' + desconocidas.join(', ') + '.'); }
+			partes.push('Revisá y guardá.');
+
+			decir(msg, partes.join(' '), llenos && !noEntraron.length && !desconocidas.length ? 'is-success' : '');
+		}
+
+		boton.addEventListener('click', aplicar);
 	}
 
 	/** Cuántas paradas tienen un sitio elegido de verdad. */

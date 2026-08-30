@@ -213,6 +213,18 @@ Antes los eventos eran otro tipo de contenido, en `caaguazu-app-api`, cargable s
 
 Que un campo aplique o no según el tipo no es cosa del formulario: `PROMOTUR_Destinos::aplica_campo()` lo decide, el editor lo usa para mostrar y esconder, y el checklist de mínimos lo usa para no exigir la fecha de un evento a una ficha que es un sitio. Si sólo lo supiera el formulario, un sitio no se podría publicar nunca.
 
+### Pegar datos en vez de copiar quince veces
+
+Los tres editores tienen arriba un cuadro plegable, **«Pegar datos»**, donde se pega un JSON y los valores se reparten solos en las casillas. Existe porque el texto de una ficha casi nunca se escribe en el panel: sale de un documento, de una planilla, de un archivo de la Municipalidad. Cargarlo era ir y volver quince veces entre dos ventanas, y ese trabajo aburrido es lo que hace que una ficha ya escrita quede sin cargar.
+
+**Llena el formulario y para ahí.** No guarda, no envía y no toca el servidor: deja los campos escritos y todavía editables, y quien carga revisa y aprieta Guardar como siempre. Es a propósito — un importador que escribe directo en la base mete datos que nadie miró y saltea el checklist, que es justamente lo que sostiene la calidad de lo que sale publicado. Acá el checklist se tacha solo mientras se pega, igual que si se hubiera tipeado.
+
+Las claves son los nombres de los campos, con el prefijo largo (`_promotur_horario`) o sin él (`horario`), y sin que importen acentos, mayúsculas ni si el separador es guion o guion bajo. Un `meta: { … }` anidado se aplana contra el resto, así se puede pegar tal cual lo que sale del modelo. Los desplegables aceptan tanto el valor (`asfalto`) como el texto que se ve (`Asfalto`, `Sitio Natural`), que es lo que alguien copia de una planilla.
+
+El índice de campos **se arma leyendo el formulario**, no de una lista escrita en el JavaScript: cada editor tiene sus campos y su prefijo de meta (`_promotur_` la ficha y el artículo, `_recorrido_` el recorrido), y una lista a mano quedaría vieja el día que se agregue un campo. Un campo nuevo en el modelo se puede pegar sin tocar `caaguazu-portal.js`.
+
+Dos cosas que no entran, y lo dice en vez de fallar en silencio: **la foto** —es un id de adjunto, y un número pegado a mano apuntaría a cualquier cosa que tenga ese id en la biblioteca— y **las paradas de un recorrido**, que son filas repetidas y piden su propio armador. Al terminar informa cuántos campos llenó, cuáles no reconoció y cuáles rechazó.
+
 ### Los recorridos
 
 Un recorrido no es un conjunto de lugares: es una **secuencia**. Cambiar el tercero por el quinto cambia el paseo, así que el orden se guarda explícito y el editor tiene botones para subir y bajar cada parada — no un menú escondido ni algo que aparezca al pasar el mouse, porque en un teléfono no hay mouse y reordenar es la operación principal.

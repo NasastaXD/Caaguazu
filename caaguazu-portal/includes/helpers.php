@@ -294,6 +294,58 @@ function promotur_acciones_de_estado( $post_id ) {
 }
 
 /**
+ * El bloque «Pegar datos»: llena el formulario de una vez desde un JSON.
+ *
+ * Por qué existe: cargar una pieza es pegar quince cosas en quince casillas, y
+ * el texto casi nunca se escribe en el panel —sale de un documento, de una
+ * planilla, de un archivo de la Municipalidad—. Copiar campo por campo es el
+ * trabajo aburrido que hace que una ficha escrita quede sin cargar.
+ *
+ * Llena el formulario y para ahí: no guarda, no envía, no toca el servidor.
+ * Lo que se ve después de pegar es el mismo formulario de siempre, con todo
+ * escrito y todavía editable, y quien carga decide si está bien antes de
+ * apretar Guardar. Es a propósito: un importador que escribe directo en la
+ * base mete datos que nadie miró, y el checklist —que es lo que sostiene la
+ * calidad de lo que sale publicado— se saltea entero.
+ *
+ * Lo dibujan los tres editores, porque los tres son un formulario con campos
+ * que tienen nombre.
+ *
+ * @param string $tipo 'destino' | 'articulo' | 'recorrido'
+ */
+function promotur_pegar_datos( $tipo ) {
+	// El ejemplo se arma con campos que ese editor realmente tiene: un ejemplo
+	// que nombra un campo inexistente enseña mal.
+	$ejemplos = array(
+		'destino'   => "{\n  \"titulo\": \"Ykua La Patria\",\n  \"descripcion\": \"El manantial donde empezó Caaguazú…\",\n  \"categoria\": \"Sitio Natural\",\n  \"etiquetas\": [\"histórico\", \"gratis\"],\n  \"tipo_item\": \"sitio\",\n  \"lat\": \"-25.472938\",\n  \"lng\": \"-56.020984\",\n  \"horario\": \"Parque abierto, se visita de día.\",\n  \"costo\": \"Entrada libre.\"\n}",
+		'articulo'  => "{\n  \"titulo\": \"La Ruta de la Madera\",\n  \"entradilla\": \"Una línea que se lee en la tarjeta.\",\n  \"descripcion\": \"El cuerpo de la nota…\",\n  \"categoria\": \"Sitio Natural\",\n  \"etiquetas\": [\"oficios\", \"historia\"]\n}",
+		'recorrido' => "{\n  \"titulo\": \"Caaguazú fundacional\",\n  \"entradilla\": \"Una línea que se lee en la tarjeta.\",\n  \"descripcion\": \"De qué va el paseo…\",\n  \"duracion\": \"Media jornada\"\n}",
+	);
+	$ejemplo = isset( $ejemplos[ $tipo ] ) ? $ejemplos[ $tipo ] : $ejemplos['destino'];
+	?>
+	<details class="promotur-fieldset promotur-pegar" data-pegar>
+		<summary class="promotur-pegar__abrir"><?php esc_html_e( 'Pegar datos', 'caaguazu-portal' ); ?></summary>
+
+		<p class="promotur-muted"><?php esc_html_e( 'Si ya tenés los datos escritos en otro lado, pegalos acá como JSON y se reparten solos en las casillas de abajo. No guarda nada: revisás lo que quedó y guardás vos.', 'caaguazu-portal' ); ?></p>
+
+		<label class="promotur-field">
+			<span><?php esc_html_e( 'JSON', 'caaguazu-portal' ); ?></span>
+			<?php /* Sin name= a propósito: es una casilla de trabajo, no un campo de la pieza, y no tiene por qué viajar en el guardado. */ ?>
+			<textarea rows="8" spellcheck="false" data-pegar-json placeholder="<?php echo esc_attr( $ejemplo ); ?>"></textarea>
+			<small class="promotur-ayuda"><?php esc_html_e( 'Las claves son los nombres de los campos: «horario», «costo», «lat». También valen con el prefijo largo («_promotur_horario»), que es como se llaman en la lista de datos de la app.', 'caaguazu-portal' ); ?></small>
+		</label>
+
+		<div class="promotur-editor__actions">
+			<button type="button" class="promotur-btn promotur-btn--ghost promotur-btn--small" data-pegar-aplicar><?php esc_html_e( 'Llenar el formulario', 'caaguazu-portal' ); ?></button>
+			<span class="promotur-form-msg" data-pegar-msg aria-live="polite"></span>
+		</div>
+
+		<p class="promotur-ayuda"><?php esc_html_e( 'La foto no se puede pegar: se sube con el botón de «Foto de portada».', 'caaguazu-portal' ); ?></p>
+	</details>
+	<?php
+}
+
+/**
  * Dibuja UN campo del modelo de contenido, con su etiqueta, su ayuda y el
  * control que le corresponde al tipo.
  *

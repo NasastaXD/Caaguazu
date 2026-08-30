@@ -485,6 +485,8 @@ body.promotur-nav-open .promotur-sidebar { transform: translateX(0); }
 	/* Los motivos de un clic de la revisión: son varios y chiquitos, y se tocan
 	   con el pulgar mientras se lee la ficha en la otra mitad de la pantalla. */
 	.promotur-chip { min-height: 44px; padding: .5em 1em; }
+	/* El renglón que abre «Pegar datos»: es un <summary>, o sea texto suelto. */
+	.promotur-pegar__abrir { display: flex; align-items: center; min-height: 44px; }
 	.promotur-app input, .promotur-app select, .promotur-app textarea { min-height: 44px; }
 }
 
@@ -629,6 +631,15 @@ body.promotur-nav-open .promotur-sidebar { transform: translateX(0); }
 .promotur-inline-form { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .promotur-upload { display: flex; align-items: center; gap: 12px; }
 .promotur-upload__preview { flex: 0 0 auto; width: 64px; height: 64px; border: 1px solid var(--linea); border-radius: var(--r-2); background: var(--hueco) center / cover no-repeat; }
+
+/* «Pegar datos»: cerrado ocupa un renglón y no le compite el lugar al
+   formulario, que es lo que se viene a hacer acá. Abierto se separa del resto
+   con el fondo hueco, para que se lea como una herramienta y no como un campo
+   más de la pieza. */
+.promotur-pegar { display: flex; flex-direction: column; gap: 12px; background: var(--hueco); }
+.promotur-pegar:not([open]) { padding: 10px 16px; }
+.promotur-pegar__abrir { font-size: .9rem; font-weight: 600; cursor: pointer; }
+.promotur-pegar textarea { font-size: .85rem; line-height: 1.5; }
 
 /* ---------------------------------------------------------------------------
  * Botones
