@@ -3,7 +3,7 @@ Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 3.8.0
+Stable tag: 3.9.0
 License: GPLv2 or later
 
 Panel autenticado tipo app (PWA) bajo /turismo-panel, con enrutador propio, login propio, roles y flujo editorial para las tres cosas que la app muestra: fichas del inventario turístico, artículos y recorridos.
@@ -57,6 +57,21 @@ llamen los tags.
 * Repo privado: definir `PROMOTUR_GITHUB_TOKEN` (PAT de solo lectura) en `wp-config.php`.
 
 == Changelog ==
+
+= 3.9.0 =
+* **Se saca el nivel de confianza.** Era un segundo eje de permisos, aparte
+  del rol —Aprendiz / Alumno Jr / De confianza, guardado por cuenta—, que
+  dejaba editar lo ya publicado o publicar directo sin pasar por el rol. Nadie
+  lo había pedido, y una capability por cuenta además del rol es una segunda
+  fuente de verdad sobre lo mismo. Publicar directo y editar sin re-revisión
+  siguen existiendo, pero dependen únicamente del rol (`promotur_publish_destino`
+  y `promotur_review_content`, las dos del Profesor).
+* Se saca de Equipo el selector «Nivel de confianza» de cada Alumno, y de Mi
+  perfil la barra «Tu progreso de confianza». La acción `set_nivel` deja de
+  existir.
+* **`caaguazu-app-api` 0.7.1** deja de traer `cuenta.nivel` en `/auth/me` y
+  `/auth/login` por este mismo motivo — no llamaba más a nada que ya no
+  existe acá. `permisos` sigue viniendo igual.
 
 = 3.8.0 =
 * **El vencimiento de una invitación deja de tener un techo de 90 días: ahora

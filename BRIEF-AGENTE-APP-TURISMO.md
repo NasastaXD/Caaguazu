@@ -77,27 +77,28 @@ Detalles que importan:
 - **Usuario de servicio:** WordPress exige un autor válido en cada entrada, pero nadie del panel es usuario de WP. La solución fue un único usuario bloqueado (`caaguazu-servicio`) que figura como autor técnico; el dueño real va en un meta.
 - **Modelo de paneles:** `caaguazu_grants` está diseñado para que una cuenta tenga rol en **varios paneles**. Hoy existe el panel `promotor`; el sistema se pensó desde el principio para admitir otros. Por eso la app encaja sin inventar nada.
 
-## 1.5 Permisos: dos ejes, no uno
+## 1.5 Permisos: por capability, no por rol
 
-Acá está la parte que se suele pasar por alto. Los permisos **no dependen solo del rol**.
-
-**Eje 1 — Rol en el panel:**
+Los permisos dependen del rol en el panel, nunca de un atributo aparte por
+cuenta:
 
 | Rol | Qué puede |
 |---|---|
-| **Promotor** | Todo: crear, editar, revisar, publicar, asignar tareas, curar destacados, moderar, gestionar equipo, ver reportes, biblioteca, estructura |
-| **Mini Promotor** | Crear borradores, editar sus fichas, ver sus tareas, editar su perfil |
+| **Profesor** | Todo: crear, editar, revisar, publicar, asignar tareas, curar destacados, moderar, gestionar equipo, ver reportes, biblioteca, estructura |
+| **Alumno** | Crear borradores, editar sus fichas, ver sus tareas, editar su perfil |
 | **Visitante** | Ver el panel y editar su perfil |
 
-**Eje 2 — Nivel de confianza** (meta de cuenta, sube con el trabajo hecho):
+(Hubo un segundo eje —un «nivel de confianza» por cuenta que le daba a un
+Alumno puntual permiso de publicar directo o de editar lo publicado, sin
+cambiarle el rol— y se sacó: nadie lo pedía, y era una segunda fuente de
+verdad sobre lo mismo que el rol ya decía. Si en algún momento hace falta que
+un Alumno puntual publique directo, la forma es cambiarle el rol.)
 
-| Nivel | Desbloquea |
-|---|---|
-| **Aprendiz** | — |
-| **Promotor Jr** | Editar fichas ya publicadas |
-| **De confianza** | **Publicar directo, sin pasar por revisión** |
-
-O sea: un Mini Promotor que llega a "De confianza" puede publicar sin revisión. **La app tiene que gatear por lo que le diga el servidor, no por el rol solo.**
+`GET /auth/me` sigue devolviendo `permisos` —la lista de capabilities
+efectivas de la cuenta, resuelta del lado servidor—, así que la app sigue sin
+tener que reimplementar la regla de quién puede qué: sigue gateando por lo
+que le diga el servidor, no por el nombre del rol. Lo que ya no trae es el
+campo `nivel`, que no significa nada mientras no exista ese segundo eje.
 
 Toda la UI del panel se gatea por capability, nunca por rol hardcodeado. Seguí ese criterio.
 
@@ -109,7 +110,7 @@ Toda la UI del panel se gatea por capability, nunca por rol hardcodeado. Seguí 
 
 **`caaguazu-turismo`** — 21 páginas estáticas ya sembradas (historia, ruta de la madera, artesanos, platos típicos, festividades, glosario guaraní, cómo llegar…). Contenido humano, escrito. Hoy son páginas web; está sin decidir si entran a la app.
 
-**`caaguazu-sso-cead`** — el colegio CEAD tiene un curso de Servicios Turísticos. Sus alumnos y docentes entran al panel con un clic desde el panel del colegio, sin registrarse de nuevo, vía un código opaco de un solo uso canjeado servidor a servidor. Los alumnos entran como Mini Promotor. *(El código está listo; el endpoint del colegio todavía no existe.)*
+**`caaguazu-sso-cead`** — el colegio CEAD tiene un curso de Servicios Turísticos. Sus alumnos y docentes entran al panel con un clic desde el panel del colegio, sin registrarse de nuevo, vía un código opaco de un solo uso canjeado servidor a servidor. Los alumnos entran como Alumno. *(El código está listo; el endpoint del colegio todavía no existe.)*
 
 **Auditoría** — cada cambio de estado editorial y cada login queda registrado en `promotur_audit_log`.
 

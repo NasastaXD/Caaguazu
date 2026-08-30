@@ -101,8 +101,8 @@ class CEADSSO_Roles {
 			return $out;
 		}
 		return array(
-			'promotur_promotor'  => __( 'Promotor', 'caaguazu-sso-cead' ),
-			'promotur_mini'      => __( 'Mini Promotor', 'caaguazu-sso-cead' ),
+			'promotur_promotor'  => __( 'Profesor', 'caaguazu-sso-cead' ),
+			'promotur_mini'      => __( 'Alumno', 'caaguazu-sso-cead' ),
 			'promotur_visitante' => __( 'Visitante', 'caaguazu-sso-cead' ),
 		);
 	}

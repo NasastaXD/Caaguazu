@@ -1,7 +1,7 @@
 <?php
 /**
- * AJAX de gestión (Fase 3): tareas (crear/reclamar/completar) y nivel de confianza.
- * Autenticado y gateado por capability.
+ * AJAX de gestión: tareas (crear/reclamar/completar). Autenticado y gateado
+ * por capability.
  */
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
@@ -18,7 +18,7 @@ class PROMOTUR_Gestion_Ajax {
 	}
 
 	private function __construct() {
-		foreach ( array( 'create_tarea', 'claim_tarea', 'complete_tarea', 'set_nivel' ) as $a ) {
+		foreach ( array( 'create_tarea', 'claim_tarea', 'complete_tarea' ) as $a ) {
 			PROMOTUR_Acciones::datos( $a, array( $this, $a ) );
 		}
 	}
@@ -68,16 +68,5 @@ class PROMOTUR_Gestion_Ajax {
 		}
 		PROMOTUR_Tareas::complete( $id );
 		wp_send_json_success( array( 'message' => __( 'Tarea completada. 🎉', 'caaguazu-portal' ), 'reload' => true ) );
-	}
-
-	public function set_nivel() {
-		$this->guard( 'promotur_manage_team' );
-		$user  = (int) ( $_POST['user_id'] ?? 0 );
-		$level = sanitize_key( wp_unslash( $_POST['level'] ?? '' ) );
-		if ( ! $user ) {
-			wp_send_json_error( array( 'message' => __( 'El usuario no es válido.', 'caaguazu-portal' ) ) );
-		}
-		PROMOTUR_Stats::set_level( $user, $level );
-		wp_send_json_success( array( 'message' => __( 'Nivel actualizado.', 'caaguazu-portal' ) ) );
 	}
 }

@@ -2,7 +2,7 @@
 Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 0.7.0
+Stable tag: 0.7.1
 License: GPLv2 or later
 
 Capa REST que consume la app Android de turismo (Turismo App Czu).
@@ -21,7 +21,7 @@ duplicarlo.
 **No reimplementa nada de lo que ya existe:**
 
 * Identidad y cuentas → `caaguazu-cuentas`
-* Permisos (rol + nivel de confianza) → `caaguazu_account_can()`
+* Permisos (rol) → `caaguazu_account_can()`
 * Flujo editorial y visibilidad → `caaguazu-portal`
 * Fichas turísticas → CPT `promotur_destino`
 
@@ -105,6 +105,18 @@ de evento.
 1. Requiere `caaguazu-cuentas` y `caaguazu-portal` activos.
 2. Subir a `/wp-content/plugins/` y activar. Crea sus dos tablas.
 3. Cargar icono y color de cada categoría en **Destinos → Categorías**.
+
+== Cambios del contrato en 0.7.1 ==
+
+**`GET /auth/me` (y la respuesta de `POST /auth/login`) dejan de traer
+`cuenta.nivel`.** Existía un nivel de confianza por cuenta, aparte del rol
+—se sacó de `caaguazu-portal` en la 3.9.0, nadie lo estaba pidiendo y era una
+segunda fuente de verdad sobre lo mismo que ya decidía el rol—, así que el
+campo dejó de significar algo. `cuenta.permisos` sigue viniendo igual: es la
+lista de capabilities efectivas, resuelta del lado servidor, así que la app
+no tiene que reimplementar de qué depende cada botón. Un cliente que sólo
+leía `permisos` sigue andando sin cambios; uno que leía `nivel` deja de
+recibirlo.
 
 == Cambios del contrato en 0.7.0 ==
 

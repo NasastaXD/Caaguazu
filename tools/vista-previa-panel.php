@@ -498,9 +498,6 @@ class PROMOTUR_Stats {
 	public static function empty_searches() { return array( array( 'q' => 'termas', 'count' => 4 ), array( 'q' => 'cascada', 'count' => 2 ) ); }
 	public static function content_health( $meses = 6 ) { return array( 'sin_foto' => array_slice( get_posts(), 0, 2 ), 'viejas' => array_slice( get_posts(), 2, 1 ) ); }
 	public static function author_counts( $account_id ) { return array( 'total' => 9, 'publicadas' => 5 ); }
-	public static function levels() { return array( 'nuevo' => 'Nuevo', 'confiable' => 'Confiable', 'experto' => 'Experto' ); }
-	public static function get_level( $account_id ) { return 'confiable'; }
-	public static function level_label( $account_id ) { return 'Confiable'; }
 	public static function serie_diaria( array $actions, $dias = 7 ) {
 		$muestra = array( 3, 7, 2, 9, 5, 11, 6 );
 		$serie   = array();

@@ -1,7 +1,7 @@
 <?php
 /**
- * Pulso del panel: niveles de confianza, producción por autor, salud del
- * contenido y actividad editorial por día.
+ * Pulso del panel: producción por autor, salud del contenido y actividad
+ * editorial por día.
  *
  * Ya no cuenta vistas ni búsquedas sin resultado: las dos se registraban desde
  * la vitrina web que este plugin publicaba, y esa vitrina se fue. La app tiene
@@ -14,7 +14,6 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 class PROMOTUR_Stats {
 
 	private static $instance = null;
-	const LEVEL_META     = 'promotur_nivel';
 
 	public static function instance() {
 		if ( null === self::$instance ) {
@@ -25,41 +24,12 @@ class PROMOTUR_Stats {
 
 	private function __construct() {}
 
-	/* ----- Niveles de confianza -----
-	   Se guardan en el metadata de la CUENTA (caaguazu-cuentas), no en
-	   usermeta de WordPress — desde el cutover, un promotor ya no es un
-	   usuario de WP. $account_id es el ID de caaguazu_accounts. */
-	public static function levels() {
-		return array(
-			'aprendiz'  => __( 'Aprendiz', 'caaguazu-portal' ),
-			'jr'        => __( 'Alumno Jr', 'caaguazu-portal' ),
-			'confianza' => __( 'De confianza', 'caaguazu-portal' ),
-		);
-	}
-
-	public static function get_level( $account_id ) {
-		$l = function_exists( 'caaguazu_account_meta_get' ) ? caaguazu_account_meta_get( $account_id, self::LEVEL_META ) : '';
-		return $l ? $l : 'aprendiz';
-	}
-
-	public static function level_label( $account_id ) {
-		$levels = self::levels();
-		$l = self::get_level( $account_id );
-		return isset( $levels[ $l ] ) ? $levels[ $l ] : $levels['aprendiz'];
-	}
-
-	public static function set_level( $account_id, $level ) {
-		if ( array_key_exists( $level, self::levels() ) && function_exists( 'caaguazu_account_meta_set' ) ) {
-			caaguazu_account_meta_set( $account_id, self::LEVEL_META, $level );
-		}
-	}
-
-	/* ----- Confianza progresiva → permisos ----- */
+	/* ----- Permisos ----- */
 
 	/**
 	 * ¿Puede editar fichas ya publicadas sin pasar de nuevo por revisión?
-	 * Desbloqueado en nivel Jr o superior (o si es revisor/admin, o el
-	 * bypass de administrador de WP cuando $account_id es 0).
+	 * Sólo quien revisa contenido (o el bypass de administrador de WP cuando
+	 * $account_id es 0).
 	 *
 	 * @param int $account_id
 	 */
@@ -67,16 +37,13 @@ class PROMOTUR_Stats {
 		if ( $account_id <= 0 ) {
 			return function_exists( 'caaguazu_wp_admin_bypass' ) && caaguazu_wp_admin_bypass();
 		}
-		if ( caaguazu_account_can( 'promotor', 'promotur_review_content', $account_id ) ) {
-			return true;
-		}
-		return in_array( self::get_level( $account_id ), array( 'jr', 'confianza' ), true );
+		return caaguazu_account_can( 'promotor', 'promotur_review_content', $account_id );
 	}
 
 	/**
 	 * ¿Puede publicar directo (con auditoría posterior)?
-	 * Desbloqueado en nivel "De confianza" (o si ya tiene la cap de publicar,
-	 * o el bypass de administrador de WP cuando $account_id es 0).
+	 * Sólo quien tiene la capability de publicar (o el bypass de
+	 * administrador de WP cuando $account_id es 0).
 	 *
 	 * @param int $account_id
 	 */
@@ -84,10 +51,7 @@ class PROMOTUR_Stats {
 		if ( $account_id <= 0 ) {
 			return function_exists( 'caaguazu_wp_admin_bypass' ) && caaguazu_wp_admin_bypass();
 		}
-		if ( caaguazu_account_can( 'promotor', 'promotur_publish_destino', $account_id ) ) {
-			return true;
-		}
-		return 'confianza' === self::get_level( $account_id );
+		return caaguazu_account_can( 'promotor', 'promotur_publish_destino', $account_id );
 	}
 
 	/* ----- Series de actividad ----- */

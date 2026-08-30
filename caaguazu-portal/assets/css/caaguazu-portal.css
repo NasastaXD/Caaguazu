@@ -757,14 +757,6 @@ html.promotur-no-splash .promotur-splash { display: none; }
 .promotur-offline-box { max-width: 380px; text-align: center; }
 
 /* ---------------------------------------------------------------------------
- * Nivel de confianza (Mi perfil)
- * ------------------------------------------------------------------------ */
-
-.promotur-trustbar { display: flex; flex-wrap: wrap; gap: 6px; margin: .7rem 0; }
-.promotur-truststep { flex: 1; min-width: 92px; padding: .5em; border-radius: var(--r-1); background: var(--tinte-neutro); color: var(--texto-debil); font-size: .82rem; font-weight: 600; text-align: center; }
-.promotur-truststep.is-on { background: var(--tinta); color: var(--sobre-tinta); }
-
-/* ---------------------------------------------------------------------------
  * Movimiento reducido / impresión
  * ------------------------------------------------------------------------ */
 

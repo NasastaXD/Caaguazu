@@ -2,7 +2,7 @@
 Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.1.0
+Stable tag: 1.1.1
 License: GPLv2 or later
 
 Acceso de un clic desde el panel del CEAD al Portal de Promotores Turísticos, sin registro nuevo ni contraseña propia del portal.
@@ -40,10 +40,14 @@ ninguno de ellos** — es WordPress pelado más el endpoint del contrato.
   cuenta existente). Un admin lo vincula a mano desde
   **Herramientas → Acceso desde el CEAD**.
 * Rol del CEAD → rol del panel `promotor` de `caaguazu-portal`: quien cursa
-  entra como Mini Promotor, quien enseña como Promotor. Un rol que no caiga en
+  entra como Alumno, quien enseña como Profesor. Un rol que no caiga en
   el mapa se rechaza (no se inventa un permiso), pero queda registrado y se
   habilita de un clic desde esa misma pantalla.
 * Entran al panel `promotor` que ya existe — no a uno aparte.
+
+**1.1.1** — los nombres de rol que se muestran acá (Alumno, Profesor) se
+sincronizan con el rename de `caaguazu-portal` 3.9.0. Sólo texto: la clave
+interna del rol y el mapa de la sección de abajo no cambiaron.
 
 == El mapa de roles (1.1.0) ==
 

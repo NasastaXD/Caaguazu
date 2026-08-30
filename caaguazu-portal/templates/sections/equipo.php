@@ -10,12 +10,11 @@
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 $roles       = PROMOTUR_Roles::roles();
-$levels      = PROMOTUR_Stats::levels();
 $administra  = promotur_can( PROMOTUR_Equipo::CAP );
 $invitaciones = $administra ? PROMOTUR_Equipo::invitaciones_abiertas() : array();
 
 $page_title = __( 'Equipo', 'caaguazu-portal' );
-$body = function () use ( $roles, $levels, $administra, $invitaciones ) {
+$body = function () use ( $roles, $administra, $invitaciones ) {
 	?>
 	<div class="promotur-eyebrow"><?php esc_html_e( 'Tu equipo', 'caaguazu-portal' ); ?></div>
 	<h2 class="promotur-h2"><?php esc_html_e( 'Equipo', 'caaguazu-portal' ); ?></h2>
@@ -61,7 +60,6 @@ $body = function () use ( $roles, $levels, $administra, $invitaciones ) {
 	<?php foreach ( $roles as $role_key => $def ) :
 		$users = promotur_team_members( $role_key, $administra );
 		if ( empty( $users ) ) { continue; }
-		$is_mini = ( 'promotur_mini' === $role_key );
 		?>
 		<h3 class="promotur-h3"><?php echo esc_html( $def['label'] ); ?> <span class="promotur-muted">(<?php echo count( $users ); ?>)</span></h3>
 		<div class="promotur-list">
@@ -76,26 +74,10 @@ $body = function () use ( $roles, $levels, $administra, $invitaciones ) {
 								<?php
 								/* translators: 1: publicadas, 2: total */
 								printf( esc_html__( '%1$d publicadas · %2$d en total', 'caaguazu-portal' ), $counts['publicadas'], $counts['total'] );
-								if ( $is_mini ) {
-									echo ' · ' . esc_html( PROMOTUR_Stats::level_label( $u['id'] ) );
-								}
 								?>
 							</span>
 						</span>
 					</div>
-					<?php if ( $is_mini ) : ?>
-						<div class="promotur-inline-form">
-							<span class="promotur-muted"><?php esc_html_e( 'Nivel de confianza:', 'caaguazu-portal' ); ?></span>
-							<select data-nivel-select>
-								<?php $cur = PROMOTUR_Stats::get_level( $u['id'] );
-								foreach ( $levels as $lk => $ll ) : ?>
-									<option value="<?php echo esc_attr( $lk ); ?>" <?php selected( $cur, $lk ); ?>><?php echo esc_html( $ll ); ?></option>
-								<?php endforeach; ?>
-							</select>
-							<button type="button" class="promotur-btn promotur-btn--ghost promotur-btn--small" data-nivel-save><?php esc_html_e( 'Guardar', 'caaguazu-portal' ); ?></button>
-							<span class="promotur-form-msg" data-form-msg aria-live="polite"></span>
-						</div>
-					<?php endif; ?>
 
 					<?php if ( $administra && (int) $u['id'] !== (int) caaguazu_account_id() ) : ?>
 						<?php $suspendida = isset( $u['status'] ) && 'active' !== $u['status']; ?>

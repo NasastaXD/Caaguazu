@@ -160,8 +160,9 @@ class CZUAPI_Auth {
 	/**
 	 * Guard: requiere token válido + capability en el panel `promotor`.
 	 *
-	 * El chequeo lo hace caaguazu-cuentas, no esta capa: los permisos tienen
-	 * dos ejes (rol y nivel de confianza) y esa lógica vive allá.
+	 * El chequeo lo hace caaguazu-cuentas, no esta capa: de qué capabilities
+	 * dispone una cuenta lo decide el rol que tiene en ese panel, y esa
+	 * lógica vive allá.
 	 *
 	 * @param string $cap
 	 * @return true|WP_REST_Response
@@ -243,9 +244,11 @@ class CZUAPI_Auth {
 	 * Perfil que consume la app.
 	 *
 	 * `permisos` es lo que la app usa para gatear la UI. Va resuelto del lado
-	 * servidor a propósito: los permisos dependen de DOS ejes —el rol del panel
-	 * y el nivel de confianza de la cuenta— y hacer que el cliente combine eso
-	 * es pedirle que reimplemente reglas que van a cambiar.
+	 * servidor a propósito: hacer que el cliente reimplemente de qué
+	 * capabilities depende cada botón es reimplementar una regla que va a
+	 * cambiar. No lleva `nivel`: existió un nivel de confianza por cuenta,
+	 * aparte del rol, que se sacó del panel — nadie lo pedía, y era una
+	 * segunda fuente de verdad sobre lo mismo que ya decidía el rol.
 	 *
 	 * @param int   $account_id
 	 * @param array $cuenta
@@ -262,17 +265,20 @@ class CZUAPI_Auth {
 			'nombre'   => $cuenta['display_name'] ? $cuenta['display_name'] : $cuenta['email'],
 			'email'    => $cuenta['email'],
 			'rol'      => $rol,
-			'nivel'    => class_exists( 'PROMOTUR_Stats' ) ? PROMOTUR_Stats::get_level( $account_id ) : '',
 			'permisos' => $this->permisos( $account_id ),
 		);
 	}
 
 	/**
-	 * Capabilities efectivas de la cuenta, ya combinando rol y nivel.
+	 * Capabilities efectivas de la cuenta.
 	 *
-	 * Los dos que salen del nivel de confianza y no del rol:
-	 *   - promotur_edit_published   → nivel Jr o superior
-	 *   - promotur_publish_destino  → nivel "De confianza"
+	 * `promotur_edit_published` no es una capability real del rol —no está en
+	 * `class-roles.php`—: es una sintetizada acá, resuelta con la misma regla
+	 * que usa el panel para decidir si editar una ficha ya publicada la
+	 * manda de nuevo a revisión (`PROMOTUR_Stats::can_edit_published()`), así
+	 * que la app no tiene que reimplementarla. `promotur_publish_destino`
+	 * también se agrega por acá para cubrir el bypass de administrador de
+	 * WP, que no pasa por `effective_caps()` porque no tiene cuenta.
 	 *
 	 * @param int $account_id
 	 * @return string[]

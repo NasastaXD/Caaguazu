@@ -136,12 +136,12 @@ Tres de ellas —Inventario, Artículos y Recorridos— hacen de lista y de deta
 | **Salida de campo** | `/captura` | `promotur_create_draft` | Captura offline: título, nota, foto y GPS quedan en el teléfono y se sincronizan cuando hay señal. |
 | **Cola de revisión** | `/revision[/<id>]` | `promotur_review_content` | Lo que espera revisión, con badge en el menú. Asignarse una ficha, aprobar, publicar o devolver con feedback (hay motivos de un clic). |
 | **Tareas** | `/tareas` | `promotur_view_own_tasks` | Encargos del equipo: reclamar y completar. Badge con las pendientes. |
-| **Equipo** | `/equipo` | `promotur_manage_team` | Quién es quién, su rol y su nivel de confianza. Cambiar el rol, suspender, sacar del panel, e invitar: crear enlaces de invitación, ver los que están abiertos y revocarlos. |
+| **Equipo** | `/equipo` | `promotur_manage_team` | Quién es quién y su rol. Cambiar el rol, suspender, sacar del panel, e invitar: crear enlaces de invitación, ver los que están abiertos y revocarlos. |
 | **Reportes** | `/reportes` | `promotur_view_reports` | Producción por autor y salud del contenido: fichas publicadas sin portada y fichas sin verificar hace más de seis meses. |
 | **Biblioteca** | `/biblioteca` | `upload_files` | La galería: grilla de fotos, subida de a tandas, nombre, descripción y crédito de cada una, y borrado —bloqueado si la foto es la portada de una ficha. Filtro por nombre y por «sólo las mías». |
 | **Estructura** | `/estructura` | `promotur_view_panel` (editar: `promotur_manage_structure`) | Categorías, zonas y etiquetas: cuántas fichas usa cada una, crear, renombrar en su lugar y borrar lo que no esté en uso. |
 | **Buscar** | `/buscar?q=` | `promotur_view_panel` | Búsqueda de fichas dentro del panel. |
-| **Mi perfil** | `/perfil` | `promotur_edit_profile` | La cuenta: nombre, correo, teléfono, foto y contraseña. Más el nivel de confianza y el portafolio de fichas publicadas. |
+| **Mi perfil** | `/perfil` | `promotur_edit_profile` | La cuenta: nombre, correo, teléfono, foto y contraseña. Más el portafolio de fichas publicadas. |
 | **Ayuda** | `/ayuda` | `promotur_view_panel` | Cómo se usa el panel. |
 
 ### El flujo editorial
@@ -182,16 +182,15 @@ Cuatro decisiones que conviene tener presentes:
 
 ### Quién publica sin pasar por revisión
 
-Conviene saberlo porque cambia quién mira la cola: **el paso de revisión no es obligatorio para todos.** `PROMOTUR_Stats::can_publish_directly()` deja publicar directo por dos caminos independientes:
+Conviene saberlo porque cambia quién mira la cola: **el paso de revisión no es obligatorio para todos.** `PROMOTUR_Stats::can_publish_directly()` deja publicar directo a quien tiene `promotur_publish_destino` —una capability del rol **Profesor**—. O sea: **todo Profesor publica lo suyo sin revisión**, y su contenido nunca entra a la cola; un Alumno, que no tiene esa capability, siempre pasa por revisión.
 
-1. **Tener `promotur_publish_destino`** — que es una capability del rol **Profesor**. O sea: **todo Profesor publica lo suyo sin revisión**, y su contenido nunca entra a la cola.
-2. **Tener nivel de confianza «De confianza»** — con lo que un Alumno, que no tiene esa capability, también publica directo.
+Hubo un segundo camino —un nivel de confianza por cuenta, que le daba autonomía a un Alumno puntual sin cambiarle el rol— que se sacó: nadie lo había pedido, y una capability por cuenta además del rol es una segunda fuente de verdad sobre lo mismo. Si algún día hace falta que un Alumno puntual publique directo, la forma es cambiarle el rol, no un atributo aparte.
 
-En los dos casos queda una entrada en el hilo de feedback («Publicación directa por nivel de confianza. Se hará una auditoría posterior») y su registro en auditoría, así que se puede revisar después — pero no antes.
+Publicar directo deja una entrada en el hilo de feedback y su registro en auditoría, así que se puede revisar después — pero no antes.
 
-La consecuencia práctica: **la cola de revisión sólo se llena con lo que escriben los Alumnos en nivel Aprendiz.** Si se quiere que un Profesor pase por revisión, hay que sacarle `promotur_publish_destino` del rol; si se quiere lo contrario para un Alumno puntual, se le sube el nivel desde Equipo.
+La consecuencia práctica: **la cola de revisión sólo se llena con lo que escriben los Alumnos.** Si se quiere que un Profesor pase por revisión, hay que sacarle `promotur_publish_destino` del rol.
 
-Lo mismo con editar lo ya publicado: `can_edit_published()` deja editar sin volver a revisión a quien revisa y a los niveles Jr y De confianza. Al resto, editar algo publicado lo devuelve a `en revisión` **sin bajarlo del aire**.
+Lo mismo con editar lo ya publicado: `can_edit_published()` deja editar sin volver a revisión a quien tiene `promotur_review_content` —Profesor—. Al resto, editar algo publicado lo devuelve a `en revisión` **sin bajarlo del aire**.
 
 Cada paso queda en el log de auditoría con quién, qué y cuándo, y la acción lleva el tipo adelante (`articulo_publicado`, `recorrido_enviado`) para que el registro siga diciendo qué se movió. Los estados tienen su pastilla de color, y el color viene del sistema de tokens (§5), no de un hex suelto.
 

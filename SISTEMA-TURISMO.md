@@ -235,8 +235,8 @@ Tres roles, definidos en `class-roles.php` como fuente única de verdad. **Toda 
 
 | Rol | Puede |
 |---|---|
-| **Promotor** | Todo: crear, editar, revisar, publicar, asignar tareas, curar destacados, moderar, gestionar equipo, ver reportes, gestionar biblioteca y estructura |
-| **Mini Promotor** | Crear borradores, editar sus fichas, ver sus tareas, editar su perfil |
+| **Profesor** | Todo: crear, editar, revisar, publicar, asignar tareas, curar destacados, moderar, gestionar equipo, ver reportes, gestionar biblioteca y estructura |
+| **Alumno** | Crear borradores, editar sus fichas, ver sus tareas, editar su perfil |
 | **Visitante** | Solo ver el panel y editar su perfil |
 
 Las 15 secciones del panel (`home`, `buscar`, `editor`, `captura`, `mis-contenidos`, `revision`, `tareas`, `curaduria`, `moderacion`, `equipo`, `reportes`, `biblioteca`, `estructura`, `perfil`, `ayuda`) están mapeadas cada una a la capability que requieren.
@@ -303,7 +303,7 @@ Por la URL viaja **solo un código sin significado**. Los datos de la persona (e
 **Reglas de negocio decididas:**
 
 - Un email que **ya tiene cuenta** en el portal sin vincular se **rechaza**, no se vincula solo. Vincular automáticamente por email sería la puerta de un robo de cuenta: quien controle esa dirección en el CEAD pasaría a manejar la cuenta existente con todos sus permisos. Un admin lo vincula a mano desde **Herramientas → Acceso desde el CEAD**.
-- Mapeo de roles: quien cursa entra como Mini Promotor, quien enseña como Promotor. Un rol que el CEAD mande y no caiga en el mapa se rechaza — no se inventa un permiso. **Desde v1.1.0 el mapa dejó de ser una constante de dos entradas**: el CEAD es un WordPress y manda roles de WordPress (`alumno`, `cead_alumno`, `subscriber`, `Docente`), ninguno de los cuales era `alumno_turismo`. Ahora los nombres se comparan normalizados (sin acentos, sin mayúsculas, sin el prefijo del colegio ni el sufijo del curso) y el mapa se edita desde **Herramientas → Acceso desde el CEAD**. Los roles administrativos del colegio siguen sin entrar, a propósito.
+- Mapeo de roles: quien cursa entra como Alumno, quien enseña como Profesor. Un rol que el CEAD mande y no caiga en el mapa se rechaza — no se inventa un permiso. **Desde v1.1.0 el mapa dejó de ser una constante de dos entradas**: el CEAD es un WordPress y manda roles de WordPress (`alumno`, `cead_alumno`, `subscriber`, `Docente`), ninguno de los cuales era `alumno_turismo`. Ahora los nombres se comparan normalizados (sin acentos, sin mayúsculas, sin el prefijo del colegio ni el sufijo del curso) y el mapa se edita desde **Herramientas → Acceso desde el CEAD**. Los roles administrativos del colegio siguen sin entrar, a propósito.
 - Entran al panel `promotor` que ya existe, no a uno aparte.
 - Las cuentas creadas por SSO llevan una contraseña aleatoria de 64 caracteres que nunca se muestra: la cuenta existe y entra por SSO, pero no hay ninguna contraseña real que adivinar.
 - Sesión **sin "recordarme"** — el acceso vive del vínculo con el CEAD.

@@ -239,7 +239,7 @@
 		render();
 	}
 
-	/* ---------- Gestión (tareas, nivel) ---------- */
+	/* ---------- Gestión (tareas) ---------- */
 	function initGestion() {
 		// Crear tarea.
 		var tform = document.querySelector('[data-tarea-form]');
@@ -272,18 +272,6 @@
 						btn.disabled = false;
 						decir(card.querySelector('[data-form-msg]'), i18n.error, 'is-error');
 					});
-				});
-			});
-		});
-		// Guardar nivel de confianza.
-		document.querySelectorAll('[data-user]').forEach(function (card) {
-			var save = card.querySelector('[data-nivel-save]');
-			if (!save) { return; }
-			save.addEventListener('click', function () {
-				var sel = card.querySelector('[data-nivel-select]');
-				var msg = card.querySelector('[data-form-msg]');
-				ajax('set_nivel', { user_id: card.getAttribute('data-user'), level: sel ? sel.value : '' }).then(function (r) {
-					if (msg) { msg.textContent = r.success ? (r.data.message || i18n.saved) : ((r.data && r.data.message) || i18n.error); msg.className = 'promotur-form-msg ' + (r.success ? 'is-success' : 'is-error'); }
 				});
 			});
 		});

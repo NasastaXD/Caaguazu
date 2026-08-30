@@ -32,11 +32,11 @@ $body = function () {
 		'recorridos'     => array( 'ruta',   __( 'Recorridos', 'caaguazu-portal' ),          __( 'Se arman eligiendo sitios del inventario —hasta nueve—, cada uno con su propio texto, audio o video, en el orden del paseo.', 'caaguazu-portal' ) ),
 		'revision'       => array( 'inbox',  __( 'Cola de revisión', 'caaguazu-portal' ),    __( 'La cola de lo que espera revisión: asignate una pieza, aprobala y publicala, o devolvela al autor con comentarios.', 'caaguazu-portal' ) ),
 		'tareas'         => array( 'tasks',  __( 'Tareas', 'caaguazu-portal' ),              __( 'Encargos con fecha límite. Los Alumnos pueden reclamar los que están disponibles y marcarlos como hechos.', 'caaguazu-portal' ) ),
-		'equipo'         => array( 'team',   __( 'Equipo', 'caaguazu-portal' ),              __( 'Quién entra al panel, con qué rol y su nivel de confianza. Cambiar el rol, suspender, sacar del panel, e invitar gente nueva.', 'caaguazu-portal' ) ),
+		'equipo'         => array( 'team',   __( 'Equipo', 'caaguazu-portal' ),              __( 'Quién entra al panel y con qué rol. Cambiar el rol, suspender, sacar del panel, e invitar gente nueva.', 'caaguazu-portal' ) ),
 		'reportes'       => array( 'chart',  __( 'Reportes', 'caaguazu-portal' ),            __( 'Producción por autor y salud del contenido: lo publicado sin portada, y lo que no se verifica hace más de seis meses.', 'caaguazu-portal' ) ),
 		'biblioteca'     => array( 'image',  __( 'Biblioteca', 'caaguazu-portal' ),          __( 'La galería de fotos del panel: subir de a tandas, describir, dar crédito y borrar.', 'caaguazu-portal' ) ),
 		'estructura'     => array( 'layout', __( 'Estructura', 'caaguazu-portal' ),          __( 'Las categorías y etiquetas de las fichas: crear, renombrar en su lugar, y borrar lo que no esté en uso.', 'caaguazu-portal' ) ),
-		'perfil'         => array( 'user',   __( 'Mi perfil', 'caaguazu-portal' ),           __( 'Tu cuenta —nombre, correo, teléfono, foto y contraseña—, tu nivel de confianza y el portafolio de lo que publicaste.', 'caaguazu-portal' ) ),
+		'perfil'         => array( 'user',   __( 'Mi perfil', 'caaguazu-portal' ),           __( 'Tu cuenta —nombre, correo, teléfono, foto y contraseña— y el portafolio de lo que publicaste.', 'caaguazu-portal' ) ),
 	);
 	?>
 	<div class="promotur-eyebrow"><?php esc_html_e( 'Cómo funciona', 'caaguazu-portal' ); ?></div>
@@ -55,7 +55,7 @@ $body = function () {
 			<span class="promotur-pill is-published"><?php esc_html_e( 'Publicado', 'caaguazu-portal' ); ?></span>
 		</p>
 		<p class="promotur-muted" style="margin:.6rem 0 0">
-			<?php esc_html_e( 'Solo lo aprobado por un Profesor llega a la app. La confianza se construye con cada aprobación: pasás de Aprendiz a Alumno Jr y luego a De confianza. Cada nivel da más autonomía, como editar algo publicado sin una nueva revisión y, en el último, publicar directamente.', 'caaguazu-portal' ); ?>
+			<?php esc_html_e( 'Solo lo aprobado por un Profesor llega a la app. Un Profesor publica directo, sin pasar por revisión, y también puede editar algo ya publicado sin que vuelva a la cola; un Alumno siempre pasa por revisión.', 'caaguazu-portal' ); ?>
 		</p>
 		<p class="promotur-muted" style="margin:.6rem 0 0">
 			<?php esc_html_e( 'Lo publicado también se puede despublicar, archivar o mandar a la papelera —y volver atrás desde ahí—, siempre en dos pasos: primero hay que sacarlo del aire antes de poder borrarlo.', 'caaguazu-portal' ); ?>

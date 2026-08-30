@@ -3,7 +3,7 @@
  * Plugin Name:       Caaguazú SSO CEAD
  * Plugin URI:        https://turismo.caaguazu.net
  * Description:       Acceso de un clic desde el panel del CEAD (curso de Servicios Turísticos) al Portal de Promotores Turísticos: el CEAD afirma quién es la persona, este plugin decide qué cuenta y qué rol le corresponden acá. No crea usuarios de WordPress ni usa su cookie — todo corre sobre el sistema de cuentas universal (caaguazu-cuentas). <strong>Se instala en caaguazu.net, no en el sitio del CEAD</strong> — ese lado lleva su propio plugin (cead-acad), que no depende de estos.
- * Version:           1.1.0
+ * Version:           1.1.1
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Requires Plugins:  caaguazu-cuentas, caaguazu-portal
@@ -16,7 +16,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'CEADSSO_VERSION', '1.1.0' );
+define( 'CEADSSO_VERSION', '1.1.1' );
 define( 'CEADSSO_FILE', __FILE__ );
 define( 'CEADSSO_DIR', plugin_dir_path( __FILE__ ) );
 define( 'CEADSSO_BASENAME', plugin_basename( __FILE__ ) );
