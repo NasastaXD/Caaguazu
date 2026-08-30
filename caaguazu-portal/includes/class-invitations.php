@@ -14,6 +14,24 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 class PROMOTUR_Invitations {
 
+	/**
+	 * Cuánto puede durar un enlace, en días. Un solo lugar para que el panel
+	 * y wp-admin ofrezcan las mismas opciones sin repetirlas cada uno por su
+	 * lado.
+	 *
+	 * @return array días => etiqueta
+	 */
+	public static function opciones_vencimiento() {
+		return array(
+			1   => __( '1 día', 'caaguazu-portal' ),
+			3   => __( '3 días', 'caaguazu-portal' ),
+			7   => __( '7 días', 'caaguazu-portal' ),
+			14  => __( '14 días', 'caaguazu-portal' ),
+			30  => __( '30 días', 'caaguazu-portal' ),
+			90  => __( '90 días', 'caaguazu-portal' ),
+		);
+	}
+
 	public static function table() {
 		global $wpdb;
 		return $wpdb->prefix . 'promotur_invitations';
@@ -45,7 +63,10 @@ class PROMOTUR_Invitations {
 		$role = array_key_exists( $args['role'], PROMOTUR_Roles::roles() ) ? $args['role'] : 'promotur_mini';
 		$count   = max( 1, min( 100, (int) $args['count'] ) );
 		$email   = $args['email'] ? sanitize_email( $args['email'] ) : null;
-		$expires = gmdate( 'Y-m-d H:i:s', time() + ( (int) $args['expires_days'] * DAY_IN_SECONDS ) );
+		// 1 a 365 días pase lo que pase: quien llame manda el número, pero acá
+		// no entra ni un enlace que vence en el pasado ni uno que dure años.
+		$dias    = max( 1, min( 365, (int) $args['expires_days'] ) );
+		$expires = gmdate( 'Y-m-d H:i:s', time() + ( $dias * DAY_IN_SECONDS ) );
 		$now     = current_time( 'mysql', 1 );
 		$by      = caaguazu_account_id(); // 0 si la crea un administrador de WP (bypass), no rompe el insert.
 

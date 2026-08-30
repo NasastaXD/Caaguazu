@@ -51,9 +51,9 @@ Cada ruta anterior responde **301** a su equivalente nueva, conservando la query
 
 La identidad **no es de WordPress**: corre entera sobre `caaguazu-cuentas` (tabla propia, sesión propia firmada, contraseñas bcrypt). Ningún promotor tiene usuario de WordPress. Los administradores de WP entran por su login de siempre gracias al bypass de ese plugin.
 
-Tres roles, y la UI se gatea **por capability, nunca por rol**:
+Tres roles —**Profesor** (`promotur_promotor`), **Alumno** (`promotur_mini`) y **Visitante** (`promotur_visitante`)—, y la UI se gatea **por capability, nunca por rol**. Los nombres son de la UI; la clave interna del rol y sus capabilities no cambiaron:
 
-| Capability | Promotor | Mini Promotor | Visitante |
+| Capability | Profesor | Alumno | Visitante |
 | --- | :---: | :---: | :---: |
 | `promotur_view_panel` | ● | ● | ● |
 | `promotur_edit_profile` | ● | ● | ● |
@@ -184,16 +184,26 @@ Cuatro decisiones que conviene tener presentes:
 
 Conviene saberlo porque cambia quién mira la cola: **el paso de revisión no es obligatorio para todos.** `PROMOTUR_Stats::can_publish_directly()` deja publicar directo por dos caminos independientes:
 
-1. **Tener `promotur_publish_destino`** — que es una capability del rol **Promotor**. O sea: **todo Promotor publica lo suyo sin revisión**, y su contenido nunca entra a la cola.
-2. **Tener nivel de confianza «De confianza»** — con lo que un Mini Promotor, que no tiene esa capability, también publica directo.
+1. **Tener `promotur_publish_destino`** — que es una capability del rol **Profesor**. O sea: **todo Profesor publica lo suyo sin revisión**, y su contenido nunca entra a la cola.
+2. **Tener nivel de confianza «De confianza»** — con lo que un Alumno, que no tiene esa capability, también publica directo.
 
 En los dos casos queda una entrada en el hilo de feedback («Publicación directa por nivel de confianza. Se hará una auditoría posterior») y su registro en auditoría, así que se puede revisar después — pero no antes.
 
-La consecuencia práctica: **la cola de revisión sólo se llena con lo que escriben los Mini Promotores en nivel Aprendiz.** Si se quiere que un Promotor pase por revisión, hay que sacarle `promotur_publish_destino` del rol; si se quiere lo contrario para un Mini Promotor puntual, se le sube el nivel desde Equipo.
+La consecuencia práctica: **la cola de revisión sólo se llena con lo que escriben los Alumnos en nivel Aprendiz.** Si se quiere que un Profesor pase por revisión, hay que sacarle `promotur_publish_destino` del rol; si se quiere lo contrario para un Alumno puntual, se le sube el nivel desde Equipo.
 
 Lo mismo con editar lo ya publicado: `can_edit_published()` deja editar sin volver a revisión a quien revisa y a los niveles Jr y De confianza. Al resto, editar algo publicado lo devuelve a `en revisión` **sin bajarlo del aire**.
 
 Cada paso queda en el log de auditoría con quién, qué y cuándo, y la acción lleva el tipo adelante (`articulo_publicado`, `recorrido_enviado`) para que el registro siga diciendo qué se movió. Los estados tienen su pastilla de color, y el color viene del sistema de tokens (§5), no de un hex suelto.
+
+### Invitaciones: el enlace no se pierde
+
+El registro es invite-only: `PROMOTUR_Invitations` guarda cada invitación en su propia tabla (`{prefijo}promotur_invitations`), con el rol, cuándo vence y el token en claro guardado en `metadata` —no sólo su hash— justo para poder reconstruir el enlace (`registration_url()` + `plain_token()`) cada vez que haga falta, no una sola vez.
+
+Eso importa porque antes el enlace recién creado sólo se mostraba una vez, adentro de un mensaje flash con 60 segundos de vida (`promotur_flash()`, un transient que se borra al leerse): si no se llegaba a copiar a tiempo, o la página se recargaba, el enlace se perdía para siempre aunque la invitación siguiera siendo válida — no había forma de volver a verlo sin ir a la base de datos. Ahora **cada invitación de la lista «Invitaciones abiertas» muestra su enlace, con un botón de copiar, todo el tiempo que esté abierta** — no sólo en el momento de crearla.
+
+El tiempo de validez es elegible al crear (`PROMOTUR_Invitations::opciones_vencimiento()`: 1, 3, 7, 14, 30 o 90 días — un solo lugar, para que el panel y wp-admin ofrezcan las mismas opciones), y `create()` lo acota entre 1 y 365 días pase lo que pase, aunque quien llame mande otra cosa.
+
+**wp-admin también puede invitar** (`Portal Turismo → Invitaciones`, gateado por `promotur_manage_team`): crea, lista y revoca sobre la misma tabla, sin depender de un usuario de WordPress —`invited_by` queda en 0 cuando la crea un administrador de WP, que es el mismo bypass que ya usaba el resto del panel—. No es volver a lo que se sacó de wp-admin (ver «Nada de lo que hace el equipo pasa por WordPress», en §2): «Usuarios» estaba roto porque operaba sobre usuarios de WordPress que los promotores ya no tienen; invitar no toca usuarios de WordPress en absoluto, sólo esta tabla propia.
 
 ### La ubicación de una ficha
 

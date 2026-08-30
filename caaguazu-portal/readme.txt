@@ -3,7 +3,7 @@ Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 3.6.3
+Stable tag: 3.7.0
 License: GPLv2 or later
 
 Panel autenticado tipo app (PWA) bajo /turismo-panel, con enrutador propio, login propio, roles y flujo editorial para las tres cosas que la app muestra: fichas del inventario turístico, artículos y recorridos.
@@ -26,7 +26,7 @@ equipo (roles, suspensión, invitaciones) tienen pantalla ahí. Lo único que
 queda en wp-admin es el registro de auditoría y las actualizaciones del
 plugin, y ninguna de las dos cosas la necesita nadie del equipo.
 
-Roles: Promotor, Mini Promotor, Visitante (capabilities `promotur_*`).
+Roles: Profesor, Alumno, Visitante (capabilities `promotur_*`).
 
 == Instalación ==
 
@@ -57,6 +57,29 @@ llamen los tags.
 * Repo privado: definir `PROMOTUR_GITHUB_TOKEN` (PAT de solo lectura) en `wp-config.php`.
 
 == Changelog ==
+
+= 3.7.0 =
+* **Promotor pasa a llamarse Profesor, y Mini Promotor pasa a llamarse
+  Alumno.** Sólo el nombre que se ve: la clave interna del rol
+  (`promotur_promotor`, `promotur_mini`) y sus capabilities no cambiaron, así
+  que no hace falta reasignarle el rol a nadie.
+* **Las invitaciones se arreglan de raíz.** El enlace recién creado sólo se
+  mostraba una vez, adentro de un mensaje que se borraba solo a los 60
+  segundos: si no se llegaba a copiar a tiempo, o la página se recargaba, se
+  perdía para siempre aunque la invitación siguiera siendo válida — no había
+  forma de volver a verlo sin ir a la base de datos. Ahora cada invitación de
+  «Invitaciones abiertas» muestra su enlace con un botón de copiar, todo el
+  tiempo que esté abierta, no sólo al crearla.
+* **El tiempo de validez ahora se elige** (1, 3, 7, 14, 30 o 90 días) en vez
+  de estar fijo en 14.
+* El formulario de invitar ya no se le mostraba a cualquiera que entrara a
+  Equipo —el servidor lo rechazaba igual, pero como un error confuso—: ahora
+  sólo lo ve quien tiene permiso.
+* **Invitaciones también desde wp-admin** (`Portal Turismo → Invitaciones`):
+  crear, listar y revocar, sin depender de un usuario de WordPress. No es
+  volver a lo que se sacó de wp-admin en su momento —«Usuarios» operaba sobre
+  usuarios de WordPress que los promotores ya no tienen; invitar no toca
+  usuarios de WordPress en absoluto, sólo la tabla propia de invitaciones—.
 
 = 3.6.3 =
 * Se saca la ayuda de «Descripción» en Categorías («una o dos líneas; encabeza

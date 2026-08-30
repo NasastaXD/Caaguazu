@@ -60,8 +60,8 @@ class PROMOTUR_Roles {
 		);
 
 		return array(
-			'promotur_promotor'  => array( 'label' => __( 'Promotor', 'caaguazu-portal' ), 'caps' => $promotor ),
-			'promotur_mini'      => array( 'label' => __( 'Mini Promotor', 'caaguazu-portal' ), 'caps' => $mini ),
+			'promotur_promotor'  => array( 'label' => __( 'Profesor', 'caaguazu-portal' ), 'caps' => $promotor ),
+			'promotur_mini'      => array( 'label' => __( 'Alumno', 'caaguazu-portal' ), 'caps' => $mini ),
 			'promotur_visitante' => array( 'label' => __( 'Visitante', 'caaguazu-portal' ), 'caps' => $visitante ),
 		);
 	}

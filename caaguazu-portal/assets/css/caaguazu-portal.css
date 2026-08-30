@@ -831,6 +831,20 @@ html.promotur-no-splash .promotur-splash { display: none; }
 .promotur-termino__nombre .promotur-form-msg { flex: 1 1 100%; font-weight: 400; }
 .promotur-termino__uso { display: flex; align-items: center; gap: 10px; padding-top: 3px; }
 
+/* Una invitación abierta: el nombre del rol y el vencimiento van en su fila de
+   siempre, y el enlace —largo, no cabe al lado de nada— en la suya propia
+   debajo, a todo lo ancho. */
+.promotur-termino--invite { flex-direction: column; align-items: stretch; gap: 8px; }
+.promotur-termino__fila { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+
+/* Un campo de sólo lectura con su botón de copiar al lado. El input no se
+   edita —es para seleccionar y copiar, no para escribir— pero se deja
+   enfocable y de ancho fijo en monoespaciada: un token o una URL larga se lee
+   mejor sin que las letras cambien de ancho entre sí. */
+.promotur-copiar { display: flex; gap: 8px; }
+.promotur-copiar input { flex: 1 1 auto; min-width: 0; font-size: .82rem; background: var(--hueco); }
+.promotur-copiar button[data-copiar-listo] { border-color: var(--alza); color: var(--alza); }
+
 /* Un enlace suelto al pie de una sección. Va con alto de blanco tocable: en el
    teléfono un renglón de texto es un blanco de 17px. */
 .promotur-nota-enlace { display: inline-flex; align-items: center; min-height: 44px; }

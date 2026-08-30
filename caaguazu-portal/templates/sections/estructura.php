@@ -25,7 +25,7 @@ $body = function () use ( $grupos, $puede ) {
 
 	<?php if ( ! $puede ) : ?>
 		<div class="promotur-card promotur-empty-box">
-			<p><?php esc_html_e( 'Esto lo organiza un Promotor. Podés ver cómo está armado, pero no cambiarlo.', 'caaguazu-portal' ); ?></p>
+			<p><?php esc_html_e( 'Esto lo organiza un Profesor. Podés ver cómo está armado, pero no cambiarlo.', 'caaguazu-portal' ); ?></p>
 		</div>
 	<?php endif; ?>
 

@@ -32,7 +32,7 @@ class PROMOTUR_Stats {
 	public static function levels() {
 		return array(
 			'aprendiz'  => __( 'Aprendiz', 'caaguazu-portal' ),
-			'jr'        => __( 'Promotor Jr', 'caaguazu-portal' ),
+			'jr'        => __( 'Alumno Jr', 'caaguazu-portal' ),
 			'confianza' => __( 'De confianza', 'caaguazu-portal' ),
 		);
 	}

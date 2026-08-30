@@ -31,7 +31,7 @@ $body = function () {
 		'articulos'      => array( 'nota',   __( 'Artículos', 'caaguazu-portal' ),           __( 'Las notas que la app muestra: título, foto de portada, entradilla, cuerpo y fuentes. Pasan por el mismo flujo de revisión que una ficha.', 'caaguazu-portal' ) ),
 		'recorridos'     => array( 'ruta',   __( 'Recorridos', 'caaguazu-portal' ),          __( 'Se arman eligiendo sitios del inventario —hasta nueve—, cada uno con su propio texto, audio o video, en el orden del paseo.', 'caaguazu-portal' ) ),
 		'revision'       => array( 'inbox',  __( 'Cola de revisión', 'caaguazu-portal' ),    __( 'La cola de lo que espera revisión: asignate una pieza, aprobala y publicala, o devolvela al autor con comentarios.', 'caaguazu-portal' ) ),
-		'tareas'         => array( 'tasks',  __( 'Tareas', 'caaguazu-portal' ),              __( 'Encargos con fecha límite. Los Mini Promotores pueden reclamar los que están disponibles y marcarlos como hechos.', 'caaguazu-portal' ) ),
+		'tareas'         => array( 'tasks',  __( 'Tareas', 'caaguazu-portal' ),              __( 'Encargos con fecha límite. Los Alumnos pueden reclamar los que están disponibles y marcarlos como hechos.', 'caaguazu-portal' ) ),
 		'equipo'         => array( 'team',   __( 'Equipo', 'caaguazu-portal' ),              __( 'Quién entra al panel, con qué rol y su nivel de confianza. Cambiar el rol, suspender, sacar del panel, e invitar gente nueva.', 'caaguazu-portal' ) ),
 		'reportes'       => array( 'chart',  __( 'Reportes', 'caaguazu-portal' ),            __( 'Producción por autor y salud del contenido: lo publicado sin portada, y lo que no se verifica hace más de seis meses.', 'caaguazu-portal' ) ),
 		'biblioteca'     => array( 'image',  __( 'Biblioteca', 'caaguazu-portal' ),          __( 'La galería de fotos del panel: subir de a tandas, describir, dar crédito y borrar.', 'caaguazu-portal' ) ),
@@ -42,7 +42,7 @@ $body = function () {
 	<div class="promotur-eyebrow"><?php esc_html_e( 'Cómo funciona', 'caaguazu-portal' ); ?></div>
 	<h2 class="promotur-h2"><?php esc_html_e( '¿Qué hace cada sección?', 'caaguazu-portal' ); ?></h2>
 	<p class="promotur-muted" style="max-width:60ch">
-		<?php esc_html_e( 'Este es el panel de los Promotores Turísticos: acá se escribe, se revisa y se publica todo lo que la app de Caaguazú muestra —fichas de destinos y eventos, artículos y recorridos—. Los Mini Promotores crean; los Promotores revisan y publican.', 'caaguazu-portal' ); ?>
+		<?php esc_html_e( 'Este es el panel de los Promotores Turísticos: acá se escribe, se revisa y se publica todo lo que la app de Caaguazú muestra —fichas de destinos y eventos, artículos y recorridos—. Los Alumnos crean; los Profesores revisan y publican.', 'caaguazu-portal' ); ?>
 	</p>
 
 	<h3 class="promotur-h3"><?php esc_html_e( 'El flujo editorial', 'caaguazu-portal' ); ?></h3>
@@ -55,7 +55,7 @@ $body = function () {
 			<span class="promotur-pill is-published"><?php esc_html_e( 'Publicado', 'caaguazu-portal' ); ?></span>
 		</p>
 		<p class="promotur-muted" style="margin:.6rem 0 0">
-			<?php esc_html_e( 'Solo lo aprobado por un Promotor llega a la app. La confianza se construye con cada aprobación: pasás de Aprendiz a Promotor Jr y luego a De confianza. Cada nivel da más autonomía, como editar algo publicado sin una nueva revisión y, en el último, publicar directamente.', 'caaguazu-portal' ); ?>
+			<?php esc_html_e( 'Solo lo aprobado por un Profesor llega a la app. La confianza se construye con cada aprobación: pasás de Aprendiz a Alumno Jr y luego a De confianza. Cada nivel da más autonomía, como editar algo publicado sin una nueva revisión y, en el último, publicar directamente.', 'caaguazu-portal' ); ?>
 		</p>
 		<p class="promotur-muted" style="margin:.6rem 0 0">
 			<?php esc_html_e( 'Lo publicado también se puede despublicar, archivar o mandar a la papelera —y volver atrás desde ahí—, siempre en dos pasos: primero hay que sacarlo del aire antes de poder borrarlo.', 'caaguazu-portal' ); ?>

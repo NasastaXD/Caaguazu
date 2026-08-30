@@ -37,16 +37,27 @@ class PROMOTUR_Auth {
 
 	/**
 	 * Genera un link de invitación, desde la sección Equipo del panel.
+	 *
+	 * No manda el enlace por el flash: un transient de 60 segundos que se
+	 * borra al leerse es plata contada para copiar una URL larga en el
+	 * teléfono, y si la página se recarga antes de copiarla se pierde sin
+	 * dejar rastro (aunque la invitación siga válida). El enlace se reconstruye
+	 * desde la metadata cada vez que hace falta —ver
+	 * PROMOTUR_Invitations::plain_token()— así que la lista de «Invitaciones
+	 * abiertas» lo muestra de nuevo cada vez que se entra a la pantalla, con
+	 * su propio botón de copiar, no sólo la primera vez.
 	 */
 	public function handle_create_invite() {
 		if ( ! caaguazu_account_can( 'promotor', 'promotur_manage_team' ) ) {
 			wp_die( esc_html__( 'No tenés autorización para hacer esto.', 'caaguazu-portal' ) );
 		}
-		$role = isset( $_POST['role'] ) ? sanitize_key( wp_unslash( $_POST['role'] ) ) : 'promotur_mini';
-		$tokens = PROMOTUR_Invitations::create( array( 'role' => $role, 'expires_days' => 14, 'count' => 1 ) );
-		$link   = PROMOTUR_Invitations::registration_url( $tokens[0] );
-		/* translators: %s = enlace de invitación */
-		promotur_flash( sprintf( __( 'Enlace de invitación creado. Es válido durante 14 días: %s', 'caaguazu-portal' ), $link ), 'success' );
+		$role    = isset( $_POST['role'] ) ? sanitize_key( wp_unslash( $_POST['role'] ) ) : 'promotur_mini';
+		$dias    = isset( $_POST['expires_days'] ) ? (int) $_POST['expires_days'] : 14;
+		if ( ! array_key_exists( $dias, PROMOTUR_Invitations::opciones_vencimiento() ) ) {
+			$dias = 14;
+		}
+		PROMOTUR_Invitations::create( array( 'role' => $role, 'expires_days' => $dias, 'count' => 1 ) );
+		promotur_flash( __( 'Enlace de invitación creado. Lo tenés abajo, en «Invitaciones abiertas».', 'caaguazu-portal' ), 'success' );
 		wp_safe_redirect( promotur_url( 'panel/equipo' ) );
 		exit;
 	}

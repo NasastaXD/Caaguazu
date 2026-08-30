@@ -31,10 +31,20 @@ class PROMOTUR_Admin {
 	/** Capability para la página de Actualizaciones (la tienen los administradores). */
 	const CAP_UPDATES = 'update_plugins';
 
+	/**
+	 * Capability de la página de Invitaciones. Es la misma que gatea la
+	 * sección Equipo del panel (`PROMOTUR_Equipo::CAP`): quien puede invitar
+	 * desde ahí puede invitar desde acá. No se referencia esa constante
+	 * directamente para no atarse al orden en que se cargan los `require` del
+	 * plugin — es la misma cadena, nombrada dos veces a propósito.
+	 */
+	const CAP_TEAM = 'promotur_manage_team';
+
 	private function __construct() {
 		add_action( 'admin_menu', array( $this, 'menu' ) );
 		add_action( 'admin_menu', array( $this, 'ocultar_tags_nativas' ), 999 );
 		add_action( 'admin_post_promotur_admin_updates', array( $this, 'handle_updates' ) );
+		add_action( 'admin_post_promotur_admin_invite', array( $this, 'handle_invite' ) );
 	}
 
 	/**
@@ -55,15 +65,30 @@ class PROMOTUR_Admin {
 
 	/* ----- Menú ----- */
 	public function menu() {
-		if ( ! current_user_can( self::CAP ) && ! current_user_can( self::CAP_UPDATES ) ) { return; }
+		$puede_logs         = current_user_can( self::CAP );
+		$puede_updates      = current_user_can( self::CAP_UPDATES );
+		$puede_invitaciones = current_user_can( self::CAP_TEAM );
+		if ( ! $puede_logs && ! $puede_updates && ! $puede_invitaciones ) { return; }
 
-		// El menú padre y su slug por defecto se gatean por la capability que tenga el rol.
-		$parent_cap = current_user_can( self::CAP ) ? self::CAP : self::CAP_UPDATES;
-		$parent_cb  = current_user_can( self::CAP ) ? array( $this, 'render_logs' ) : array( $this, 'render_updates' );
+		// El menú padre y su slug por defecto se gatean por la primera
+		// capability que tenga el rol, en este orden de preferencia.
+		if ( $puede_logs ) {
+			$parent_cap = self::CAP;
+			$parent_cb  = array( $this, 'render_logs' );
+		} elseif ( $puede_updates ) {
+			$parent_cap = self::CAP_UPDATES;
+			$parent_cb  = array( $this, 'render_updates' );
+		} else {
+			$parent_cap = self::CAP_TEAM;
+			$parent_cb  = array( $this, 'render_invitaciones' );
+		}
 		add_menu_page( __( 'Portal Turismo', 'caaguazu-portal' ), __( 'Portal Turismo', 'caaguazu-portal' ), $parent_cap, 'promotur', $parent_cb, 'dashicons-palmtree', 57 );
 
-		if ( current_user_can( self::CAP ) ) {
+		if ( $puede_logs ) {
 			add_submenu_page( 'promotur', __( 'Registros', 'caaguazu-portal' ), __( 'Registros', 'caaguazu-portal' ), self::CAP, 'promotur', array( $this, 'render_logs' ) );
+		}
+		if ( $puede_invitaciones ) {
+			add_submenu_page( 'promotur', __( 'Invitaciones', 'caaguazu-portal' ), __( 'Invitaciones', 'caaguazu-portal' ), self::CAP_TEAM, 'promotur-invitaciones', array( $this, 'render_invitaciones' ) );
 		}
 		add_submenu_page( 'promotur', __( 'Actualizaciones', 'caaguazu-portal' ), __( 'Actualizaciones', 'caaguazu-portal' ), self::CAP_UPDATES, 'promotur-updates', array( $this, 'render_updates' ) );
 	}
@@ -143,6 +168,162 @@ class PROMOTUR_Admin {
 			<?php endif; ?>
 		</div>
 		<?php
+	}
+
+	/* ================= INVITACIONES =================
+	 *
+	 * Vive acá además de en Equipo (panel) porque no todo el que necesita
+	 * invitar entra al panel: alguien que recién está armando el equipo puede
+	 * preferir wp-admin, y esto no depende de usuarios de WordPress —inserta
+	 * en la misma tabla custom que ya usa el panel, con `invited_by` en 0
+	 * cuando lo crea un administrador de WP—, así que reabrirlo acá no repite
+	 * el error de «Usuarios» (ver la cabecera de este archivo).
+	 */
+	private function guard_invitaciones() {
+		if ( ! current_user_can( self::CAP_TEAM ) ) {
+			wp_die( esc_html__( 'No tenés autorización para hacer esto.', 'caaguazu-portal' ) );
+		}
+	}
+
+	public function render_invitaciones() {
+		$this->guard_invitaciones();
+		$roles        = PROMOTUR_Roles::roles();
+		$vencimientos = PROMOTUR_Invitations::opciones_vencimiento();
+		?>
+		<div class="wrap">
+			<h1><?php esc_html_e( 'Invitaciones', 'caaguazu-portal' ); ?></h1>
+			<?php $this->show_notice(); ?>
+
+			<h2><?php esc_html_e( 'Invitar a alguien', 'caaguazu-portal' ); ?></h2>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+				<?php wp_nonce_field( 'promotur_admin_invite' ); ?>
+				<input type="hidden" name="action" value="promotur_admin_invite">
+				<input type="hidden" name="op" value="create">
+				<table class="form-table"><tbody>
+					<tr>
+						<th><label for="promotur-invite-role"><?php esc_html_e( 'Rol', 'caaguazu-portal' ); ?></label></th>
+						<td>
+							<select id="promotur-invite-role" name="role">
+								<?php foreach ( $roles as $rk => $rd ) : ?>
+									<option value="<?php echo esc_attr( $rk ); ?>" <?php selected( 'promotur_mini', $rk ); ?>><?php echo esc_html( $rd['label'] ); ?></option>
+								<?php endforeach; ?>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<th><label for="promotur-invite-dias"><?php esc_html_e( 'Válido por', 'caaguazu-portal' ); ?></label></th>
+						<td>
+							<select id="promotur-invite-dias" name="expires_days">
+								<?php foreach ( $vencimientos as $dias => $etiqueta ) : ?>
+									<option value="<?php echo esc_attr( $dias ); ?>" <?php selected( 14, $dias ); ?>><?php echo esc_html( $etiqueta ); ?></option>
+								<?php endforeach; ?>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<th><label for="promotur-invite-email"><?php esc_html_e( 'Email (opcional)', 'caaguazu-portal' ); ?></label></th>
+						<td><input type="email" id="promotur-invite-email" name="email" class="regular-text"></td>
+					</tr>
+				</tbody></table>
+				<p><button class="button button-primary"><?php esc_html_e( 'Crear enlace', 'caaguazu-portal' ); ?></button></p>
+			</form>
+
+			<h2><?php esc_html_e( 'Invitaciones abiertas', 'caaguazu-portal' ); ?></h2>
+			<?php
+			$abiertas = class_exists( 'PROMOTUR_Equipo' ) ? PROMOTUR_Equipo::invitaciones_abiertas() : array();
+			if ( empty( $abiertas ) ) :
+				?>
+				<p><?php esc_html_e( 'No hay ninguna esperando.', 'caaguazu-portal' ); ?></p>
+			<?php else : ?>
+				<table class="widefat striped" style="max-width:900px">
+					<thead><tr>
+						<th><?php esc_html_e( 'Rol', 'caaguazu-portal' ); ?></th>
+						<th><?php esc_html_e( 'Vence', 'caaguazu-portal' ); ?></th>
+						<th><?php esc_html_e( 'Enlace', 'caaguazu-portal' ); ?></th>
+						<th></th>
+					</tr></thead>
+					<tbody>
+						<?php foreach ( $abiertas as $inv ) :
+							$enlace = PROMOTUR_Invitations::registration_url( PROMOTUR_Invitations::plain_token( $inv ) );
+							?>
+							<tr>
+								<td><?php echo esc_html( PROMOTUR_Roles::label( $inv['role'] ) ); ?></td>
+								<td><?php echo esc_html( date_i18n( 'Y-m-d', strtotime( $inv['expires_at'] ) ) ); ?></td>
+								<td>
+									<?php if ( $enlace ) : ?>
+										<input type="text" readonly value="<?php echo esc_attr( $enlace ); ?>" style="width:340px" onclick="this.select()">
+										<button type="button" class="button" data-promotur-copiar="<?php echo esc_attr( $enlace ); ?>"><?php esc_html_e( 'Copiar', 'caaguazu-portal' ); ?></button>
+									<?php endif; ?>
+								</td>
+								<td>
+									<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline"
+										  onsubmit="return confirm('<?php echo esc_js( __( 'El enlace deja de servir. ¿Seguimos?', 'caaguazu-portal' ) ); ?>');">
+										<?php wp_nonce_field( 'promotur_admin_invite' ); ?>
+										<input type="hidden" name="action" value="promotur_admin_invite">
+										<input type="hidden" name="op" value="revoke">
+										<input type="hidden" name="invitacion" value="<?php echo esc_attr( $inv['id'] ); ?>">
+										<button type="submit" class="button"><?php esc_html_e( 'Revocar', 'caaguazu-portal' ); ?></button>
+									</form>
+								</td>
+							</tr>
+						<?php endforeach; ?>
+					</tbody>
+				</table>
+			<?php endif; ?>
+		</div>
+		<script>
+		// Un botón de copiar mínimo: esta pantalla de wp-admin no carga el
+		// bundle del panel (ese sólo se encola en las rutas del panel), así
+		// que no hay un initCopiar() del que colgarse acá.
+		document.querySelectorAll('[data-promotur-copiar]').forEach(function (boton) {
+			boton.addEventListener('click', function () {
+				var texto = boton.getAttribute('data-promotur-copiar');
+				var listo = function () {
+					var original = boton.textContent;
+					boton.textContent = '<?php echo esc_js( __( 'Copiado', 'caaguazu-portal' ) ); ?>';
+					setTimeout(function () { boton.textContent = original; }, 1600);
+				};
+				if (navigator.clipboard && navigator.clipboard.writeText) {
+					navigator.clipboard.writeText(texto).then(listo, function () {
+						var caja = document.createElement('textarea');
+						caja.value = texto; caja.style.position = 'fixed'; caja.style.opacity = '0';
+						document.body.appendChild(caja); caja.select();
+						try { document.execCommand('copy'); listo(); } catch (e) {}
+						document.body.removeChild(caja);
+					});
+				}
+			});
+		});
+		</script>
+		<?php
+	}
+
+	public function handle_invite() {
+		$this->guard_invitaciones();
+		check_admin_referer( 'promotur_admin_invite' );
+		$op = sanitize_key( wp_unslash( $_POST['op'] ?? '' ) );
+
+		if ( 'create' === $op ) {
+			$role  = isset( $_POST['role'] ) ? sanitize_key( wp_unslash( $_POST['role'] ) ) : 'promotur_mini';
+			$dias  = isset( $_POST['expires_days'] ) ? (int) $_POST['expires_days'] : 14;
+			if ( ! array_key_exists( $dias, PROMOTUR_Invitations::opciones_vencimiento() ) ) {
+				$dias = 14;
+			}
+			$email = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
+			PROMOTUR_Invitations::create( array( 'role' => $role, 'expires_days' => $dias, 'email' => $email, 'count' => 1 ) );
+			$this->notice( __( 'Enlace de invitación creado. Lo tenés abajo, en «Invitaciones abiertas».', 'caaguazu-portal' ) );
+		} elseif ( 'revoke' === $op ) {
+			$id = isset( $_POST['invitacion'] ) ? (int) $_POST['invitacion'] : 0;
+			if ( $id && PROMOTUR_Invitations::get( $id ) ) {
+				PROMOTUR_Invitations::revoke( $id );
+				$this->notice( __( 'Invitación revocada. Ese enlace ya no sirve.', 'caaguazu-portal' ) );
+			} else {
+				$this->notice( __( 'Esa invitación ya no existe.', 'caaguazu-portal' ), 'error' );
+			}
+		}
+
+		wp_safe_redirect( admin_url( 'admin.php?page=promotur-invitaciones' ) );
+		exit;
 	}
 
 	/* ================= ACTUALIZACIONES ================= */

@@ -77,7 +77,55 @@
 		initReview();
 		initGestion();
 		initCaptura();
+		initCopiar();
 	});
+
+	/**
+	 * Copia texto al portapapeles, con caída a un método que funciona en
+	 * cualquier navegador (incluidos los que no dan `navigator.clipboard`
+	 * fuera de HTTPS o en un iframe). Compartido por cualquier botón «Copiar»
+	 * del panel.
+	 */
+	function copiarAlPortapapeles(texto, alTerminar) {
+		if (navigator.clipboard && navigator.clipboard.writeText) {
+			navigator.clipboard.writeText(texto).then(alTerminar, function () { copiarConTextarea(texto, alTerminar); });
+		} else {
+			copiarConTextarea(texto, alTerminar);
+		}
+	}
+	function copiarConTextarea(texto, alTerminar) {
+		var caja = document.createElement('textarea');
+		caja.value = texto;
+		caja.setAttribute('readonly', '');
+		caja.style.position = 'fixed';
+		caja.style.opacity = '0';
+		document.body.appendChild(caja);
+		caja.select();
+		try { document.execCommand('copy'); alTerminar(); } catch (e) { /* sin portapapeles: el texto queda seleccionado para copiar a mano */ }
+		document.body.removeChild(caja);
+	}
+
+	/* ---------- Botones «Copiar» (enlaces de invitación, y los que vengan) ---------- */
+	function initCopiar() {
+		document.querySelectorAll('[data-copiar]').forEach(function (caja) {
+			var input = caja.querySelector('[data-copiar-valor]');
+			var boton = caja.querySelector('[data-copiar-boton]');
+			if (!input || !boton) { return; }
+			var textoOriginal = boton.textContent;
+			boton.addEventListener('click', function () {
+				input.select();
+				input.setSelectionRange(0, input.value.length); // iOS necesita esto además de select()
+				copiarAlPortapapeles(input.value, function () {
+					boton.textContent = i18n.copied || 'Copiado';
+					boton.setAttribute('data-copiar-listo', '1');
+					setTimeout(function () {
+						boton.textContent = textoOriginal;
+						boton.removeAttribute('data-copiar-listo');
+					}, 1600);
+				});
+			});
+		});
+	}
 
 	/* ---------- Salida de campo (captura offline) ---------- */
 	function initCaptura() {

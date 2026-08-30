@@ -211,8 +211,24 @@ class PROMOTUR_Equipo {
 	const CAP = 'promotur_manage_team';
 	public static function invitaciones_abiertas() {
 		return array(
-			array( 'id' => 3, 'role' => 'promotur_mini', 'expires_at' => gmdate( 'Y-m-d H:i:s', time() + 9 * DAY_IN_SECONDS ) ),
+			array(
+				'id' => 3, 'role' => 'promotur_mini',
+				'expires_at' => gmdate( 'Y-m-d H:i:s', time() + 9 * DAY_IN_SECONDS ),
+				'metadata'   => json_encode( array( 'token' => 'token-de-muestra' ) ), // phpcs:ignore WordPress.WP.AlternativeFunctions.json_encode_json_encode
+			),
 		);
+	}
+}
+class PROMOTUR_Invitations {
+	public static function opciones_vencimiento() {
+		return array( 1 => '1 día', 3 => '3 días', 7 => '7 días', 14 => '14 días', 30 => '30 días', 90 => '90 días' );
+	}
+	public static function plain_token( $row ) {
+		$meta = json_decode( $row['metadata'] ?? '', true );
+		return is_array( $meta ) && ! empty( $meta['token'] ) ? $meta['token'] : '';
+	}
+	public static function registration_url( $token ) {
+		return $token ? promotur_url( 'i/' . rawurlencode( $token ) ) : '';
 	}
 }
 class PROMOTUR_Estructura {
@@ -255,11 +271,11 @@ class PROMOTUR_Medios {
 }
 class PROMOTUR_Roles {
 	public static function sections() { return array(); }
-	public static function label( $key ) { return 'promotur_mini' === $key ? 'Mini Promotor' : 'Promotor'; }
+	public static function label( $key ) { return 'promotur_mini' === $key ? 'Alumno' : ( 'promotur_promotor' === $key ? 'Profesor' : 'Visitante' ); }
 	public static function roles() {
 		return array(
-			'promotur_promotor'  => array( 'label' => 'Promotor', 'caps' => array() ),
-			'promotur_mini'      => array( 'label' => 'Mini Promotor', 'caps' => array() ),
+			'promotur_promotor'  => array( 'label' => 'Profesor', 'caps' => array() ),
+			'promotur_mini'      => array( 'label' => 'Alumno', 'caps' => array() ),
 			'promotur_visitante' => array( 'label' => 'Visitante', 'caps' => array() ),
 		);
 	}

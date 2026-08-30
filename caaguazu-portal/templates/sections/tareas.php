@@ -34,7 +34,7 @@ $body = function () use ( $uid, $tareas, $can_assign, $minis, $destinos ) {
 						</select>
 					</label>
 				</div>
-				<label class="promotur-field"><span><?php esc_html_e( 'Asignar a (Mini Promotores)', 'caaguazu-portal' ); ?></span>
+				<label class="promotur-field"><span><?php esc_html_e( 'Asignar a (Alumnos)', 'caaguazu-portal' ); ?></span>
 					<select name="asignados[]" multiple size="4">
 						<?php foreach ( $minis as $m ) : ?><option value="<?php echo esc_attr( $m['id'] ); ?>"><?php echo esc_html( $m['display_name'] ); ?></option><?php endforeach; ?>
 					</select>

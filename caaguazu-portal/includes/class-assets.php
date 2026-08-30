@@ -139,6 +139,7 @@ class PROMOTUR_Assets {
 				'confirm'  => __( '¿Querés confirmar esta acción?', 'caaguazu-portal' ),
 				'missing'  => __( 'Faltan algunos datos obligatorios.', 'caaguazu-portal' ),
 				'photoUploaded' => __( 'Foto subida.', 'caaguazu-portal' ),
+				'copied'   => __( 'Copiado', 'caaguazu-portal' ),
 			),
 		) );
 	}
