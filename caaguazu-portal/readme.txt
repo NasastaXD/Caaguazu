@@ -3,7 +3,7 @@ Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 3.9.1
+Stable tag: 3.9.2
 License: GPLv2 or later
 
 Panel autenticado tipo app (PWA) bajo /turismo-panel, con enrutador propio, login propio, roles y flujo editorial para las tres cosas que la app muestra: fichas del inventario turístico, artículos y recorridos.
@@ -52,11 +52,40 @@ que traiga adjunto `caaguazu-portal.zip` — la regla no depende de cómo se
 llamen los tags.
 
 * Versión en un solo lugar: header `Version:` + constante `PROMOTUR_VERSION` (semver).
-* Migraciones de BD: incrementar `PROMOTUR_DB_VERSION`; corren solas en `admin_init`
-  vía `promotur_run_migrations()`.
+* Migraciones de BD: incrementar `PROMOTUR_DB_VERSION`; corren solas en `init`
+  y en `admin_init` vía `promotur_run_migrations()`. En las dos a propósito: el
+  equipo no entra a wp-admin, así que colgarlas sólo de ahí dejaba sitios sin
+  migrar para siempre.
 * Repo privado: definir `PROMOTUR_GITHUB_TOKEN` (PAT de solo lectura) en `wp-config.php`.
 
 == Changelog ==
+
+= 3.9.2 =
+* **El caché servía el bucle de redirecciones aunque la 3.9.1 ya lo hubiera
+  arreglado.** LiteSpeed se había guardado la redirección vieja de
+  `/turismo-panel/entrar` con `public,max-age=604800` —siete días— y la seguía
+  entregando sin que PHP corriera. La página buena sólo aparecía agregándole un
+  parámetro cualquiera a la URL.
+* **La causa de fondo, que es más grave que una redirección vieja:** el panel
+  nunca le dijo a ningún caché de página que no lo guardara, y la sesión del
+  panel es una cookie de `caaguazu-cuentas`, no de WordPress. Todo caché decide
+  «esta persona está logueada, no le sirvo caché» buscando las cookies de
+  WordPress, que acá no existen — así que veía a cada promotor como visitante
+  anónimo y guardaba sus pantallas como públicas. Ahora el panel se marca como
+  no cacheable en todas sus rutas (`DONOTCACHEPAGE` y la API de LiteSpeed).
+* Al detectar un cambio de versión, además de rehacer las reglas de reescritura
+  se **purga el caché de página**. Arreglar a dónde va una URL no sirve de nada
+  si el caché sigue entregando la respuesta anterior.
+* **Las migraciones de base de datos corrían sólo en `admin_init`.** El motivo
+  de existir de este plugin es que el equipo no entre a wp-admin, así que un
+  sitio donde nadie abre el escritorio se quedaba con la base vieja para
+  siempre. Ahora corren también en `init`.
+* Eso último no daba ningún error visible, y ahí estaba lo peor: a una tabla
+  sin las columnas de la 3.8.0, `$wpdb->insert()` le devuelve `false` y sigue.
+  Crear una invitación «funcionaba» —aparecía el enlace— pero no guardaba
+  ninguna fila, y a quien abría ese enlace le decía «necesitás una invitación
+  válida». Ahora un insert que falla no devuelve token, queda registrado en
+  auditoría, y quien invita ve un error en vez de un enlace fantasma.
 
 = 3.9.1 =
 * **Nadie podía iniciar sesión: «demasiadas redirecciones».** El mapa de reglas

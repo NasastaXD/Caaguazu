@@ -97,7 +97,7 @@ class PROMOTUR_Invitations {
 		$tokens = array();
 		for ( $i = 0; $i < $count; $i++ ) {
 			$token = self::token();
-			$wpdb->insert( self::table(), array(
+			$ok    = $wpdb->insert( self::table(), array(
 				'token_hash' => self::hash( $token ),
 				'email'      => $email,
 				'role'       => $role,
@@ -107,6 +107,28 @@ class PROMOTUR_Invitations {
 				'created_at' => $now,
 				'metadata'   => wp_json_encode( array( 'token' => $token ) ),
 			), array( '%s', '%s', '%s', '%d', '%s', '%d', '%s', '%s' ) );
+
+			/*
+			 * Un insert que falla NO devuelve token.
+			 *
+			 * `$wpdb->insert()` devuelve false y sigue de largo: no lanza nada.
+			 * Devolver igual el token era la peor combinación posible —quien
+			 * invita ve un enlace con toda la pinta de estar bien, se lo pasa a
+			 * alguien, y a esa persona le dice «necesitás una invitación
+			 * válida» porque detrás no hay ninguna fila—. El caso real es una
+			 * tabla a la que le falta una columna porque la migración no corrió
+			 * (ver promotur_maybe_upgrade()), y el síntoma no se parece en nada
+			 * a la causa.
+			 */
+			if ( false === $ok ) {
+				if ( class_exists( 'PROMOTUR_Audit' ) ) {
+					PROMOTUR_Audit::log( 'invitation_error', array(
+						'entity_type' => 'invitation',
+						'payload'     => array( 'error' => (string) $wpdb->last_error ),
+					) );
+				}
+				continue;
+			}
 
 			$tokens[] = $token;
 			if ( class_exists( 'PROMOTUR_Audit' ) ) {

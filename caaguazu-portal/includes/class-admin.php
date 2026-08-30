@@ -320,8 +320,14 @@ class PROMOTUR_Admin {
 			$dias     = isset( $_POST['expires_days'] ) ? (int) $_POST['expires_days'] : 0;
 			$usos_max = isset( $_POST['max_usos'] ) ? (int) $_POST['max_usos'] : 1;
 			$email    = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
-			PROMOTUR_Invitations::create( array( 'role' => $role, 'expires_days' => $dias, 'max_usos' => $usos_max, 'email' => $email, 'count' => 1 ) );
-			$this->notice( __( 'Enlace de invitación creado. Lo tenés abajo, en «Invitaciones abiertas».', 'caaguazu-portal' ) );
+			$tokens   = PROMOTUR_Invitations::create( array( 'role' => $role, 'expires_days' => $dias, 'max_usos' => $usos_max, 'email' => $email, 'count' => 1 ) );
+			if ( empty( $tokens ) ) {
+				// Ver el porqué en PROMOTUR_Invitations::create(): un enlace que
+				// se muestra sin fila detrás es peor que un error.
+				$this->notice( __( 'No se pudo crear la invitación: la base de datos rechazó el registro. Revisá que las tablas del plugin estén al día.', 'caaguazu-portal' ), 'error' );
+			} else {
+				$this->notice( __( 'Enlace de invitación creado. Lo tenés abajo, en «Invitaciones abiertas».', 'caaguazu-portal' ) );
+			}
 		} elseif ( 'revoke' === $op ) {
 			$id = isset( $_POST['invitacion'] ) ? (int) $_POST['invitacion'] : 0;
 			if ( $id && PROMOTUR_Invitations::get( $id ) ) {

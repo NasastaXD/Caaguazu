@@ -161,7 +161,7 @@ class PROMOTUR_Router {
 			return;
 		}
 
-		nocache_headers();
+		promotur_no_cachear();
 
 		// El panel es una "app": sin admin bar de WordPress.
 		add_filter( 'show_admin_bar', '__return_false' );

@@ -57,8 +57,15 @@ class PROMOTUR_Auth {
 		// completar con un default.
 		$dias     = isset( $_POST['expires_days'] ) ? (int) $_POST['expires_days'] : 0;
 		$usos_max = isset( $_POST['max_usos'] ) ? (int) $_POST['max_usos'] : 1;
-		PROMOTUR_Invitations::create( array( 'role' => $role, 'expires_days' => $dias, 'max_usos' => $usos_max, 'count' => 1 ) );
-		promotur_flash( __( 'Enlace de invitación creado. Lo tenés abajo, en «Invitaciones abiertas».', 'caaguazu-portal' ), 'success' );
+		$tokens   = PROMOTUR_Invitations::create( array( 'role' => $role, 'expires_days' => $dias, 'max_usos' => $usos_max, 'count' => 1 ) );
+
+		// Si no se guardó, se dice acá y no se descubre cuando alguien abre un
+		// enlace que no existe. Ver el porqué en PROMOTUR_Invitations::create().
+		if ( empty( $tokens ) ) {
+			promotur_flash( __( 'No se pudo crear la invitación: la base de datos rechazó el registro. Avisale a quien administra el sitio.', 'caaguazu-portal' ), 'error' );
+		} else {
+			promotur_flash( __( 'Enlace de invitación creado. Lo tenés abajo, en «Invitaciones abiertas».', 'caaguazu-portal' ), 'success' );
+		}
 		wp_safe_redirect( promotur_url( 'panel/equipo' ) );
 		exit;
 	}

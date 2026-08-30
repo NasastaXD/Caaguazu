@@ -740,6 +740,54 @@ function promotur_route_activa( $route ) {
 }
 
 /**
+ * Que ningún caché de página guarde una respuesta del panel.
+ *
+ * `nocache_headers()` de WordPress manda las cabeceras correctas y NO ALCANZA:
+ * un caché de página como LiteSpeed decide qué guardar antes de mirarlas, y
+ * cada uno tiene su propia puerta para que le digan que no.
+ *
+ * Por qué le pasa a este plugin y no a un sitio de WordPress normal: la sesión
+ * del panel es una cookie de `caaguazu-cuentas`, no de WordPress. Todo caché
+ * de página decide «esta persona está logueada, no le sirvo caché» buscando
+ * las cookies de WordPress — que acá no existen. Así que ve a cada promotor
+ * como un visitante anónimo y guarda sus páginas como si fueran públicas.
+ *
+ * Eso ya rompió algo real: LiteSpeed se guardó, con `public,max-age=604800`,
+ * la redirección de `/turismo-panel/entrar` de cuando el enrutado estaba mal
+ * (ver PROMOTUR_Router::reglas()). Arreglado el enrutado, el sitio siguió
+ * sirviendo el bucle desde el caché — la página nueva sólo aparecía agregando
+ * un parámetro cualquiera a la URL. Y el problema no termina en una
+ * redirección vieja: con la misma lógica, la pantalla de un promotor logueado
+ * se le puede servir a otra persona.
+ *
+ * Se llama en el despacho, así que cubre todas las rutas del panel: las
+ * secciones, las de acceso y las dos puertas de datos.
+ */
+function promotur_no_cachear() {
+	nocache_headers();
+
+	/*
+	 * La constante que miran la mayoría (WP Rocket, W3 Total Cache, Batcache,
+	 * WP Super Cache y el propio LiteSpeed). Se define sólo si no está: otro
+	 * plugin puede haberla puesto antes y redefinirla es un warning de PHP.
+	 */
+	foreach ( array( 'DONOTCACHEPAGE', 'DONOTCACHEOBJECT', 'DONOTCACHEDB' ) as $bandera ) {
+		if ( ! defined( $bandera ) ) {
+			define( $bandera, true );
+		}
+	}
+
+	// LiteSpeed Cache v3+, que es el que corre en el sitio. Es un do_action:
+	// si el plugin no está, no pasa nada.
+	do_action( 'litespeed_control_set_nocache', 'Panel: la sesión no es de WordPress y el caché no la ve' );
+
+	// LiteSpeed Cache v2, por si algún sitio quedó en la versión vieja.
+	if ( method_exists( 'LiteSpeed_Cache_API', 'set_nocache' ) ) {
+		LiteSpeed_Cache_API::set_nocache( 'Panel: la sesión no es de WordPress y el caché no la ve' );
+	}
+}
+
+/**
  * Mensaje efímero (flash) por visitante, vía transient. Patrón PRG.
  *
  * La clave usa el ID de cuenta si hay una logueada, o el ID de WordPress
