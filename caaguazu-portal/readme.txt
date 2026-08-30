@@ -3,7 +3,7 @@ Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 3.9.3
+Stable tag: 3.9.4
 License: GPLv2 or later
 
 Panel autenticado tipo app (PWA) bajo /turismo-panel, con enrutador propio, login propio, roles y flujo editorial para las tres cosas que la app muestra: fichas del inventario turístico, artículos y recorridos.
@@ -59,6 +59,24 @@ llamen los tags.
 * Repo privado: definir `PROMOTUR_GITHUB_TOKEN` (PAT de solo lectura) en `wp-config.php`.
 
 == Changelog ==
+
+= 3.9.4 =
+* **Un alta que falla ahora deja rastro.** Hasta acá, si alguien abría su
+  enlace de invitación y el registro se le caía, el error se le mostraba a esa
+  persona y ahí moría: en Registros se veía la invitación creada y después
+  nada, exactamente igual que si nunca la hubiera usado. Con eso a la vista, un
+  bug de tres versiones parecía «no la abrieron todavía». Ahora se anota
+  `registro_fallido` con el motivo (`sesion_vencida`, `invitacion_expired`,
+  `datos_incompletos`, `email_duplicado`, `alta_rechazada`) y, cuando el
+  problema es el token, con sus primeros caracteres y de dónde llegó (de la URL
+  o de un campo). Sin datos personales: ni email ni contraseña.
+* **Registros mostraba menos de lo que guardaba.** La pestaña Usuarios filtra
+  por una lista de acciones, y tres eventos que sí se escriben no estaban en
+  ella: `account_registered` —el alta de verdad, tapada por el
+  `user_registered` viejo de WordPress, que ya no se escribe—, e
+  `invitation_error`, que se agregó en la 3.9.2 justamente para diagnosticar
+  esto y era invisible. Un registro exitoso no aparecía en la pantalla que uno
+  mira para saber si hubo un registro exitoso.
 
 = 3.9.3 =
 * **El alta por invitación fallaba justo al enviar el formulario**, con

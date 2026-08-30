@@ -176,12 +176,43 @@ class PROMOTUR_Auth {
 		exit;
 	}
 
+	/**
+	 * Un alta que no salió, anotada en el registro de auditoría.
+	 *
+	 * Existe porque un alta fallida no dejaba ninguna huella: la pantalla
+	 * mostraba el error a quien lo estaba sufriendo y ahí moría. Cuando el
+	 * campo de seguridad pisó al token de la invitación (ver la constante
+	 * `PROMOTUR_Acciones::CAMPO_TOKEN`), en wp-admin se veía la invitación
+	 * creada y después nada, como si nadie hubiera intentado usarla — y era
+	 * justo al revés. El motivo y los primeros caracteres del token que llegó
+	 * alcanzan para distinguir «no la usaron» de «la usaron y se rompió».
+	 *
+	 * @param array  $vars
+	 * @param string $motivo  Clave corta, para poder buscarla.
+	 * @param string $mensaje Lo que ve la persona.
+	 * @param array  $extra   Contexto, sin datos personales.
+	 * @return array
+	 */
+	private function fallo_registro( $vars, $motivo, $mensaje, $extra = array() ) {
+		$vars['error'] = $mensaje;
+		if ( class_exists( 'PROMOTUR_Audit' ) ) {
+			PROMOTUR_Audit::log( 'registro_fallido', array(
+				'user_id'     => 0,
+				'entity_type' => 'invitation',
+				'payload'     => array_merge( array( 'motivo' => $motivo ), $extra ),
+			) );
+		}
+		return $vars;
+	}
+
 	/* ----- Registro (INVITE-ONLY) ----- */
 	private function process_register( $vars ) {
 		// Token de invitación (de la query var o del POST).
-		$token = sanitize_text_field( get_query_var( 'promotur_invitacion' ) );
+		$token  = sanitize_text_field( get_query_var( 'promotur_invitacion' ) );
+		$origen = $token ? 'url' : '';
 		if ( ! $token && isset( $_REQUEST['token'] ) ) {
-			$token = sanitize_text_field( wp_unslash( $_REQUEST['token'] ) );
+			$token  = sanitize_text_field( wp_unslash( $_REQUEST['token'] ) );
+			$origen = $token ? 'campo' : '';
 		}
 		$row    = PROMOTUR_Invitations::find_by_token( $token );
 		$status = PROMOTUR_Invitations::status( $row );
@@ -198,13 +229,26 @@ class PROMOTUR_Auth {
 			return $vars;
 		}
 		if ( ! $this->verify( 'promotur_registro' ) ) {
-			$vars['error'] = __( 'Tu sesión venció. Recargá la página.', 'caaguazu-portal' );
-			return $vars;
+			return $this->fallo_registro( $vars, 'sesion_vencida', __( 'Tu sesión venció. Recargá la página.', 'caaguazu-portal' ) );
 		}
 		// Sólo con invitación válida (invite-only).
 		if ( 'valid' !== $status ) {
-			$vars['error'] = __( 'Necesitás una invitación válida para registrarte.', 'caaguazu-portal' );
-			return $vars;
+			/*
+			 * El estado dice por qué no sirve, y el prefijo del token con su
+			 * origen dice QUÉ llegó: si el token viene de la URL y aun así es
+			 * `invalid`, o si su prefijo no se parece a un token nuestro, lo
+			 * que falla no es la invitación sino lo que la transporta.
+			 */
+			return $this->fallo_registro(
+				$vars,
+				'invitacion_' . $status,
+				__( 'Necesitás una invitación válida para registrarte.', 'caaguazu-portal' ),
+				array(
+					'token'  => substr( (string) $token, 0, 8 ),
+					'largo'  => strlen( (string) $token ),
+					'origen' => $origen,
+				)
+			);
 		}
 
 		$display_name = sanitize_text_field( wp_unslash( $_POST['user_login'] ?? '' ) );
@@ -213,12 +257,20 @@ class PROMOTUR_Auth {
 		$pass         = (string) ( $_POST['user_pass'] ?? '' );
 
 		if ( ! $display_name || ! is_email( $email ) || '' === $phone || ! Caaguazu_Cuentas_Passwords::is_valid( $pass ) ) {
-			$vars['error'] = __( 'Completá usuario, email, teléfono y una contraseña de al menos 6 caracteres.', 'caaguazu-portal' );
-			return $vars;
+			return $this->fallo_registro(
+				$vars,
+				'datos_incompletos',
+				__( 'Completá usuario, email, teléfono y una contraseña de al menos 6 caracteres.', 'caaguazu-portal' ),
+				array( 'invitacion' => (int) $row['id'] )
+			);
 		}
 		if ( Caaguazu_Cuentas_Accounts::email_exists( $email ) ) {
-			$vars['error'] = __( 'Ese email ya está registrado.', 'caaguazu-portal' );
-			return $vars;
+			return $this->fallo_registro(
+				$vars,
+				'email_duplicado',
+				__( 'Ese email ya está registrado.', 'caaguazu-portal' ),
+				array( 'invitacion' => (int) $row['id'] )
+			);
 		}
 
 		$role = array_key_exists( $row['role'], PROMOTUR_Roles::roles() ) ? $row['role'] : 'promotur_visitante';
@@ -230,8 +282,12 @@ class PROMOTUR_Auth {
 			'phone'        => $phone,
 		) );
 		if ( is_wp_error( $account ) ) {
-			$vars['error'] = $account->get_error_message();
-			return $vars;
+			return $this->fallo_registro(
+				$vars,
+				'alta_rechazada',
+				$account->get_error_message(),
+				array( 'invitacion' => (int) $row['id'], 'codigo' => $account->get_error_code() )
+			);
 		}
 		$account_id = (int) $account['id'];
 

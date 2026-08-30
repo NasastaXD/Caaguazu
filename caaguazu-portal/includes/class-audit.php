@@ -38,6 +38,38 @@ class PROMOTUR_Audit {
 	 *
 	 * @return string[]
 	 */
+	/**
+	 * Lo que pasa con las cuentas y con el armado del panel: la pestaña
+	 * «Usuarios» de Registros.
+	 *
+	 * Esto es un FILTRO, y ahí está el riesgo: una acción que se escriba y no
+	 * figure acá queda guardada en la tabla y no se ve NUNCA, que es peor que
+	 * no escribirla —uno mira la pantalla, no ve nada y concluye que no pasó
+	 * nada—. Pasó dos veces: con `account_registered`, el alta de verdad, que
+	 * quedó tapada por el `user_registered` viejo de WordPress (describía
+	 * usuarios de WP y ya no se escribe: los eventos de equipo son sobre
+	 * cuentas), y con `invitation_error`, agregado justamente para diagnosticar
+	 * altas rotas y que no se veía.
+	 *
+	 * Por eso vive acá, al lado de `post_actions()` y lejos de la plantilla, y
+	 * por eso `tools/verificar-auditoria.php` compara esta lista contra cada
+	 * `PROMOTUR_Audit::log()` del código.
+	 *
+	 * @return string[]
+	 */
+	public static function user_actions() {
+		return array(
+			'login_success', 'login_failed',
+			'account_registered', 'registro_fallido',
+			'invitation_created', 'invitation_used', 'invitation_revoked',
+			'invitation_error',
+			'equipo_rol', 'equipo_estado', 'equipo_quitado',
+			'cuenta_editada', 'clave_cambiada',
+			'media_borrada', 'estructura_creada', 'estructura_borrada',
+			'update_settings',
+		);
+	}
+
 	public static function post_actions() {
 		if ( ! class_exists( 'PROMOTUR_Editorial' ) ) {
 			return array( 'destino_created', 'destino_enviado', 'destino_publicado', 'destino_necesita_cambios', 'destino_aprobado' );

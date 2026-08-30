@@ -43,10 +43,10 @@ directamente**: `bash bin/build-zip.sh` los arma los cuatro (o
 ## Antes de dar nada por bueno
 
 ```bash
-npm run verificar   # diseño + lógica + rutas + las 23 pantallas en teléfono
+npm run verificar   # diseño + lógica + rutas + auditoría + las 23 pantallas
 ```
 
-Son cuatro cosas, y las cuatro salen con código 1 si algo falla:
+Son cinco cosas, y las cinco salen con código 1 si algo falla:
 
 - `tools/verificar-diseno.php` — las reglas del sistema de diseño del panel
   (colores, radios, sombras, tipografía, clases sin estilo, URLs a mano).
@@ -58,6 +58,12 @@ Son cuatro cosas, y las cuatro salen con código 1 si algo falla:
   queda con la primera que matchea, así que el **orden** del mapa de reglas es
   parte de la definición: mal ordenado deja login, registro, el enlace de
   invitación y la PWA inalcanzables, sin tirar ningún error.
+- `tools/verificar-auditoria.php` — que todo lo que se anota en el registro de
+  auditoría se vea en «Registros». Esa pantalla filtra por una lista de
+  acciones, así que una acción que se escriba y no esté en la lista queda
+  guardada donde nadie la mira — y uno lee esa pantalla vacía como «no pasó
+  nada». Ya tapó el alta de una cuenta y el evento que existía justamente para
+  diagnosticar altas rotas.
 - `tools/auditar-movil.mjs` — nada se sale de la pantalla, nada que se toque
   baja de 44px.
 

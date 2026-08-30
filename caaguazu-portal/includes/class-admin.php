@@ -117,16 +117,7 @@ class PROMOTUR_Admin {
 
 		$actions = 'posts' === $tab
 			? PROMOTUR_Audit::post_actions()
-			// Lo que pasa con las cuentas y con el armado del panel. Los
-			// `user_*` de antes describían usuarios de WordPress y ya no se
-			// escriben: los eventos de equipo son sobre cuentas.
-			: array(
-				'login_success', 'login_failed', 'user_registered',
-				'invitation_created', 'invitation_used', 'invitation_revoked',
-				'equipo_rol', 'equipo_estado', 'equipo_quitado',
-				'cuenta_editada', 'clave_cambiada',
-				'media_borrada', 'estructura_creada', 'estructura_borrada',
-			);
+			: PROMOTUR_Audit::user_actions();
 
 		$res = PROMOTUR_Audit::query( array( 'actions' => $actions, 'paged' => $paged, 'per_page' => 50 ) );
 		$base = admin_url( 'admin.php?page=promotur-logs&tab=' . $tab );
