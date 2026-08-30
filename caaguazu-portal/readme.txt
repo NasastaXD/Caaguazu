@@ -3,7 +3,7 @@ Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 3.7.0
+Stable tag: 3.8.0
 License: GPLv2 or later
 
 Panel autenticado tipo app (PWA) bajo /turismo-panel, con enrutador propio, login propio, roles y flujo editorial para las tres cosas que la app muestra: fichas del inventario turístico, artículos y recorridos.
@@ -57,6 +57,26 @@ llamen los tags.
 * Repo privado: definir `PROMOTUR_GITHUB_TOKEN` (PAT de solo lectura) en `wp-config.php`.
 
 == Changelog ==
+
+= 3.8.0 =
+* **El vencimiento de una invitación deja de tener un techo de 90 días: ahora
+  es cualquier número de días, o permanente si se deja vacío (o en 0).** El
+  selector fijo de la 3.7.0 se cambia por un campo numérico —con sugerencias
+  en un `<datalist>`, no una lista cerrada—.
+* **Suma un límite de usos, también customizable.** Antes una invitación
+  moría al primer registro; ahora se le puede poner cuántas cuentas puede
+  crear (por default sigue siendo 1, que es el comportamiento de siempre), o
+  dejarlo vacío para que sirva sin límite —un enlace para un grupo entero, en
+  vez de uno por persona—.
+* El estado «Usada» pasa a llamarse **«Agotada»**: con un límite de más de
+  uno, una invitación no se apaga en el primer registro, sólo cuando llega al
+  máximo que se le puso. `usos`/`max_usos` son las columnas nuevas de la
+  tabla, y la migración le pone `max_usos = 1` a toda invitación existente
+  —para que nada que antes fuera de un solo uso pase a ser «sin límite» de
+  golpe— y `usos = 1` a la que ya estuviera usada, para que siga contando
+  como agotada.
+* «Vence» y «Usos» en la lista de invitaciones abiertas dicen «No vence» y
+  «sin límite» cuando corresponde, en el panel y en wp-admin.
 
 = 3.7.0 =
 * **Promotor pasa a llamarse Profesor, y Mini Promotor pasa a llamarse

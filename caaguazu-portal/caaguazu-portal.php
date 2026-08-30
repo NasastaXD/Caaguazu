@@ -3,7 +3,7 @@
  * Plugin Name:       Caaguazú Portal — Promotores Turísticos
  * Plugin URI:        https://turismo.caaguazu.net
  * Description:       Panel autenticado tipo app bajo /turismo-panel, instalable como PWA, donde el equipo escribe las tres cosas que la aplicación muestra —fichas del inventario turístico, artículos y recorridos— con un mismo flujo editorial: borrador → revisión → publicación. Corre sobre rutas propias y no depende del theme: trae su propio CSS y su propia tipografía, y desencola los del theme activo en sus rutas. La identidad de los promotores corre sobre el sistema de cuentas universal (caaguazu-cuentas): no son usuarios de WordPress.
- * Version:           3.7.0
+ * Version:           3.8.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Requires Plugins:  caaguazu-cuentas
@@ -17,8 +17,8 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'PROMOTUR_VERSION', '3.7.0' );
-define( 'PROMOTUR_DB_VERSION', 2 ); // se incrementa cuando cambia la estructura de datos.
+define( 'PROMOTUR_VERSION', '3.8.0' );
+define( 'PROMOTUR_DB_VERSION', 3 ); // se incrementa cuando cambia la estructura de datos.
 define( 'PROMOTUR_FILE', __FILE__ );
 define( 'PROMOTUR_DIR', plugin_dir_path( __FILE__ ) );
 define( 'PROMOTUR_URI', plugin_dir_url( __FILE__ ) );
@@ -338,6 +338,28 @@ function promotur_run_migrations( $from ) {
 	// v2: tablas de invitaciones y auditoría (invite-only + logs).
 	if ( $from < 2 ) {
 		PROMOTUR_Install::create_tables();
+	}
+	// v3: invitaciones con vencimiento opcional (permanentes) y un límite de
+	// usos configurable en vez de una sola vez fija. `create_tables()` sólo
+	// agrega columnas que faltan —dbDelta no toca una columna que ya
+	// existe—, así que `expires_at` necesita su propio ALTER para dejar de
+	// ser NOT NULL en una instalación que ya tenía la tabla de la v2.
+	if ( $from < 3 ) {
+		global $wpdb;
+		$wpdb->query( 'ALTER TABLE ' . $wpdb->prefix . 'promotur_invitations MODIFY expires_at DATETIME NULL' ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		PROMOTUR_Install::create_tables(); // agrega max_usos y usos, que no existían.
+
+		// Backfill: antes de esto una invitación era de un solo uso siempre,
+		// sin excepción. Sin este paso, `max_usos` y `usos` quedarían en NULL
+		// y 0 —los defaults de columnas nuevas— para TODA fila ya existente,
+		// y eso las volvería «sin límite» de golpe: una invitación que ya se
+		// había usado (y que por eso hoy figura como agotada) pasaría a
+		// verse otra vez válida y reutilizable sin fin. Se preserva el
+		// comportamiento de siempre —de un solo uso— y, para la que ya se
+		// había usado, que siga contando como agotada.
+		$table = $wpdb->prefix . 'promotur_invitations';
+		$wpdb->query( "UPDATE {$table} SET max_usos = 1 WHERE max_usos IS NULL" ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		$wpdb->query( "UPDATE {$table} SET usos = 1 WHERE used_at IS NOT NULL AND usos = 0" ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 	}
 	do_action( 'promotur_run_migrations', $from );
 }

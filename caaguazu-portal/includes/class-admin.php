@@ -187,8 +187,7 @@ class PROMOTUR_Admin {
 
 	public function render_invitaciones() {
 		$this->guard_invitaciones();
-		$roles        = PROMOTUR_Roles::roles();
-		$vencimientos = PROMOTUR_Invitations::opciones_vencimiento();
+		$roles = PROMOTUR_Roles::roles();
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Invitaciones', 'caaguazu-portal' ); ?></h1>
@@ -211,13 +210,22 @@ class PROMOTUR_Admin {
 						</td>
 					</tr>
 					<tr>
-						<th><label for="promotur-invite-dias"><?php esc_html_e( 'Válido por', 'caaguazu-portal' ); ?></label></th>
+						<th><label for="promotur-invite-dias"><?php esc_html_e( 'Vence en (días)', 'caaguazu-portal' ); ?></label></th>
 						<td>
-							<select id="promotur-invite-dias" name="expires_days">
-								<?php foreach ( $vencimientos as $dias => $etiqueta ) : ?>
-									<option value="<?php echo esc_attr( $dias ); ?>" <?php selected( 14, $dias ); ?>><?php echo esc_html( $etiqueta ); ?></option>
+							<input type="number" id="promotur-invite-dias" name="expires_days" min="0" step="1" placeholder="0" list="promotur-dias-sugeridos" style="width:100px">
+							<datalist id="promotur-dias-sugeridos">
+								<?php foreach ( PROMOTUR_Invitations::dias_sugeridos() as $d ) : ?>
+									<option value="<?php echo esc_attr( $d ); ?>"></option>
 								<?php endforeach; ?>
-							</select>
+							</datalist>
+							<p class="description"><?php esc_html_e( 'Vacío o 0: no vence nunca.', 'caaguazu-portal' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th><label for="promotur-invite-usos"><?php esc_html_e( 'Cuántas cuentas puede crear', 'caaguazu-portal' ); ?></label></th>
+						<td>
+							<input type="number" id="promotur-invite-usos" name="max_usos" min="0" step="1" value="1" style="width:100px">
+							<p class="description"><?php esc_html_e( 'Vacío o 0: sin límite.', 'caaguazu-portal' ); ?></p>
 						</td>
 					</tr>
 					<tr>
@@ -239,6 +247,7 @@ class PROMOTUR_Admin {
 					<thead><tr>
 						<th><?php esc_html_e( 'Rol', 'caaguazu-portal' ); ?></th>
 						<th><?php esc_html_e( 'Vence', 'caaguazu-portal' ); ?></th>
+						<th><?php esc_html_e( 'Usos', 'caaguazu-portal' ); ?></th>
 						<th><?php esc_html_e( 'Enlace', 'caaguazu-portal' ); ?></th>
 						<th></th>
 					</tr></thead>
@@ -248,7 +257,8 @@ class PROMOTUR_Admin {
 							?>
 							<tr>
 								<td><?php echo esc_html( PROMOTUR_Roles::label( $inv['role'] ) ); ?></td>
-								<td><?php echo esc_html( date_i18n( 'Y-m-d', strtotime( $inv['expires_at'] ) ) ); ?></td>
+								<td><?php echo esc_html( PROMOTUR_Invitations::vence_texto( $inv ) ); ?></td>
+								<td><?php echo esc_html( PROMOTUR_Invitations::usos_texto( $inv ) ); ?></td>
 								<td>
 									<?php if ( $enlace ) : ?>
 										<input type="text" readonly value="<?php echo esc_attr( $enlace ); ?>" style="width:340px" onclick="this.select()">
@@ -304,13 +314,13 @@ class PROMOTUR_Admin {
 		$op = sanitize_key( wp_unslash( $_POST['op'] ?? '' ) );
 
 		if ( 'create' === $op ) {
-			$role  = isset( $_POST['role'] ) ? sanitize_key( wp_unslash( $_POST['role'] ) ) : 'promotur_mini';
-			$dias  = isset( $_POST['expires_days'] ) ? (int) $_POST['expires_days'] : 14;
-			if ( ! array_key_exists( $dias, PROMOTUR_Invitations::opciones_vencimiento() ) ) {
-				$dias = 14;
-			}
-			$email = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
-			PROMOTUR_Invitations::create( array( 'role' => $role, 'expires_days' => $dias, 'email' => $email, 'count' => 1 ) );
+			$role     = isset( $_POST['role'] ) ? sanitize_key( wp_unslash( $_POST['role'] ) ) : 'promotur_mini';
+			// Vacío o 0 en cualquiera de los dos: sin vencimiento / sin límite
+			// de usos. create() lo entiende igual.
+			$dias     = isset( $_POST['expires_days'] ) ? (int) $_POST['expires_days'] : 0;
+			$usos_max = isset( $_POST['max_usos'] ) ? (int) $_POST['max_usos'] : 1;
+			$email    = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
+			PROMOTUR_Invitations::create( array( 'role' => $role, 'expires_days' => $dias, 'max_usos' => $usos_max, 'email' => $email, 'count' => 1 ) );
 			$this->notice( __( 'Enlace de invitación creado. Lo tenés abajo, en «Invitaciones abiertas».', 'caaguazu-portal' ) );
 		} elseif ( 'revoke' === $op ) {
 			$id = isset( $_POST['invitacion'] ) ? (int) $_POST['invitacion'] : 0;

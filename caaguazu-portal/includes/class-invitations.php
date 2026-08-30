@@ -1,13 +1,21 @@
 <?php
 /**
- * Invitaciones (invite-only) en tabla custom. Token en claro solo se muestra una vez
- * (y se guarda en metadata para reconstruir el link corto /i/<token> desde wp-admin).
- * Modelado en el plugin CEAD (modules/auth/class-invitations.php).
+ * Invitaciones (invite-only) en tabla custom. El token en claro se guarda en
+ * `metadata` —no sólo su hash— para poder reconstruir el link corto
+ * /i/<token> (`registration_url()` + `plain_token()`) cada vez que haga
+ * falta, no una sola vez: el panel y wp-admin lo muestran mientras la
+ * invitación siga abierta, con su botón de copiar. Modelado en el plugin
+ * CEAD (modules/auth/class-invitations.php).
  *
  * `invited_by` y `used_by_user_id` son IDs de cuenta del sistema de cuentas
  * universal (caaguazu-cuentas), no de wp_users — no hay FK real (columnas
  * BIGINT simples), así que el cambio de espacio de IDs no requiere migración
  * de esquema, sólo de significado hacia adelante.
+ *
+ * `expires_at` y `max_usos` son NULL cuando no aplican —enlace permanente,
+ * o sin límite de cuentas—, no un valor grande a modo de infinito: `status()`
+ * los trata como «no corresponde», así que un enlace permanente nunca puede
+ * dar `expired` ni uno sin límite `agotada`.
  */
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
@@ -15,22 +23,27 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 class PROMOTUR_Invitations {
 
 	/**
-	 * Cuánto puede durar un enlace, en días. Un solo lugar para que el panel
-	 * y wp-admin ofrezcan las mismas opciones sin repetirlas cada uno por su
+	 * Días sugeridos para el <datalist> del campo de vencimiento —no una
+	 * lista cerrada: el campo acepta cualquier número, o quedar vacío para
+	 * que el enlace no venza nunca. Un solo lugar para que el panel y
+	 * wp-admin ofrezcan las mismas sugerencias sin repetirlas cada uno por su
 	 * lado.
 	 *
-	 * @return array días => etiqueta
+	 * @return int[]
 	 */
-	public static function opciones_vencimiento() {
-		return array(
-			1   => __( '1 día', 'caaguazu-portal' ),
-			3   => __( '3 días', 'caaguazu-portal' ),
-			7   => __( '7 días', 'caaguazu-portal' ),
-			14  => __( '14 días', 'caaguazu-portal' ),
-			30  => __( '30 días', 'caaguazu-portal' ),
-			90  => __( '90 días', 'caaguazu-portal' ),
-		);
+	public static function dias_sugeridos() {
+		return array( 1, 3, 7, 14, 30, 90, 365 );
 	}
+
+	/**
+	 * Techo de días para no guardar un disparate por un cero de más tipeado
+	 * a mano (no es un tope de producto: dejar el campo vacío da un enlace
+	 * permanente, que es la ausencia total de techo).
+	 */
+	const MAX_DIAS = 3650; // ~10 años
+
+	/** Techo de usos por el mismo motivo — dejar el campo vacío es sin límite. */
+	const MAX_USOS = 100000;
 
 	public static function table() {
 		global $wpdb;
@@ -48,7 +61,13 @@ class PROMOTUR_Invitations {
 	/**
 	 * Crea N invitaciones.
 	 *
-	 * @param array $args { role, email, expires_days, count }
+	 * `expires_days` y `max_usos` en 0, vacío o ausentes son a propósito
+	 * «sin límite»: un enlace permanente para un grupo que se anota durante
+	 * meses, o uno que sirve para cualquier cantidad de cuentas, son casos
+	 * de uso reales y no un descuido — no un valor mágico que haya que
+	 * adivinar.
+	 *
+	 * @param array $args { role, email, expires_days, max_usos, count }
 	 * @return string[] tokens en claro (única oportunidad de verlos)
 	 */
 	public static function create( $args = array() ) {
@@ -56,19 +75,24 @@ class PROMOTUR_Invitations {
 		$args = wp_parse_args( $args, array(
 			'role'         => 'promotur_mini',
 			'email'        => '',
-			'expires_days' => 14,
+			'expires_days' => null,
+			'max_usos'     => 1,
 			'count'        => 1,
 		) );
 
-		$role = array_key_exists( $args['role'], PROMOTUR_Roles::roles() ) ? $args['role'] : 'promotur_mini';
-		$count   = max( 1, min( 100, (int) $args['count'] ) );
-		$email   = $args['email'] ? sanitize_email( $args['email'] ) : null;
-		// 1 a 365 días pase lo que pase: quien llame manda el número, pero acá
-		// no entra ni un enlace que vence en el pasado ni uno que dure años.
-		$dias    = max( 1, min( 365, (int) $args['expires_days'] ) );
-		$expires = gmdate( 'Y-m-d H:i:s', time() + ( $dias * DAY_IN_SECONDS ) );
-		$now     = current_time( 'mysql', 1 );
-		$by      = caaguazu_account_id(); // 0 si la crea un administrador de WP (bypass), no rompe el insert.
+		$role  = array_key_exists( $args['role'], PROMOTUR_Roles::roles() ) ? $args['role'] : 'promotur_mini';
+		$count = max( 1, min( 100, (int) $args['count'] ) );
+		$email = $args['email'] ? sanitize_email( $args['email'] ) : null;
+
+		$dias = (int) $args['expires_days'];
+		// Acota sólo si hay un número — 0/vacío se guarda tal cual: permanente.
+		$expires = $dias > 0 ? gmdate( 'Y-m-d H:i:s', time() + ( min( $dias, self::MAX_DIAS ) * DAY_IN_SECONDS ) ) : null;
+
+		$usos_max = (int) $args['max_usos'];
+		$usos_max = $usos_max > 0 ? min( $usos_max, self::MAX_USOS ) : null;
+
+		$now = current_time( 'mysql', 1 );
+		$by  = caaguazu_account_id(); // 0 si la crea un administrador de WP (bypass), no rompe el insert.
 
 		$tokens = array();
 		for ( $i = 0; $i < $count; $i++ ) {
@@ -79,13 +103,18 @@ class PROMOTUR_Invitations {
 				'role'       => $role,
 				'invited_by' => $by,
 				'expires_at' => $expires,
+				'max_usos'   => $usos_max,
 				'created_at' => $now,
 				'metadata'   => wp_json_encode( array( 'token' => $token ) ),
-			), array( '%s', '%s', '%s', '%d', '%s', '%s', '%s' ) );
+			), array( '%s', '%s', '%s', '%d', '%s', '%d', '%s', '%s' ) );
 
 			$tokens[] = $token;
 			if ( class_exists( 'PROMOTUR_Audit' ) ) {
-				PROMOTUR_Audit::log( 'invitation_created', array( 'entity_type' => 'invitation', 'entity_id' => (int) $wpdb->insert_id, 'payload' => array( 'role' => $role ) ) );
+				PROMOTUR_Audit::log( 'invitation_created', array(
+					'entity_type' => 'invitation',
+					'entity_id'   => (int) $wpdb->insert_id,
+					'payload'     => array( 'role' => $role, 'expires_at' => $expires, 'max_usos' => $usos_max ),
+				) );
 			}
 		}
 		return $tokens;
@@ -105,20 +134,28 @@ class PROMOTUR_Invitations {
 	}
 
 	/**
-	 * Estado calculado: valid|used|expired|revoked|invalid.
+	 * Estado calculado: valid|agotada|expired|revoked|invalid.
+	 *
+	 * «Agotada» reemplaza a la vieja «usada»: con un límite de usos
+	 * configurable, una invitación no se apaga la primera vez que alguien
+	 * se registra con ella, sólo cuando llega al máximo que se le puso —que
+	 * por default sigue siendo 1, o sea que el caso más común (invitar a una
+	 * sola persona) se sigue comportando exactamente igual que antes.
 	 */
 	public static function status( $row ) {
 		if ( ! $row ) { return 'invalid'; }
 		if ( ! empty( $row['revoked_at'] ) ) { return 'revoked'; }
-		if ( ! empty( $row['used_at'] ) ) { return 'used'; }
-		if ( strtotime( $row['expires_at'] . ' UTC' ) < time() ) { return 'expired'; }
+		// NULL = no vence nunca.
+		if ( ! empty( $row['expires_at'] ) && strtotime( $row['expires_at'] . ' UTC' ) < time() ) { return 'expired'; }
+		// NULL = sin límite de usos.
+		if ( null !== $row['max_usos'] && (int) $row['usos'] >= (int) $row['max_usos'] ) { return 'agotada'; }
 		return 'valid';
 	}
 
 	public static function status_label( $status ) {
 		$map = array(
 			'valid'   => __( 'Válida', 'caaguazu-portal' ),
-			'used'    => __( 'Usada', 'caaguazu-portal' ),
+			'agotada' => __( 'Agotada', 'caaguazu-portal' ),
 			'expired' => __( 'Expirada', 'caaguazu-portal' ),
 			'revoked' => __( 'Revocada', 'caaguazu-portal' ),
 			'invalid' => __( 'Inválida', 'caaguazu-portal' ),
@@ -126,15 +163,44 @@ class PROMOTUR_Invitations {
 		return $map[ $status ] ?? $status;
 	}
 
+	/**
+	 * Registra un uso: suma uno a `usos` y anota quién fue la última cuenta
+	 * creada con este enlace. Con un límite de más de uno, `used_by_user_id`
+	 * deja de identificar «a quién se le dio»: quién usó cada vez queda en
+	 * el log de auditoría, una fila por registro (`invitation_used`).
+	 */
 	public static function mark_used( $id, $user_id ) {
 		global $wpdb;
-		$wpdb->update( self::table(),
-			array( 'used_at' => current_time( 'mysql', 1 ), 'used_by_user_id' => (int) $user_id ),
-			array( 'id' => (int) $id ), array( '%s', '%d' ), array( '%d' )
-		);
+		$wpdb->query( $wpdb->prepare(
+			'UPDATE ' . self::table() . ' SET usos = usos + 1, used_at = %s, used_by_user_id = %d WHERE id = %d',
+			current_time( 'mysql', 1 ), (int) $user_id, (int) $id
+		) );
 		if ( class_exists( 'PROMOTUR_Audit' ) ) {
 			PROMOTUR_Audit::log( 'invitation_used', array( 'entity_type' => 'invitation', 'entity_id' => (int) $id, 'user_id' => (int) $user_id ) );
 		}
+	}
+
+	/**
+	 * Cuánto vence, para mostrar. NULL es «no vence nunca», no un dato que
+	 * falta — así que no hay fecha que formatear.
+	 */
+	public static function vence_texto( $row ) {
+		if ( empty( $row['expires_at'] ) ) {
+			return __( 'No vence', 'caaguazu-portal' );
+		}
+		/* translators: %s = fecha en que vence la invitación */
+		return sprintf( __( 'Vence el %s', 'caaguazu-portal' ), date_i18n( 'j \d\e F', strtotime( $row['expires_at'] ) ) );
+	}
+
+	/** Cuántas veces se usó, para mostrar. NULL en max_usos es «sin límite». */
+	public static function usos_texto( $row ) {
+		$usos = (int) $row['usos'];
+		if ( null === $row['max_usos'] ) {
+			/* translators: %d = cuántas cuentas ya se crearon con esta invitación */
+			return sprintf( _n( '%d cuenta creada, sin límite', '%d cuentas creadas, sin límite', $usos, 'caaguazu-portal' ), $usos );
+		}
+		/* translators: 1: usos, 2: el máximo permitido */
+		return sprintf( __( '%1$d de %2$d', 'caaguazu-portal' ), $usos, (int) $row['max_usos'] );
 	}
 
 	public static function revoke( $id ) {

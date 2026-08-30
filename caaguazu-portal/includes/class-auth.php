@@ -51,12 +51,13 @@ class PROMOTUR_Auth {
 		if ( ! caaguazu_account_can( 'promotor', 'promotur_manage_team' ) ) {
 			wp_die( esc_html__( 'No tenés autorización para hacer esto.', 'caaguazu-portal' ) );
 		}
-		$role    = isset( $_POST['role'] ) ? sanitize_key( wp_unslash( $_POST['role'] ) ) : 'promotur_mini';
-		$dias    = isset( $_POST['expires_days'] ) ? (int) $_POST['expires_days'] : 14;
-		if ( ! array_key_exists( $dias, PROMOTUR_Invitations::opciones_vencimiento() ) ) {
-			$dias = 14;
-		}
-		PROMOTUR_Invitations::create( array( 'role' => $role, 'expires_days' => $dias, 'count' => 1 ) );
+		$role = isset( $_POST['role'] ) ? sanitize_key( wp_unslash( $_POST['role'] ) ) : 'promotur_mini';
+		// Vacío o 0 en cualquiera de los dos es la elección explícita de «sin
+		// límite» —create() lo entiende igual—, no un valor que haya que
+		// completar con un default.
+		$dias     = isset( $_POST['expires_days'] ) ? (int) $_POST['expires_days'] : 0;
+		$usos_max = isset( $_POST['max_usos'] ) ? (int) $_POST['max_usos'] : 1;
+		PROMOTUR_Invitations::create( array( 'role' => $role, 'expires_days' => $dias, 'max_usos' => $usos_max, 'count' => 1 ) );
 		promotur_flash( __( 'Enlace de invitación creado. Lo tenés abajo, en «Invitaciones abiertas».', 'caaguazu-portal' ), 'success' );
 		wp_safe_redirect( promotur_url( 'panel/equipo' ) );
 		exit;

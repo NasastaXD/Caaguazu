@@ -23,20 +23,37 @@ $body = function () use ( $roles, $levels, $administra, $invitaciones ) {
 	<?php if ( $administra ) : ?>
 		<div class="promotur-card promotur-invite">
 			<h3 class="promotur-h3"><?php esc_html_e( 'Invitar a alguien', 'caaguazu-portal' ); ?></h3>
-			<p class="promotur-muted"><?php esc_html_e( 'Generá un enlace de invitación con el rol y el tiempo de validez que quieras.', 'caaguazu-portal' ); ?></p>
-			<form method="post" action="<?php echo esc_url( PROMOTUR_Acciones::url( 'invite' ) ); ?>" class="promotur-inline-form">
+			<p class="promotur-muted"><?php esc_html_e( 'Generá un enlace de invitación con el rol, el vencimiento y cuántas cuentas puede crear.', 'caaguazu-portal' ); ?></p>
+			<form method="post" action="<?php echo esc_url( PROMOTUR_Acciones::url( 'invite' ) ); ?>" class="promotur-form">
 				<?php PROMOTUR_Acciones::campos(); ?>
-				<select name="role" aria-label="<?php esc_attr_e( 'Rol', 'caaguazu-portal' ); ?>">
-					<?php foreach ( $roles as $rk => $rd ) : ?>
-						<option value="<?php echo esc_attr( $rk ); ?>" <?php selected( 'promotur_mini', $rk ); ?>><?php echo esc_html( $rd['label'] ); ?></option>
+				<div class="promotur-grid promotur-grid--2">
+					<label class="promotur-field">
+						<span><?php esc_html_e( 'Rol', 'caaguazu-portal' ); ?></span>
+						<select name="role">
+							<?php foreach ( $roles as $rk => $rd ) : ?>
+								<option value="<?php echo esc_attr( $rk ); ?>" <?php selected( 'promotur_mini', $rk ); ?>><?php echo esc_html( $rd['label'] ); ?></option>
+							<?php endforeach; ?>
+						</select>
+					</label>
+					<label class="promotur-field">
+						<span><?php esc_html_e( 'Vence en (días)', 'caaguazu-portal' ); ?></span>
+						<input type="number" name="expires_days" min="0" step="1" placeholder="0" list="promotur-dias-sugeridos">
+						<small class="promotur-ayuda"><?php esc_html_e( 'Vacío o 0: no vence nunca.', 'caaguazu-portal' ); ?></small>
+					</label>
+					<label class="promotur-field">
+						<span><?php esc_html_e( 'Cuántas cuentas puede crear', 'caaguazu-portal' ); ?></span>
+						<input type="number" name="max_usos" min="0" step="1" value="1">
+						<small class="promotur-ayuda"><?php esc_html_e( 'Vacío o 0: sin límite.', 'caaguazu-portal' ); ?></small>
+					</label>
+				</div>
+				<datalist id="promotur-dias-sugeridos">
+					<?php foreach ( PROMOTUR_Invitations::dias_sugeridos() as $d ) : ?>
+						<option value="<?php echo esc_attr( $d ); ?>"></option>
 					<?php endforeach; ?>
-				</select>
-				<select name="expires_days" aria-label="<?php esc_attr_e( 'Validez', 'caaguazu-portal' ); ?>">
-					<?php foreach ( PROMOTUR_Invitations::opciones_vencimiento() as $dias => $etiqueta ) : ?>
-						<option value="<?php echo esc_attr( $dias ); ?>" <?php selected( 14, $dias ); ?>><?php echo esc_html( $etiqueta ); ?></option>
-					<?php endforeach; ?>
-				</select>
-				<button type="submit" class="promotur-btn promotur-btn--primary"><?php esc_html_e( 'Crear enlace', 'caaguazu-portal' ); ?></button>
+				</datalist>
+				<div class="promotur-editor__actions">
+					<button type="submit" class="promotur-btn promotur-btn--primary"><?php esc_html_e( 'Crear enlace', 'caaguazu-portal' ); ?></button>
+				</div>
 			</form>
 		</div>
 	<?php endif; ?>
@@ -137,13 +154,8 @@ $body = function () use ( $roles, $levels, $administra, $invitaciones ) {
 								</span>
 								<span class="promotur-termino__uso">
 									<span class="promotur-muted">
-										<?php
-										printf(
-											/* translators: %s = fecha en que vence la invitación */
-											esc_html__( 'Vence el %s', 'caaguazu-portal' ),
-											esc_html( date_i18n( 'j \d\e F', strtotime( $inv['expires_at'] ) ) )
-										);
-										?>
+										<?php echo esc_html( PROMOTUR_Invitations::vence_texto( $inv ) ); ?>
+										· <?php echo esc_html( PROMOTUR_Invitations::usos_texto( $inv ) ); ?>
 									</span>
 									<form method="post" action="<?php echo esc_url( PROMOTUR_Acciones::url( 'invitacion_revocar' ) ); ?>"
 										  data-confirmar="<?php esc_attr_e( 'El enlace deja de servir. ¿Seguimos?', 'caaguazu-portal' ); ?>">

@@ -214,14 +214,21 @@ class PROMOTUR_Equipo {
 			array(
 				'id' => 3, 'role' => 'promotur_mini',
 				'expires_at' => gmdate( 'Y-m-d H:i:s', time() + 9 * DAY_IN_SECONDS ),
+				'max_usos' => 1, 'usos' => 0,
 				'metadata'   => json_encode( array( 'token' => 'token-de-muestra' ) ), // phpcs:ignore WordPress.WP.AlternativeFunctions.json_encode_json_encode
+			),
+			array(
+				'id' => 4, 'role' => 'promotur_promotor',
+				'expires_at' => null, // permanente, para probar esa rama de la maqueta
+				'max_usos' => null, 'usos' => 3, // sin límite, para probar esa rama
+				'metadata'   => json_encode( array( 'token' => 'token-permanente' ) ), // phpcs:ignore WordPress.WP.AlternativeFunctions.json_encode_json_encode
 			),
 		);
 	}
 }
 class PROMOTUR_Invitations {
-	public static function opciones_vencimiento() {
-		return array( 1 => '1 día', 3 => '3 días', 7 => '7 días', 14 => '14 días', 30 => '30 días', 90 => '90 días' );
+	public static function dias_sugeridos() {
+		return array( 1, 3, 7, 14, 30, 90, 365 );
 	}
 	public static function plain_token( $row ) {
 		$meta = json_decode( $row['metadata'] ?? '', true );
@@ -229,6 +236,13 @@ class PROMOTUR_Invitations {
 	}
 	public static function registration_url( $token ) {
 		return $token ? promotur_url( 'i/' . rawurlencode( $token ) ) : '';
+	}
+	public static function vence_texto( $row ) {
+		return empty( $row['expires_at'] ) ? 'No vence' : 'Vence el ' . date( 'j \d\e F', strtotime( $row['expires_at'] ) );
+	}
+	public static function usos_texto( $row ) {
+		$usos = (int) $row['usos'];
+		return null === $row['max_usos'] ? $usos . ' cuentas creadas, sin límite' : $usos . ' de ' . (int) $row['max_usos'];
 	}
 }
 class PROMOTUR_Estructura {
