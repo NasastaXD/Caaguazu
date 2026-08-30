@@ -3,7 +3,7 @@ Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 3.6.2
+Stable tag: 3.6.3
 License: GPLv2 or later
 
 Panel autenticado tipo app (PWA) bajo /turismo-panel, con enrutador propio, login propio, roles y flujo editorial para las tres cosas que la app muestra: fichas del inventario turístico, artículos y recorridos.
@@ -57,6 +57,12 @@ llamen los tags.
 * Repo privado: definir `PROMOTUR_GITHUB_TOKEN` (PAT de solo lectura) en `wp-config.php`.
 
 == Changelog ==
+
+= 3.6.3 =
+* Se saca la ayuda de «Descripción» en Categorías («una o dos líneas; encabeza
+  la categoría en la app»): no hacía falta, y encima salía en rojo —el color
+  de campo obligatorio— porque estaba metida en el mismo `<em>` que el
+  asterisco, no en una ayuda de verdad.
 
 = 3.6.2 =
 * **Categorías: la descripción y la imagen se pisaban con el nombre y el

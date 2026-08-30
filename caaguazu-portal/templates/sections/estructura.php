@@ -61,7 +61,7 @@ $body = function () use ( $grupos, $puede ) {
 										$img_url = $img_id ? wp_get_attachment_image_url( $img_id, 'medium' ) : '';
 										?>
 										<label class="promotur-field">
-											<span><?php esc_html_e( 'Descripción', 'caaguazu-portal' ); ?> <em><?php esc_html_e( 'una o dos líneas; encabeza la categoría en la app', 'caaguazu-portal' ); ?></em></span>
+											<span><?php esc_html_e( 'Descripción', 'caaguazu-portal' ); ?></span>
 											<textarea name="descripcion" rows="2"><?php echo esc_textarea( $termino->description ); ?></textarea>
 										</label>
 										<div class="promotur-field promotur-field--image">
