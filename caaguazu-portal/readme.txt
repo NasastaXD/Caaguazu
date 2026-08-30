@@ -3,7 +3,7 @@ Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 3.6.1
+Stable tag: 3.6.2
 License: GPLv2 or later
 
 Panel autenticado tipo app (PWA) bajo /turismo-panel, con enrutador propio, login propio, roles y flujo editorial para las tres cosas que la app muestra: fichas del inventario turístico, artículos y recorridos.
@@ -57,6 +57,14 @@ llamen los tags.
 * Repo privado: definir `PROMOTUR_GITHUB_TOKEN` (PAT de solo lectura) en `wp-config.php`.
 
 == Changelog ==
+
+= 3.6.2 =
+* **Categorías: la descripción y la imagen se pisaban con el nombre y el
+  badge de fichas.** El `<form>` de cada categoría —nombre, descripción,
+  imagen, botón Guardar— es un solo flex sin salto de línea, y desde que la
+  3.5.2 le agregó descripción e imagen quedaba todo apretado en una fila:
+  campos amontonados y el badge de «N fichas» flotando centrado en el medio
+  del formulario. Ahora cada campo va en su propio renglón.
 
 = 3.6.1 =
 * **«Pegar datos» en los tres editores.** Un cuadro plegable arriba del

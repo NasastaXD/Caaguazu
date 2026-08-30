@@ -809,13 +809,27 @@ html.promotur-no-splash .promotur-splash { display: none; }
  * Una fila por categoría o etiqueta. El nombre se edita donde está, sin
  * abrir otra pantalla: son nombres de una línea. En teléfono la fila se parte
  * en dos y el campo se queda con el ancho.
+ *
+ * Una categoría además lleva descripción e imagen (ver PROMOTUR_Estructura::
+ * tiene_extras()), y esos dos campos —más el mensaje de guardado y el botón—
+ * viven en el mismo <form> que el nombre. Sin su propio `flex-wrap` ahí
+ * adentro, el form los mete a todos en una sola fila apretada: se pisan entre
+ * sí, y el badge de «N fichas» del costado, centrado contra una fila que de
+ * golpe es altísima, termina flotando en el medio del formulario. Los campos
+ * largos se fuerzan a su propio renglón para que el form crezca hacia abajo
+ * en vez de aplastarse hacia los costados, y el badge se ancla arriba en vez
+ * de centrarse contra una altura que ya no es la de un renglón de texto.
  * ------------------------------------------------------------------------ */
 
-.promotur-termino { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--linea); }
+.promotur-termino { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--linea); }
 .promotur-termino:last-child { border-bottom: 0; }
-.promotur-termino__nombre { display: flex; flex: 1 1 240px; align-items: center; gap: 8px; min-width: 0; font-weight: 600; }
+.promotur-termino__nombre { display: flex; flex-wrap: wrap; flex: 1 1 240px; align-items: center; gap: 8px; min-width: 0; font-weight: 600; }
 .promotur-app .promotur-termino__nombre input { flex: 1 1 auto; min-width: 0; height: 44px; }
-.promotur-termino__uso { display: flex; align-items: center; gap: 10px; }
+/* Descripción, Imagen y el mensaje de guardado: cada uno a todo lo ancho del
+   form, en su propio renglón, en vez de apretados junto al nombre. */
+.promotur-termino__nombre .promotur-field,
+.promotur-termino__nombre .promotur-form-msg { flex: 1 1 100%; font-weight: 400; }
+.promotur-termino__uso { display: flex; align-items: center; gap: 10px; padding-top: 3px; }
 
 /* Un enlace suelto al pie de una sección. Va con alto de blanco tocable: en el
    teléfono un renglón de texto es un blanco de 17px. */
