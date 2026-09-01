@@ -2,7 +2,7 @@
 Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.1.1
+Stable tag: 1.1.2
 License: GPLv2 or later
 
 Acceso de un clic desde el panel del CEAD al Portal de Promotores Turísticos, sin registro nuevo ni contraseña propia del portal.
@@ -140,3 +140,22 @@ Cada intento de canje (éxito, rechazo o error) queda en
   `redirect_to=`: eso sería un open-redirect justo después de abrir sesión.
 * Sesión de SSO sin "recordarme" (dura lo que dura cualquier sesión del
   sistema de cuentas, no más) — el acceso vive del vínculo con el CEAD.
+
+== Changelog ==
+
+= 1.1.2 =
+* **Un rol que llegaba con espacios rebotaba, y no había forma de verlo.** El
+  canje limpiaba el rol con `sanitize_key()` antes de que lo viera el
+  normalizador, y `sanitize_key()` no convierte los separadores: los borra.
+  «Docente Turismo» llegaba como `docenteturismo`, que ya no pierde el sufijo
+  del curso ni coincide con nada, y la persona veía «Tu rol en el CEAD todavía
+  no está habilitado para entrar al portal». El normalizador —que maneja
+  espacios, guiones, acentos y mayúsculas— nunca llegaba a hacer su trabajo.
+  Ahora el rol viaja entero y se normaliza donde corresponde.
+* **La pantalla que arregla un rechazo decía que no había nada que arreglar.**
+  La lista de «roles que llegaron y se rechazaron» se cachea diez minutos, así
+  que quien rebotaba avisaba, el admin abría Herramientas → Acceso desde el
+  CEAD y veía «Ninguno». Un rechazo nuevo ahora invalida ese caché.
+* `tools/verificar-logica.php` comprueba las dos formas del nombre visible
+  («Docente Turismo», «Alumno Turismo») y que nadie vuelva a mutilar el rol
+  antes de normalizarlo.

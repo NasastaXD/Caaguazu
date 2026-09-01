@@ -65,7 +65,17 @@ class CEADSSO_Redeem {
 			'email'    => sanitize_email( $body['email'] ),
 			'nombre'   => isset( $body['nombre'] ) ? sanitize_text_field( $body['nombre'] ) : '',
 			'telefono' => isset( $body['telefono'] ) ? sanitize_text_field( $body['telefono'] ) : '',
-			'rol'      => sanitize_key( $body['rol'] ),
+			/*
+			 * `sanitize_text_field()` y NO `sanitize_key()`: el rol se
+			 * normaliza en `CEADSSO_Roles::normalizar()`, y esa normalización
+			 * se apoya en los separadores. `sanitize_key()` los borra en vez
+			 * de convertirlos —«Docente Turismo» queda en «docenteturismo»,
+			 * que ya no pierde el sufijo del curso ni matchea nada— así que
+			 * mutilaba el rol antes de que el normalizador lo viera, y la
+			 * persona rebotaba con «tu rol todavía no está habilitado».
+			 * Lo que llega crudo se guarda crudo; limpiar es tarea de allá.
+			 */
+			'rol'      => sanitize_text_field( $body['rol'] ),
 			'curso'    => isset( $body['curso'] ) ? sanitize_text_field( $body['curso'] ) : '',
 		);
 	}

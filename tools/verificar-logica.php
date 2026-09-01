@@ -74,6 +74,36 @@ comprobar( 'administrator → nada (no se regala el panel)', CEADSSO_Roles::reso
 comprobar( 'editor → nada',            CEADSSO_Roles::resolver( 'editor' ), null );
 comprobar( 'cualquier_cosa → nada',    CEADSSO_Roles::resolver( 'cualquier_cosa' ), null );
 
+/*
+ * El rol tal como lo escribe una persona en el CEAD, con espacios y
+ * mayúsculas. Un WordPress manda el slug del rol, pero también manda el
+ * nombre visible cuando quien configuró el emisor puso ese: los dos tienen
+ * que entrar.
+ */
+comprobar( '«Docente Turismo» (nombre visible) → promotor', CEADSSO_Roles::resolver( 'Docente Turismo' ), 'promotur_promotor' );
+comprobar( '«Alumno Turismo» (nombre visible) → mini',      CEADSSO_Roles::resolver( 'Alumno Turismo' ), 'promotur_mini' );
+
+/*
+ * Y que nadie vuelva a mutilar el rol ANTES de que el normalizador lo vea.
+ *
+ * `normalizar()` convierte los separadores —espacio y guion pasan a `_`— y
+ * después usa ese `_` para sacar el prefijo del colegio y el sufijo del curso.
+ * `sanitize_key()` no convierte: BORRA. Con él en el medio, «Docente Turismo»
+ * llega como «docenteturismo», que ya no pierde el sufijo y no matchea nada,
+ * y la persona rebota con «tu rol todavía no está habilitado» sin que haya
+ * ningún error en ningún lado. Es lo que hacía el canje.
+ *
+ * Se mira el código y no el resultado porque el daño ocurre una capa antes de
+ * lo que estas comprobaciones pueden llamar: `redeem()` sale a la red.
+ */
+$redeem = file_get_contents( $raiz . '/caaguazu-sso-cead/includes/class-redeem.php' );
+preg_match( "/'rol'\s*=>\s*([a-z_]+)\(/", $redeem, $m );
+comprobar(
+	'el canje no mutila el rol antes de normalizarlo',
+	isset( $m[1] ) ? $m[1] : '(no se encontró la línea)',
+	'sanitize_text_field'
+);
+
 echo "\n== PROMOTUR_Destinos::coords_desde_maps ==\n";
 require $raiz . '/caaguazu-portal/includes/class-destinos.php';
 $casos = array(
