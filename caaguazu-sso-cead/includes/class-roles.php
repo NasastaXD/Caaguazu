@@ -69,16 +69,24 @@ class CEADSSO_Roles {
 	public static function base() {
 		return array(
 			// El contrato original, ya normalizado (pierde `_turismo`).
-			'alumno'      => 'promotur_mini',
-			'docente'     => 'promotur_promotor',
+			'alumno'       => 'promotur_mini',
+			'docente'      => 'promotur_promotor',
 			// Las otras formas de decir lo mismo.
-			'estudiante'  => 'promotur_mini',
-			'cursante'    => 'promotur_mini',
-			'subscriber'  => 'promotur_mini',
-			'profesor'    => 'promotur_promotor',
-			'instructor'  => 'promotur_promotor',
-			'tutor'       => 'promotur_promotor',
-			'coordinador' => 'promotur_promotor',
+			'estudiante'   => 'promotur_mini',
+			'cursante'     => 'promotur_mini',
+			'subscriber'   => 'promotur_mini',
+			'profesor'     => 'promotur_promotor',
+			'instructor'   => 'promotur_promotor',
+			'tutor'        => 'promotur_promotor',
+			'coordinador'  => 'promotur_promotor',
+			// Quien dirige el programa de turismo del CEAD está del lado de
+			// quien enseña, no del lado de quien administra un WordPress: es
+			// la dirección DE ESTA carrera, y por eso entra como Profesor.
+			// No confundir con `administrator`, que sigue afuera a propósito.
+			'direccion'    => 'promotur_promotor',
+			'coordinacion' => 'promotur_promotor',
+			'director'     => 'promotur_promotor',
+			'directora'    => 'promotur_promotor',
 		);
 	}
 
@@ -111,6 +119,7 @@ class CEADSSO_Roles {
 	 * Normaliza un rol tal como lo manda el CEAD.
 	 *
 	 *   «Cead_Docente_Turismo» → «docente»
+	 *   «Dirección de Turismo» → «direccion»
 	 *   «Alumno del curso»     → «alumno_del_curso»
 	 *   «DOCENTE»              → «docente»
 	 *
@@ -148,6 +157,13 @@ class CEADSSO_Roles {
 		// los agrega quien instaló el plugin de allá, no la persona.
 		$rol = preg_replace( '/^(cead|czu|caaguazu)_/', '', $rol );
 		$rol = preg_replace( '/_(turismo|servicios_turisticos|st)$/', '', $rol );
+
+		// Y la preposición que queda colgando cuando el rol venía escrito como
+		// frase: «Dirección de Turismo» pierde el `_turismo` y queda en
+		// `direccion_de`, que no es ningún rol. El nombre visible de un rol se
+		// escribe así de seguido, y quien lo escribe del otro lado no tiene por
+		// qué saber cómo lo partimos acá.
+		$rol = preg_replace( '/_(de|del|la|el|los|las)$/', '', $rol );
 
 		return (string) $rol;
 	}

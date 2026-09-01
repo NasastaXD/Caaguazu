@@ -2,7 +2,7 @@
 Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.1.2
+Stable tag: 1.1.3
 License: GPLv2 or later
 
 Acceso de un clic desde el panel del CEAD al Portal de Promotores Turísticos, sin registro nuevo ni contraseña propia del portal.
@@ -142,6 +142,18 @@ Cada intento de canje (éxito, rechazo o error) queda en
   sistema de cuentas, no más) — el acceso vive del vínculo con el CEAD.
 
 == Changelog ==
+
+= 1.1.3 =
+* **Quien dirige la carrera de turismo del CEAD ahora entra como Profesor.**
+  `direccion`, `coordinacion`, `director` y `directora` se suman al mapa base:
+  dirigir este programa es estar del lado de quien enseña. `administrator` y
+  `editor` siguen afuera a propósito — ser administrador del CEAD no es ser
+  promotor turístico de Caaguazú.
+* **Un rol escrito como frase perdía el sufijo del curso y quedaba a medias.**
+  «Dirección de Turismo» se normalizaba a `direccion_de`, con la preposición
+  colgando, que no coincide con ningún rol. El nombre visible de un rol se
+  escribe así, y quien lo escribe del otro lado no tiene por qué saber cómo lo
+  partimos acá.
 
 = 1.1.2 =
 * **Un rol que llegaba con espacios rebotaba, y no había forma de verlo.** El
