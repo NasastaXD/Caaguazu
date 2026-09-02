@@ -347,7 +347,7 @@ No reimplementa identidad, permisos ni flujo editorial — delega en `caaguazu-c
 
 El mapa base **no** lo sirve este plugin: la app usa tiles vectoriales embebidos (2 MB, contra los ~250 MB que pesaría una pirámide ráster). Lo que sí sirve son los markers, separados del mapa base — eso es lo que hace que registrar un lugar haga aparecer su pin sin regenerar nada.
 
-**Pendiente:** `POST /contenido` (alta de fichas desde el teléfono) no está implementado; la lectura sí. Y no tiene auto-updater (§7.5).
+**Pendiente:** `POST /contenido` (alta de fichas desde el teléfono) no está implementado; la lectura sí.
 
 ---
 
@@ -429,11 +429,11 @@ No es un defecto, pero es la causa raíz de 7.2 y 7.4, y conviene tenerlo escrit
 | Componente | Mecanismo |
 |---|---|
 | Theme, `caaguazu-modulos`, `caaguazu-turismo`, `caaguazu-editor-ux` | Clase compartida `Caaguazu_Component_Updater`, compara contra `manifest.json` del release |
-| `caaguazu-portal` | `plugin-update-checker` vendoreado, lee los GitHub Releases directamente |
+| `caaguazu-portal`, `caaguazu-app-api` | `plugin-update-checker` vendoreado, lee los GitHub Releases directamente |
 | `caaguazu-locales` | Manifiesto JSON manual en `updates/` *(roto, ver 7.4)* |
-| `caaguazu-cuentas`, `caaguazu-sso-cead`, `caaguazu-app-api` | **Ninguno** — instalación y actualización a mano |
+| `caaguazu-cuentas`, `caaguazu-sso-cead` | **Ninguno** — instalación y actualización a mano |
 
-Los tres plugins sin updater son los de identidad y el que sirve la API de la app — o sea los que más conviene poder parchear rápido si aparece un problema de seguridad. Con una app publicada dependiendo de esa API, deja de ser incómodo y pasa a ser un riesgo.
+`caaguazu-app-api` sumó el mismo mecanismo que el Portal en la 0.8.1 —era el más urgente de parchear rápido, con una app publicada dependiendo de él—. Quedan los dos plugins de identidad sin updater; son los siguientes candidatos a migrar.
 
 ### 7.6 El conteo de páginas está mal documentado en tres lugares
 

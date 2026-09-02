@@ -2,7 +2,7 @@
 Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 0.8.0
+Stable tag: 0.8.1
 License: GPLv2 or later
 
 Capa REST que consume la app Android de turismo (Turismo App Czu).
@@ -109,6 +109,30 @@ de evento.
 1. Requiere `caaguazu-cuentas` y `caaguazu-portal` activos.
 2. Subir a `/wp-content/plugins/` y activar. Crea sus dos tablas.
 3. Cargar icono y color de cada categoría en **Destinos → Categorías**.
+
+== Auto-actualización ==
+
+Desde 0.8.1 el plugin se actualiza desde wp-admin sin pasar por
+WordPress.org, con el mismo mecanismo que `caaguazu-portal`:
+plugin-update-checker (vendoreado en `vendor/`) contra los GitHub Releases de
+`NasastaXD/Caaguazu`. El job `app-api` de `.github/workflows/release.yml`
+publica el release con el tag `app-api-{version}` y el asset
+`caaguazu-app-api.zip` cada vez que sube la versión del header; el checker lo
+detecta (~cada 12 h) y ofrece la actualización en **Plugins** y en
+**Caaguazú API → Actualizaciones** (wp-admin, capability `update_plugins`).
+
+En ese mismo repositorio se publican también el theme, el panel y el SSO del
+CEAD, cada uno con su propio tag y su propio zip. Para que el updater de esta
+API no agarre el release de otro componente, sólo considera un release que
+traiga adjunto `caaguazu-app-api.zip` — no depende de cómo se llame el tag.
+
+* Versión en un solo lugar: header `Version:` + constante `CZUAPI_VERSION` (semver).
+* El updater y su pantalla no dependen de que `caaguazu-cuentas` ni
+  `caaguazu-portal` estén activos: comprobar y bajar una versión nueva de este
+  plugin es justo la herramienta que hace falta cuando el resto del ecosistema
+  no está funcionando.
+* Repo privado: definir `CZUAPI_GITHUB_TOKEN` (PAT de solo lectura) en
+  `wp-config.php`, o cargarlo desde **Caaguazú API → Actualizaciones**.
 
 == Cambios del contrato en 0.8.0 ==
 
@@ -302,5 +326,3 @@ Están detallados, con payloads, en `docs/contrato-app-contenido.md`.
   `get_manifest()` y `set_manifest()`, que existen desde 0.2.0, contra una
   instalación 0.1.0 — y moría con un error fatal. Se vuelve a enchufar cuando
   la versión instalada acá sea la que esa pantalla necesita.
-* Este plugin todavía no tiene auto-updater, igual que `caaguazu-cuentas` y
-  `caaguazu-sso-cead`.

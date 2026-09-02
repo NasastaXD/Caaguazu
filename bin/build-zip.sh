@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # Regenera los zips instalables. Sin argumentos arma los cuatro; con `theme`,
-# `portal`, `app-api` o `sso` arma sólo el que se pida (los dos primeros son lo
-# que hace el workflow de release).
+# `portal`, `app-api` o `sso` arma sólo el que se pida — es lo mismo que hace
+# `.github/workflows/release.yml` por cada componente cuyo tag todavía no
+# existe.
 #
 # No se versionan en git (ver .gitignore): se generan bajo demanda o desde
-# .github/workflows/release.yml.
+# ese workflow.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -26,8 +27,6 @@ if [ "$que" = "todo" ] || [ "$que" = "portal" ]; then
 	echo "Generado: caaguazu-portal.zip"
 fi
 
-# La API de la app no tiene auto-updater: se instala a mano, así que su zip se
-# arma bajo demanda y no lo publica ningún workflow.
 if [ "$que" = "todo" ] || [ "$que" = "app-api" ]; then
 	rm -f caaguazu-app-api.zip
 	zip -r -q caaguazu-app-api.zip caaguazu-app-api -x '*.DS_Store' -x '__MACOSX/*'
