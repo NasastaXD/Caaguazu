@@ -347,6 +347,12 @@ $body = function () use ( $post, $post_id, $estado, $checklist, $feedback, $grup
 			<?php promotur_acciones_de_estado( $post_id ); ?>
 		</aside>
 	</div>
+
+	<?php
+	// Las versiones en otro idioma. Va fuera del formulario del editor a
+	// propósito: ver el comentario de arriba del partial.
+	include PROMOTUR_DIR . 'templates/partials/traducciones.php';
+	?>
 	<?php
 };
 

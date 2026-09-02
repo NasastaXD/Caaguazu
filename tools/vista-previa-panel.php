@@ -159,7 +159,19 @@ function wp_trim_words( $t, $n = 55, $more = null ) { return $t; }
 function has_post_thumbnail( $p = null ) { return false; }
 function get_post_thumbnail_id( $p = null ) { return 0; }
 function wp_get_attachment_image( $id, $size = '', $icon = false, $attr = array() ) { return ''; }
-function get_post_field( $campo, $p = null ) { return 'post_content' === $campo ? 'Sendero corto, sombra y agua fría todo el año.' : ''; }
+function get_post_field( $campo, $p = null ) {
+	// Los cuatro campos que las plantillas leen de verdad. `post_title` y
+	// `post_excerpt` los agregó el bloque de idiomas: sin ellos, los campos
+	// traducibles quedaban con el original vacío y el bloque se dibujaba a
+	// medias — o sea, se auditaba una pantalla que no es la que se ve.
+	$mapa = array(
+		'post_content'      => 'Sendero corto, sombra y agua fría todo el año.',
+		'post_title'        => 'Salto Ykua La Patria',
+		'post_excerpt'      => 'Una caída de agua a veinte minutos del centro, con sombra y mesas.',
+		'post_modified_gmt' => gmdate( 'Y-m-d H:i:s', time() - 3600 ),
+	);
+	return isset( $mapa[ $campo ] ) ? $mapa[ $campo ] : '';
+}
 function get_post_type( $p = null ) { return $GLOBALS['promotur_vista_previa_cpt'] ?? 'promotur_destino'; }
 function get_the_terms( $p, $tax ) { return get_terms( array( 'taxonomy' => $tax ) ); }
 function wp_get_object_terms( $p, $tax, $args = array() ) { return array( 30 ); }
@@ -621,6 +633,15 @@ class Promotur_Vista_Previa_DB {
 $GLOBALS['wpdb'] = new Promotur_Vista_Previa_DB();
 
 require $plugin . 'includes/helpers.php';
+
+/*
+ * Las traducciones se cargan DE VERDAD, no stubeadas: son lógica pura sobre
+ * `get_post_meta()` y `get_post_field()`, que ya tienen su doble acá arriba.
+ * Un doble de esta clase dibujaría los campos que el doble declare, y el
+ * bloque de idiomas es justamente una lista declarativa — auditarlo contra una
+ * copia sería auditar la copia.
+ */
+require $plugin . 'includes/class-traducciones.php';
 
 // La cabina de mando de la app está fuera de circulación (ver
 // promotur_app_api_activa()): su clase ya no se carga acá tampoco, para que la

@@ -93,6 +93,7 @@ class CZUAPI_Eventos {
 				'categoria'  => array( 'type' => 'integer' ),
 				'pagina'     => array( 'type' => 'integer', 'default' => 1 ),
 				'por_pagina' => array( 'type' => 'integer', 'default' => 20 ),
+				'idioma'     => array( 'type' => 'string' ),   // es | en | pt
 			),
 		) );
 
@@ -100,6 +101,9 @@ class CZUAPI_Eventos {
 			'methods'             => 'GET',
 			'callback'            => array( $this, 'detalle' ),
 			'permission_callback' => '__return_true',
+			'args'                => array(
+				'idioma' => array( 'type' => 'string' ),
+			),
 		) );
 	}
 
@@ -122,8 +126,9 @@ class CZUAPI_Eventos {
 		 * por fuente está muy por encima de lo que un departamento agenda en una
 		 * temporada, y evita que un error de carga se lleve puesta la memoria.
 		 */
-		$items = array_merge(
-			$this->de_fichas( $desde, $hasta, $cat ),
+		$idioma = CZUAPI_Idiomas::del_pedido( $request );
+		$items  = array_merge(
+			$this->de_fichas( $desde, $hasta, $cat, $idioma ),
 			$this->de_cpt_viejo( $desde, $hasta, $cat )
 		);
 
@@ -149,7 +154,7 @@ class CZUAPI_Eventos {
 	 * @param int    $cat   term_id de categoría, o 0
 	 * @return array[]
 	 */
-	private function de_fichas( $desde, $hasta, $cat ) {
+	private function de_fichas( $desde, $hasta, $cat, $idioma = 'es' ) {
 		$meta_query = array(
 			array( 'key' => PROMOTUR_Destinos::META_TIPO_ITEM, 'value' => 'evento' ),
 			array( 'key' => PROMOTUR_Destinos::META_INICIO, 'value' => $desde, 'compare' => '>=', 'type' => 'DATETIME' ),
@@ -174,7 +179,7 @@ class CZUAPI_Eventos {
 
 		$out = array();
 		foreach ( get_posts( $args ) as $post ) {
-			$out[] = $this->formato_ficha( $post );
+			$out[] = $this->formato_ficha( $post, $idioma );
 		}
 		return $out;
 	}
@@ -250,33 +255,49 @@ class CZUAPI_Eventos {
 	 * @param WP_Post $post
 	 * @return array
 	 */
-	private function formato_ficha( $post ) {
+	private function formato_ficha( $post, $idioma = 'es' ) {
 		$id  = $post->ID;
 		$lat = get_post_meta( $id, '_promotur_lat', true );
 		$lng = get_post_meta( $id, '_promotur_lng', true );
+
+		/*
+		 * Esto es una FICHA del panel, así que se traduce como cualquier otra.
+		 * El evento del CPT viejo —`formato()`, más abajo— no: no pasa por el
+		 * panel, así que no hay dónde escribirle una traducción. Los dos
+		 * traen igual `idioma` y `traducido`, para que el cliente lea una sola
+		 * forma y `traducido: false` le diga cuál es cuál.
+		 */
+		$i18n = CZUAPI_Idiomas::textos( $id, $idioma );
+		$t    = function ( $campo, $porDefecto ) use ( $i18n ) {
+			return isset( $i18n['textos'][ $campo ] ) ? $i18n['textos'][ $campo ] : $porDefecto;
+		};
 
 		return array(
 			'id'        => (int) $id,
 			'tipo'      => 'evento',
 			'origen'    => 'ficha',
 			'ficha_id'  => (int) $id,
-			'titulo'    => get_the_title( $post ),
+			'idioma'    => $i18n['idioma'],
+			'traducido' => $i18n['traducido'],
+			'titulo'    => $t( 'titulo', get_the_title( $post ) ),
 			'inicio'    => czuapi_fecha( (string) get_post_meta( $id, PROMOTUR_Destinos::META_INICIO, true ) ),
 			'fin'       => czuapi_fecha( (string) get_post_meta( $id, PROMOTUR_Destinos::META_FIN, true ) ),
 			'lugar'     => ( '' === $lat || '' === $lng ) ? null : array(
 				'ref_tipo' => 'destino',
 				'ref_id'   => (int) $id,
-				'nombre'   => get_the_title( $post ),
+				'nombre'   => $t( 'titulo', get_the_title( $post ) ),
 				'lat'      => (float) $lat,
 				'lng'      => (float) $lng,
 			),
-			'costo'     => (string) get_post_meta( $id, '_promotur_costo', true ),
+			'costo'     => $t( 'costo', (string) get_post_meta( $id, '_promotur_costo', true ) ),
 			'categoria' => czuapi_primer_termino( $id, CZUAPI_Taxonomias::TAX_CATEGORIA ),
 			'portada'   => czuapi_imagen( (int) get_post_thumbnail_id( $id ) ),
 			// Antes leía el gancho, que se sacó de la ficha por redundante.
 			// El resumen de tarjeta ahora sale de la descripción, igual que
 			// en el evento del CPT viejo (`formato()` más abajo).
-			'resumen'   => get_the_excerpt( $post ),
+			// La ficha no tiene un «resumen» propio: el de la tarjeta sale de
+			// la descripción, que sí se traduce.
+			'resumen'   => $t( 'descripcion', get_the_excerpt( $post ) ),
 		);
 	}
 
@@ -315,6 +336,11 @@ class CZUAPI_Eventos {
 			// y el payload original no la traía.
 			'portada'   => czuapi_imagen( (int) get_post_thumbnail_id( $id ) ),
 			'resumen'   => get_the_excerpt( $post ),
+			// El CPT viejo no pasa por el panel, así que no hay dónde
+			// escribirle una traducción. Las claves vienen igual para que el
+			// cliente no tenga dos formas de leer la misma tarjeta.
+			'idioma'    => CZUAPI_Idiomas::FALLBACK,
+			'traducido' => false,
 		);
 
 		if ( $completo ) {

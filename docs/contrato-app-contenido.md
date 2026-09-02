@@ -4,6 +4,12 @@
 **De:** el lado del panel (WordPress en `caaguazu.net`).
 **Versión de la API:** `caaguazu-app-api` **0.4.0**, namespace `/wp-json/czu-app/v1/`.
 
+> **Ojo:** este documento describe la 0.4.0 y la API va por la 0.8.0. Los
+> cambios de contrato posteriores están, uno por versión, en el
+> `readme.txt` del plugin, y el multi-idioma —que toca **todas** las respuestas
+> de contenido— tiene su propio documento:
+> [`idiomas-en-la-api.md`](idiomas-en-la-api.md).
+
 Este documento es el contrato de las **tres entidades de contenido**: el sitio
 turístico (la ficha), el artículo y el recorrido. Autenticación, mapa y
 sincronización están en [`BRIEF-AGENTE-APP-TURISMO.md`](../BRIEF-AGENTE-APP-TURISMO.md)

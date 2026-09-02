@@ -38,6 +38,20 @@ class CZUAPI_Articulos {
 	const META_PORTADA      = '_articulo_portada';
 	const META_RELACIONADOS = '_articulo_relacionados';
 
+	/**
+	 * Campo traducible del panel → clave con la que esta respuesta lo sirve.
+	 *
+	 * `cuerpo` no está acá: en la respuesta viaja como `cuerpo_html`, ya
+	 * pasado por `the_content`, así que se resuelve a mano en `detalle()` —
+	 * pisar el HTML con texto plano dejaría el cuerpo sin párrafos.
+	 */
+	const MAPA_I18N = array(
+		'antetitulo' => 'antetitulo',
+		'titulo'     => 'titulo',
+		'subtitulo'  => 'subtitulo',
+		'entradilla' => 'entradilla',
+	);
+
 	public static function instance() {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -83,6 +97,7 @@ class CZUAPI_Articulos {
 				'buscar'     => array( 'type' => 'string' ),
 				'pagina'     => array( 'type' => 'integer', 'default' => 1 ),
 				'por_pagina' => array( 'type' => 'integer', 'default' => 20 ),
+				'idioma'     => array( 'type' => 'string' ),   // es | en | pt
 			),
 		) );
 
@@ -90,6 +105,9 @@ class CZUAPI_Articulos {
 			'methods'             => 'GET',
 			'callback'            => array( $this, 'detalle' ),
 			'permission_callback' => '__return_true',
+			'args'                => array(
+				'idioma' => array( 'type' => 'string' ),
+			),
 		) );
 	}
 
@@ -139,10 +157,11 @@ class CZUAPI_Articulos {
 			$args['s'] = sanitize_text_field( (string) $request->get_param( 'buscar' ) );
 		}
 
-		$q     = new WP_Query( $args );
-		$items = array();
+		$idioma = CZUAPI_Idiomas::del_pedido( $request );
+		$q      = new WP_Query( $args );
+		$items  = array();
 		foreach ( $q->posts as $post ) {
-			$items[] = $this->resumen( $post );
+			$items[] = $this->resumen( $post, $idioma );
 		}
 
 		return CZUAPI_Response::with_etag(
@@ -158,12 +177,24 @@ class CZUAPI_Articulos {
 			return CZUAPI_Response::no_encontrado();
 		}
 
-		$out = $this->resumen( $post );
+		$idioma = CZUAPI_Idiomas::del_pedido( $request );
+		$i18n   = CZUAPI_Idiomas::textos( $post->ID, $idioma );
 
-		$out['cuerpo_html']  = apply_filters( 'the_content', $post->post_content );
+		$out = $this->resumen( $post, $idioma );
+
+		// El cuerpo se traduce en plano y recién después se le aplica
+		// `the_content`: el original también se guarda en plano, así que
+		// formatear antes de elegir el texto daría dos HTML distintos según el
+		// idioma —uno con párrafos y otro sin ellos—.
+		$cuerpo = isset( $i18n['textos']['cuerpo'] ) ? $i18n['textos']['cuerpo'] : $post->post_content;
+
+		$out['cuerpo_html']  = apply_filters( 'the_content', $cuerpo );
+		// Las fuentes NO se traducen: son citas de dónde salió cada dato, y
+		// traducir el nombre de un libro o de un archivo lo vuelve imposible
+		// de encontrar.
 		$out['fuentes']      = $this->fuentes( $post->ID );
 		$out['categoria']    = czuapi_primer_termino( $post->ID, CZUAPI_Taxonomias::TAX_CATEGORIA );
-		$out['relacionados'] = $this->relacionados( $post->ID );
+		$out['relacionados'] = $this->relacionados( $post->ID, $idioma );
 		$out['actualizado']  = czuapi_fecha( $post->post_modified_gmt );
 
 		return CZUAPI_Response::with_etag( $out, $request, 180 );
@@ -178,9 +209,9 @@ class CZUAPI_Articulos {
 	 * @param WP_Post $post
 	 * @return array
 	 */
-	private function resumen( $post ) {
-		$id = (int) $post->ID;
-		return array(
+	private function resumen( $post, $idioma = 'es' ) {
+		$id  = (int) $post->ID;
+		$out = array(
 			'id'         => $id,
 			'antetitulo' => (string) get_post_meta( $id, self::META_ANTETITULO, true ),
 			'titulo'     => get_the_title( $post ),
@@ -196,9 +227,12 @@ class CZUAPI_Articulos {
 			// llama así y así lo escribe la gente.
 			'entradilla' => get_the_excerpt( $post ),
 			'portada'    => $this->portada( $id ),
+			// Quién firma NO se traduce: es un nombre propio.
 			'autores'    => $this->autores( $id ),
 			'publicado'  => czuapi_fecha( $post->post_date_gmt ),
 		);
+
+		return CZUAPI_Idiomas::aplicar( $out, $id, $idioma, self::MAPA_I18N );
 	}
 
 	/**
@@ -279,7 +313,7 @@ class CZUAPI_Articulos {
 	 *
 	 * @return array[]
 	 */
-	private function relacionados( $id ) {
+	private function relacionados( $id, $idioma = 'es' ) {
 		$raw = get_post_meta( $id, self::META_RELACIONADOS, true );
 		$ids = is_array( $raw ) ? $raw : array_filter( array_map( 'intval', explode( ',', (string) $raw ) ) );
 
@@ -307,9 +341,10 @@ class CZUAPI_Articulos {
 
 		$out = array();
 		foreach ( get_posts( $args ) as $p ) {
+			$t = CZUAPI_Idiomas::textos( (int) $p->ID, $idioma );
 			$out[] = array(
 				'id'      => (int) $p->ID,
-				'titulo'  => get_the_title( $p ),
+				'titulo'  => isset( $t['textos']['titulo'] ) ? $t['textos']['titulo'] : get_the_title( $p ),
 				'portada' => czuapi_imagen( (int) get_post_thumbnail_id( $p->ID ), '', 'medium' ),
 			);
 		}

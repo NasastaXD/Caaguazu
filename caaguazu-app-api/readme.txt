@@ -2,7 +2,7 @@
 Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 0.7.1
+Stable tag: 0.8.0
 License: GPLv2 or later
 
 Capa REST que consume la app Android de turismo (Turismo App Czu).
@@ -56,8 +56,12 @@ Namespace: `/wp-json/czu-app/v1/`
 * `GET·POST·PUT·DELETE /mis-recorridos` — requiere token
 * `GET /articulos`, `GET /articulos/{id}` — filtros: `categoria`, `etiqueta`, `buscar`, `pagina`, `por_pagina`
 
+= Idioma =
+* `GET /idiomas` — en qué idiomas se puede pedir el contenido
+* Todo endpoint de contenido acepta `?idioma=es|en|pt` (o `Accept-Language`)
+
 = Interfaz =
-* `GET /strings/{locale}` — `es`, `en`, `gn`
+* `GET /strings/{locale}` — `es`, `en`, `gn`, `pt`
 * `GET /media-manifest`
 
 = Sincronización =
@@ -105,6 +109,42 @@ de evento.
 1. Requiere `caaguazu-cuentas` y `caaguazu-portal` activos.
 2. Subir a `/wp-content/plugins/` y activar. Crea sus dos tablas.
 3. Cargar icono y color de cada categoría en **Destinos → Categorías**.
+
+== Cambios del contrato en 0.8.0 ==
+
+**Multi-idioma en el contenido.** Nada de lo que ya funcionaba cambia: sin
+`?idioma`, cada endpoint responde exactamente lo que respondía.
+
+* **`GET /idiomas`** (nuevo) — los idiomas disponibles, con su nombre en su
+  propio idioma y cuál es el original.
+* **`?idioma=es|en|pt`** en `/inventario`, `/inventario/{id}`, `/articulos`,
+  `/articulos/{id}`, `/recorridos`, `/recorridos/{id}`, `/mis-recorridos` y
+  `/eventos`. Si no viene, se mira `Accept-Language` (sólo el código de
+  idioma: `pt-BR` y `pt-PT` son el mismo portugués). Un idioma desconocido
+  **no es error**: se sirve el castellano.
+* **Cada objeto de contenido suma `idioma` y `traducido`.** `idioma` es en qué
+  idioma están sus textos; `traducido` dice si TODOS sus campos traducibles lo
+  estaban. Importa porque la caída al original es **campo por campo**: una
+  ficha puede venir con el título en inglés y la descripción en castellano.
+  Sin ese dato el cliente muestra una mezcla de dos idiomas sin poder avisar de
+  nada; con él puede poner «parcialmente traducido».
+* Qué se traduce: los textos que una persona lee. Ficha: `titulo`,
+  `descripcion`, `practicos.horario`, `practicos.costo` (y `horario_resumen` en
+  la lista). Artículo: `antetitulo`, `titulo`, `subtitulo`, `entradilla`,
+  `cuerpo_html`. Recorrido: `titulo`, `resumen`, `articulo_html`,
+  `duracion_estimada` y el `texto` de cada parada.
+* Qué **no** se traduce, a propósito: coordenadas, enlaces, fechas,
+  `rango_precio`, `autores`, `fuentes`, y las categorías y etiquetas — esas son
+  del sistema y se traducen una sola vez en `/strings`, no una vez por ficha.
+* El **título de una parada** de recorrido sale de la ficha a la que apunta, no
+  de una copia: traducir la ficha una vez la traduce en todos los recorridos.
+* `/mapa/markers` no cambia: no lleva ningún texto.
+* Los eventos del CPT viejo traen `idioma: "es"` y `traducido: false` siempre —
+  no pasan por el panel, así que no hay dónde escribirles una traducción. Los
+  eventos que salen de una ficha sí se traducen.
+* `/strings/{locale}` acepta ahora también `pt`.
+* El `ETag` ya varía con el idioma (se calcula sobre el cuerpo), y el idioma
+  viaja en el query string, así que la caché intermedia no mezcla idiomas.
 
 == Cambios del contrato en 0.7.1 ==
 

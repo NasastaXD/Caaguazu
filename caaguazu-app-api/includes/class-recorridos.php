@@ -83,6 +83,7 @@ class CZUAPI_Recorridos {
 			'args'                => array(
 				'pagina'     => array( 'type' => 'integer', 'default' => 1 ),
 				'por_pagina' => array( 'type' => 'integer', 'default' => 20 ),
+				'idioma'     => array( 'type' => 'string' ),   // es | en | pt
 			),
 		) );
 
@@ -90,6 +91,9 @@ class CZUAPI_Recorridos {
 			'methods'             => 'GET',
 			'callback'            => array( $this, 'detalle' ),
 			'permission_callback' => '__return_true',
+			'args'                => array(
+				'idioma' => array( 'type' => 'string' ),
+			),
 		) );
 
 		register_rest_route( CZUAPI_NS, '/mis-recorridos', array(
@@ -141,9 +145,10 @@ class CZUAPI_Recorridos {
 			) ),
 		) ) );
 
-		$out = array();
+		$idioma = CZUAPI_Idiomas::del_pedido( $request );
+		$out    = array();
 		foreach ( $q->posts as $post ) {
-			$out[] = $this->formato( $post, false );
+			$out[] = $this->formato( $post, false, $idioma );
 		}
 
 		return CZUAPI_Response::with_etag(
@@ -169,13 +174,13 @@ class CZUAPI_Recorridos {
 			}
 			// Sin ETag/Cache-Control acá: `with_etag` manda `public`, y esto es
 			// de una sola cuenta. Lo mismo vale para mis_lista/crear/actualizar.
-			return new WP_REST_Response( $this->formato( $post, true ), 200 );
+			return new WP_REST_Response( $this->formato( $post, true, CZUAPI_Idiomas::del_pedido( $request ) ), 200 );
 		}
 		if ( 'publish' !== $post->post_status ) {
 			return CZUAPI_Response::no_encontrado();
 		}
 
-		return CZUAPI_Response::with_etag( $this->formato( $post, true ), $request, 180 );
+		return CZUAPI_Response::with_etag( $this->formato( $post, true, CZUAPI_Idiomas::del_pedido( $request ) ), $request, 180 );
 	}
 
 	/* --------------------------------------------------------------------- */
@@ -199,9 +204,12 @@ class CZUAPI_Recorridos {
 			),
 		) );
 
-		$out = array();
+		// El recorrido lo armó esta persona y su texto no se traduce, pero los
+		// nombres de sus paradas salen de fichas que sí pueden estarlo.
+		$idioma = CZUAPI_Idiomas::del_pedido( $request );
+		$out    = array();
 		foreach ( $posts as $post ) {
-			$out[] = $this->formato( $post, true );
+			$out[] = $this->formato( $post, true, $idioma );
 		}
 		return new WP_REST_Response( $out, 200 );
 	}
@@ -237,7 +245,7 @@ class CZUAPI_Recorridos {
 		update_post_meta( $id, self::META_CUENTA, $cuenta );
 		update_post_meta( $id, self::META_PARADAS, $paradas );
 
-		return new WP_REST_Response( $this->formato( get_post( $id ), true ), 201 );
+		return new WP_REST_Response( $this->formato( get_post( $id ), true, CZUAPI_Idiomas::del_pedido( $request ) ), 201 );
 	}
 
 	public function mis_actualizar( $request ) {
@@ -260,7 +268,7 @@ class CZUAPI_Recorridos {
 			update_post_meta( $post->ID, self::META_PARADAS, $paradas );
 		}
 
-		return new WP_REST_Response( $this->formato( get_post( $post->ID ), true ), 200 );
+		return new WP_REST_Response( $this->formato( get_post( $post->ID ), true, CZUAPI_Idiomas::del_pedido( $request ) ), 200 );
 	}
 
 	public function mis_borrar( $request ) {
@@ -300,7 +308,7 @@ class CZUAPI_Recorridos {
 	 * @param bool    $completo
 	 * @return array
 	 */
-	private function formato( $post, $completo ) {
+	private function formato( $post, $completo, $idioma = 'es' ) {
 		$id      = $post->ID;
 		$tipo    = (string) get_post_meta( $id, self::META_TIPO, true );
 		$paradas = get_post_meta( $id, self::META_PARADAS, true );
@@ -311,21 +319,35 @@ class CZUAPI_Recorridos {
 			$portada = (int) get_post_thumbnail_id( $id );
 		}
 
+		/*
+		 * Un recorrido de usuario NO se traduce: lo escribió una persona en la
+		 * app, en su idioma, y no pasa por el panel. `resolver()` devuelve el
+		 * original para todo, así que sale solo — pero el idioma que se
+		 * informa es igual el pedido, porque los títulos de sus paradas sí
+		 * vienen de fichas que pueden estar traducidas.
+		 */
+		$i18n = CZUAPI_Idiomas::textos( $id, $idioma );
+		$t    = function ( $campo, $porDefecto ) use ( $i18n ) {
+			return isset( $i18n['textos'][ $campo ] ) ? $i18n['textos'][ $campo ] : $porDefecto;
+		};
+
 		$out = array(
 			'id'                => (int) $id,
 			'tipo'              => $tipo ? $tipo : 'prehecho',
-			'titulo'            => get_the_title( $post ),
-			'resumen'           => get_the_excerpt( $post ),
+			'titulo'            => $t( 'titulo', get_the_title( $post ) ),
+			'resumen'           => $t( 'resumen', get_the_excerpt( $post ) ),
 			'portada'           => czuapi_imagen( $portada ),
-			'duracion_estimada' => (string) get_post_meta( $id, self::META_DURACION, true ),
+			'duracion_estimada' => $t( 'duracion_estimada', (string) get_post_meta( $id, self::META_DURACION, true ) ),
 			'cantidad_paradas'  => count( $paradas ),
+			'idioma'            => $i18n['idioma'],
+			'traducido'         => $i18n['traducido'],
 		);
 
 		if ( ! $completo ) {
 			return $out;
 		}
 
-		$out['paradas'] = $this->expandir_paradas( $paradas );
+		$out['paradas'] = $this->expandir_paradas( $paradas, $idioma, $i18n['textos'] );
 
 		// Calculados, no almacenados.
 		$out['costo_total']  = $this->costo_total( $out['paradas'] );
@@ -340,8 +362,11 @@ class CZUAPI_Recorridos {
 		if ( 'prehecho' === $out['tipo'] ) {
 			$out['historia']      = $this->historia( $id );
 			$out['medios']        = $this->medios( $id );
-			$out['articulos']     = $this->articulos( $id );
-			$out['articulo_html'] = apply_filters( 'the_content', $post->post_content );
+			$out['articulos']     = $this->articulos( $id, $idioma );
+			// Igual que en artículos: se elige el texto en plano y recién
+			// después se le da formato, para que los dos idiomas salgan con
+			// los mismos párrafos.
+			$out['articulo_html'] = apply_filters( 'the_content', $t( 'cuerpo', $post->post_content ) );
 		} else {
 			// Un recorrido de usuario no tiene nada de esto: lo armó una
 			// persona en la app eligiendo lugares, no escribiéndolos. Las
@@ -376,7 +401,7 @@ class CZUAPI_Recorridos {
 	 *
 	 * @return array[]
 	 */
-	private function articulos( $id ) {
+	private function articulos( $id, $idioma = 'es' ) {
 		$crudo = get_post_meta( $id, self::META_ARTICULOS, true );
 		$ids   = is_array( $crudo ) ? array_map( 'intval', $crudo ) : array();
 		if ( ! $ids ) {
@@ -395,13 +420,33 @@ class CZUAPI_Recorridos {
 			if ( ! $att ) {
 				$att = (int) get_post_thumbnail_id( $p->ID );
 			}
+			$t = CZUAPI_Idiomas::textos( (int) $p->ID, $idioma );
 			$out[] = array(
 				'id'      => (int) $p->ID,
-				'titulo'  => get_the_title( $p ),
+				'titulo'  => isset( $t['textos']['titulo'] ) ? $t['textos']['titulo'] : get_the_title( $p ),
 				'portada' => czuapi_imagen( $att, '', 'medium' ),
 			);
 		}
 		return $out;
+	}
+
+	/**
+	 * El nombre de una parada, en el idioma pedido.
+	 *
+	 * Sale de la ficha o del evento al que la parada apunta, no de una copia
+	 * guardada en el recorrido: así, traducir una ficha una sola vez la
+	 * traduce en todos los recorridos que la incluyen.
+	 *
+	 * @param int     $ref_id
+	 * @param WP_Post $post
+	 * @param string  $idioma
+	 * @return string
+	 */
+	private function titulo_de_parada( $ref_id, $post, $idioma ) {
+		$t = CZUAPI_Idiomas::textos( (int) $ref_id, $idioma );
+		return isset( $t['textos']['titulo'] ) && '' !== $t['textos']['titulo']
+			? $t['textos']['titulo']
+			: get_the_title( $post );
 	}
 
 	/**
@@ -446,9 +491,11 @@ class CZUAPI_Recorridos {
 	 *
 	 * @return array[]
 	 */
-	private function expandir_paradas( $paradas ) {
+	private function expandir_paradas( $paradas, $idioma = 'es', $textos = array() ) {
 		$out = array();
+		$i   = -1;
 		foreach ( $paradas as $p ) {
+			$i++;
 			$ref_id   = (int) $p['ref_id'];
 			$ref_tipo = $p['ref_tipo'];
 			$post     = get_post( $ref_id );
@@ -457,6 +504,18 @@ class CZUAPI_Recorridos {
 			// guardados antes traen `nota`. Se leen los dos para no perder lo
 			// que ya está cargado.
 			$texto = isset( $p['texto'] ) ? (string) $p['texto'] : (string) ( $p['nota'] ?? '' );
+
+			/*
+			 * El texto de la parada se traduce con el recorrido —es parte de
+			 * lo que el equipo escribió acá—, mientras que el TÍTULO de la
+			 * parada sale de la ficha a la que apunta y se traduce con esa
+			 * ficha. Son dos piezas distintas, y por eso se resuelven contra
+			 * dos posts distintos.
+			 */
+			$clave_texto = 'parada.' . $i . '.texto';
+			if ( isset( $textos[ $clave_texto ] ) && '' !== $textos[ $clave_texto ] ) {
+				$texto = (string) $textos[ $clave_texto ];
+			}
 
 			if ( ! $post || 'publish' !== $post->post_status ) {
 				// La parada quedó colgada (ficha despublicada). Se informa en
@@ -491,7 +550,7 @@ class CZUAPI_Recorridos {
 				'ref_tipo'   => $ref_tipo,
 				'ref_id'     => $ref_id,
 				'disponible' => true,
-				'titulo'     => get_the_title( $post ),
+				'titulo'     => $this->titulo_de_parada( $ref_id, $post, $idioma ),
 				'portada'    => czuapi_imagen( (int) get_post_thumbnail_id( $ref_id ), '', 'medium' ),
 				'categoria'  => czuapi_primer_termino( $ref_id, CZUAPI_Taxonomias::TAX_CATEGORIA ),
 				'coordenadas'=> $viejo

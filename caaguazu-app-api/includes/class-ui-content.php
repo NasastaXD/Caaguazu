@@ -26,8 +26,27 @@ class CZUAPI_UI_Content {
 	const OPT_STRINGS  = 'czuapi_strings_';   // + locale
 	const OPT_MANIFEST = 'czuapi_media_manifest';
 
-	/** Idiomas que ya maneja el ecosistema. */
+	/**
+	 * Idiomas que ya maneja el ecosistema, para los textos de la interfaz.
+	 *
+	 * Se mantiene como constante —hay sets de strings cargados con estas
+	 * claves— pero se le suman los idiomas del panel: si mañana el contenido
+	 * se traduce a uno nuevo y la interfaz no lo acepta, la app queda con las
+	 * fichas en portugués y el menú en castellano, que es peor que todo en
+	 * castellano. `gn` sigue acá aunque el contenido todavía no se traduzca:
+	 * los textos de interfaz en guaraní ya existen.
+	 */
 	const LOCALES = array( 'es', 'en', 'gn' );
+
+	/**
+	 * @return string[]
+	 */
+	public static function locales() {
+		$del_panel = class_exists( 'PROMOTUR_Traducciones' )
+			? PROMOTUR_Traducciones::idiomas_api()
+			: array();
+		return array_values( array_unique( array_merge( self::LOCALES, $del_panel ) ) );
+	}
 
 	public static function instance() {
 		if ( null === self::$instance ) {
@@ -53,13 +72,14 @@ class CZUAPI_UI_Content {
 	}
 
 	public function strings( $request ) {
-		$locale = strtolower( (string) $request['locale'] );
-		if ( ! in_array( $locale, self::LOCALES, true ) ) {
+		$locale     = strtolower( (string) $request['locale'] );
+		$disponibles = self::locales();
+		if ( ! in_array( $locale, $disponibles, true ) ) {
 			return CZUAPI_Response::error(
 				'locale_no_soportado',
 				__( 'Idioma no disponible.', 'caaguazu-app-api' ),
 				404,
-				array( 'disponibles' => self::LOCALES )
+				array( 'disponibles' => $disponibles )
 			);
 		}
 

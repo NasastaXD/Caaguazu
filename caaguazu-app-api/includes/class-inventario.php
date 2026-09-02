@@ -25,6 +25,22 @@ class CZUAPI_Inventario {
 	/** Meta con los IDs de artículos relacionados. */
 	const META_ARTICULOS = '_promotur_articulos_rel';
 
+	/**
+	 * Campo traducible del panel → clave con la que esta respuesta lo sirve.
+	 *
+	 * Las cuatro coinciden salvo `descripcion`, que en la respuesta de lista no
+	 * existe (una tarjeta no la lleva) — `aplicar()` ignora sola las claves que
+	 * la salida no tiene, así que el mismo mapa sirve para lista y detalle.
+	 * `horario` es otro caso de nombre distinto en cada lado, y por eso el mapa
+	 * existe en vez de pisar por nombre.
+	 */
+	const MAPA_I18N = array(
+		'titulo'      => 'titulo',
+		'descripcion' => 'descripcion',
+		'horario'     => 'horario_resumen',
+		'costo'       => 'costo',
+	);
+
 	public static function instance() {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -47,6 +63,7 @@ class CZUAPI_Inventario {
 				'tipo_item'  => array( 'type' => 'string' ),  // sitio | evento
 				'pagina'     => array( 'type' => 'integer', 'default' => 1 ),
 				'por_pagina' => array( 'type' => 'integer', 'default' => 20 ),
+				'idioma'     => array( 'type' => 'string' ),   // es | en | pt
 			),
 		) );
 
@@ -54,6 +71,9 @@ class CZUAPI_Inventario {
 			'methods'             => 'GET',
 			'callback'            => array( $this, 'detalle' ),
 			'permission_callback' => '__return_true',
+			'args'                => array(
+				'idioma' => array( 'type' => 'string' ),
+			),
 		) );
 
 		register_rest_route( CZUAPI_NS, '/mapa/markers', array(
@@ -140,10 +160,11 @@ class CZUAPI_Inventario {
 			$args['meta_query']     = $meta_query; // phpcs:ignore WordPress.DB.SlowDBQuery
 		}
 
-		$q     = new WP_Query( $args );
-		$items = array();
+		$idioma = CZUAPI_Idiomas::del_pedido( $request );
+		$q      = new WP_Query( $args );
+		$items  = array();
 		foreach ( $q->posts as $post ) {
-			$items[] = $this->item_lista( $post );
+			$items[] = $this->item_lista( $post, $idioma );
 		}
 
 		// ETag corto: la lista cambia cada vez que se publica o se despublica
@@ -162,9 +183,9 @@ class CZUAPI_Inventario {
 	 * @param WP_Post $post
 	 * @return array
 	 */
-	private function item_lista( $post ) {
+	private function item_lista( $post, $idioma = 'es' ) {
 		$id = $post->ID;
-		return array(
+		$out = array(
 			'id'              => (int) $id,
 			'tipo'            => 'destino',
 			// Sitio o evento. `tipo` sigue diciendo de qué colección salió
@@ -188,6 +209,8 @@ class CZUAPI_Inventario {
 			'horario_resumen' => (string) get_post_meta( $id, '_promotur_horario', true ),
 			'actualizado'     => czuapi_fecha( $post->post_modified_gmt ),
 		);
+
+		return CZUAPI_Idiomas::aplicar( $out, $id, $idioma, self::MAPA_I18N );
 	}
 
 	public function detalle( $request ) {
@@ -202,6 +225,19 @@ class CZUAPI_Inventario {
 			return (string) get_post_meta( $id, $key, true );
 		};
 
+		/*
+		 * Los textos en el idioma pedido, resueltos campo por campo: lo que
+		 * está traducido viene traducido y lo que no, en castellano. Se piden
+		 * una sola vez y se usan directo en vez de pasar por `aplicar()`,
+		 * porque acá dos de los cuatro campos viven ANIDADOS —`practicos`— y
+		 * un mapa de claves planas no llega ahí.
+		 */
+		$idioma = CZUAPI_Idiomas::del_pedido( $request );
+		$i18n   = CZUAPI_Idiomas::textos( $id, $idioma );
+		$t      = function ( $campo, $porDefecto ) use ( $i18n ) {
+			return isset( $i18n['textos'][ $campo ] ) ? $i18n['textos'][ $campo ] : $porDefecto;
+		};
+
 		// El detalle pesa más que un ítem de lista —galería, historia, artículos
 		// relacionados— y cambia menos seguido: una ficha publicada se edita de
 		// vez en cuando, no todo el tiempo. Un ETag más largo que el de la lista
@@ -211,7 +247,12 @@ class CZUAPI_Inventario {
 			'tipo'        => 'destino',
 			'tipo_item'   => $this->tipo_item( $id ),
 			'fechas'      => $this->fechas( $id ),
-			'titulo'      => get_the_title( $post ),
+			'titulo'      => $t( 'titulo', get_the_title( $post ) ),
+			// En qué idioma salieron los textos de arriba, y si TODOS los
+			// campos traducibles de esta ficha estaban traducidos. Con
+			// `traducido: false` alguno cayó al castellano.
+			'idioma'      => $i18n['idioma'],
+			'traducido'   => $i18n['traducido'],
 			'categoria'   => czuapi_primer_termino( $id, CZUAPI_Taxonomias::TAX_CATEGORIA ),
 			'etiquetas'   => $this->etiquetas( $id ),
 			'coordenadas' => $this->coordenadas( $id ),
@@ -241,8 +282,8 @@ class CZUAPI_Inventario {
 			 * en la ficha, y eso es peor que no estar.
 			 */
 			'practicos'   => array(
-				'horario'      => $m( '_promotur_horario' ),
-				'costo'        => $m( '_promotur_costo' ),
+				'horario'      => $t( 'horario', $m( '_promotur_horario' ) ),
+				'costo'        => $t( 'costo', $m( '_promotur_costo' ) ),
 				'rango_precio' => $this->rango_precio( $id ),
 				'contacto'     => $m( '_promotur_contacto' ),
 			),
@@ -253,8 +294,8 @@ class CZUAPI_Inventario {
 			// pensar de la respuesta de Artículos al armar esta, y una ficha
 			// no es un artículo—. La app no la estaba levantando: buscaba
 			// `descripcion` y esa clave nunca existió acá.
-			'descripcion'            => apply_filters( 'the_content', $post->post_content ),
-			'articulos_relacionados' => $this->articulos_relacionados( $id ),
+			'descripcion'            => apply_filters( 'the_content', $t( 'descripcion', $post->post_content ) ),
+			'articulos_relacionados' => $this->articulos_relacionados( $id, $idioma ),
 			'fuentes'                => $m( '_promotur_fuentes' ),
 			'autor'                  => czuapi_autor( $id ),
 			'actualizado'            => czuapi_fecha( $post->post_modified_gmt ),
@@ -447,7 +488,7 @@ class CZUAPI_Inventario {
 	 *
 	 * @return array[]
 	 */
-	private function articulos_relacionados( $id ) {
+	private function articulos_relacionados( $id, $idioma = 'es' ) {
 		$raw = get_post_meta( $id, self::META_ARTICULOS, true );
 		$ids = is_array( $raw ) ? $raw : array_filter( array_map( 'intval', explode( ',', (string) $raw ) ) );
 		if ( ! $ids ) {
@@ -464,9 +505,12 @@ class CZUAPI_Inventario {
 
 		$out = array();
 		foreach ( $posts as $p ) {
+			// Cada relacionado es un artículo, y un artículo se traduce solo:
+			// su título viene del mismo modelo, no de una copia guardada acá.
+			$t = CZUAPI_Idiomas::textos( (int) $p->ID, $idioma );
 			$out[] = array(
 				'id'      => (int) $p->ID,
-				'titulo'  => get_the_title( $p ),
+				'titulo'  => isset( $t['textos']['titulo'] ) ? $t['textos']['titulo'] : get_the_title( $p ),
 				'portada' => czuapi_imagen( (int) get_post_thumbnail_id( $p->ID ), '', 'medium' ),
 			);
 		}

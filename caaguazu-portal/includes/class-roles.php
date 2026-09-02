@@ -39,6 +39,11 @@ class PROMOTUR_Roles {
 			'promotur_manage_media'    => true,
 			'promotur_manage_structure'=> true,
 			'promotur_manage_app'      => true,
+			// Traducir a otro idioma es de Profesor y no de Alumno: una
+			// traducción se publica tal cual en la app, sin pasar por
+			// revisión —el flujo editorial revisa el castellano, que es el
+			// original— así que quien la escribe está publicando.
+			'promotur_traducir'        => true,
 			'promotur_edit_profile'    => true,
 			'upload_files'             => true,
 		);

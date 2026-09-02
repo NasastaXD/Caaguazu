@@ -3,7 +3,7 @@
  * Plugin Name:       Caaguazú Portal — Promotores Turísticos
  * Plugin URI:        https://turismo.caaguazu.net
  * Description:       Panel autenticado tipo app bajo /turismo-panel, instalable como PWA, donde el equipo escribe las tres cosas que la aplicación muestra —fichas del inventario turístico, artículos y recorridos— con un mismo flujo editorial: borrador → revisión → publicación. Corre sobre rutas propias y no depende del theme: trae su propio CSS y su propia tipografía, y desencola los del theme activo en sus rutas. La identidad de los promotores corre sobre el sistema de cuentas universal (caaguazu-cuentas): no son usuarios de WordPress.
- * Version:           3.9.4
+ * Version:           3.10.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Requires Plugins:  caaguazu-cuentas
@@ -17,7 +17,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'PROMOTUR_VERSION', '3.9.4' );
+define( 'PROMOTUR_VERSION', '3.10.0' );
 define( 'PROMOTUR_DB_VERSION', 3 ); // se incrementa cuando cambia la estructura de datos.
 define( 'PROMOTUR_FILE', __FILE__ );
 define( 'PROMOTUR_DIR', plugin_dir_path( __FILE__ ) );
@@ -58,6 +58,9 @@ require_once PROMOTUR_DIR . 'includes/class-destinos.php';
 require_once PROMOTUR_DIR . 'includes/class-articulos.php';
 require_once PROMOTUR_DIR . 'includes/class-recorridos.php';
 require_once PROMOTUR_DIR . 'includes/class-editorial.php';
+require_once PROMOTUR_DIR . 'includes/class-traducciones.php';
+require_once PROMOTUR_DIR . 'includes/class-traducciones-archivo.php';
+require_once PROMOTUR_DIR . 'includes/class-traducciones-acciones.php';
 require_once PROMOTUR_DIR . 'includes/class-estados.php';
 require_once PROMOTUR_DIR . 'includes/class-ajax.php';
 require_once PROMOTUR_DIR . 'includes/class-tareas.php';
@@ -140,6 +143,7 @@ function promotur_boot() {
 	PROMOTUR_Articulos::instance();
 	PROMOTUR_Recorridos::instance();
 	PROMOTUR_Editorial::instance();
+	PROMOTUR_Traducciones_Acciones::instance();
 	PROMOTUR_Estados::instance();
 	PROMOTUR_Ajax::instance();
 	PROMOTUR_Tareas::instance();

@@ -642,6 +642,37 @@ body.promotur-nav-open .promotur-sidebar { transform: translateX(0); }
 .promotur-pegar textarea { font-size: .85rem; line-height: 1.5; }
 
 /* ---------------------------------------------------------------------------
+ * Idiomas: el bloque de traducciones de los tres editores.
+ *
+ * El original y su traducción van uno al lado del otro en pantalla ancha y uno
+ * arriba del otro en el teléfono. Se traduce mirando el original, así que
+ * tenerlo que buscar en otra parte de la página es exactamente lo que hace que
+ * una traducción se desalinee del texto que traduce.
+ * ------------------------------------------------------------------------ */
+
+.promotur-i18n { display: flex; flex-direction: column; gap: 18px; margin-top: 24px; }
+.promotur-i18n__head { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: flex-start; }
+.promotur-i18n__estados { display: flex; flex-wrap: wrap; gap: 16px; margin: 0; padding: 0; list-style: none; }
+.promotur-i18n__estados li { display: flex; align-items: center; gap: 8px; font-size: .88rem; }
+
+.promotur-i18n__archivo { display: flex; flex-wrap: wrap; gap: 20px; padding: 16px; border: 1px solid var(--linea); border-radius: var(--r-2); background: var(--hueco); }
+.promotur-i18n__archivo form { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; flex: 1 1 260px; }
+
+.promotur-i18n__idioma { border: 1px solid var(--linea); border-radius: var(--r-2); padding: 14px 16px; }
+.promotur-i18n__idioma > summary { display: flex; align-items: center; gap: 10px; font-weight: 600; cursor: pointer; }
+.promotur-i18n__idioma[open] > summary { margin-bottom: 14px; }
+
+.promotur-i18n__campo { display: grid; grid-template-columns: 1fr; gap: 10px; padding: 14px 0; border-top: 1px solid var(--linea); }
+.promotur-i18n__original { font-size: .9rem; color: var(--texto-2); }
+.promotur-i18n__original p { margin: .3em 0 0; white-space: pre-line; }
+.promotur-i18n__etiqueta { font-size: .78rem; font-weight: 600; color: var(--texto-debil); text-transform: uppercase; letter-spacing: .04em; }
+.promotur-i18n__acciones { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding-top: 14px; }
+
+@media (min-width: 900px) {
+	.promotur-i18n__campo { grid-template-columns: 1fr 1fr; gap: 20px; }
+}
+
+/* ---------------------------------------------------------------------------
  * Botones
  * ------------------------------------------------------------------------ */
 

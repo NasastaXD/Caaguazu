@@ -3,7 +3,7 @@ Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 3.9.4
+Stable tag: 3.10.0
 License: GPLv2 or later
 
 Panel autenticado tipo app (PWA) bajo /turismo-panel, con enrutador propio, login propio, roles y flujo editorial para las tres cosas que la app muestra: fichas del inventario turístico, artículos y recorridos.
@@ -59,6 +59,41 @@ llamen los tags.
 * Repo privado: definir `PROMOTUR_GITHUB_TOKEN` (PAT de solo lectura) en `wp-config.php`.
 
 == Changelog ==
+
+= 3.10.0 =
+* **Cada ficha, artículo y recorrido se puede traducir a inglés y a portugués.**
+  Nuevo bloque «Idiomas» al pie de los tres editores, con el original al lado
+  del cuadro donde se escribe la traducción. El castellano es el original y no
+  se toca desde ahí; lo que quede sin traducir la app lo sirve en castellano,
+  **campo por campo** — una ficha con el título traducido y la descripción no,
+  muestra el título en inglés y la descripción en castellano, en vez de caer
+  entera a un idioma.
+* **Traducir una pieza entera de una sola vez, con un archivo.** «Bajar para
+  traducir» da un `.json` con todos los textos y **las instrucciones adentro**:
+  qué es cada campo, qué no hay que tocar (nombres propios, montos en
+  guaraníes), que los párrafos se conservan y que un campo vacío significa «sin
+  traducir». Se le puede pasar a cualquiera —o a un modelo de lenguaje— sin
+  adjuntar nada más, y vuelve por «Subir el archivo».
+* El importador no confía en lo que sube: rechaza lo que no sea un archivo de
+  acá, y **rechaza el archivo de otra pieza de contenido**. Ese es el error
+  caro: los campos se llaman igual en todas, así que pisar una ficha con los
+  textos de otra queda perfectamente normal hasta que alguien lee la app.
+* Traducir es de **Profesor** (`promotur_traducir`). Un Alumno no ve el bloque:
+  una traducción sale publicada tal cual, sin pasar por revisión —el flujo
+  editorial revisa el castellano, que es el original—, así que quien la escribe
+  está publicando.
+* Cada idioma muestra su estado: sin empezar, a medias, completa, o **«el
+  castellano cambió después»** — que es el que importa, porque una traducción
+  vieja y una al día se ven idénticas y la app estaría mostrando texto que ya
+  no dice lo mismo que el original.
+* Guardar una traducción mueve la fecha de modificación de la pieza. No es
+  cosmético: `/sync`, el delta de la caché offline de la app, busca por esa
+  fecha, y guardar un meta no la mueve. Sin esto una traducción nueva no
+  entraba nunca en el delta.
+* Sumar un idioma (el guaraní, cuando se pida) es agregarlo a
+  `PROMOTUR_Traducciones::idiomas()`: el formulario, el archivo y la API
+  recorren esa misma lista.
+* `tools/verificar-traducciones.php`, nuevo en `npm run verificar`.
 
 = 3.9.4 =
 * **Un alta que falla ahora deja rastro.** Hasta acá, si alguien abría su
