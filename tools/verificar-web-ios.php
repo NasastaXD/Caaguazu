@@ -48,6 +48,7 @@ function add_action( $hook, $cb ) {}
 function register_activation_hook( $file, $cb ) {}
 function register_deactivation_hook( $file, $cb ) {}
 function plugin_dir_path( $file ) { return dirname( $file ) . '/'; }
+function plugin_basename( $file ) { return basename( dirname( $file ) ) . '/' . basename( $file ); }
 
 $GLOBALS['czu_query_vars'] = array();
 function get_query_var( $var ) {

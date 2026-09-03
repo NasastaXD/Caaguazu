@@ -2,7 +2,7 @@
 Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.0.1
+Stable tag: 1.1.0
 License: GPLv2 or later
 
 Espejo web de la app de turismo, servido en `caaguazu.net/ios/`, para quien usa iPhone mientras no exista una app nativa.
@@ -55,6 +55,32 @@ propio a un subdirectorio de éste no les tocó una línea.
 No hace falta tocar Ajustes → Enlaces permanentes: el plugin flushea las
 rewrite rules solo, al activarse y al detectar un cambio de versión.
 
+== Auto-actualización ==
+
+Desde 1.1.0 se actualiza desde wp-admin sin pasar por WordPress.org, con el
+mismo mecanismo que `caaguazu-portal` y `caaguazu-app-api`:
+plugin-update-checker (vendoreado en `vendor/`) contra los GitHub Releases de
+`NasastaXD/Caaguazu`. El job `web-ios` de `.github/workflows/release.yml`
+publica el release con el tag `web-ios-{version}` y el asset
+`caaguazu-web-ios.zip` cada vez que sube la versión del header; el checker lo
+detecta (~cada 12 h) y ofrece la actualización en **Plugins** y en
+**Web iOS → Actualizaciones** (wp-admin, capability `update_plugins`).
+
+En ese mismo repositorio se publican también el theme, el panel, la API y el
+SSO del CEAD, cada uno con su propio tag y su propio zip. Para que el updater
+de este plugin no agarre el release de otro componente, sólo considera un
+release que traiga adjunto `caaguazu-web-ios.zip` — no depende de cómo se
+llame el tag.
+
+Que sea temporal —se retira el día que exista una app nativa de iOS— no era
+motivo para dejarlo sin esto: sin auto-updater, la corrección de la 1.0.1
+—que sacó al sitio de una pantalla negra— hubiera dependido de que alguien
+con acceso al hosting bajara un zip y lo subiera a mano.
+
+* Versión en un solo lugar: header `Version:` + constante `CZUWIOS_VERSION` (semver).
+* Repo privado: definir `CZUWIOS_GITHUB_TOKEN` (PAT de solo lectura) en
+  `wp-config.php`, o cargarlo desde **Web iOS → Actualizaciones**.
+
 == Cuándo se retira ==
 
 Cuando exista una app nativa de iOS. Desactivar el plugin y borrar la
@@ -64,6 +90,13 @@ que guarda cada visitante es su propio `localStorage` (favoritos, recorrido
 propio, idioma elegido), y eso vive en su navegador, no acá.
 
 == Changelog ==
+
+= 1.1.0 =
+* **Auto-updater.** Hasta acá era el único de los cinco componentes que se
+  instalaba a mano — cada corrección exigía pedirle a quien tiene acceso al
+  hosting que bajara un zip y lo subiera. Mismo mecanismo que
+  `caaguazu-portal` y `caaguazu-app-api`. Ver «Auto-actualización» arriba.
+* Nueva pantalla wp-admin → **Web iOS → Actualizaciones**.
 
 = 1.0.1 =
 * **Pantalla en blanco en producción, sin ningún error a la vista.** Todo

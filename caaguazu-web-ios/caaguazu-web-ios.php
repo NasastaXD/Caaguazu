@@ -3,7 +3,7 @@
  * Plugin Name:       Caaguazú Web (espejo iOS)
  * Plugin URI:        https://caaguazu.net
  * Description:       Sirve el espejo web de la app de turismo (HTML/CSS/JS sin build) bajo /ios/, para darle algo instalable a quien usa iPhone mientras no exista una app nativa. Temporal a propósito: se desinstala el día que esa app exista.
- * Version:           1.0.1
+ * Version:           1.1.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Municipalidad de Caaguazú
@@ -44,12 +44,21 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'CZUWIOS_VERSION', '1.0.1' );
+define( 'CZUWIOS_VERSION', '1.1.0' );
 define( 'CZUWIOS_FILE', __FILE__ );
 define( 'CZUWIOS_DIR', plugin_dir_path( __FILE__ ) );
+define( 'CZUWIOS_BASENAME', plugin_basename( __FILE__ ) );
 
 /** Dónde vive: caaguazu.net/ios/. Un solo lugar si algún día conviene otro. */
 define( 'CZUWIOS_BASE', 'ios' );
+
+/**
+ * Repo y nombre del asset para el auto-updater. Mismo repo que
+ * `caaguazu-portal` —los cinco componentes conviven ahí—, filtrado por el
+ * nombre del zip: ver `czuwios_updater()`.
+ */
+define( 'CZUWIOS_REPO', 'https://github.com/NasastaXD/Caaguazu/' );
+define( 'CZUWIOS_ASSET', 'caaguazu-web-ios.zip' );
 
 /** La carpeta con los archivos de verdad — el espejo, calcado sin tocar. */
 define( 'CZUWIOS_SITIO', CZUWIOS_DIR . 'sitio/' );
@@ -200,6 +209,11 @@ final class CZUWIOS_Servidor {
 
 function czuwios_boot() {
 	CZUWIOS_Servidor::instance();
+	czuwios_init_updater();
+	if ( is_admin() ) {
+		require_once CZUWIOS_DIR . 'includes/class-admin.php';
+		CZUWIOS_Admin::instance();
+	}
 }
 add_action( 'plugins_loaded', 'czuwios_boot' );
 
@@ -220,3 +234,126 @@ function czuwios_desactivar() {
 	flush_rewrite_rules();
 }
 register_deactivation_hook( __FILE__, 'czuwios_desactivar' );
+
+/* ---------------------------------------------------------------------------
+ * Auto-updater desde GitHub Releases (plugin-update-checker vendoreado).
+ *
+ * Mismo mecanismo y mismo repositorio que `caaguazu-portal` y
+ * `caaguazu-app-api` —los componentes del ecosistema conviven en
+ * `NasastaXD/Caaguazu`—, así que la explicación larga de por qué hace falta
+ * cada filtro está en el docblock de `promotur_updater()`. Acá sólo lo que
+ * cambia por ser este plugin:
+ *
+ *   - El asset a buscar es `caaguazu-web-ios.zip`.
+ *   - El tag es `web-ios-X.Y.Z`.
+ *   - El token de GitHub es una constante y una opción propias
+ *     (`CZUWIOS_GITHUB_TOKEN` / `czuwios_github_token`): cada plugin se
+ *     instala y se retira por separado, aunque los tres apunten al mismo
+ *     repo privado si algún día pasa a serlo.
+ *
+ * Este plugin es temporal a propósito —se retira el día que exista una app
+ * nativa de iOS—, pero mientras exista va a recibir el mismo trato que el
+ * resto: sin esto, cada corrección (como la de la 1.0.1) exigía pedirle a
+ * alguien con acceso al hosting que baje un zip y lo suba a mano.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * Token de GitHub para el updater. La constante en wp-config.php gana sobre
+ * la opción editable desde wp-admin → Web iOS → Actualizaciones.
+ *
+ * @return string Token, o cadena vacía si no hay ninguno configurado.
+ */
+function czuwios_github_token() {
+	if ( defined( 'CZUWIOS_GITHUB_TOKEN' ) && CZUWIOS_GITHUB_TOKEN ) {
+		return (string) CZUWIOS_GITHUB_TOKEN;
+	}
+	return (string) get_option( 'czuwios_github_token', '' );
+}
+
+/**
+ * Accesor a la instancia del auto-updater (plugin-update-checker).
+ * La página de Actualizaciones la usa para consultar versión/estado y forzar comprobaciones.
+ *
+ * @return \YahnisElsts\PluginUpdateChecker\v5p6\Plugin\UpdateChecker|null
+ */
+function czuwios_updater() {
+	static $updater = null;
+	static $built   = false;
+
+	if ( $built ) {
+		return $updater;
+	}
+	$built = true;
+
+	$loader = CZUWIOS_DIR . 'vendor/plugin-update-checker/plugin-update-checker.php';
+	if ( ! file_exists( $loader ) ) {
+		return null;
+	}
+	require_once $loader;
+	if ( ! class_exists( '\YahnisElsts\PluginUpdateChecker\v5\PucFactory' ) ) {
+		return null;
+	}
+
+	$updater = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
+		CZUWIOS_REPO,
+		CZUWIOS_FILE,
+		'caaguazu-web-ios'
+	);
+
+	// Usar el .zip adjunto al release (no el zip del código fuente del repo).
+	$api = method_exists( $updater, 'getVcsApi' ) ? $updater->getVcsApi() : null;
+	if ( $api && method_exists( $api, 'enableReleaseAssets' ) ) {
+		$api->enableReleaseAssets( '/' . preg_quote( CZUWIOS_ASSET, '/' ) . '$/i' );
+	}
+
+	/*
+	 * En este repositorio conviven varias cosas que se publican por separado
+	 * (theme, panel, API, SSO, y esto), y sólo un release trae el zip de
+	 * ESTE plugin. Sin este filtro, el updater agarraría cualquier release
+	 * y ofrecería instalar lo que no es.
+	 */
+	if ( $api && method_exists( $api, 'setReleaseFilter' ) ) {
+		$api->setReleaseFilter( function ( $version, $release ) {
+			foreach ( isset( $release->assets ) ? (array) $release->assets : array() as $asset ) {
+				if ( isset( $asset->name ) && CZUWIOS_ASSET === $asset->name ) {
+					return true;
+				}
+			}
+			return false;
+		} );
+	}
+
+	/*
+	 * La versión que anuncia el tag del release. Los tags de este repo son
+	 * `web-ios-1.0.1`, y la librería la saca con `ltrim( $tag, 'v' )` —que
+	 * acá no quita nada—, así que sin este filtro toda instalación vería la
+	 * «versión disponible» como la cadena `web-ios-1.0.1`, que nunca es
+	 * mayor que `1.0.1` para `version_compare()`: ninguna actualización se
+	 * ofrecería jamás. El plan B de la librería —leer el header `Version:`
+	 * del archivo principal en la raíz del repo— tampoco sirve, porque el
+	 * plugin vive en una subcarpeta.
+	 */
+	if ( method_exists( $updater, 'addResultFilter' ) ) {
+		$updater->addResultFilter( function ( $info ) {
+			if ( isset( $info->version ) && preg_match( '/(\d+(?:\.\d+)*(?:[-+][A-Za-z0-9.]+)?)$/', (string) $info->version, $m ) ) {
+				$info->version = $m[1];
+			}
+			return $info;
+		} );
+	}
+
+	$token = czuwios_github_token();
+	if ( $token ) {
+		$updater->setAuthentication( $token );
+	}
+
+	return $updater;
+}
+
+/**
+ * Auto-updater desde GitHub Releases (plugin-update-checker vendoreado).
+ * Descarga el asset caaguazu-web-ios.zip adjunto al release más reciente.
+ */
+function czuwios_init_updater() {
+	czuwios_updater();
+}
