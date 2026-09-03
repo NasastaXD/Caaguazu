@@ -31,6 +31,9 @@ js/app.js                 router por hash + barra inferior
 js/pantallas/*.js         una pantalla por archivo: inicio, buscar, ficha,
                           articulos, articulo, recorridos, recorrido, mapa,
                           perfil
+js/compartir.js           hoja de compartir: Web Share API o enlace + QR
+js/qr.js                  envoltorio del generador de QR vendoreado
+js/vendor/qrcode.js       qrcode-generator de Kazuhiko Arase (MIT), sin tocar
 textos/{es,en,pt}.json    copia exacta de los respaldos de la app Android
 manifest.webmanifest      para "agregar a inicio" en iOS/Android
 assets/icon-*.png         isotipo oficial, copiado de caaguazu-theme
@@ -56,6 +59,11 @@ assets/icon-*.png         isotipo oficial, copiado de caaguazu-theme
   se completa con el idioma elegido (persistido en `localStorage`) y encima
   se fusiona lo que traiga `/strings/{idioma}` del panel, sin reemplazar el
   respaldo. `/idiomas` decide que idiomas ofrecer, igual que en la app.
+- **Compartir con `navigator.share` cuando existe** (la mayoría de los
+  navegadores de teléfono, incluido Safari en iOS) y, cuando no, una hoja
+  propia con el enlace para copiar y un código QR. El QR se genera en el
+  propio navegador con una copia vendoreada de `qrcode-generator` — no hay
+  ningún servicio externo que reciba la URL que se está compartiendo.
 
 ## Que falta a proposito
 
