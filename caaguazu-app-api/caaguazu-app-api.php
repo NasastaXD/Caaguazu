@@ -50,8 +50,8 @@ define( 'CZUAPI_NS', 'czu-app/v1' );
 
 /**
  * Repo y nombre del asset para el auto-updater. Mismo repo que
- * `caaguazu-portal` —los cuatro componentes conviven ahí—, filtrado por el
- * nombre del zip: ver `czuapi_updater()`.
+ * `caaguazu-portal` —los cinco componentes del ecosistema conviven ahí—,
+ * filtrado por el nombre del zip: ver `czuapi_updater()`.
  */
 define( 'CZUAPI_REPO', 'https://github.com/NasastaXD/Caaguazu/' );
 define( 'CZUAPI_ASSET', 'caaguazu-app-api.zip' );
@@ -231,10 +231,11 @@ function czuapi_updater() {
 	}
 
 	/*
-	 * En este repositorio conviven cuatro cosas que se publican por separado
-	 * (theme, panel, esta API y el SSO), y sólo un release trae el zip de
-	 * ESTE plugin. Sin este filtro, el updater agarraría cualquier release
-	 * —el del theme, el del panel— y ofrecería instalar lo que no es.
+	 * En este repositorio conviven cinco cosas que se publican por separado
+	 * (theme, panel, esta API, el SSO y el espejo web para iOS), y sólo un
+	 * release trae el zip de ESTE plugin. Sin este filtro, el updater
+	 * agarraría cualquier release —el del theme, el del panel— y ofrecería
+	 * instalar lo que no es.
 	 */
 	if ( $api && method_exists( $api, 'setReleaseFilter' ) ) {
 		$api->setReleaseFilter( function ( $version, $release ) {

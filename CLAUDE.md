@@ -13,9 +13,10 @@ escrito de un cambio testeado.
 | Panel | header `Version:` de `caaguazu-portal/caaguazu-portal.php` **y** `PROMOTUR_VERSION` | `portal-X.Y.Z` | `caaguazu-portal.zip` |
 | API de la app | header `Version:` de `caaguazu-app-api/caaguazu-app-api.php` **y** `CZUAPI_VERSION` | `app-api-X.Y.Z` | `caaguazu-app-api.zip` |
 | SSO CEAD | header `Version:` de `caaguazu-sso-cead/caaguazu-sso-cead.php` **y** `CEADSSO_VERSION` | `sso-X.Y.Z` | `caaguazu-sso-cead.zip` |
+| Web (espejo iOS) | header `Version:` de `caaguazu-web-ios/caaguazu-web-ios.php` **y** `CZUWIOS_VERSION` | `web-ios-X.Y.Z` | `caaguazu-web-ios.zip` |
 
-Los tres plugins llevan el número **dos veces** —el header que lee WordPress y
-la constante que usa el código—. Si se actualiza uno solo, el plugin miente
+Los cuatro plugins llevan el número **dos veces** —el header que lee WordPress
+y la constante que usa el código—. Si se actualiza uno solo, el plugin miente
 sobre su propia versión y el updater compara contra el número equivocado.
 
 Y sumar la entrada al `== Changelog ==` de su `readme.txt`. El changelog es lo
@@ -24,7 +25,7 @@ que alguien lee para saber qué probar.
 ### Cómo sale el release
 
 [`.github/workflows/release.yml`](.github/workflows/release.yml) publica los
-cuatro componentes, cada uno **sólo si su tag todavía no existe** — o sea, sólo
+cinco componentes, cada uno **sólo si su tag todavía no existe** — o sea, sólo
 cuando su versión subió. Se dispara de dos formas:
 
 - **Al mergear a `main`**, automáticamente.
@@ -33,7 +34,7 @@ cuando su versión subió. Se dispara de dos formas:
   rama antes de mergearla.
 
 Mientras una rama esté sin mergear y sin dispatch, **entregar los zips
-directamente**: `bash bin/build-zip.sh` los arma los cuatro (o
+directamente**: `bash bin/build-zip.sh` los arma los cinco (o
 `bash bin/build-zip.sh portal` para uno solo).
 
 > **Regla que no se rompe:** cada release lleva **un solo zip**, y cada updater

@@ -121,10 +121,11 @@ publica el release con el tag `app-api-{version}` y el asset
 detecta (~cada 12 h) y ofrece la actualización en **Plugins** y en
 **Caaguazú API → Actualizaciones** (wp-admin, capability `update_plugins`).
 
-En ese mismo repositorio se publican también el theme, el panel y el SSO del
-CEAD, cada uno con su propio tag y su propio zip. Para que el updater de esta
-API no agarre el release de otro componente, sólo considera un release que
-traiga adjunto `caaguazu-app-api.zip` — no depende de cómo se llame el tag.
+En ese mismo repositorio se publican también el theme, el panel, el SSO del
+CEAD y el espejo web para iOS, cada uno con su propio tag y su propio zip.
+Para que el updater de esta API no agarre el release de otro componente,
+sólo considera un release que traiga adjunto `caaguazu-app-api.zip` — no
+depende de cómo se llame el tag.
 
 * Versión en un solo lugar: header `Version:` + constante `CZUAPI_VERSION` (semver).
 * El updater y su pantalla no dependen de que `caaguazu-cuentas` ni

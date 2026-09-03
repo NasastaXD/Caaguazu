@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Regenera los zips instalables. Sin argumentos arma los cuatro; con `theme`,
-# `portal`, `app-api` o `sso` arma sólo el que se pida — es lo mismo que hace
-# `.github/workflows/release.yml` por cada componente cuyo tag todavía no
-# existe.
+# Regenera los zips instalables. Sin argumentos arma los cinco; con `theme`,
+# `portal`, `app-api`, `sso` o `web-ios` arma sólo el que se pida — es lo
+# mismo que hace `.github/workflows/release.yml` por cada componente cuyo tag
+# todavía no existe.
 #
 # No se versionan en git (ver .gitignore): se generan bajo demanda o desde
 # ese workflow.
@@ -40,4 +40,13 @@ if [ "$que" = "todo" ] || [ "$que" = "sso" ]; then
 	rm -f caaguazu-sso-cead.zip
 	zip -r -q caaguazu-sso-cead.zip caaguazu-sso-cead -x '*.DS_Store' -x '__MACOSX/*'
 	echo "Generado: caaguazu-sso-cead.zip"
+fi
+
+# El espejo web para iOS: sirve caaguazu-web-ios/sitio/ en /ios/ del mismo
+# WordPress, sin necesitar hosting ni DNS propios. Temporal a propósito: se
+# retira cuando exista una app nativa de iOS.
+if [ "$que" = "todo" ] || [ "$que" = "web-ios" ]; then
+	rm -f caaguazu-web-ios.zip
+	zip -r -q caaguazu-web-ios.zip caaguazu-web-ios -x '*.DS_Store' -x '__MACOSX/*'
+	echo "Generado: caaguazu-web-ios.zip"
 fi
