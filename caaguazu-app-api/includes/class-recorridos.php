@@ -552,7 +552,7 @@ class CZUAPI_Recorridos {
 				'disponible' => true,
 				'titulo'     => $this->titulo_de_parada( $ref_id, $post, $idioma ),
 				'portada'    => czuapi_imagen( (int) get_post_thumbnail_id( $ref_id ), '', 'medium' ),
-				'categoria'  => czuapi_primer_termino( $ref_id, CZUAPI_Taxonomias::TAX_CATEGORIA ),
+				'categoria'  => czuapi_primer_termino( $ref_id, CZUAPI_Taxonomias::TAX_CATEGORIA, $idioma ),
 				'coordenadas'=> $viejo
 					? $this->coord_evento( $ref_id )
 					: $this->coord_destino( $ref_id ),

@@ -7,14 +7,20 @@
  * renombrar y borrar. Renombrar en su lugar —sin pantalla aparte— porque son
  * nombres de una línea y abrir otra pantalla para cambiar una palabra es
  * desproporcionado.
+ *
+ * El nombre traducido va con el mismo criterio: un campo corto por idioma,
+ * plegado bajo «Traducciones» y no una pantalla propia — es un solo campo, a
+ * diferencia del bloque «Idiomas» de una ficha, que tiene varios.
  */
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-$grupos = PROMOTUR_Estructura::grupos();
-$puede  = promotur_can( PROMOTUR_Estructura::CAP );
+$grupos          = PROMOTUR_Estructura::grupos();
+$puede           = promotur_can( PROMOTUR_Estructura::CAP );
+$puede_traducir  = promotur_can( PROMOTUR_Traducciones::CAP );
+$idiomas_termino = PROMOTUR_Traducciones::idiomas();
 
 $page_title = __( 'Estructura', 'caaguazu-portal' );
-$body = function () use ( $grupos, $puede ) {
+$body = function () use ( $grupos, $puede, $puede_traducir, $idiomas_termino ) {
 	?>
 	<div class="promotur-pagehead">
 		<div>
@@ -77,6 +83,24 @@ $body = function () use ( $grupos, $puede ) {
 										</div>
 										<p class="promotur-form-msg" data-form-msg></p>
 									<?php endif; ?>
+
+									<?php if ( $puede_traducir && $idiomas_termino ) : ?>
+										<details class="promotur-termino__i18n">
+											<summary><?php esc_html_e( 'Traducciones', 'caaguazu-portal' ); ?></summary>
+											<div class="promotur-termino__i18n-campos">
+												<?php foreach ( $idiomas_termino as $locale => $nombre_idioma ) : ?>
+													<label class="promotur-field">
+														<span><?php echo esc_html( $nombre_idioma ); ?></span>
+														<input type="text"
+															   name="i18n[<?php echo esc_attr( $locale ); ?>]"
+															   value="<?php echo esc_attr( get_term_meta( $termino->term_id, PROMOTUR_Estructura::meta_i18n( $locale ), true ) ); ?>"
+															   placeholder="<?php echo esc_attr( $termino->name ); ?>">
+													</label>
+												<?php endforeach; ?>
+											</div>
+										</details>
+									<?php endif; ?>
+
 									<button type="submit" class="promotur-btn promotur-btn--ghost promotur-btn--small"><?php esc_html_e( 'Guardar', 'caaguazu-portal' ); ?></button>
 								</form>
 							<?php else : ?>

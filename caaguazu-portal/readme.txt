@@ -3,7 +3,7 @@ Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 3.10.0
+Stable tag: 3.10.1
 License: GPLv2 or later
 
 Panel autenticado tipo app (PWA) bajo /turismo-panel, con enrutador propio, login propio, roles y flujo editorial para las tres cosas que la app muestra: fichas del inventario turístico, artículos y recorridos.
@@ -59,6 +59,16 @@ llamen los tags.
 * Repo privado: definir `PROMOTUR_GITHUB_TOKEN` (PAT de solo lectura) en `wp-config.php`.
 
 == Changelog ==
+
+= 3.10.1 =
+* **Categorías y etiquetas también se traducen ahora**, desde **Estructura**:
+  cada término tiene un desplegable «Traducciones» con un campo de nombre por
+  idioma. Faltaba: la 3.10.0 traducía fichas, artículos y recorridos, pero el
+  nombre de una categoría —que aparece en cada uno de ellos— seguía en
+  castellano sin importar el idioma pedido.
+* Es un campo por idioma, no el bloque completo de una ficha: una categoría no
+  tiene descripción, horario ni cuerpo que traducir, sólo el nombre. Sin
+  archivo para bajar y subir tampoco — son pocos términos.
 
 = 3.10.0 =
 * **Cada ficha, artículo y recorrido se puede traducir a inglés y a portugués.**

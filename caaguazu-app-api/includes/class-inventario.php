@@ -195,13 +195,13 @@ class CZUAPI_Inventario {
 			'tipo_item'       => $this->tipo_item( $id ),
 			'fechas'          => $this->fechas( $id ),
 			'titulo'          => get_the_title( $post ),
-			'categoria'       => czuapi_primer_termino( $id, CZUAPI_Taxonomias::TAX_CATEGORIA ),
+			'categoria'       => czuapi_primer_termino( $id, CZUAPI_Taxonomias::TAX_CATEGORIA, $idioma ),
 			// Se suma acá —antes sólo la traía el detalle— para que un chip de
 			// tag en la tarjeta de lista no obligue a pedir el detalle antes
 			// de poder mostrarlo. Es barata: WP_Query ya precargó los términos
 			// de toda la página en una sola consulta, así que esto no agrega
 			// ninguna.
-			'etiquetas'       => $this->etiquetas( $id ),
+			'etiquetas'       => $this->etiquetas( $id, $idioma ),
 			'coordenadas'     => $this->coordenadas( $id ),
 			'google_maps'     => $this->google_maps( $id ),
 			'portada'         => $this->portada( $id ),
@@ -253,8 +253,8 @@ class CZUAPI_Inventario {
 			// `traducido: false` alguno cayó al castellano.
 			'idioma'      => $i18n['idioma'],
 			'traducido'   => $i18n['traducido'],
-			'categoria'   => czuapi_primer_termino( $id, CZUAPI_Taxonomias::TAX_CATEGORIA ),
-			'etiquetas'   => $this->etiquetas( $id ),
+			'categoria'   => czuapi_primer_termino( $id, CZUAPI_Taxonomias::TAX_CATEGORIA, $idioma ),
+			'etiquetas'   => $this->etiquetas( $id, $idioma ),
 			'coordenadas' => $this->coordenadas( $id ),
 			// El enlace de Google Maps es ahora el modo principal de cargar la
 			// ubicación en el panel, y el que la app usa para llevar a la
@@ -457,12 +457,12 @@ class CZUAPI_Inventario {
 		return $out;
 	}
 
-	private function etiquetas( $id ) {
+	private function etiquetas( $id, $idioma = 'es' ) {
 		$terms = get_the_terms( $id, CZUAPI_Taxonomias::TAX_ETIQUETA );
 		if ( ! $terms || is_wp_error( $terms ) ) {
 			return array();
 		}
-		return array_map( 'czuapi_termino', $terms );
+		return array_map( function ( $t ) use ( $idioma ) { return czuapi_termino( $t, $idioma ); }, $terms );
 	}
 
 	/**

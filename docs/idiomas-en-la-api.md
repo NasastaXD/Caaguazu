@@ -67,8 +67,8 @@ lo que la persona espera— es ver el contenido igual.
 | `GET /recorridos/{id}` | sí |
 | `GET /mis-recorridos` · `POST` · `PUT` | sí *(ver §6)* |
 | `GET /eventos` · `GET /eventos/{id}` | sí |
+| `GET /categorias` · `/etiquetas` | sí — ver §7 |
 | `GET /mapa/markers` | **no** — no lleva ningún texto |
-| `GET /categorias` · `/etiquetas` | **no** — ver §7 |
 | `GET /sync` | **no** — devuelve IDs, no textos |
 
 ---
@@ -149,12 +149,14 @@ qué se abre.
 | `horario_resumen` | ✔ | — |
 | `practicos.horario` | — | ✔ |
 | `practicos.costo` | — | ✔ |
+| `categoria.nombre` | ✔ | ✔ |
+| `etiquetas[].nombre` | ✔ | ✔ |
 | `articulos_relacionados[].titulo` | — | ✔ |
 
 ### Artículo
 
-`antetitulo`, `titulo`, `subtitulo`, `entradilla`, `cuerpo_html`, y el `titulo`
-de cada `relacionados[]`.
+`antetitulo`, `titulo`, `subtitulo`, `entradilla`, `cuerpo_html`, `categoria.nombre`,
+`etiquetas[].nombre`, y el `titulo` de cada `relacionados[]`.
 
 `cuerpo_html` viene con los mismos párrafos en los dos idiomas: el texto se
 elige en plano y el HTML se arma después, así que un idioma no sale con
@@ -170,6 +172,15 @@ párrafos y el otro sin ellos.
 - **`paradas[].titulo`** — sale de la **ficha a la que la parada apunta**, no de
   una copia guardada en el recorrido. O sea: traducir una ficha una sola vez la
   traduce en todos los recorridos que la incluyen.
+- **`paradas[].categoria.nombre`** — mismo origen que el título: la categoría de
+  la ficha a la que apunta la parada.
+
+### Categoría y etiqueta (dondequiera que aparezcan)
+
+Sólo `nombre`. `descripcion`, `color`, `icono` e `imagen` de una categoría no se
+traducen — quedan en castellano en cualquier idioma que pidas. Es la extensión
+más obvia si en algún momento hace falta: un campo más en `campos()` del lado
+del panel, el mismo mecanismo.
 
 ### Lo que NO se traduce, a propósito
 
@@ -178,7 +189,8 @@ párrafos y el otro sin ellos.
 - `fuentes` — son citas de dónde salió cada dato; traducir el nombre de un libro
   o de un archivo lo vuelve imposible de encontrar.
 - Los montos en guaraníes dentro de `costo`: el texto se traduce, el número no.
-- **Categorías y etiquetas** — ver §7.
+- La `descripcion`, el `color`, el `icono` y la `imagen` de una categoría — sólo
+  su `nombre` se traduce, ver arriba.
 
 ---
 
@@ -211,22 +223,66 @@ cambiado sólo el portugués.
 
 ---
 
-## 7. Categorías y etiquetas: por qué no van acá
+## 7. Categorías y etiquetas
 
-Una categoría (`Sitios Naturales`) y una etiqueta (`con niños`) no son contenido
-de una ficha: son del sistema, y las comparten cientos de fichas. Traducirlas
-por ficha sería traducir «Sitios Naturales» una vez por cada sitio natural que
-exista, con el resultado previsible de que terminen dichas de cuatro maneras
-distintas.
+> **Corrección sobre la primera versión de este documento:** acá decía que
+> categorías y etiquetas se traducían por `/strings`, buscando por
+> `categoria.slug`. Eso describía cómo *debería* funcionar antes de
+> construirlo, y quedó escrito como si ya estuviera — pero `/strings` nunca
+> tuvo ese mecanismo: es una lista de claves sueltas (`nav.inventario`,
+> `nav.mapa`…) sin ninguna noción de categoría o etiqueta. Si programaron
+> contra esa versión, no hay ningún `categoria.<slug>` que vaya a aparecer
+> ahí. Perdón por el lío — quedó corregido abajo, y es lo que ya está en la
+> API.
 
-Van por **`/strings/{locale}`**, que es el mismo canal por el que ya viajan los
-textos de la interfaz de la app y que ahora acepta también `pt`. Se traducen una
-vez y valen para todo.
+Una categoría (`Sitios Naturales`) y una etiqueta (`con niños`) no son
+contenido de una ficha: son del sistema, y las comparten cientos de fichas.
+Pero eso es un argumento sobre **dónde se edita** la traducción —una vez por
+categoría, no una vez por cada ficha de esa categoría—, no sobre por qué
+endpoint se sirve. Y el mecanismo que ya existe para «una vez por categoría,
+resuelto en cada lugar donde aparece» es el mismo que usa cada ficha: `?idioma`.
 
-O sea que `/inventario?idioma=en` sigue devolviendo `categoria.nombre` en
-castellano. **El nombre para mostrar sale de `/strings`, buscando por
-`categoria.slug`.** Eso ya era así antes de 0.8.0 para `es`/`en`/`gn`; lo único
-nuevo es que ahora hay portugués.
+**Así que van por el mismo camino que todo lo demás.** `/categorias` y
+`/etiquetas` aceptan `?idioma=es|en|pt`, y el `nombre` de cada objeto
+`categoria`/`etiquetas` embebido en una ficha, un artículo o un recorrido
+—también el de cada parada de un recorrido— sale ya traducido, con el mismo
+`?idioma` que mandaste para el resto de la respuesta. Nada nuevo que aprender:
+es exactamente el mismo parámetro, aplicado también acá.
+
+```http
+GET /wp-json/czu-app/v1/categorias?idioma=en
+
+[
+  { "id": 4, "slug": "sitios-naturales", "nombre": "Natural Sites", "…": "…" }
+]
+```
+
+```json
+// /inventario/412?idioma=en — la categoría embebida sale traducida sola
+{
+  "id": 412,
+  "titulo": "Ykua La Patria Waterfall",
+  "categoria": { "id": 4, "slug": "sitios-naturales", "nombre": "Natural Sites" },
+  "…": "…"
+}
+```
+
+Se resuelve contra la fila del término —una traducción por categoría, cargada
+una vez en el panel (§8)— y no se duplica en cada ficha, que es lo que la
+primera versión de este documento estaba tratando de evitar. Sólo que el
+resultado se sirve donde ya se pedía todo lo demás, no en un canal aparte.
+
+Un objeto `categoria`/`etiqueta` **no** trae `idioma` ni `traducido` propios
+—esos dos campos siguen siendo del objeto de contenido que lo contiene—: si
+una categoría no tiene traducción cargada, su `nombre` sale en castellano
+dentro de una respuesta que puede estar `traducido: true` para el resto de sus
+campos. Es el mismo principio de «cae al original campo por campo» de la
+ficha, aplicado un nivel más adentro.
+
+**`/strings/{locale}`** sigue siendo sólo para los textos fijos de la interfaz
+—menús, botones, avisos— y ahora acepta también `pt` (antes era `es`/`en`/`gn`
+nada más). No tiene ninguna clave de categoría ni de etiqueta, ni la va a
+tener.
 
 ---
 
@@ -252,6 +308,13 @@ marcada como desactualizada, pero **la app la sigue sirviendo** — es mejor un
 texto en inglés levemente viejo que un salto al castellano sin aviso. `/sync` va
 a avisar del cambio igual, porque editar mueve la fecha de modificación.
 
+**Categorías y etiquetas se traducen aparte, en Estructura** —no en el bloque
+Idiomas de una ficha, porque no son de ninguna ficha en particular—: cada
+término de la lista tiene un desplegable «Traducciones» con un campo por
+idioma. También de Profesor. No hay archivo para bajar y subir acá: son pocos
+términos y un solo campo cada uno, así que no vale la pena el mecanismo del
+archivo.
+
 ---
 
 ## 9. Resumen para implementar
@@ -262,8 +325,11 @@ a avisar del cambio igual, porque editar mueve la fecha de modificación.
 3. **Incluir el idioma en la clave de caché local.** Es el error que más caro
    sale.
 4. Leer `traducido` y decidir qué mostrar cuando es `false`.
-5. Para los nombres de categorías y etiquetas, seguir usando `/strings/{locale}`
-   con el `slug`.
+5. Pasar `?idioma=` también a `/categorias` y `/etiquetas` si tenés un catálogo
+   propio de filtros — el `nombre` de cada uno sale traducido igual que en
+   cualquier otro endpoint. **No hace falta leer nada de `/strings` para
+   esto** — si programaron el lookup por `/strings` contra la versión anterior
+   de este documento, se puede sacar entero.
 6. Cuando `/sync` marque una pieza como cambiada, invalidarla **en todos los
    idiomas**.
 

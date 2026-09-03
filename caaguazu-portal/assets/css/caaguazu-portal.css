@@ -860,6 +860,15 @@ html.promotur-no-splash .promotur-splash { display: none; }
 .promotur-termino__nombre .promotur-form-msg { flex: 1 1 100%; font-weight: 400; }
 .promotur-termino__uso { display: flex; align-items: center; gap: 10px; padding-top: 3px; }
 
+/* El nombre traducido de una categoría o etiqueta: un campo por idioma,
+   plegado por default para no alargar una lista que puede tener muchos
+   términos. flex:1 1 100% para ocupar la fila entera, igual que .promotur-field
+   dentro de .promotur-termino__nombre. */
+.promotur-termino__i18n { flex: 1 1 100%; font-weight: 400; font-size: .85rem; }
+.promotur-termino__i18n summary { cursor: pointer; color: var(--texto-2); }
+.promotur-termino__i18n-campos { display: flex; flex-wrap: wrap; gap: 10px; padding-top: 8px; }
+.promotur-termino__i18n-campos .promotur-field { flex: 1 1 160px; }
+
 /* Una invitación abierta: el nombre del rol y el vencimiento van en su fila de
    siempre, y el enlace —largo, no cabe al lado de nada— en la suya propia
    debajo, a todo lo ancho. */

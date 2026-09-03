@@ -290,7 +290,7 @@ class CZUAPI_Eventos {
 				'lng'      => (float) $lng,
 			),
 			'costo'     => $t( 'costo', (string) get_post_meta( $id, '_promotur_costo', true ) ),
-			'categoria' => czuapi_primer_termino( $id, CZUAPI_Taxonomias::TAX_CATEGORIA ),
+			'categoria' => czuapi_primer_termino( $id, CZUAPI_Taxonomias::TAX_CATEGORIA, $idioma ),
 			'portada'   => czuapi_imagen( (int) get_post_thumbnail_id( $id ) ),
 			// Antes leía el gancho, que se sacó de la ficha por redundante.
 			// El resumen de tarjeta ahora sale de la descripción, igual que

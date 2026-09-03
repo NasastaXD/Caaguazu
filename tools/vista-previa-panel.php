@@ -270,6 +270,7 @@ class PROMOTUR_Estructura {
 		return ! empty( $g[ $tax ]['extras'] );
 	}
 	public static function meta_imagen() { return 'czuapi_imagen_id'; }
+	public static function meta_i18n( $locale ) { return 'czuapi_i18n_' . $locale; }
 	public static function terminos( $tax ) {
 		$muestra = array(
 			'promotur_categoria' => array( array( 'Saltos de agua', 7, 'Cascadas y correntadas del departamento.' ), array( 'Ferias', 0, '' ) ),

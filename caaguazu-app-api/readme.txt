@@ -2,7 +2,7 @@
 Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 0.8.1
+Stable tag: 0.8.2
 License: GPLv2 or later
 
 Capa REST que consume la app Android de turismo (Turismo App Czu).
@@ -133,6 +133,33 @@ traiga adjunto `caaguazu-app-api.zip` — no depende de cómo se llame el tag.
   no está funcionando.
 * Repo privado: definir `CZUAPI_GITHUB_TOKEN` (PAT de solo lectura) en
   `wp-config.php`, o cargarlo desde **Caaguazú API → Actualizaciones**.
+
+== Cambios del contrato en 0.8.2 ==
+
+**`/categorias` y `/etiquetas` aceptan `?idioma=`, y cada `categoria`/`etiquetas[]`
+embebido en fichas, artículos y recorridos sale traducido.** Faltaba en la
+0.8.0: el `nombre` de una categoría o etiqueta seguía viniendo en castellano
+sin importar qué `?idioma` se pidiera, y el primer borrador de la
+documentación decía por error que había que resolverlo leyendo `/strings` con
+una clave `categoria.<slug>` que nunca existió ahí. Corregido de las dos
+formas: el contrato real (esto) y el documento
+(`docs/idiomas-en-la-api.md`, §7).
+
+* `GET /categorias?idioma=en`, `GET /etiquetas?idioma=en` — mismo parámetro que
+  el resto de los endpoints.
+* El `nombre` de `categoria` y de cada `etiquetas[]`, dondequiera que aparezcan
+  —ficha, artículo, recorrido, y el `categoria` de cada parada de un
+  recorrido—, sale en el idioma pedido si hay traducción cargada.
+* Se traduce sólo el `nombre`. `descripcion`, `color`, `icono` e `imagen` de
+  una categoría siguen en castellano.
+* Un objeto `categoria`/`etiqueta` no suma `idioma` ni `traducido` propios:
+  esos dos campos son del objeto de contenido que lo contiene, igual que
+  antes.
+* La traducción se carga en el panel, en **Estructura**, no en el bloque
+  Idiomas de una ficha: es un dato del término, compartido por todas las
+  fichas que lo usan.
+* `/strings/{locale}` no cambia: sigue siendo sólo para los textos fijos de
+  la interfaz y nunca tuvo ninguna clave de categoría o etiqueta.
 
 == Cambios del contrato en 0.8.0 ==
 

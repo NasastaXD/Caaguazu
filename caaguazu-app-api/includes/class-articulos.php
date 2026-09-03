@@ -193,7 +193,7 @@ class CZUAPI_Articulos {
 		// traducir el nombre de un libro o de un archivo lo vuelve imposible
 		// de encontrar.
 		$out['fuentes']      = $this->fuentes( $post->ID );
-		$out['categoria']    = czuapi_primer_termino( $post->ID, CZUAPI_Taxonomias::TAX_CATEGORIA );
+		$out['categoria']    = czuapi_primer_termino( $post->ID, CZUAPI_Taxonomias::TAX_CATEGORIA, $idioma );
 		$out['relacionados'] = $this->relacionados( $post->ID, $idioma );
 		$out['actualizado']  = czuapi_fecha( $post->post_modified_gmt );
 
@@ -220,7 +220,7 @@ class CZUAPI_Articulos {
 			// detalle (ver docblock arriba), no había motivo para que sólo el
 			// detalle la tuviera. Barata por la misma razón que en inventario:
 			// WP_Query ya precargó los términos de toda la página.
-			'etiquetas'  => $this->etiquetas( $id ),
+			'etiquetas'  => $this->etiquetas( $id, $idioma ),
 			// `entradilla` es el párrafo de arranque escrito por la redacción
 			// (el post_excerpt). Se llamaba `bajada` hasta acá: se renombró
 			// para hablar el mismo idioma que el panel, donde el campo se
@@ -299,12 +299,12 @@ class CZUAPI_Articulos {
 	/**
 	 * @return array[]
 	 */
-	private function etiquetas( $id ) {
+	private function etiquetas( $id, $idioma = 'es' ) {
 		$terms = get_the_terms( $id, CZUAPI_Taxonomias::TAX_ETIQUETA );
 		if ( ! $terms || is_wp_error( $terms ) ) {
 			return array();
 		}
-		return array_map( 'czuapi_termino', $terms );
+		return array_map( function ( $t ) use ( $idioma ) { return czuapi_termino( $t, $idioma ); }, $terms );
 	}
 
 	/**
@@ -328,7 +328,7 @@ class CZUAPI_Articulos {
 			$args['post__in'] = $ids;
 			$args['orderby']  = 'post__in';
 		} else {
-			$cat = czuapi_primer_termino( $id, CZUAPI_Taxonomias::TAX_CATEGORIA );
+			$cat = czuapi_primer_termino( $id, CZUAPI_Taxonomias::TAX_CATEGORIA, $idioma );
 			if ( ! $cat ) {
 				return array();
 			}
