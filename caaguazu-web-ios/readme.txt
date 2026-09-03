@@ -2,7 +2,7 @@
 Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPLv2 or later
 
 Espejo web de la app de turismo, servido en `caaguazu.net/ios/`, para quien usa iPhone mientras no exista una app nativa.
@@ -64,6 +64,25 @@ que guarda cada visitante es su propio `localStorage` (favoritos, recorrido
 propio, idioma elegido), y eso vive en su navegador, no acá.
 
 == Changelog ==
+
+= 1.0.1 =
+* **Pantalla en blanco en producción, sin ningún error a la vista.** Todo
+  archivo bajo `/ios/` (`js/app.js`, `css/estilo.css`, el manifest…) devolvía
+  un 301 antes del 200: `redirect_canonical()` de WordPress corre en el mismo
+  hook que el despachador de este plugin, ve `/ios/js/app.js` como si le
+  faltara la barra final de su estructura de permalinks, y la agrega. El
+  navegador seguía el redirect y el archivo llegaba igual — pero `app.js` es
+  un módulo ES con imports relativos (`from "./idioma.js"`), y esos se
+  resuelven contra la URL final, CON la barra puesta: el navegador pedía
+  `js/app.js/idioma.js`, que no existe. El import fallaba, el módulo entero
+  no cargaba, y la pantalla quedaba negra. El único síntoma estaba en las
+  cabeceras (301 antes del 200 en cada archivo), no en la consola ni en la
+  pantalla — nadie que abriera el sitio podía saber por qué.
+* Se cancela con el filtro que `redirect_canonical()` ya expone para esto,
+  sólo para pedidos de este plugin.
+* `tools/verificar-web-ios.php`, nuevo — prueba que el filtro esté
+  efectivamente enganchado (no sólo que la función esté bien escrita) y que
+  cancele el redirect exactamente para las URLs de este plugin.
 
 = 1.0.0 =
 * Primera versión: sirve el espejo completo (inicio, buscar, ficha,

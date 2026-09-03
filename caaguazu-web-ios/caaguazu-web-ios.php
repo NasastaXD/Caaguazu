@@ -3,7 +3,7 @@
  * Plugin Name:       Caaguazú Web (espejo iOS)
  * Plugin URI:        https://caaguazu.net
  * Description:       Sirve el espejo web de la app de turismo (HTML/CSS/JS sin build) bajo /ios/, para darle algo instalable a quien usa iPhone mientras no exista una app nativa. Temporal a propósito: se desinstala el día que esa app exista.
- * Version:           1.0.0
+ * Version:           1.0.1
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Municipalidad de Caaguazú
@@ -44,7 +44,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'CZUWIOS_VERSION', '1.0.0' );
+define( 'CZUWIOS_VERSION', '1.0.1' );
 define( 'CZUWIOS_FILE', __FILE__ );
 define( 'CZUWIOS_DIR', plugin_dir_path( __FILE__ ) );
 
@@ -70,6 +70,34 @@ final class CZUWIOS_Servidor {
 		add_action( 'init', array( $this, 'reglas' ) );
 		add_action( 'init', array( $this, 'reflushear_si_hace_falta' ) );
 		add_action( 'template_redirect', array( $this, 'despachar' ) );
+		add_filter( 'redirect_canonical', array( $this, 'sin_canonical' ) );
+	}
+
+	/**
+	 * Que WordPress no le agregue una barra final a nada de acá.
+	 *
+	 * `redirect_canonical()` corre en `template_redirect` —el mismo hook
+	 * que `despachar()`— y ve `/ios/js/app.js` como un permalink al que le
+	 * falta la barra de su estructura, así que manda un 301 a
+	 * `/ios/js/app.js/` ANTES de que este plugin llegue a servir nada. El
+	 * navegador sigue el redirect y el archivo se sirve igual — pero
+	 * `js/app.js` es un módulo ES con imports relativos (`from
+	 * "./idioma.js"`), y esos se resuelven contra la URL final, con la
+	 * barra puesta: `js/app.js/idioma.js`, un path que no existe. El
+	 * import falla, el módulo entero no carga, y la pantalla queda en
+	 * blanco sin ningún error a la vista — el único síntoma es que TODO
+	 * archivo bajo `/ios/` devuelve 301 antes del 200, cosa que sólo se ve
+	 * mirando las cabeceras, nunca desde el navegador.
+	 *
+	 * Se cancela con el filtro que `redirect_canonical()` ya expone para
+	 * esto —devolver `false`— y sólo para pedidos de este plugin: no toca
+	 * la canonicalización del resto del sitio.
+	 *
+	 * @param string|false $redirect_url
+	 * @return string|false
+	 */
+	public function sin_canonical( $redirect_url ) {
+		return get_query_var( 'czuwios_archivo' ) ? false : $redirect_url;
 	}
 
 	public function query_vars( $vars ) {
