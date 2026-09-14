@@ -260,15 +260,50 @@ class PROMOTUR_Router {
 
 	/**
 	 * Redirige wp-login.php al login del portal, salvo admins y acciones de sistema.
+	 *
+	 * QUÉ ES ESTE BLOQUEO Y QUÉ NO
+	 *
+	 * Es comodidad, no seguridad: los promotores no son usuarios de WordPress
+	 * y su login es otro, así que mandarlos a `wp-login.php` es mandarlos a una
+	 * pantalla donde no pueden entrar. Lo único que hace es llevarlos al login
+	 * que sí les sirve. No protege nada —el formulario de WordPress es el de
+	 * cualquier WordPress— y no hay que tratarlo como si protegiera.
+	 *
+	 * Eso importa por los dos portones de abajo, que dejaron a este bloqueo
+	 * dejando afuera a quien no debía:
+	 *
+	 * 1. El POST pasa siempre. El formulario de WordPress postea sin `action`,
+	 *    así que caía en el `'login'` por defecto y se redirigía también el
+	 *    envío, no sólo la pantalla. Con eso, un administrador que llegaba al
+	 *    formulario igual no podía entrar: sus credenciales se perdían en el
+	 *    redirect.
+	 * 2. `?admin=1` saltea el bloqueo. Hace falta un portón que funcione SIN
+	 *    sesión, porque el `current_user_can()` de más abajo sólo puede
+	 *    contestar que sí cuando ya hay sesión iniciada — y quien viene a la
+	 *    pantalla de login justamente no la tiene. Esa excepción era, en los
+	 *    hechos, código muerto: un administrador deslogueado que entraba a
+	 *    /wp-admin terminaba siempre en /turismo-panel/entrar.
 	 */
 	public function maybe_block_wp_login() {
-		$action = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : 'login';
+		// Portón 1: el envío del formulario. Ver la cabecera.
+		$metodo = isset( $_SERVER['REQUEST_METHOD'] ) ? strtoupper( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) ) : 'GET';
+		if ( 'POST' === $metodo ) {
+			return;
+		}
+
+		$action = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : 'login'; // phpcs:ignore WordPress.Security.NonceVerification
 		$exempt = array( 'logout', 'resetpass', 'rp', 'postpass', 'lostpassword', 'retrievepassword' );
 		if ( in_array( $action, $exempt, true ) ) {
 			return;
 		}
+
+		// Portón 2: pedir la pantalla de WordPress a propósito. Ver la cabecera.
+		if ( isset( $_GET['admin'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
+			return;
+		}
+
 		if ( current_user_can( 'manage_options' ) ) {
-			return; // admins conservan wp-login.php
+			return; // admins con sesión abierta conservan wp-login.php
 		}
 		if ( ! apply_filters( 'promotur_block_wp_login', true ) ) {
 			return;

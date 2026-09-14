@@ -3,7 +3,7 @@ Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 3.5.2
+Stable tag: 3.5.3
 License: GPLv2 or later
 
 Panel autenticado tipo app (PWA) bajo /turismo-panel, con enrutador propio, login propio, roles y flujo editorial para las tres cosas que la app muestra: fichas del inventario turístico, artículos y recorridos.
@@ -57,6 +57,22 @@ llamen los tags.
 * Repo privado: definir `PROMOTUR_GITHUB_TOKEN` (PAT de solo lectura) en `wp-config.php`.
 
 == Changelog ==
+
+= 3.5.3 =
+* **Los administradores vuelven a poder entrar a wp-admin.** El bloqueo de
+  `wp-login.php` —que manda a los promotores al login del panel, porque no son
+  usuarios de WordPress y ahí no pueden entrar— exceptuaba a los
+  administradores con `current_user_can( 'manage_options' )`. Esa excepción no
+  podía funcionar nunca: corre en `login_init`, o sea en la pantalla de login,
+  donde por definición todavía no hay sesión. Un administrador deslogueado que
+  entraba a `/wp-admin` terminaba siempre en `/turismo-panel/entrar`.
+* Peor todavía, se redirigía también el POST: el formulario de WordPress envía
+  sin `action`, así que caía en el `'login'` por defecto y las credenciales se
+  perdían en el redirect. Quien llegaba al formulario igual no podía entrar.
+* Ahora el envío del formulario pasa siempre, y `/wp-login.php?admin=1` saltea
+  el bloqueo — hacía falta un portón que funcione sin sesión. Ese parámetro no
+  es un secreto ni protege nada: lo único que destapa es el formulario estándar
+  de WordPress. El bloqueo siempre fue comodidad, no control de acceso.
 
 = 3.5.2 =
 * **El panel deja de hacer ~124 consultas de más en cada pantalla.** La barra
