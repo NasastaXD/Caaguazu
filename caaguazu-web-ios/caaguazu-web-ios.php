@@ -3,7 +3,7 @@
  * Plugin Name:       Caaguazú Web turismo
  * Plugin URI:        https://caaguazu.net
  * Description:       La web de turismo de acceso fácil (HTML/CSS/JS sin build), en /turismo/ y en /ios/: el mismo contenido que la app, sin instalar nada ni crear una cuenta. Nació como espejo para iPhone mientras no exista una app nativa.
- * Version:           2.0.4
+ * Version:           2.0.5
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Municipalidad de Caaguazú
@@ -45,7 +45,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'CZUWIOS_VERSION', '2.0.4' );
+define( 'CZUWIOS_VERSION', '2.0.5' );
 define( 'CZUWIOS_FILE', __FILE__ );
 define( 'CZUWIOS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'CZUWIOS_BASENAME', plugin_basename( __FILE__ ) );

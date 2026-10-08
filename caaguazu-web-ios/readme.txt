@@ -2,7 +2,7 @@
 Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 2.0.4
+Stable tag: 2.0.5
 License: GPLv2 or later
 
 La guía de turismo de Caaguazú en una página web de acceso fácil, en `caaguazu.net/turismo/` (y en `/ios/`): se abre y se usa, sin instalar nada y sin crear una cuenta.
@@ -130,6 +130,13 @@ que guarda cada visitante es su propio `localStorage` (favoritos, recorrido
 propio, idioma elegido), y eso vive en su navegador, no acá.
 
 == Changelog ==
+
+= 2.0.5 =
+* La barra del asistente se anima: la pestaña que se activa aparece con un
+  pequeño crecimiento y su etiqueta sube, y el orbe sube desde abajo la primera
+  vez que se dibuja. Al tocar una pestaña, el disco se encoge un poco.
+* El orbe queda a la altura de los íconos, no arriba de la pastilla.
+* Con «reducir movimiento» en el teléfono, nada de esto se anima.
 
 = 2.0.4 =
 * El asistente va en el medio de la barra, como un orbe negro que sube por

@@ -54,13 +54,35 @@ function pintarBarra(activa) {
     ["app", Icono.ruta, t("nav.recorridos")],
   ].filter(Boolean);
 
+  // Si la barra ya tiene estas mismas pestañas, sólo se mueve la marca de
+  // activa. Así el orbe no se vuelve a dibujar en cada navegación, y la pestaña
+  // nueva puede animar su entrada.
+  const iguales =
+    barra.children.length === items.length &&
+    items.every(([clave, , etiqueta], i) => {
+      const a = barra.children[i];
+      return a.getAttribute("href") === `#/${clave}` && a.getAttribute("aria-label") === etiqueta;
+    });
+  if (iguales) {
+    items.forEach(([clave], i) => {
+      const a = barra.children[i];
+      const activo = clave === activa;
+      a.classList.toggle("activo", activo);
+      if (activo) a.setAttribute("aria-current", "page");
+      else a.removeAttribute("aria-current");
+    });
+    return;
+  }
+
   barra.innerHTML = items
     .map(([clave, icono, etiqueta]) => {
       const activo = clave === activa;
       const orbe = clave === "asistente" ? " barra__item--ia" : "";
+      // La etiqueta visible va escondida para lectores de pantalla: el nombre
+      // accesible es el aria-label del enlace.
       return `<a class="barra__item${orbe} ${activo ? "activo" : ""}" href="#/${clave}" aria-label="${escapar(etiqueta)}"${
         activo ? ' aria-current="page"' : ""
-      }>${icono}<span>${escapar(etiqueta)}</span></a>`;
+      }>${icono}<span aria-hidden="true">${escapar(etiqueta)}</span></a>`;
     })
     .join("");
 }
