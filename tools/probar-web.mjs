@@ -319,7 +319,7 @@ seccion( 'Asistente' );
 		return route.fulfill( json( { error: { codigo: 'muchos_pedidos', mensaje: 'x', detalle: { espera_seg: 30 } } }, 429, { 'Retry-After': '30' } ) );
 	} );
 	await ir( p, '#/asistente' );
-	ok( 'la pestaña aparece cuando la API lo tiene prendido', ( await p.locator( '#barra .barra__item' ).allTextContents() ).some( ( t ) => /Asistente/.test( t ) ) );
+	ok( 'la pestaña aparece cuando la API lo tiene prendido', await p.locator( '#barra a[href="#/asistente"]' ).count() === 1 );
 	await p.locator( '[data-ejemplo]' ).first().click();
 	await p.waitForSelector( '.globo--ia:not(.escribiendo)', { timeout: 5000 } );
 	ok( 'muestra la respuesta', ( await p.locator( '.globo--ia' ).first().textContent() ).includes( 'Ykua La Patria' ) );
@@ -341,7 +341,7 @@ seccion( 'Asistente' );
 {
 	const { ctx, p } = await pagina( {}, { asistente: false } );
 	await ir( p, '#/inicio' );
-	ok( 'sin asistente: ni pestaña ni tarjeta', ! ( await p.locator( '#barra .barra__item' ).allTextContents() ).some( ( t ) => /Asistente/.test( t ) ) && await p.locator( 'a[href="#/asistente"]' ).count() === 0 );
+	ok( 'sin asistente: ni pestaña ni tarjeta', await p.locator( '#barra a[href="#/asistente"]' ).count() === 0 && await p.locator( 'a[href="#/asistente"]' ).count() === 0 );
 	await ir( p, '#/asistente' );
 	ok( 'entrar a mano a /asistente lo explica en vez de romperse', await p.locator( '.vacio' ).count() === 1 );
 	await ctx.close();
