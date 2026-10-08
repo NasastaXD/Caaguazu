@@ -203,7 +203,7 @@ No es "un CPT con un formulario": es una **aplicación completa** montada sobre 
 | `/turismo/panel/...` | El panel en sí |
 | `/promotur-manifest.webmanifest`, `/promotur-sw.js`, `/promotur-icon-{n}.png`, `/promotur-offline` | PWA |
 
-El plugin **redirige `wp-login.php` a `/czu-login`** para todo usuario que no sea administrador — esto afecta a todo el sitio, no solo a las rutas del portal. Los administradores conservan `wp-login.php` de siempre.
+El plugin **no toca `wp-login.php`**: esa pantalla queda para quien administra WordPress, y los promotores entran por el login del panel. (Hasta `caaguazu-portal` 3.5.3 la redirigía al login del panel; se sacó porque dejaba afuera de wp-admin a los administradores.)
 
 ### 5.2 Modelo de contenido
 

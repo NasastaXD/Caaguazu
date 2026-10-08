@@ -26,8 +26,14 @@ class PROMOTUR_Router {
 		add_action( 'init', array( __CLASS__, 'add_rewrite_rules' ) );
 		add_action( 'template_redirect', array( $this, 'dispatch' ) );
 
-		// Bloquear wp-login.php para usuarios del portal (con excepciones).
-		add_action( 'login_init', array( $this, 'maybe_block_wp_login' ) );
+		/*
+		 * wp-login.php NO se toca. Hasta 3.5.3 este router lo redirigía al
+		 * login del panel, pensando en un promotor que cayera ahí por error.
+		 * En la práctica a esa pantalla sólo llega quien administra WordPress,
+		 * y el redirect lo mandaba a un login que no era el suyo — con
+		 * excepciones que nunca alcanzaron. Los promotores entran por
+		 * /turismo-panel/entrar, que es el único enlace que conocen.
+		 */
 
 		// WP no debe "adivinar" URLs y romper nuestras rutas.
 		remove_action( 'template_redirect', 'redirect_guess_404_permalink' );
@@ -256,24 +262,5 @@ class PROMOTUR_Router {
 				array( 'response' => 403 )
 			);
 		}
-	}
-
-	/**
-	 * Redirige wp-login.php al login del portal, salvo admins y acciones de sistema.
-	 */
-	public function maybe_block_wp_login() {
-		$action = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : 'login';
-		$exempt = array( 'logout', 'resetpass', 'rp', 'postpass', 'lostpassword', 'retrievepassword' );
-		if ( in_array( $action, $exempt, true ) ) {
-			return;
-		}
-		if ( current_user_can( 'manage_options' ) ) {
-			return; // admins conservan wp-login.php
-		}
-		if ( ! apply_filters( 'promotur_block_wp_login', true ) ) {
-			return;
-		}
-		wp_safe_redirect( promotur_url( 'login' ) );
-		exit;
 	}
 }

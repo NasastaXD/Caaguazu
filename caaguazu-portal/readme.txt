@@ -3,7 +3,7 @@ Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 3.5.2
+Stable tag: 3.6.0
 License: GPLv2 or later
 
 Panel autenticado tipo app (PWA) bajo /turismo-panel, con enrutador propio, login propio, roles y flujo editorial para las tres cosas que la app muestra: fichas del inventario turístico, artículos y recorridos.
@@ -57,6 +57,40 @@ llamen los tags.
 * Repo privado: definir `PROMOTUR_GITHUB_TOKEN` (PAT de solo lectura) en `wp-config.php`.
 
 == Changelog ==
+
+= 3.6.0 =
+* **Los docentes ven los borradores de todo el equipo.** «Mis contenidos»
+  suma un selector «Míos / Del equipo» para quien revisa (el Promotor, que es
+  el rol con que entran los docentes del CEAD). Hacía falta: el editor ya le
+  dejaba abrir y corregir una ficha ajena, pero no había ningún lugar donde
+  encontrarla — el inventario sólo muestra lo publicado y la cola de revisión
+  sólo lo enviado, así que el borrador de un colega era invisible hasta que
+  su dueño lo mandaba. En «Del equipo» cada fila dice de quién es. El Mini
+  Promotor (los alumnos) sigue viendo sólo lo suyo. Los recorridos que arma
+  la gente en la app no aparecen: son privados de su dueño.
+* **El panel deja de tocar `wp-login.php`.** Hasta acá lo redirigía a
+  /turismo-panel/entrar, pensando en un promotor que cayera ahí por error. En
+  la práctica a esa pantalla sólo llega quien administra WordPress, y el
+  redirect lo mandaba a un login que no era el suyo — el portón `?admin=1`
+  de 3.5.3 lo destrababa, pero obligaba a acordarse de la URL. Se sacó entero:
+  los promotores entran por /turismo-panel/entrar, que es el único enlace que
+  conocen. El filtro `promotur_block_wp_login` deja de existir.
+
+= 3.5.3 =
+* **Los administradores vuelven a poder entrar a wp-admin.** El bloqueo de
+  `wp-login.php` —que manda a los promotores al login del panel, porque no son
+  usuarios de WordPress y ahí no pueden entrar— exceptuaba a los
+  administradores con `current_user_can( 'manage_options' )`. Esa excepción no
+  podía funcionar nunca: corre en `login_init`, o sea en la pantalla de login,
+  donde por definición todavía no hay sesión. Un administrador deslogueado que
+  entraba a `/wp-admin` terminaba siempre en `/turismo-panel/entrar`.
+* Peor todavía, se redirigía también el POST: el formulario de WordPress envía
+  sin `action`, así que caía en el `'login'` por defecto y las credenciales se
+  perdían en el redirect. Quien llegaba al formulario igual no podía entrar.
+* Ahora el envío del formulario pasa siempre, y `/wp-login.php?admin=1` saltea
+  el bloqueo — hacía falta un portón que funcione sin sesión. Ese parámetro no
+  es un secreto ni protege nada: lo único que destapa es el formulario estándar
+  de WordPress. El bloqueo siempre fue comodidad, no control de acceso.
 
 = 3.5.2 =
 * **El panel deja de hacer ~124 consultas de más en cada pantalla.** La barra

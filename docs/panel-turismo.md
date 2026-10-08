@@ -128,7 +128,7 @@ Tres de ellas —Inventario, Artículos y Recorridos— hacen de lista y de deta
 | Sección | Ruta | Capability | Qué hace |
 | --- | --- | --- | --- |
 | **Inicio** | `/turismo-panel` | `promotur_view_panel` | Pulso del día: cuántas fichas esperan revisión, publicadas, esperando tu corrección, en proceso, reseñas por moderar y consultas sin responder — cada una es un link a donde se resuelve. Más la actividad editorial de los últimos 7 días y los accesos rápidos. |
-| **Mis contenidos** | `/mis-contenidos` | `promotur_create_draft` | Todo lo tuyo —fichas, artículos y recorridos— ordenado por última modificación, con su tipo y su estado editorial. |
+| **Mis contenidos** | `/mis-contenidos` | `promotur_create_draft` | Todo lo tuyo —fichas, artículos y recorridos— ordenado por última modificación, con su tipo y su estado editorial. Quien tiene `promotur_review_content` (el Promotor) puede pasar a «Del equipo» y ver lo de todos, borradores incluidos, con el nombre de quién lo escribió. |
 | **Nueva ficha / Editor** | `/editor[/<id>]` | `promotur_edit_destino` | Ficha guiada por grupos de campos, con checklist de mínimos en vivo que bloquea el envío si falta algo, subida de fotos y geolocalización. Muestra el feedback de quien revisó. |
 | **Inventario turístico** | `/inventario[/<id>]` | `promotur_view_panel` | El catálogo de fichas publicadas del departamento, con sus datos. Es de donde los recorridos toman sus paradas. |
 | **Artículos** | `/articulos[/nuevo\|<id>]` | `promotur_create_draft` | Las notas que la app muestra: ante título, título, foto con su pie, autores, subtítulo, entradilla, cuerpo y fuentes, más categoría y etiquetas. |
