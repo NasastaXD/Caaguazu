@@ -434,16 +434,23 @@ seccion( 'Arranque y caché con el plugin de verdad (PHP)' );
 if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
 	console.log( `${ gris }  (sin php en el equipo: se salta)${ fin }` );
 } else {
-	const puerto = await new Promise( ( r ) => { const t = servidorTcp(); t.listen( 0, '127.0.0.1', () => { const n = t.address().port; t.close( () => r( n ) ); } ); } );
-	const PHP = `http://127.0.0.1:${ puerto }`;
-	// WEB_LATENCIA_MS: lo que cuesta arrancar WordPress en un hosting compartido.
-	const registro = join( tmpdir(), `probar-web-${ puerto }.log` );
-	writeFileSync( registro, '' );
-	const hijo = spawn( 'php', [ '-S', `127.0.0.1:${ puerto }`, join( aqui, 'web-prueba', 'router.php' ) ], { stdio: 'ignore', env: { ...process.env, PHP_CLI_SERVER_WORKERS: '8', WEB_LATENCIA_MS: '120', WEB_ASISTENTE: '0', WEB_REGISTRO: registro } } );
-	// Lo que llegó de verdad al servidor (y no lo que contestó el caché del
-	// navegador) queda anotado en un archivo: ver WEB_REGISTRO en router.php.
-	const pedidosAlServidor = () => ( existsSync( registro ) ? readFileSync( registro, 'utf8' ).split( '\n' ).filter( Boolean ).map( ( l ) => { const [ estado, , ruta ] = l.split( ' ' ); return { estado, ruta }; } ) : [] );
-	for ( let i = 0; i < 50; i++ ) { try { await fetch( PHP + '/turismo/ajustes.json' ); break; } catch { await new Promise( ( r ) => setTimeout( r, 100 ) ); } }
+	const DIRECTA = '/wp-content/plugins/caaguazu-web-ios/sitio/';
+
+	/** Levanta el plugin de verdad (sin WordPress) en un puerto libre. */
+	async function levantarPhp( env = {} ) {
+		const puerto = await new Promise( ( r ) => { const t = servidorTcp(); t.listen( 0, '127.0.0.1', () => { const n = t.address().port; t.close( () => r( n ) ); } ); } );
+		const registro = join( tmpdir(), `probar-web-${ puerto }.log` );
+		writeFileSync( registro, '' );
+		writeFileSync( join( tmpdir(), `czu-limite-${ puerto }.cnt` ), '0' );
+		// WEB_LATENCIA_MS: lo que cuesta arrancar WordPress en un hosting compartido.
+		const hijo = spawn( 'php', [ '-S', `127.0.0.1:${ puerto }`, join( aqui, 'web-prueba', 'router.php' ) ], { stdio: 'ignore', env: { ...process.env, PHP_CLI_SERVER_WORKERS: '12', WEB_LATENCIA_MS: '120', WEB_ASISTENTE: '0', WEB_REGISTRO: registro, ...env } } );
+		for ( let i = 0; i < 50; i++ ) { try { await fetch( `http://127.0.0.1:${ puerto }/turismo/` ); break; } catch { await new Promise( ( r ) => setTimeout( r, 100 ) ); } }
+		writeFileSync( registro, '' );
+		// Lo que llegó de verdad al servidor (y no lo que contestó el caché del
+		// navegador): ver WEB_REGISTRO en router.php.
+		const pedidos = () => ( existsSync( registro ) ? readFileSync( registro, 'utf8' ).split( '\n' ).filter( Boolean ).map( ( l ) => { const [ estado, , ruta ] = l.split( ' ' ); return { estado, ruta }; } ) : [] );
+		return { PHP: `http://127.0.0.1:${ puerto }`, pedidos, matar: () => hijo.kill() };
+	}
 
 	const abrir = async ( opciones = {} ) => {
 		const ctx = await navegador.newContext( { viewport: { width: 390, height: 844 }, locale: 'es-AR', hasTouch: true, isMobile: true, ...opciones } );
@@ -452,7 +459,11 @@ if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
 		p.on( 'pageerror', ( e ) => errores.push( e.message ) );
 		return { ctx, p, errores };
 	};
-	const esModulo = ( ruta ) => /\/js\/.+\.js(\?|$)/.test( ruta ) && ! /vendor\//.test( ruta );
+	const esCodigo = ( ruta ) => /\/(js|css)\//.test( ruta );
+	const esModulo = ( ruta ) => /\/js\/.+\.js(\?|$)/.test( ruta ) && ! /vendor\// .test( ruta );
+
+	const srv = await levantarPhp();
+	const { PHP, pedidos: pedidosAlServidor } = srv;
 
 	// --- Primera visita -------------------------------------------------------
 	{
@@ -466,16 +477,23 @@ if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
 		ok( 'la app arranca y reemplaza la pantalla de «Cargando…»', await p.locator( '#arranque' ).count() === 0 && await p.locator( '.pantalla' ).count() === 1 );
 		ok( 'sin errores de página', errores.length === 0, errores.join( '|' ) );
 
-		const codigo = vistos.filter( ( r ) => /\/(js|css)\//.test( r ) );
+		const codigo = vistos.filter( esCodigo );
 		ok( 'todo el código se pide con su versión en la URL', codigo.length > 15 && codigo.every( ( r ) => /\?v=\d+\.\d+\.\d+$/.test( r ) ), codigo.filter( ( r ) => ! /\?v=/.test( r ) ).join( ',' ) );
+		ok( 'y TODO el código sale de la carpeta del plugin, sin pasar por PHP/WordPress', codigo.length > 15 && codigo.every( ( r ) => r.startsWith( DIRECTA ) ), codigo.filter( ( r ) => ! r.startsWith( DIRECTA ) ).join( ',' ) );
 		const repetidos = Object.entries( codigo.reduce( ( a, r ) => ( ( a[ r ] = ( a[ r ] || 0 ) + 1 ), a ), {} ) ).filter( ( [ , n ] ) => n > 1 ).map( ( [ r ] ) => r );
 		ok( 'ningún módulo se baja dos veces (con dos URLs distintas se ejecutaría dos veces)', repetidos.length === 0, repetidos.join( ',' ) );
 
 		const html = await ( await fetch( PHP + '/turismo/' ) ).text();
-		const precargados = new Set( [ ...html.matchAll( /rel="modulepreload" href="([^"]+)"/g ) ].map( ( m ) => '/turismo/' + m[ 1 ] ) );
-		const pedidosModulos = vistos.filter( esModulo );
-		const sinPrecarga = pedidosModulos.filter( ( r ) => ! precargados.has( r ) );
+		const precargados = new Set( [ ...html.matchAll( /rel="modulepreload" href="([^"]+)"/g ) ].map( ( m ) => m[ 1 ] ) );
+		const sinPrecarga = vistos.filter( esModulo ).filter( ( r ) => ! precargados.has( r ) );
 		ok( 'la precarga cubre todos los módulos que la app necesitó (si no, bajan en fila)', precargados.size > 15 && sinPrecarga.length === 0, sinPrecarga.join( ',' ) );
+
+		// Lo que SÍ pasa por PHP/WordPress: tiene que ser poco, porque es lo que se cae.
+		// (/uploads/ son las fotos de la API de prueba, no de este plugin.)
+		const porPhp = vistos.filter( ( r ) => ! r.startsWith( DIRECTA ) && ! r.includes( '/wp-json/' ) && ! r.startsWith( '/uploads/' ) );
+		ok( 'por PHP pasa sólo la página (y el manifest, que el navegador pide aparte)', porPhp.every( ( r ) => r === '/turismo/' || r.endsWith( 'manifest.webmanifest' ) ), porPhp.join( ',' ) );
+		ok( 'los ajustes viajan en la página: ningún ajustes.json aparte', ! vistos.some( ( r ) => r.includes( 'ajustes.json' ) ) );
+		ok( 'los textos y el ícono salen de la carpeta directa, con versión', vistos.filter( ( r ) => /textos\/es\.json|icon-192\.png/.test( r ) ).every( ( r ) => r.startsWith( DIRECTA ) ), vistos.filter( ( r ) => /textos\/|icon-192/.test( r ) ).join( ',' ) );
 		await ctx.close();
 	}
 
@@ -490,9 +508,9 @@ if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
 		await p.waitForSelector( '#barra .barra__item', { timeout: 9000 } );
 		await p.waitForTimeout( 500 );
 		const segunda = pedidosAlServidor().slice( antes ).map( ( x ) => x.ruta );
-		const codigo = segunda.filter( ( r ) => /\/(js|css)\//.test( r ) );
+		const codigo = segunda.filter( esCodigo );
 		ok( 'en la segunda visita ningún js ni css vuelve al servidor', codigo.length === 0, codigo.slice( 0, 4 ).join( ',' ) );
-		ok( 'sí se revalidan la página y los ajustes (lo único que puede cambiar sin cambiar de URL)', segunda.some( ( r ) => r.startsWith( '/turismo/?visita=2' ) ) && segunda.some( ( r ) => r.endsWith( 'ajustes.json' ) ), segunda.slice( 0, 6 ).join( ',' ) );
+		ok( 'sí se revalida la página (lo único que puede cambiar sin cambiar de URL)', segunda.some( ( r ) => r.startsWith( '/turismo/?visita=2' ) ), segunda.slice( 0, 6 ).join( ',' ) );
 		await ctx.close();
 	}
 
@@ -505,9 +523,28 @@ if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
 		ok( 'ETag vuelto débil por el servidor (W/"…") → 304', await estado( 'W/' + etag ) === 304 );
 		ok( 'ETag con sufijo de compresión → 304', await estado( etag.replace( /"$/, '-gzip"' ) ) === 304 );
 		ok( 'otro ETag → 200 con el archivo', await estado( '"otro"' ) === 200 );
-		const versionado = ( await fetch( url + '?v=' + ( ( await ( await fetch( PHP + '/turismo/ajustes.json' ) ).json() ).version ) ) ).headers.get( 'cache-control' );
-		ok( 'el código con su versión se cachea «para siempre»', /immutable/.test( versionado ), versionado );
+		const version = ( await ( await fetch( PHP + '/turismo/ajustes.json' ) ).json() ).version;
+		ok( 'por PHP, el código con su versión se cachea «para siempre»', /immutable/.test( ( await fetch( `${ url }?v=${ version }` ) ).headers.get( 'cache-control' ) ) );
 		ok( 'una versión ajena no recibe esa promesa', ! /immutable/.test( ( await fetch( url + '?v=0.0.1' ) ).headers.get( 'cache-control' ) ) );
+		// La página se revalida por LO QUE ENVÍA: si cambian los ajustes de wp-admin
+		// sin tocar ningún archivo, un 304 la dejaría con los enlaces viejos.
+		const pagina = await fetch( PHP + '/turismo/' );
+		ok( 'la página trae un ETag y se revalida', Boolean( pagina.headers.get( 'etag' ) ) && ( await fetch( PHP + '/turismo/', { headers: { 'If-None-Match': pagina.headers.get( 'etag' ) } } ) ).status === 304 );
+	}
+
+	// --- Navegador sin import maps: la ruta por PHP, con versión en cada import
+	{
+		const { ctx, p, errores } = await abrir();
+		await p.addInitScript( () => { Object.defineProperty( HTMLScriptElement, 'supports', { value: () => false } ); } );
+		const vistos = [];
+		p.on( 'request', ( r ) => { const u = new URL( r.url() ); if ( u.origin === PHP && esModulo( u.pathname ) ) { vistos.push( u.pathname + u.search ); } } );
+		await p.goto( PHP + '/turismo/#/inicio', { waitUntil: 'load' } );
+		await p.waitForSelector( '#barra .barra__item', { timeout: 9000 } );
+		const porPhp = vistos.filter( ( r ) => r.startsWith( '/turismo/js/' ) );
+		ok( 'sin import maps la app arranca igual, por la ruta de PHP', await p.locator( '#arranque' ).count() === 0 && porPhp.length > 10, `${ porPhp.length } módulos por PHP` );
+		ok( 'y cada import lleva su versión (PHP se la pone)', porPhp.every( ( r ) => /\?v=\d+\.\d+\.\d+$/.test( r ) ), porPhp.filter( ( r ) => ! /\?v=/.test( r ) ).join( ',' ) );
+		ok( 'sin errores de página', errores.length === 0, errores.join( '|' ) );
+		await ctx.close();
 	}
 
 	// --- La pantalla de arranque ---------------------------------------------
@@ -580,8 +617,37 @@ if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
 		ok( 'sin errores de página', errores.length === 0, errores.join( '|' ) );
 		await ctx.close();
 	}
+	srv.matar();
 
-	hijo.kill();
+	// --- El hosting al límite: la falla de producción -------------------------
+	//
+	// Lo que pasaba: cada archivo pasaba por WordPress y el hosting, con un tope
+	// de conexiones a la base de datos, contestaba «Database Error» (500) a los
+	// que sobraban. A la web le faltaban archivos al azar y quedaba en blanco.
+	// Acá el tope es de 2 pedidos a la vez por «WordPress» (todo menos la
+	// carpeta del plugin) y cada uno tarda 150 ms: la ráfaga de una web de ~25
+	// archivos lo pasa de lejos si el código no se sirve directo.
+	{
+		const lim = await levantarPhp( { WEB_LIMITE_PHP: '2', WEB_LATENCIA_MS: '150' } );
+		const { ctx, p, errores } = await abrir();
+		const respuestas = [];
+		p.on( 'response', ( r ) => { if ( r.url().startsWith( lim.PHP ) ) { respuestas.push( { estado: r.status(), ruta: new URL( r.url() ).pathname } ); } } );
+		await p.goto( lim.PHP + '/turismo/#/inicio', { waitUntil: 'load' } );
+		await p.waitForSelector( '#barra .barra__item', { timeout: 12000 } ).catch( () => {} );
+		await p.waitForTimeout( 5000 ); // alcanza para los reintentos de la API
+		const codigo = respuestas.filter( ( r ) => esCodigo( r.ruta ) );
+		ok( 'con el hosting al límite, ningún archivo de código falla', codigo.length > 15 && codigo.every( ( r ) => r.estado === 200 ), codigo.filter( ( r ) => r.estado !== 200 ).map( ( r ) => r.estado + ' ' + r.ruta ).join( ',' ) );
+		ok( 'la app arranca', await p.locator( '#arranque' ).count() === 0 && await p.locator( '#barra .barra__item' ).count() > 0 );
+		const fallos = respuestas.filter( ( r ) => r.estado >= 500 );
+		console.log( `${ gris }       (500 que dio el hosting simulado, todos de la API: ${ fallos.length })${ fin }` );
+		// Home pide cuatro cosas a la vez y arma lo que le llega: sin reintentos, un 500
+		// hace desaparecer una sección SIN avisar (ni error ni hueco). Por eso se
+		// mira que estén las dos que siempre hay.
+		ok( 'aunque la API tropiece, Inicio termina completo gracias a los reintentos (categorías y lugares)', await p.locator( '.carril' ).count() === 1 && await p.locator( '.grilla' ).count() === 1 && await p.locator( '[data-reintentar]' ).count() === 0, ( await p.locator( '#contenido' ).innerText() ).slice( 0, 100 ).replace( /\n/g, ' ' ) );
+		ok( 'sin errores de página', errores.length === 0, errores.join( '|' ) );
+		await ctx.close();
+		lim.matar();
+	}
 }
 
 await navegador.close();

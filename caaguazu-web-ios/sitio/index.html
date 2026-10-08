@@ -36,12 +36,14 @@
 <link rel="preload" href="fuentes/inter-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fuentes/inter-600.woff2" as="font" type="font/woff2" crossorigin>
 
-<!-- Los módulos de la app, pedidos todos juntos. Sin esto el navegador se entera
-     de cada uno recién al leer el anterior (app.js → pantallas → piezas → …) y
-     los baja en fila, una vuelta de red por escalón. El plugin completa esta
-     lista al servir la página (ver CZUWIOS_Servidor::precarga_modulos()); con
-     un servidor de archivos cualquiera simplemente no hay lista y todo anda
-     igual, un poco más lento. -->
+<!-- Los módulos de la app, pedidos todos juntos y con su versión. Sin esto el
+     navegador se entera de cada uno recién al leer el anterior (app.js →
+     pantallas → piezas → …) y los baja en fila, una vuelta de red por escalón.
+     El plugin completa este lugar al servir la página (ver
+     CZUWIOS_Servidor::preparar_html()): el mapa de importaciones con la versión
+     de cada módulo y un <link rel="modulepreload"> por cada uno. Con un
+     servidor de archivos cualquiera no hay nada de eso y todo anda igual, un
+     poco más lento. -->
 <!--precarga-->
 
 <link rel="stylesheet" href="css/estilo.css">
@@ -92,6 +94,9 @@
   </div>
 </main>
 <nav id="barra" class="barra" aria-label="Secciones"></nav>
+<!-- Acá el plugin pone los ajustes (la API y las tiendas) como JSON, para que la
+     página no tenga que pedirlos aparte: ver CZUWIOS_Servidor::preparar_html(). -->
+<!--ajustes-->
 <!--
   El vigilante. JavaScript clásico y en línea, a propósito: es lo único que
   corre aunque un módulo no cargue, no se entienda o se cuelgue. Hace tres

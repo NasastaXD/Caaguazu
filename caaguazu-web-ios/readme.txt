@@ -2,7 +2,7 @@
 Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 2.0.1
+Stable tag: 2.0.2
 License: GPLv2 or later
 
 La guía de turismo de Caaguazú en una página web de acceso fácil, en `caaguazu.net/turismo/` (y en `/ios/`): se abre y se usa, sin instalar nada y sin crear una cuenta.
@@ -64,7 +64,11 @@ Un archivo más lo arma el plugin en cada pedido y no está en `sitio/`:
 `ajustes.json`, con la dirección de la API y los enlaces a las tiendas. Así la
 misma copia de la web anda en un sitio de prueba sin tocar una línea.
 
-La caché tiene tres reglas. La página, los ajustes y los textos —`html`, `json`—
+El código no se sirve por PHP sino directo desde la carpeta del plugin (ver el
+changelog de 2.0.2 por qué): la página arma las direcciones y un import map con
+la versión de cada módulo. La ruta `/turismo/js/…` por PHP sigue andando —es la
+de respaldo, y la que usa un servidor de archivos de prueba— y sus reglas de
+caché son éstas. La caché tiene tres reglas. La página, los ajustes y los textos —`html`, `json`—
 se revalidan en cada carga (con ETag: si no cambió, es un 304 sin cuerpo). El
 código —`css`, `js`— se pide con la versión en la URL (`js/app.js?v=2.0.1`, y
 también cada `import` entre módulos: lo estampa el plugin al servirlo, el
@@ -126,6 +130,44 @@ que guarda cada visitante es su propio `localStorage` (favoritos, recorrido
 propio, idioma elegido), y eso vive en su navegador, no acá.
 
 == Changelog ==
+
+= 2.0.2 =
+* **Por fin, la causa de la pantalla en blanco.** Con el informe que 2.0.1 le
+  muestra a quien la abre —«No cargó: …/css/estilo.css, …/pantallas/app.js,
+  …/compartir.js, …/pantallas/asistente.js, …/qrcode.js»— se midió en producción:
+  cada archivo de la web (el CSS, cada uno de los ~20 módulos) se pedía por
+  `/turismo/…` y pasaba por WordPress completo, con su conexión a la base de
+  datos. Un teléfono los pide casi a la vez; el hosting tiene un tope de
+  conexiones y a los que sobraban les contestaba **«Database Error» (500)**. Con
+  22 archivos en paralelo, más de la mitad volvían con 500, y a la web le
+  faltaban archivos al azar: nunca era el mismo teléfono ni el mismo archivo, y
+  desde afuera no se veía ningún error. La precarga de módulos de 2.0.1 pedía
+  todo junto y lo empeoraba.
+* **El código se sirve directo, sin WordPress.** La página (que sí pasa por PHP:
+  es lo único) apunta el CSS, los módulos, las fuentes, los íconos, `qrcode.js`
+  y los textos a la carpeta del plugin
+  (`/wp-content/plugins/caaguazu-web-ios/sitio/…`), que el servidor web contesta
+  solo. Los mismos 22 archivos en paralelo por esa ruta: 200 todos, tres tandas
+  seguidas. Un **import map** (que arma el plugin con la lista de módulos) le
+  pone la versión a cada `import`, así que lo que dura una semana en el teléfono
+  no se puede mezclar entre versiones. Un navegador sin import maps (iOS < 16.4)
+  usa la ruta de siempre por PHP, que sigue andando con la versión en cada URL.
+* **Los ajustes viajan en la página** (la API y los enlaces de las tiendas, como
+  JSON adentro del HTML): un pedido menos, y justo uno de los que pasaban por
+  WordPress. La página ahora se revalida por lo que envía, no por la fecha del
+  archivo: si cambian los enlaces de las tiendas en wp-admin, el 304 no la deja
+  con los viejos.
+* **La API reintenta.** Los pedidos a `/wp-json/czu-app/v1/` también pasan por
+  WordPress y también pueden recibir ese 500 de «el momento». Ahora, ante un 5xx
+  o un corte, se vuelve a pedir a los 0,6 s y a los 1,8 s (un 404 o un 400 no se
+  reintentan). Sin eso Inicio, que arma lo que le llega, perdía una sección
+  entera —categorías, lugares— sin mostrar ningún error.
+* Pruebas: `tools/web-prueba/router.php` ahora imita al hosting (la carpeta del
+  plugin directa, con los tipos que da; y `WEB_LIMITE_PHP=N`, que devuelve el
+  «Database Error» cuando hay más de N pedidos a la vez por «WordPress»), y
+  `probar-web.mjs` comprueba que con el hosting al límite el código no falla, que
+  Inicio termina completo, y la ruta de respaldo sin import maps. Con el código
+  servido por PHP como en 2.0.1, siete de esas comprobaciones fallan.
 
 = 2.0.1 =
 * **La página ya no puede quedar vacía.** Hasta 2.0.0 el HTML salía sin nada

@@ -17,10 +17,32 @@ function url(ruta, params = {}) {
   return ajuste().api + ruta + (query ? "?" + query : "");
 }
 
+// Cuánto se espera antes de cada reintento. Cada pedido a la API arranca
+// WordPress y abre una conexión a la base de datos, y un hosting compartido
+// tiene un tope: cuando varios pedidos llegan juntos, los que sobran reciben un
+// 500 («Database Error») que NO es de la API sino del momento. Esperar un
+// instante y volver a pedir casi siempre alcanza, y es la diferencia entre una
+// pantalla con su contenido y una con «algo salió mal».
+const ESPERAS = [600, 1800];
+const dormir = (ms) => new Promise((resolver) => setTimeout(resolver, ms));
+
 async function pedir(ruta, params = {}) {
-  const respuesta = await fetch(url(ruta, params));
-  if (!respuesta.ok) throw new Error(`${respuesta.status} en ${ruta}`);
-  return respuesta.json();
+  let ultimo;
+  for (let intento = 0; intento <= ESPERAS.length; intento++) {
+    if (intento > 0) await dormir(ESPERAS[intento - 1]);
+    let respuesta;
+    try {
+      respuesta = await fetch(url(ruta, params));
+    } catch (e) {
+      ultimo = e; // sin red un momento: se vuelve a probar
+      continue;
+    }
+    if (respuesta.ok) return respuesta.json();
+    ultimo = new Error(`${respuesta.status} en ${ruta}`);
+    // Un 404 o un 400 es una respuesta: esperar no la cambia. Un 5xx sí puede.
+    if (respuesta.status < 500) break;
+  }
+  throw ultimo;
 }
 
 /** Error del asistente con lo que la pantalla necesita para explicarlo. */

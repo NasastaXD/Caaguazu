@@ -2,7 +2,7 @@
 // lo que mande /strings/{idioma} encima, sin reemplazarlo nunca del todo.
 // Calcado de Idioma.kt y Textos.kt de Turismo-app-czu.
 
-import { ajuste, conTiempo } from "./config.js";
+import { ajuste, conTiempo, urlSitio } from "./config.js";
 
 const ORIGINAL = "es";
 const SOPORTADOS = ["es", "en", "pt"];
@@ -97,7 +97,7 @@ export async function cargarTextosDelServidor(ms = 4000) {
 
 async function cargarEmbebido(codigo) {
   try {
-    return await conTiempo(`textos/${codigo}.json`, {}, 6000).then((r) => (r.ok ? r.json() : {}));
+    return await conTiempo(urlSitio(`textos/${codigo}.json`), {}, 6000).then((r) => (r.ok ? r.json() : {}));
   } catch {
     return {};
   }

@@ -26,6 +26,10 @@
  *                   arrancar WordPress en un hosting compartido (0 = nada)
  *   WEB_ASISTENTE   «1» para que GET /asistente diga que está disponible
  *   WEB_TIENDAS     «0» para no cargar enlaces de tienda
+ *   WEB_LIMITE_PHP N: con más de N pedidos a la vez pasando por «WordPress»
+ *                   (todo menos la carpeta del plugin), el N+1 recibe el
+ *                   «Database Error» (500) que da el hosting cuando se le
+ *                   acaban las conexiones a MySQL. Es la falla de producción.
  *   WEB_REGISTRO    archivo donde anotar cada pedido que llega («304 GET /ruta»).
  *                   El log del servidor de PHP no sirve para esto: con varios
  *                   procesos y un `exit` en el medio, no anota la respuesta.
@@ -71,6 +75,9 @@ function update_option( ...$a ) { return true; }
 function rest_url( $ruta = '' ) { return 'http://' . ( $_SERVER['HTTP_HOST'] ?? '127.0.0.1' ) . '/wp-json/' . $ruta; }
 function home_url( $ruta = '' ) { return 'http://' . ( $_SERVER['HTTP_HOST'] ?? '127.0.0.1' ) . $ruta; }
 function wp_json_encode( $d, $f = 0 ) { return json_encode( $d, $f ); }
+function wp_parse_url( $u, $c = -1 ) { return parse_url( $u, $c ); }
+/** Donde el plugin está instalado en un WordPress de verdad. */
+function plugins_url( $ruta = '', $plugin = '' ) { return 'http://' . ( $_SERVER['HTTP_HOST'] ?? '127.0.0.1' ) . '/wp-content/plugins/caaguazu-web-ios/' . ltrim( $ruta, '/' ); }
 function wp_unslash( $v ) { return is_string( $v ) ? stripslashes( $v ) : $v; }
 function sanitize_text_field( $v ) { return trim( strip_tags( (string) $v ) ); }
 function sanitize_key( $v ) { return strtolower( preg_replace( '/[^a-z0-9_\-]/i', '', (string) $v ) ); }
@@ -84,6 +91,61 @@ function nocache_headers() {
 	header( 'Pragma: no-cache' );
 }
 
+$ruta = rawurldecode( parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH ) );
+
+/* ---------------------------------------------------------------------------
+ * La carpeta del plugin: la sirve el servidor web directo, SIN WordPress.
+ * Se imita lo que contesta el hosting de producción (hcdn): los tipos, la
+ * semana de caché y —lo que importa para probar— que nunca se cae.
+ * ------------------------------------------------------------------------ */
+
+$directa = '/wp-content/plugins/caaguazu-web-ios/sitio/';
+if ( 0 === strpos( $ruta, $directa ) ) {
+	$archivo = realpath( $plugin_dir . '/sitio/' . substr( $ruta, strlen( $directa ) ) );
+	if ( ! $archivo || 0 !== strpos( $archivo, realpath( $plugin_dir . '/sitio' ) . '/' ) || ! is_file( $archivo ) ) {
+		http_response_code( 404 );
+		return true;
+	}
+	$tipos = array(
+		'js' => 'application/x-javascript', 'css' => 'text/css', 'json' => 'application/json',
+		'png' => 'image/png', 'woff2' => 'font/woff2', 'webmanifest' => 'text/plain', 'html' => 'text/html',
+	);
+	header( 'Content-Type: ' . ( $tipos[ strtolower( pathinfo( $archivo, PATHINFO_EXTENSION ) ) ] ?? 'application/octet-stream' ) );
+	header( 'Cache-Control: public, max-age=604800' );
+	header( 'Last-Modified: ' . gmdate( 'D, d M Y H:i:s', filemtime( $archivo ) ) . ' GMT' );
+	header( 'ETag: W/"' . dechex( filesize( $archivo ) ) . '-' . dechex( filemtime( $archivo ) ) . '"' );
+	readfile( $archivo );
+	return true;
+}
+
+/* ---------------------------------------------------------------------------
+ * El tope de conexiones del hosting. Cuenta cuántos pedidos están a la vez
+ * adentro de «WordPress»; el que pasa el tope recibe el error de producción.
+ * ------------------------------------------------------------------------ */
+
+if ( $limite_php = (int) getenv( 'WEB_LIMITE_PHP' ) ) {
+	$cuenta = fopen( sys_get_temp_dir() . '/czu-limite-' . ( $_SERVER['SERVER_PORT'] ?? '0' ) . '.cnt', 'c+' );
+	$mover  = function ( $delta ) use ( $cuenta ) {
+		flock( $cuenta, LOCK_EX );
+		rewind( $cuenta );
+		$n = max( 0, (int) stream_get_contents( $cuenta ) + $delta );
+		ftruncate( $cuenta, 0 );
+		rewind( $cuenta );
+		fwrite( $cuenta, (string) $n );
+		flock( $cuenta, LOCK_UN );
+		return $n;
+	};
+	$en_vuelo = $mover( 1 );
+	register_shutdown_function( function () use ( $mover ) { $mover( -1 ); } );
+	if ( $en_vuelo > $limite_php ) {
+		usleep( 30000 ); // el hosting tarda un poco en rendirse
+		http_response_code( 500 );
+		header( 'Content-Type: text/html; charset=UTF-8' );
+		echo '<!DOCTYPE html><html><head><title>Database Error</title></head><body><h1>Database Error</h1><p>Too many connections.</p></body></html>';
+		return true;
+	}
+}
+
 /* ---------------------------------------------------------------------------
  * Latencia: lo que cuesta, en un hosting compartido, arrancar WordPress.
  * ------------------------------------------------------------------------ */
@@ -92,7 +154,6 @@ if ( $latencia > 0 ) {
 	usleep( $latencia * 1000 );
 }
 
-$ruta = rawurldecode( parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH ) );
 
 /* ---------------------------------------------------------------------------
  * La API: datos reales de producción.
