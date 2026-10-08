@@ -480,7 +480,8 @@ img { display: block; max-width: 100%; }
   box-shadow: var(--sombra-flotante);
 }
 
-.ficha-boton-favorito {
+.ficha-boton-favorito,
+.ficha-boton-compartir {
   position: fixed;
   top: 16px;
   right: 16px;
@@ -496,6 +497,7 @@ img { display: block; max-width: 100%; }
   box-shadow: var(--sombra-flotante);
 }
 .ficha-boton-favorito.activo { color: var(--acento); }
+.ficha-boton-compartir { right: 64px; }
 
 .ficha-hoja {
   position: relative;

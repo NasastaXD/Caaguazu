@@ -3,7 +3,7 @@ Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 3.10.1
+Stable tag: 3.11.0
 License: GPLv2 or later
 
 Panel autenticado tipo app (PWA) bajo /turismo-panel, con enrutador propio, login propio, roles y flujo editorial para las tres cosas que la app muestra: fichas del inventario turístico, artículos y recorridos.
@@ -59,6 +59,33 @@ llamen los tags.
 * Repo privado: definir `PROMOTUR_GITHUB_TOKEN` (PAT de solo lectura) en `wp-config.php`.
 
 == Changelog ==
+
+= 3.11.0 =
+* **Los profesores ven los borradores de todo el equipo.** «Mis contenidos»
+  suma un selector «Míos / Del equipo» para el Profesor. Hacía falta: el
+  editor ya le dejaba abrir y corregir una ficha ajena, pero no había ningún
+  lugar donde encontrarla — el inventario sólo muestra lo publicado y la cola
+  de revisión sólo lo enviado, así que el borrador de un colega era invisible
+  hasta que su dueño lo mandaba. En «Del equipo» cada fila dice de quién es.
+  Se gatea con `promotur_review_content`, la misma capability que ya decide
+  «edita lo ajeno» y «ve la papelera entera». El Alumno sigue viendo sólo lo
+  suyo, y un `?de=equipo` escrito a mano no le muestra nada de más. Los
+  recorridos que arma la gente en la app no aparecen: son privados de su
+  dueño.
+* **El panel deja de tocar `wp-login.php`.** Lo redirigía a
+  /turismo-panel/entrar, pensando en alguien del equipo que cayera ahí por
+  error. En la práctica a esa pantalla sólo llega quien administra WordPress,
+  y la excepción para administradores no podía funcionar nunca: preguntaba
+  `current_user_can()` en la pantalla de login, donde todavía no hay sesión.
+  Encima redirigía también el POST del formulario, así que ni siquiera se
+  podían enviar las credenciales. Se sacó entero, con el filtro
+  `promotur_block_wp_login`: el equipo entra por /turismo-panel/entrar, que es
+  el único enlace que conoce.
+* Estos dos cambios se escribieron primero contra `main`, que había quedado
+  en 3.5.2 mientras el sitio avanzaba hasta 3.10.1 desde otra rama. Llegaron
+  a numerarse 3.5.3 y 3.6.0 ahí, pero ninguno de los dos se publicó con ese
+  número — el tag `portal-3.6.0` ya era el de «Pegar datos». Esta es su
+  primera salida, ya sobre 3.10.1.
 
 = 3.10.1 =
 * **Categorías y etiquetas también se traducen ahora**, desde **Estructura**:

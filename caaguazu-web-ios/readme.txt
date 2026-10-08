@@ -2,7 +2,7 @@
 Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.1.0
+Stable tag: 1.2.0
 License: GPLv2 or later
 
 Espejo web de la app de turismo, servido en `caaguazu.net/ios/`, para quien usa iPhone mientras no exista una app nativa.
@@ -90,6 +90,20 @@ que guarda cada visitante es su propio `localStorage` (favoritos, recorrido
 propio, idioma elegido), y eso vive en su navegador, no acá.
 
 == Changelog ==
+
+= 1.2.0 =
+* **Compartir una ficha, un artículo o un recorrido**, con un botón en cada
+  una de esas pantallas; y desde Perfil, compartir el espejo entero. Usa la
+  hoja de compartir del teléfono
+  (`navigator.share`, que Safari en iOS tiene) y, donde no existe, abre una
+  hoja propia con el enlace para copiar y un código QR. El QR se genera en el
+  navegador con una copia de `qrcode-generator` (MIT) en
+  `sitio/js/vendor/`: ningún servicio externo recibe la URL compartida.
+* No es nuevo: se había hecho en `caaguazu-web/` (PR #65) un día después de
+  que este plugin copiara esa carpeta, así que nunca llegó al espejo que se
+  sirve en `/ios/`. Se porta tal cual, y `caaguazu-web/` deja de existir —
+  era la copia vieja, ya sin uso desde que el espejo lo sirve este plugin.
+  Su README, que explica cómo está hecha la página, pasa a `ESPEJO.md`.
 
 = 1.1.0 =
 * **Auto-updater.** Hasta acá era el único de los cinco componentes que se

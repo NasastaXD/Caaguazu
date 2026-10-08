@@ -1,6 +1,7 @@
 import { t, idiomaActual, idiomasDisponibles, elegirIdioma, cargarTextos } from "../idioma.js";
 import { escapar, Icono } from "../piezas.js";
 import { listaFavoritos, listaRecorrido } from "../estado.js";
+import { compartir } from "../compartir.js";
 
 export async function render(contenedor) {
   pintar(contenedor);
@@ -30,6 +31,10 @@ function pintar(contenedor) {
         <span>${escapar(t("perfil.acercaDe"))}</span>
         <span class="descripcion">${escapar(t("app.nombre"))}</span>
       </div>
+      <button class="fila-perfil" id="perfil-compartir" style="width:100%;text-align:left">
+        <span>${escapar(t("diag.compartir"))}</span>
+        <span class="enlace">${Icono.compartir}</span>
+      </button>
     </div>
 
     <div id="zona-idioma"></div>
@@ -37,6 +42,9 @@ function pintar(contenedor) {
 
   contenedor.querySelector("#perfil-volver").addEventListener("click", () => history.back());
   contenedor.querySelector("#abrir-idioma").addEventListener("click", () => abrirIdioma(contenedor));
+  contenedor.querySelector("#perfil-compartir").addEventListener("click", () => {
+    compartir({ titulo: t("app.nombre"), ruta: "inicio" });
+  });
 }
 
 function nombreIdiomaActual() {
