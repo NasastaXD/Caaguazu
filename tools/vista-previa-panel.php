@@ -636,6 +636,16 @@ $GLOBALS['wpdb'] = new Promotur_Vista_Previa_DB();
 require $plugin . 'includes/helpers.php';
 
 /*
+ * El plugin de la web de turismo (`caaguazu-web-ios`) es opcional: el panel
+ * pregunta por `czuwios_url()` y, si no existe, no dibuja el botón de «Ver la
+ * web». Por defecto la vista previa NO lo tiene —así se ve el panel sin él—;
+ * con VISTA_PREVIA_WEB=1 se simula, para ver el botón.
+ */
+if ( getenv( 'VISTA_PREVIA_WEB' ) ) {
+	function czuwios_url( $ruta = '' ) { return 'https://caaguazu.net/turismo/' . ltrim( (string) $ruta, '/' ); }
+}
+
+/*
  * Las traducciones se cargan DE VERDAD, no stubeadas: son lógica pura sobre
  * `get_post_meta()` y `get_post_field()`, que ya tienen su doble acá arriba.
  * Un doble de esta clase dibujaría los campos que el doble declare, y el

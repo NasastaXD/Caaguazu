@@ -1,12 +1,16 @@
 <?php
 /**
- * Lo único que este plugin pone en wp-admin: la pantalla de actualizaciones.
+ * Lo que este plugin pone en wp-admin: dos pantallas bajo «Web turismo».
  *
- * Mismo motivo que `CZUAPI_Admin` del lado de la API: sin esto, cada
- * corrección —como la de la 1.0.1, que dejaba el sitio en pantalla negra—
- * exigía pedirle a quien tiene acceso al hosting que baje un zip y lo suba a
- * mano. Este plugin es temporal —se retira el día que exista una app nativa
- * de iOS—, pero mientras exista se actualiza como cualquier otro.
+ * - **Enlaces a la app**: adónde llevan los botones de «Bajá la app» de la
+ *   web —los recorridos viven sólo en la app desde 2.0.0—. Se cargan acá y no
+ *   en el código porque la app de iOS todavía no existe y la de Android puede
+ *   cambiar de ficha: cuando eso pase, alguien pega el enlace nuevo y listo,
+ *   sin publicar una versión.
+ * - **Actualizaciones**: mismo motivo que `CZUAPI_Admin` del lado de la API.
+ *   Sin esto, cada corrección —como la de la 1.0.1, que dejaba el sitio en
+ *   pantalla negra— exigía pedirle a quien tiene acceso al hosting que baje un
+ *   zip y lo suba a mano.
  */
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
@@ -18,6 +22,9 @@ class CZUWIOS_Admin {
 	/** Misma capability que usa wp-admin para el resto de las actualizaciones. */
 	const CAP = 'update_plugins';
 
+	/** Los enlaces a las tiendas son configuración del sitio, no del plugin. */
+	const CAP_ENLACES = 'manage_options';
+
 	public static function instance() {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -28,21 +35,118 @@ class CZUWIOS_Admin {
 	private function __construct() {
 		add_action( 'admin_menu', array( $this, 'menu' ) );
 		add_action( 'admin_post_czuwios_admin_updates', array( $this, 'handle_updates' ) );
+		add_action( 'admin_post_czuwios_enlaces', array( $this, 'handle_enlaces' ) );
 	}
 
 	public function menu() {
-		if ( ! current_user_can( self::CAP ) ) {
-			return;
-		}
 		add_menu_page(
-			__( 'Web iOS', 'caaguazu-web-ios' ),
-			__( 'Web iOS', 'caaguazu-web-ios' ),
-			self::CAP,
-			'czuwios-updates',
-			array( $this, 'render_updates' ),
+			__( 'Web turismo', 'caaguazu-web-ios' ),
+			__( 'Web turismo', 'caaguazu-web-ios' ),
+			self::CAP_ENLACES,
+			'czuwios-enlaces',
+			array( $this, 'render_enlaces' ),
 			'dashicons-smartphone',
 			59 // debajo de «Portal Turismo» (57) y «Caaguazú API» (58).
 		);
+		add_submenu_page(
+			'czuwios-enlaces',
+			__( 'Enlaces a la app', 'caaguazu-web-ios' ),
+			__( 'Enlaces a la app', 'caaguazu-web-ios' ),
+			self::CAP_ENLACES,
+			'czuwios-enlaces',
+			array( $this, 'render_enlaces' )
+		);
+		// El slug de siempre: un enlace guardado a la pantalla vieja sigue andando.
+		add_submenu_page(
+			'czuwios-enlaces',
+			__( 'Actualizaciones', 'caaguazu-web-ios' ),
+			__( 'Actualizaciones', 'caaguazu-web-ios' ),
+			self::CAP,
+			'czuwios-updates',
+			array( $this, 'render_updates' )
+		);
+	}
+
+	/**
+	 * Enlaces a la app en cada tienda.
+	 */
+	public function render_enlaces() {
+		if ( ! current_user_can( self::CAP_ENLACES ) ) {
+			wp_die( esc_html__( 'No tenés autorización para hacer esto.', 'caaguazu-web-ios' ) );
+		}
+		$android = (string) get_option( CZUWIOS_OPT_ANDROID, '' );
+		$ios     = (string) get_option( CZUWIOS_OPT_IOS, '' );
+		?>
+		<div class="wrap">
+			<h1><?php esc_html_e( 'Enlaces a la app', 'caaguazu-web-ios' ); ?></h1>
+			<?php $this->show_notice(); ?>
+
+			<p style="max-width:680px">
+				<?php esc_html_e( 'Los recorridos se arman en la app, no en la web. Cuando alguien toca «Recorridos» en la web, ve un botón para bajar la app de la tienda de su teléfono: estos son los enlaces de esos botones. Si una tienda queda vacía, su botón no aparece.', 'caaguazu-web-ios' ); ?>
+			</p>
+			<p>
+				<a href="<?php echo esc_url( czuwios_url() ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Abrir la web', 'caaguazu-web-ios' ); ?></a>
+				&nbsp;·&nbsp;<code><?php echo esc_html( czuwios_url() ); ?></code>
+			</p>
+
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+				<?php wp_nonce_field( 'czuwios_enlaces' ); ?>
+				<input type="hidden" name="action" value="czuwios_enlaces">
+				<table class="form-table" role="presentation"><tbody>
+					<tr>
+						<th scope="row"><label for="czuwios-android"><?php esc_html_e( 'Google Play (Android)', 'caaguazu-web-ios' ); ?></label></th>
+						<td>
+							<input type="url" id="czuwios-android" name="android" class="large-text" value="<?php echo esc_attr( $android ); ?>" placeholder="https://play.google.com/store/apps/details?id=…">
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="czuwios-ios"><?php esc_html_e( 'App Store (iPhone)', 'caaguazu-web-ios' ); ?></label></th>
+						<td>
+							<input type="url" id="czuwios-ios" name="ios" class="large-text" value="<?php echo esc_attr( $ios ); ?>" placeholder="https://apps.apple.com/…">
+							<p class="description"><?php esc_html_e( 'Mientras no exista la app de iPhone, dejalo vacío: a quien entra desde un iPhone la web le dice que la app todavía no está para su teléfono.', 'caaguazu-web-ios' ); ?></p>
+						</td>
+					</tr>
+				</tbody></table>
+				<p class="description"><?php esc_html_e( 'Sólo se aceptan enlaces que empiecen con https://.', 'caaguazu-web-ios' ); ?></p>
+				<?php submit_button( __( 'Guardar enlaces', 'caaguazu-web-ios' ) ); ?>
+			</form>
+		</div>
+		<?php
+	}
+
+	public function handle_enlaces() {
+		if ( ! current_user_can( self::CAP_ENLACES ) ) {
+			wp_die( esc_html__( 'No tenés autorización para hacer esto.', 'caaguazu-web-ios' ) );
+		}
+		check_admin_referer( 'czuwios_enlaces' );
+
+		$rechazados = array();
+		foreach ( array( 'android' => CZUWIOS_OPT_ANDROID, 'ios' => CZUWIOS_OPT_IOS ) as $campo => $opcion ) {
+			$crudo  = trim( (string) wp_unslash( $_POST[ $campo ] ?? '' ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			$limpio = CZUWIOS_Servidor::enlace_tienda( esc_url_raw( $crudo, array( 'https' ) ) );
+			if ( '' !== $crudo && '' === $limpio ) {
+				// No se pisa lo que había: un enlace mal pegado no tiene que
+				// borrar uno bueno.
+				$rechazados[] = 'android' === $campo ? 'Google Play' : 'App Store';
+				continue;
+			}
+			update_option( $opcion, $limpio, false );
+		}
+
+		if ( $rechazados ) {
+			$this->notice(
+				sprintf(
+					/* translators: %s = tiendas */
+					__( 'No se guardó el enlace de %s: tiene que empezar con https://. Lo demás quedó guardado.', 'caaguazu-web-ios' ),
+					esc_html( implode( ' y ', $rechazados ) )
+				),
+				'error'
+			);
+		} else {
+			$this->notice( __( 'Enlaces guardados. La web los usa desde la próxima vez que alguien la abra.', 'caaguazu-web-ios' ) );
+		}
+		wp_safe_redirect( admin_url( 'admin.php?page=czuwios-enlaces' ) );
+		exit;
 	}
 
 	private function notice( $msg, $type = 'success' ) {
@@ -90,7 +194,7 @@ class CZUWIOS_Admin {
 		$token_opt   = (string) get_option( 'czuwios_github_token', '' );
 		?>
 		<div class="wrap">
-			<h1><?php esc_html_e( 'Actualizaciones del espejo iOS', 'caaguazu-web-ios' ); ?></h1>
+			<h1><?php esc_html_e( 'Actualizaciones de la web de turismo', 'caaguazu-web-ios' ); ?></h1>
 			<?php $this->show_notice(); ?>
 
 			<?php if ( ! $updater ) : ?>

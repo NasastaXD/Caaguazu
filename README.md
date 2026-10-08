@@ -6,7 +6,7 @@ Portal del departamento de Caaguazú, Paraguay. **El sitio se está rehaciendo d
 - [`caaguazu-portal/`](caaguazu-portal/) — **el panel de promotores turísticos**, bajo `/turismo-panel`. Es lo que sigue vivo y en desarrollo, y donde el equipo escribe las tres cosas que la app muestra: fichas del inventario turístico, artículos y recorridos. Ver [`docs/panel-turismo.md`](docs/panel-turismo.md).
 - [`caaguazu-app-api/`](caaguazu-app-api/) — la API REST que consume la app Android. Lee el contenido de donde ya vive y lo sirve; no lo duplica.
 - [`caaguazu-sso-cead/`](caaguazu-sso-cead/) — el acceso de un clic desde el CEAD. Estaba en el repo sólo como `.zip` subido a mano; se sacó el código para poder arreglarle el mapeo de roles y revisarlo como cualquier otra cosa.
-- [`caaguazu-web-ios/`](caaguazu-web-ios/) — espejo web (sin build) de la app de turismo, servido en `caaguazu.net/ios/`, para quien usa iPhone mientras no exista una app nativa. Temporal: se retira cuando esa app exista.
+- [`caaguazu-web-ios/`](caaguazu-web-ios/) — la web de turismo de acceso fácil (sin build, sin cuenta, claro y oscuro), servida en `caaguazu.net/turismo/` y en `/ios/`. Mismo contenido y misma API que la app; los recorridos y el mapa sin conexión son de la app, y la web lleva a la tienda. Nació como espejo temporal para iPhone y por eso su carpeta conserva el nombre.
 - [`docs/contrato-app-contenido.md`](docs/contrato-app-contenido.md) — **el contrato de contenido para quien construye la app**: cómo interpretar un sitio turístico, un artículo y un recorrido, con payloads y con el porqué de cada decisión.
 - [`docs/textos-del-panel.md`](docs/textos-del-panel.md) — todos los textos que se ven en el panel, por pantalla, con una columna para reescribirlos.
 - [`tools/`](tools/) — `verificar-diseno.php` (comprueba las reglas del sistema de diseño), `verificar-logica.php` (las dos funciones que transforman un dato: el parseo del enlace de Google Maps y la normalización de roles del CEAD), `vista-previa-panel.php` (dibuja una pantalla del panel sin levantar WordPress) y `textos-del-panel.php` (regenera el inventario de textos). Los dos primeros salen con código 1 si algo falla; `npm run verificar` los corre.
@@ -30,7 +30,7 @@ El panel no autentica ni guarda identidad por su cuenta: todo eso corre sobre `c
 | Acceso de un clic desde el CEAD | `caaguazu-sso-cead` | acá, con el mapeo de roles arreglado (v1.1.0) |
 | Negocios, reservas y reseñas | `caaguazu-locales` | independiente |
 | API REST de la app Android | `caaguazu-app-api` | acá (v0.8.2) |
-| Espejo web para iOS | `caaguazu-web-ios` | acá, temporal |
+| Web de turismo (`/turismo/`, `/ios/`) | `caaguazu-web-ios` | acá |
 
 ## Publicar
 

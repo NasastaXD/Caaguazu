@@ -1,41 +1,45 @@
 import { Api } from "../api.js";
 import { t } from "../idioma.js";
-import { escapar, estadoCargando, estadoVacio, estadoError, fechaCorta } from "../piezas.js";
+import { escapar, filaArticulo, cabeceraPantalla, botonAjustes, esqueletoLista, vacio, error } from "../piezas.js";
 
-export async function render(contenedor) {
-  contenedor.innerHTML = `
-    <div class="cabecera">
-      <h1 class="titulo-pantalla">${escapar(t("nav.articulos"))}</h1>
-      <a class="boton-perfil" href="#/perfil" aria-label="perfil">👤</a>
-    </div>
-    <div id="cuerpo-articulos">${estadoCargando()}</div>
+const POR_PAGINA = 20;
+
+export async function render(el, { vigente }) {
+  el.innerHTML = `
+    ${cabeceraPantalla(t("web.articulos"), { derecha: botonAjustes() })}
+    <div id="lista-articulos">${esqueletoLista(4)}</div>
+    <div id="mas-articulos"></div>
   `;
-  await cargar(contenedor);
-}
 
-async function cargar(contenedor) {
-  const cuerpo = contenedor.querySelector("#cuerpo-articulos");
-  try {
-    const pagina = await Api.articulos({ porPagina: 30 });
-    const items = pagina.items ?? [];
-    cuerpo.innerHTML = items.length
-      ? items.map(tarjeta).join("")
-      : estadoVacio();
-  } catch {
-    cuerpo.innerHTML = estadoError(() => cargar(contenedor));
+  let pagina = 1;
+  let cargados = 0;
+
+  async function cargar() {
+    const lista = el.querySelector("#lista-articulos");
+    const mas = el.querySelector("#mas-articulos");
+    try {
+      const r = await Api.articulos({ pagina, porPagina: POR_PAGINA });
+      if (!vigente()) return;
+      const items = r.items ?? [];
+      if (pagina === 1) {
+        lista.innerHTML = items.length ? `<div class="lista"></div>` : vacio(t("web.sinArticulos"));
+      }
+      lista.querySelector(".lista")?.insertAdjacentHTML("beforeend", items.map((a, i) => filaArticulo(a, i)).join(""));
+      cargados += items.length;
+      mas.innerHTML = cargados < (r.total ?? 0)
+        ? `<button type="button" class="boton boton--fantasma boton--ancho" style="margin-top:12px">${escapar(t("web.cargarMas"))}</button>`
+        : "";
+      mas.querySelector("button")?.addEventListener("click", (ev) => {
+        ev.currentTarget.disabled = true;
+        pagina++;
+        cargar();
+      });
+    } catch {
+      if (!vigente()) return;
+      if (pagina === 1) lista.innerHTML = error();
+      else mas.innerHTML = error();
+    }
   }
-}
 
-function tarjeta(a) {
-  return `
-    <a href="#/articulo/${a.id}" style="display:flex;gap:14px;margin-bottom:var(--entre-tarjetas)">
-      <div style="width:96px;height:96px;flex:none;border-radius:var(--radio-media);overflow:hidden;background:var(--banda)">
-        ${a.portada?.url ? `<img src="${escapar(a.portada.url)}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover">` : ""}
-      </div>
-      <div>
-        ${a.antetitulo ? `<div class="texto-fecha">${escapar(a.antetitulo)}</div>` : ""}
-        <div class="titular-tarjeta-articulo">${escapar(a.titulo)}</div>
-        ${a.publicado ? `<div class="meta" style="color:var(--tinta-suave);font-size:13px;margin-top:2px">${escapar(fechaCorta(a.publicado))}</div>` : ""}
-      </div>
-    </a>`;
+  await cargar();
 }

@@ -1,11 +1,12 @@
 {
   "name": "Caaguazú Turismo",
   "short_name": "Caaguazú",
+  "description": "Guía turística de Caaguazú.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#F7F7F5",
-  "theme_color": "#96C8A2",
+  "background_color": "#f4f4f2",
+  "theme_color": "#f4f4f2",
   "icons": [
     { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png" }
