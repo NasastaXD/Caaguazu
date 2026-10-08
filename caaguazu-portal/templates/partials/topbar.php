@@ -39,6 +39,13 @@ $en_home  = 'home' === promotur_current_route();
 			<input type="search" name="q" value="<?php echo esc_attr( $q ); ?>" data-buscador placeholder="<?php esc_attr_e( 'Buscar…', 'caaguazu-portal' ); ?>" aria-label="<?php esc_attr_e( 'Buscar', 'caaguazu-portal' ); ?>">
 		</form>
 
+		<?php $url_web = promotur_url_web(); ?>
+		<?php if ( '' !== $url_web ) : ?>
+			<a class="promotur-iconbtn" href="<?php echo esc_url( $url_web ); ?>" target="_blank" rel="noopener" title="<?php esc_attr_e( 'Ver la web', 'caaguazu-portal' ); ?>" aria-label="<?php esc_attr_e( 'Ver la web de turismo (se abre en otra pestaña)', 'caaguazu-portal' ); ?>">
+				<?php echo promotur_icon( 'externo' ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
+			</a>
+		<?php endif; ?>
+
 		<button type="button" class="promotur-iconbtn" data-theme-toggle aria-label="<?php esc_attr_e( 'Cambiar tema', 'caaguazu-portal' ); ?>">
 			<span class="promotur-theme-light"><?php echo promotur_icon( 'moon' ); // phpcs:ignore WordPress.Security.EscapeOutput ?></span>
 			<span class="promotur-theme-dark"><?php echo promotur_icon( 'sun' ); // phpcs:ignore WordPress.Security.EscapeOutput ?></span>

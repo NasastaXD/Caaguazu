@@ -2,6 +2,8 @@
 // lo que mande /strings/{idioma} encima, sin reemplazarlo nunca del todo.
 // Calcado de Idioma.kt y Textos.kt de Turismo-app-czu.
 
+import { ajuste, conTiempo } from "./config.js";
+
 const ORIGINAL = "es";
 const SOPORTADOS = ["es", "en", "pt"];
 const CLAVE_AJUSTE = "czu.idioma";
@@ -55,9 +57,7 @@ export async function cargarTextos() {
   const propio = actual === ORIGINAL ? {} : await cargarEmbebido(actual);
   let delServidor = {};
   try {
-    delServidor = await fetch(`https://caaguazu.net/wp-json/czu-app/v1/strings/${actual}`).then((r) =>
-      r.ok ? r.json() : {},
-    );
+    delServidor = await conTiempo(`${ajuste().api}strings/${actual}`, {}, 4000).then((r) => (r.ok ? r.json() : {}));
   } catch {
     /* sin red: se sigue con el respaldo embebido */
   }
@@ -66,7 +66,7 @@ export async function cargarTextos() {
 
 async function cargarEmbebido(codigo) {
   try {
-    return await fetch(`textos/${codigo}.json`).then((r) => (r.ok ? r.json() : {}));
+    return await conTiempo(`textos/${codigo}.json`, {}, 6000).then((r) => (r.ok ? r.json() : {}));
   } catch {
     return {};
   }
@@ -74,4 +74,10 @@ async function cargarEmbebido(codigo) {
 
 export function t(clave) {
   return textos[clave] ?? clave;
+}
+
+/** t() con huecos: `tf("web.ia.espera", 30)` sobre «Probá de nuevo en %s segundos». */
+export function tf(clave, ...valores) {
+  let i = 0;
+  return t(clave).replace(/%s/g, () => String(valores[i++] ?? ""));
 }

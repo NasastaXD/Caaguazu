@@ -1,14 +1,18 @@
-// Favoritos y el recorrido propio que la persona arma, guardados en el
-// telefono. Calcado de Guardado.kt: sin cuenta, sin servidor, dos listas.
+// Lo que la persona guarda, en su propio teléfono: sin cuenta, sin servidor,
+// sin sincronizar entre dispositivos. Calcado de Guardado.kt de la app.
+//
+// Desde 2.0.0 es sólo la lista de favoritos: el recorrido propio se arma en
+// la app (ver pantallas/app.js). Lo que alguien haya dejado en la clave vieja
+// `czu.recorrido` queda en su navegador, sin uso; no se borra por si vuelve.
 
 const CLAVE_FAVORITOS = "czu.favoritos";
-const CLAVE_RECORRIDO = "czu.recorrido";
 
 const escuchas = new Set();
 
 function leer(clave) {
   try {
-    return JSON.parse(localStorage.getItem(clave) || "[]");
+    const v = JSON.parse(localStorage.getItem(clave) || "[]");
+    return Array.isArray(v) ? v : [];
   } catch {
     return [];
   }
@@ -18,16 +22,11 @@ function escribir(clave, lista) {
   try {
     localStorage.setItem(clave, JSON.stringify(lista));
   } catch {
-    /* sin storage: no persiste, pero no rompe la sesion actual */
+    /* sin storage: no persiste, pero no rompe la visita actual */
   }
 }
 
 let favoritos = new Set(leer(CLAVE_FAVORITOS));
-let recorrido = leer(CLAVE_RECORRIDO);
-
-function avisar() {
-  for (const fn of escuchas) fn();
-}
 
 export function alSuscribirEstado(fn) {
   escuchas.add(fn);
@@ -42,29 +41,15 @@ export function alternarFavorito(id) {
   if (favoritos.has(id)) favoritos.delete(id);
   else favoritos.add(id);
   escribir(CLAVE_FAVORITOS, [...favoritos]);
-  avisar();
+  for (const fn of escuchas) fn(id);
 }
 
 export function listaFavoritos() {
   return [...favoritos];
 }
 
-export function enRecorrido(id) {
-  return recorrido.includes(id);
-}
-
-export function alternarEnRecorrido(id) {
-  recorrido = recorrido.includes(id) ? recorrido.filter((x) => x !== id) : [...recorrido, id];
-  escribir(CLAVE_RECORRIDO, recorrido);
-  avisar();
-}
-
-export function vaciarRecorrido() {
-  recorrido = [];
-  escribir(CLAVE_RECORRIDO, recorrido);
-  avisar();
-}
-
-export function listaRecorrido() {
-  return [...recorrido];
+export function olvidarFavorito(id) {
+  if (!favoritos.has(id)) return;
+  favoritos.delete(id);
+  escribir(CLAVE_FAVORITOS, [...favoritos]);
 }
