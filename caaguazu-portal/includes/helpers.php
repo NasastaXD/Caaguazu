@@ -701,7 +701,6 @@ function promotur_nav_grupos() {
 				array( 'route' => 'panel/inventario', 'label' => __( 'Inventario turístico', 'caaguazu-portal' ), 'icon' => 'pin',  'cap' => 'promotur_view_panel' ),
 				array( 'route' => 'panel/articulos',  'label' => __( 'Artículos', 'caaguazu-portal' ),            'icon' => 'nota', 'cap' => 'promotur_create_draft' ),
 				array( 'route' => 'panel/recorridos', 'label' => __( 'Recorridos', 'caaguazu-portal' ),           'icon' => 'ruta', 'cap' => 'promotur_create_draft' ),
-				array( 'route' => 'panel/asistente', 'label' => __( 'Asistente', 'caaguazu-portal' ),           'icon' => 'chat', 'cap' => 'promotur_manage_asistente' ),
 			),
 		),
 		array(
@@ -711,6 +710,7 @@ function promotur_nav_grupos() {
 				array( 'route' => 'panel/reportes',   'label' => __( 'Reportes', 'caaguazu-portal' ),   'icon' => 'chart',  'cap' => 'promotur_view_reports' ),
 				array( 'route' => 'panel/biblioteca', 'label' => __( 'Biblioteca', 'caaguazu-portal' ), 'icon' => 'image',  'cap' => 'promotur_manage_media' ),
 				array( 'route' => 'panel/estructura', 'label' => __( 'Estructura', 'caaguazu-portal' ), 'icon' => 'layout', 'cap' => 'promotur_manage_structure' ),
+				array( 'route' => 'panel/asistente', 'label' => __( 'Asistente', 'caaguazu-portal' ), 'icon' => 'chat', 'cap' => 'promotur_manage_asistente' ),
 			),
 		),
 	);

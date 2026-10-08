@@ -968,3 +968,14 @@ html.promotur-no-splash .promotur-splash { display: none; }
 	.promotur-content { max-width: none; padding: 0; }
 	.promotur-card { border-color: var(--linea-2); }
 }
+
+/* Prueba del asistente (sección Asistente, pestaña Probar). */
+.promotur-chat__log { display: flex; flex-direction: column; gap: 10px; min-height: 120px; max-height: 52vh; overflow-y: auto; padding: 4px 2px; }
+.promotur-chat__msg { max-width: 88%; padding: 10px 14px; border-radius: var(--r-full); line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+.promotur-chat__msg.is-yo { align-self: flex-end; background: var(--tinta); color: var(--sobre-tinta); }
+.promotur-chat__msg.is-ia { align-self: flex-start; background: var(--hueco); color: var(--texto); border: 1px solid var(--linea); }
+.promotur-chat__fuentes { align-self: flex-start; font-size: .82rem; }
+.promotur-mb { margin-bottom: var(--gap); }
+
+/* Pestañas que no caben en el teléfono: bajan a otra línea en vez de cortarse. */
+.promotur-seg--ancho { flex-wrap: wrap; overflow-x: visible; }

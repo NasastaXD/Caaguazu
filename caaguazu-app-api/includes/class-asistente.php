@@ -185,7 +185,17 @@ class CZUAPI_Asistente {
 	 * charla entera de planificar una salida sin inflar cada pedido.
 	 */
 	public static function memoria_turnos() {
-		return max( 0, min( 20, (int) get_option( 'czuapi_ia_memoria', 10 ) ) );
+		return self::normalizar_turnos( get_option( 'czuapi_ia_memoria', 10 ) );
+	}
+
+	/** Entre 0 (sin memoria) y 20 turnos. */
+	public static function normalizar_turnos( $turnos ) {
+		return max( 0, min( 20, (int) $turnos ) );
+	}
+
+	/** Entre 1 y 24 horas. */
+	public static function normalizar_horas( $horas ) {
+		return max( 1, min( 24, (int) $horas ) );
 	}
 
 	/**
@@ -196,7 +206,7 @@ class CZUAPI_Asistente {
 	 * cree que está retomando.
 	 */
 	public static function memoria_ttl() {
-		return 2 * HOUR_IN_SECONDS;
+		return self::normalizar_horas( get_option( 'czuapi_ia_memoria_horas', 2 ) ) * HOUR_IN_SECONDS;
 	}
 
 	/**
@@ -236,6 +246,69 @@ class CZUAPI_Asistente {
 	 */
 	public static function set_conocimiento( $texto ) {
 		update_option( 'czuapi_ia_conocimiento', sanitize_textarea_field( trim( (string) $texto ) ), false );
+	}
+
+	/**
+	 * Guarda la personalidad. Igual a la de fábrica (o pedido explícito) se
+	 * guarda VACÍA: así, cuando la de fábrica mejore en una versión nueva, le
+	 * llega a quien nunca la tocó. Ver el comentario en wp-admin.
+	 */
+	public static function set_persona( $texto, $volver_fabrica = false ) {
+		$persona = self::normalizar_texto( $texto );
+		if ( $volver_fabrica || self::normalizar_texto( $persona ) === self::normalizar_texto( self::persona_de_fabrica() ) ) {
+			$persona = '';
+		}
+		update_option( 'czuapi_ia_persona', sanitize_textarea_field( $persona ), false );
+	}
+
+	/** Para comparar textos sin que un salto de línea de Windows los separe. */
+	public static function normalizar_texto( $texto ) {
+		return trim( str_replace( array( "\r\n", "\r" ), "\n", (string) $texto ) );
+	}
+
+	/** Tipos de fuente que el asistente puede usar para contestar. */
+	const TIPOS_FUENTE = array( 'lugares', 'eventos', 'recorridos', 'articulos' );
+
+	/** Filtra una lista de tipos de fuente a los válidos, en su orden. */
+	public static function normalizar_fuentes( $valores ) {
+		$valores = is_array( $valores ) ? array_map( 'strval', $valores ) : array();
+		return array_values( array_intersect( self::TIPOS_FUENTE, $valores ) );
+	}
+
+	/**
+	 * Qué fuentes están prendidas. Sin nada guardado, todas: es lo que hacía el
+	 * asistente antes de que existiera esta opción.
+	 *
+	 * @return array<string,bool>
+	 */
+	public static function fuentes_activas() {
+		$guardadas = get_option( 'czuapi_ia_fuentes', null );
+		$lista     = is_array( $guardadas ) ? self::normalizar_fuentes( $guardadas ) : self::TIPOS_FUENTE;
+		$out       = array();
+		foreach ( self::TIPOS_FUENTE as $tipo ) {
+			$out[ $tipo ] = in_array( $tipo, $lista, true );
+		}
+		return $out;
+	}
+
+	/** Guarda las fuentes prendidas y tira el catálogo para que se rearme. */
+	public static function set_fuentes( $valores ) {
+		update_option( 'czuapi_ia_fuentes', self::normalizar_fuentes( $valores ), false );
+		CZUAPI_Asistente_Fuentes::invalidar();
+	}
+
+	/** Cuánto recuerda cada charla. Afecta a las charlas que empiezan de ahí en más. */
+	public static function set_memoria( $turnos, $horas ) {
+		update_option( 'czuapi_ia_memoria', self::normalizar_turnos( $turnos ), false );
+		update_option( 'czuapi_ia_memoria_horas', self::normalizar_horas( $horas ), false );
+	}
+
+	/**
+	 * Olvida todas las charlas guardadas, de todas las conversaciones a la vez.
+	 * Sube la generación de la memoria: las llaves viejas no se vuelven a leer.
+	 */
+	public static function olvidar_conversaciones() {
+		update_option( 'czuapi_ia_mem_gen', (int) get_option( 'czuapi_ia_mem_gen', 0 ) + 1, false );
 	}
 
 	/* --------------------------------------------------------------------- */
@@ -995,7 +1068,9 @@ TXT;
 	}
 
 	protected static function clave_memoria( $conversacion ) {
-		return 'czuapi_ia_mem_' . md5( (string) $conversacion );
+		// La generación cambia con «olvidar todas»: las charlas anteriores quedan
+		// sin llave y se van solas al vencer su transient.
+		return 'czuapi_ia_mem_' . md5( (int) get_option( 'czuapi_ia_mem_gen', 0 ) . '|' . (string) $conversacion );
 	}
 
 	protected static function cargar_memoria( $conversacion ) {
@@ -1096,6 +1171,51 @@ TXT;
 		return CZUAPI_Response::with_etag( array( 'disponible' => self::activo() ), $request, 300 );
 	}
 
+	/**
+	 * Una pregunta de principio a fin, sin el HTTP: la usan el endpoint público
+	 * (después de su tope por IP) y el panel, donde el profesor prueba al
+	 * asistente. Lo que se guarda en la memoria y en los registros es lo mismo.
+	 *
+	 * @return array { ok, respuesta, fuentes, conversacion, idioma, error }
+	 */
+	public static function charlar( $mensaje, $conversacion, $idioma ) {
+		// Sin identificador válido se arranca una conversación nueva, y se le
+		// devuelve a quien llama para que lo use en la pregunta siguiente.
+		$conv = self::conversacion_valida( $conversacion );
+		if ( '' === $conv ) {
+			$conv = wp_generate_uuid4();
+		}
+		$historial = self::cargar_memoria( $conv );
+
+		$r = self::preguntar( $mensaje, $historial, $idioma );
+
+		if ( ! $r['ok'] ) {
+			self::guardar_error( $r );
+			error_log( '[CzuApi][IA] fallo: ' . $r['error'] );
+			return array( 'ok' => false, 'respuesta' => '', 'fuentes' => array(), 'conversacion' => $conv, 'idioma' => $idioma, 'error' => (string) $r['error'] );
+		}
+		delete_transient( 'czuapi_ia_ultimo_error' );
+
+		/*
+		 * Queda registrado SIEMPRE, no sólo cuando algo falla. Una respuesta
+		 * lenta no es un error —contesta bien, sólo tarde— así que no deja
+		 * rastro por ningún otro lado, y sin rastro «está lento» se discute a
+		 * ciegas: puede ser el modelo o puede ser armar el catálogo.
+		 */
+		$t = self::ultimo_turno();
+		error_log( sprintf(
+			'[CzuApi][IA] respuesta: %.1fs modelo + %.1fs fuentes, %s, %d fuente(s) citada(s)',
+			(float) ( $t['seg'] ?? 0 ),
+			(float) ( $t['seg_fuentes'] ?? 0 ),
+			(string) ( $t['modelo'] ?? '' ),
+			count( $r['fuentes'] )
+		) );
+
+		self::guardar_memoria( $conv, $mensaje, $r['contenido'] );
+
+		return array( 'ok' => true, 'respuesta' => $r['respuesta'], 'fuentes' => $r['fuentes'], 'conversacion' => $conv, 'idioma' => $idioma, 'error' => '' );
+	}
+
 	public function responder( $request ) {
 		if ( ! self::activo() ) {
 			return CZUAPI_Response::error( 'asistente_apagado', __( 'El asistente no está disponible.', 'caaguazu-app-api' ), 503 );
@@ -1119,45 +1239,17 @@ TXT;
 			return $res;
 		}
 
-		// Sin identificador válido se arranca una conversación nueva, y se le
-		// devuelve a la app para que lo use en la pregunta siguiente.
-		$conversacion = self::conversacion_valida( $request->get_param( 'conversacion' ) );
-		if ( '' === $conversacion ) {
-			$conversacion = wp_generate_uuid4();
-		}
-		$idioma    = CZUAPI_Idiomas::del_pedido( $request );
-		$historial = self::cargar_memoria( $conversacion );
-
-		$r = self::preguntar( $mensaje, $historial, $idioma );
+		$idioma = CZUAPI_Idiomas::del_pedido( $request );
+		$r      = self::charlar( $mensaje, $request->get_param( 'conversacion' ), $idioma );
 
 		if ( ! $r['ok'] ) {
-			self::guardar_error( $r );
-			error_log( '[CzuApi][IA] fallo: ' . $r['error'] );
 			return CZUAPI_Response::error( 'sin_respuesta', __( 'No se pudo responder ahora.', 'caaguazu-app-api' ), 502 );
 		}
-		delete_transient( 'czuapi_ia_ultimo_error' );
-
-		/*
-		 * Queda registrado SIEMPRE, no sólo cuando algo falla. Una respuesta
-		 * lenta no es un error —contesta bien, sólo tarde— así que no deja
-		 * rastro por ningún otro lado, y sin rastro «está lento» se discute a
-		 * ciegas: puede ser el modelo o puede ser armar el catálogo.
-		 */
-		$t = self::ultimo_turno();
-		error_log( sprintf(
-			'[CzuApi][IA] respuesta: %.1fs modelo + %.1fs fuentes, %s, %d fuente(s) citada(s)',
-			(float) ( $t['seg'] ?? 0 ),
-			(float) ( $t['seg_fuentes'] ?? 0 ),
-			(string) ( $t['modelo'] ?? '' ),
-			count( $r['fuentes'] )
-		) );
-
-		self::guardar_memoria( $conversacion, $mensaje, $r['contenido'] );
 
 		$res = new WP_REST_Response( array(
 			'respuesta'    => $r['respuesta'],
 			'fuentes'      => $r['fuentes'],
-			'conversacion' => $conversacion,
+			'conversacion' => $r['conversacion'],
 			'idioma'       => $idioma,
 		), 200 );
 		// Una respuesta es de una persona y de un momento: ningún intermediario

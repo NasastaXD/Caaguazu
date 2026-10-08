@@ -75,6 +75,7 @@
 		initAcciones();
 		initPapelera();
 		initReview();
+		initPruebaAsistente();
 		initGestion();
 		initCaptura();
 		initCopiar();
@@ -963,6 +964,74 @@
 
 		function setBusy(b) { box.querySelectorAll('[data-review-action]').forEach(function (x) { x.disabled = b; }); }
 		function setMsg(text, cls) { if (msg) { msg.textContent = text; msg.className = 'promotur-form-msg ' + (cls || ''); } }
+	}
+
+	/**
+	 * Prueba del asistente desde el panel: el profesor conversa con él como lo
+	 * haría un turista. La charla vive en la memoria del asistente (ver la pestaña
+	 * «Memoria»), así que acá sólo se guarda el id para seguir el hilo. Las
+	 * burbujas se arman con textContent: lo que contesta el asistente no es HTML.
+	 */
+	function initPruebaAsistente() {
+		var caja = document.querySelector('[data-asistente-prueba]');
+		if (!caja) { return; }
+		var log = caja.querySelector('[data-chat-log]');
+		var form = caja.querySelector('[data-chat-form]');
+		var campo = form.querySelector('textarea[name="mensaje"]');
+		var boton = form.querySelector('button[type="submit"]');
+		var nueva = caja.querySelector('[data-chat-nueva]');
+		var msg = caja.querySelector('[data-chat-msg]');
+		var conversacion = '';
+
+		function burbuja(texto, clase) {
+			var div = document.createElement('div');
+			div.className = 'promotur-chat__msg ' + clase;
+			div.textContent = texto;
+			log.appendChild(div);
+			log.scrollTop = log.scrollHeight;
+		}
+
+		function fuentes(lista) {
+			if (!lista || !lista.length) { return; }
+			var p = document.createElement('p');
+			p.className = 'promotur-chat__fuentes promotur-muted';
+			p.textContent = caja.getAttribute('data-msg-fuentes') + ' ' + lista.map(function (f) { return f.titulo; }).join(' · ');
+			log.appendChild(p);
+			log.scrollTop = log.scrollHeight;
+		}
+
+		form.addEventListener('submit', function (e) {
+			e.preventDefault();
+			var texto = campo.value.trim();
+			if (!texto) { decir(msg, caja.getAttribute('data-msg-vacio'), 'is-error'); return; }
+			burbuja(texto, 'is-yo');
+			campo.value = '';
+			boton.disabled = true;
+			decir(msg, caja.getAttribute('data-msg-enviando'), '');
+			ajax('asistente_probar', { mensaje: texto, conversacion: conversacion }).then(function (r) {
+				boton.disabled = false;
+				if (!r.success) {
+					decir(msg, (r.data && r.data.message) || caja.getAttribute('data-msg-error'), 'is-error');
+					return;
+				}
+				conversacion = r.data.conversacion || conversacion;
+				burbuja(r.data.respuesta, 'is-ia');
+				fuentes(r.data.fuentes);
+				decir(msg, '', '');
+			}).catch(function () {
+				boton.disabled = false;
+				decir(msg, caja.getAttribute('data-msg-error'), 'is-error');
+			});
+		});
+
+		if (nueva) {
+			nueva.addEventListener('click', function () {
+				conversacion = '';
+				log.textContent = '';
+				decir(msg, '', '');
+				campo.focus();
+			});
+		}
 	}
 
 	/* CSS.escape con fallback (keys de meta tienen guiones bajos, seguro). */
