@@ -223,6 +223,8 @@ $body = function () use ( $post, $post_id, $estado, $checklist, $feedback, $grup
 			<input type="hidden" name="post_id" value="<?php echo esc_attr( $post_id ); ?>">
 			<input type="hidden" name="tipo" value="recorrido">
 
+			<?php promotur_pegar_datos( 'recorrido' ); ?>
+
 			<label class="promotur-field">
 				<span><?php esc_html_e( 'Nombre del recorrido', 'caaguazu-portal' ); ?> <em>*</em></span>
 				<input type="text" name="titulo" value="<?php echo esc_attr( $titulo ); ?>" data-check="titulo" required>
@@ -345,6 +347,12 @@ $body = function () use ( $post, $post_id, $estado, $checklist, $feedback, $grup
 			<?php promotur_acciones_de_estado( $post_id ); ?>
 		</aside>
 	</div>
+
+	<?php
+	// Las versiones en otro idioma. Va fuera del formulario del editor a
+	// propósito: ver el comentario de arriba del partial.
+	include PROMOTUR_DIR . 'templates/partials/traducciones.php';
+	?>
 	<?php
 };
 

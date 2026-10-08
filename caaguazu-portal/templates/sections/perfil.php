@@ -1,6 +1,6 @@
 <?php
 /**
- * Mi perfil: la cuenta, el nivel de confianza y lo publicado.
+ * Mi perfil: la cuenta y lo publicado.
  *
  * La cuenta se edita acá y en ningún otro lado. Vive en `caaguazu-cuentas`,
  * que es un sistema aparte de los usuarios de WordPress: cambiar el nombre, el
@@ -21,48 +21,17 @@ $pub      = get_posts( array(
 	'meta_query'     => array( array( 'key' => PROMOTUR_Destinos::OWNER_META, 'value' => $uid ) ), // phpcs:ignore WordPress.DB.SlowDBQuery
 	'posts_per_page' => 50,
 ) );
-$is_mini = ( 'promotur_mini' === promotur_user_role() );
 
 $page_title = __( 'Mi perfil', 'caaguazu-portal' );
-$body = function () use ( $identity, $uid, $pub, $is_mini ) {
+$body = function () use ( $identity, $uid, $pub ) {
 	?>
 	<div class="promotur-profile">
 		<?php echo promotur_avatar( $identity, 'promotur-avatar--lg' ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 		<div>
 			<h2 class="promotur-h2"><?php echo esc_html( $identity['display_name'] ); ?></h2>
-			<p class="promotur-muted">
-				<?php echo esc_html( promotur_role_label() ); ?>
-				<?php if ( $is_mini ) : ?> · <span class="promotur-pill is-approved"><?php echo esc_html( PROMOTUR_Stats::level_label( $uid ) ); ?></span><?php endif; ?>
-			</p>
+			<p class="promotur-muted"><?php echo esc_html( promotur_role_label() ); ?></p>
 		</div>
 	</div>
-
-	<?php if ( $is_mini ) : ?>
-		<div class="promotur-card promotur-trust">
-			<h3 class="promotur-h3"><?php esc_html_e( 'Tu progreso de confianza', 'caaguazu-portal' ); ?></h3>
-			<div class="promotur-trustbar">
-				<?php
-				$levels = PROMOTUR_Stats::levels();
-				$cur    = PROMOTUR_Stats::get_level( $uid );
-				$keys   = array_keys( $levels );
-				$ci     = array_search( $cur, $keys, true );
-				foreach ( $keys as $idx => $lk ) : ?>
-					<span class="promotur-truststep<?php echo $idx <= $ci ? ' is-on' : ''; ?>"><?php echo esc_html( $levels[ $lk ] ); ?></span>
-				<?php endforeach; ?>
-			</div>
-			<p class="promotur-muted">
-				<?php
-				if ( 'confianza' === $cur ) {
-					esc_html_e( 'Nivel máximo: publicás directamente y después se hace una auditoría. Gracias por tu compromiso.', 'caaguazu-portal' );
-				} elseif ( 'jr' === $cur ) {
-					esc_html_e( 'Promotor Jr: podés editar fichas publicadas sin pasar por una nueva revisión. Seguí sumando aprobaciones para llegar a «De confianza».', 'caaguazu-portal' );
-				} else {
-					esc_html_e( 'Aprendiz: todo tu contenido pasa por revisión. A medida que sumás aprobaciones, vas ganando autonomía.', 'caaguazu-portal' );
-				}
-				?>
-			</p>
-		</div>
-	<?php endif; ?>
 
 	<div class="promotur-grid promotur-grid--3">
 		<div class="promotur-card promotur-stat">

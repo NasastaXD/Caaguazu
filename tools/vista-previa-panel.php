@@ -159,7 +159,19 @@ function wp_trim_words( $t, $n = 55, $more = null ) { return $t; }
 function has_post_thumbnail( $p = null ) { return false; }
 function get_post_thumbnail_id( $p = null ) { return 0; }
 function wp_get_attachment_image( $id, $size = '', $icon = false, $attr = array() ) { return ''; }
-function get_post_field( $campo, $p = null ) { return 'post_content' === $campo ? 'Sendero corto, sombra y agua fría todo el año.' : ''; }
+function get_post_field( $campo, $p = null ) {
+	// Los cuatro campos que las plantillas leen de verdad. `post_title` y
+	// `post_excerpt` los agregó el bloque de idiomas: sin ellos, los campos
+	// traducibles quedaban con el original vacío y el bloque se dibujaba a
+	// medias — o sea, se auditaba una pantalla que no es la que se ve.
+	$mapa = array(
+		'post_content'      => 'Sendero corto, sombra y agua fría todo el año.',
+		'post_title'        => 'Salto Ykua La Patria',
+		'post_excerpt'      => 'Una caída de agua a veinte minutos del centro, con sombra y mesas.',
+		'post_modified_gmt' => gmdate( 'Y-m-d H:i:s', time() - 3600 ),
+	);
+	return isset( $mapa[ $campo ] ) ? $mapa[ $campo ] : '';
+}
 function get_post_type( $p = null ) { return $GLOBALS['promotur_vista_previa_cpt'] ?? 'promotur_destino'; }
 function get_the_terms( $p, $tax ) { return get_terms( array( 'taxonomy' => $tax ) ); }
 function wp_get_object_terms( $p, $tax, $args = array() ) { return array( 30 ); }
@@ -211,8 +223,38 @@ class PROMOTUR_Equipo {
 	const CAP = 'promotur_manage_team';
 	public static function invitaciones_abiertas() {
 		return array(
-			array( 'id' => 3, 'role' => 'promotur_mini', 'expires_at' => gmdate( 'Y-m-d H:i:s', time() + 9 * DAY_IN_SECONDS ) ),
+			array(
+				'id' => 3, 'role' => 'promotur_mini',
+				'expires_at' => gmdate( 'Y-m-d H:i:s', time() + 9 * DAY_IN_SECONDS ),
+				'max_usos' => 1, 'usos' => 0,
+				'metadata'   => json_encode( array( 'token' => 'token-de-muestra' ) ), // phpcs:ignore WordPress.WP.AlternativeFunctions.json_encode_json_encode
+			),
+			array(
+				'id' => 4, 'role' => 'promotur_promotor',
+				'expires_at' => null, // permanente, para probar esa rama de la maqueta
+				'max_usos' => null, 'usos' => 3, // sin límite, para probar esa rama
+				'metadata'   => json_encode( array( 'token' => 'token-permanente' ) ), // phpcs:ignore WordPress.WP.AlternativeFunctions.json_encode_json_encode
+			),
 		);
+	}
+}
+class PROMOTUR_Invitations {
+	public static function dias_sugeridos() {
+		return array( 1, 3, 7, 14, 30, 90, 365 );
+	}
+	public static function plain_token( $row ) {
+		$meta = json_decode( $row['metadata'] ?? '', true );
+		return is_array( $meta ) && ! empty( $meta['token'] ) ? $meta['token'] : '';
+	}
+	public static function registration_url( $token ) {
+		return $token ? promotur_url( 'i/' . rawurlencode( $token ) ) : '';
+	}
+	public static function vence_texto( $row ) {
+		return empty( $row['expires_at'] ) ? 'No vence' : 'Vence el ' . date( 'j \d\e F', strtotime( $row['expires_at'] ) );
+	}
+	public static function usos_texto( $row ) {
+		$usos = (int) $row['usos'];
+		return null === $row['max_usos'] ? $usos . ' cuentas creadas, sin límite' : $usos . ' de ' . (int) $row['max_usos'];
 	}
 }
 class PROMOTUR_Estructura {
@@ -228,6 +270,7 @@ class PROMOTUR_Estructura {
 		return ! empty( $g[ $tax ]['extras'] );
 	}
 	public static function meta_imagen() { return 'czuapi_imagen_id'; }
+	public static function meta_i18n( $locale ) { return 'czuapi_i18n_' . $locale; }
 	public static function terminos( $tax ) {
 		$muestra = array(
 			'promotur_categoria' => array( array( 'Saltos de agua', 7, 'Cascadas y correntadas del departamento.' ), array( 'Ferias', 0, '' ) ),
@@ -255,11 +298,11 @@ class PROMOTUR_Medios {
 }
 class PROMOTUR_Roles {
 	public static function sections() { return array(); }
-	public static function label( $key ) { return 'promotur_mini' === $key ? 'Mini Promotor' : 'Promotor'; }
+	public static function label( $key ) { return 'promotur_mini' === $key ? 'Alumno' : ( 'promotur_promotor' === $key ? 'Profesor' : 'Visitante' ); }
 	public static function roles() {
 		return array(
-			'promotur_promotor'  => array( 'label' => 'Promotor', 'caps' => array() ),
-			'promotur_mini'      => array( 'label' => 'Mini Promotor', 'caps' => array() ),
+			'promotur_promotor'  => array( 'label' => 'Profesor', 'caps' => array() ),
+			'promotur_mini'      => array( 'label' => 'Alumno', 'caps' => array() ),
 			'promotur_visitante' => array( 'label' => 'Visitante', 'caps' => array() ),
 		);
 	}
@@ -468,9 +511,6 @@ class PROMOTUR_Stats {
 	public static function empty_searches() { return array( array( 'q' => 'termas', 'count' => 4 ), array( 'q' => 'cascada', 'count' => 2 ) ); }
 	public static function content_health( $meses = 6 ) { return array( 'sin_foto' => array_slice( get_posts(), 0, 2 ), 'viejas' => array_slice( get_posts(), 2, 1 ) ); }
 	public static function author_counts( $account_id ) { return array( 'total' => 9, 'publicadas' => 5 ); }
-	public static function levels() { return array( 'nuevo' => 'Nuevo', 'confiable' => 'Confiable', 'experto' => 'Experto' ); }
-	public static function get_level( $account_id ) { return 'confiable'; }
-	public static function level_label( $account_id ) { return 'Confiable'; }
 	public static function serie_diaria( array $actions, $dias = 7 ) {
 		$muestra = array( 3, 7, 2, 9, 5, 11, 6 );
 		$serie   = array();
@@ -595,6 +635,15 @@ $GLOBALS['wpdb'] = new Promotur_Vista_Previa_DB();
 
 require $plugin . 'includes/helpers.php';
 
+/*
+ * Las traducciones se cargan DE VERDAD, no stubeadas: son lógica pura sobre
+ * `get_post_meta()` y `get_post_field()`, que ya tienen su doble acá arriba.
+ * Un doble de esta clase dibujaría los campos que el doble declare, y el
+ * bloque de idiomas es justamente una lista declarativa — auditarlo contra una
+ * copia sería auditar la copia.
+ */
+require $plugin . 'includes/class-traducciones.php';
+
 // La cabina de mando de la app está fuera de circulación (ver
 // promotur_app_api_activa()): su clase ya no se carga acá tampoco, para que la
 // vista previa refleje lo que el panel realmente sirve.
@@ -635,6 +684,20 @@ if ( false !== strpos( $ruta, 'articulos' ) ) {
 
 // El estado activo del menú sale de la sección que se está dibujando.
 $GLOBALS['promotur_section'] = 0 === strpos( $ruta, 'sections/' ) ? substr( $ruta, strlen( 'sections/' ) ) : '';
+
+/*
+ * Crear cuenta se dibuja con una invitación válida. Sin esto la plantilla toma
+ * la rama de «necesitás una invitación» y devuelve tres renglones: se estaría
+ * mirando —y auditando— la pantalla que casi nadie ve, en vez del formulario
+ * que es el motivo por el que existe.
+ */
+if ( 'auth/registro' === $ruta ) {
+	$invite_status   = 'valid';
+	$invite_role     = 'Alumno';
+	$invite_role_key = 'promotur_mini';
+	$invite_vence    = gmdate( 'Y-m-d H:i:s', time() + 14 * DAY_IN_SECONDS );
+	$token           = 'token-de-muestra';
+}
 
 // La vista previa dibuja el estado de una plantilla concreta: el estado del
 // editorial de cada ficha lo pone el stub de get_posts(), no la base.

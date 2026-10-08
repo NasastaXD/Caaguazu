@@ -36,16 +36,35 @@ class PROMOTUR_Auth {
 
 	/**
 	 * Genera un link de invitación, desde la sección Equipo del panel.
+	 *
+	 * No manda el enlace por el flash: un transient de 60 segundos que se
+	 * borra al leerse es plata contada para copiar una URL larga en el
+	 * teléfono, y si la página se recarga antes de copiarla se pierde sin
+	 * dejar rastro (aunque la invitación siga válida). El enlace se reconstruye
+	 * desde la metadata cada vez que hace falta —ver
+	 * PROMOTUR_Invitations::plain_token()— así que la lista de «Invitaciones
+	 * abiertas» lo muestra de nuevo cada vez que se entra a la pantalla, con
+	 * su propio botón de copiar, no sólo la primera vez.
 	 */
 	public function handle_create_invite() {
 		if ( ! caaguazu_account_can( 'promotor', 'promotur_manage_team' ) ) {
 			wp_die( esc_html__( 'No tenés autorización para hacer esto.', 'caaguazu-portal' ) );
 		}
 		$role = isset( $_POST['role'] ) ? sanitize_key( wp_unslash( $_POST['role'] ) ) : 'promotur_mini';
-		$tokens = PROMOTUR_Invitations::create( array( 'role' => $role, 'expires_days' => 14, 'count' => 1 ) );
-		$link   = PROMOTUR_Invitations::registration_url( $tokens[0] );
-		/* translators: %s = enlace de invitación */
-		promotur_flash( sprintf( __( 'Enlace de invitación creado. Es válido durante 14 días: %s', 'caaguazu-portal' ), $link ), 'success' );
+		// Vacío o 0 en cualquiera de los dos es la elección explícita de «sin
+		// límite» —create() lo entiende igual—, no un valor que haya que
+		// completar con un default.
+		$dias     = isset( $_POST['expires_days'] ) ? (int) $_POST['expires_days'] : 0;
+		$usos_max = isset( $_POST['max_usos'] ) ? (int) $_POST['max_usos'] : 1;
+		$tokens   = PROMOTUR_Invitations::create( array( 'role' => $role, 'expires_days' => $dias, 'max_usos' => $usos_max, 'count' => 1 ) );
+
+		// Si no se guardó, se dice acá y no se descubre cuando alguien abre un
+		// enlace que no existe. Ver el porqué en PROMOTUR_Invitations::create().
+		if ( empty( $tokens ) ) {
+			promotur_flash( __( 'No se pudo crear la invitación: la base de datos rechazó el registro. Avisale a quien administra el sitio.', 'caaguazu-portal' ), 'error' );
+		} else {
+			promotur_flash( __( 'Enlace de invitación creado. Lo tenés abajo, en «Invitaciones abiertas».', 'caaguazu-portal' ), 'success' );
+		}
 		wp_safe_redirect( promotur_url( 'panel/equipo' ) );
 		exit;
 	}
@@ -129,7 +148,8 @@ class PROMOTUR_Auth {
 	 * de que exista un usuario de WordPress.
 	 */
 	private function verify( $action ) {
-		$token = isset( $_POST['promotur_token'] ) ? sanitize_text_field( wp_unslash( $_POST['promotur_token'] ) ) : '';
+		$campo = PROMOTUR_Acciones::CAMPO_TOKEN;
+		$token = isset( $_POST[ $campo ] ) ? sanitize_text_field( wp_unslash( $_POST[ $campo ] ) ) : '';
 		return PROMOTUR_Acciones::token_valido( $token, $action );
 	}
 
@@ -155,31 +175,79 @@ class PROMOTUR_Auth {
 		exit;
 	}
 
+	/**
+	 * Un alta que no salió, anotada en el registro de auditoría.
+	 *
+	 * Existe porque un alta fallida no dejaba ninguna huella: la pantalla
+	 * mostraba el error a quien lo estaba sufriendo y ahí moría. Cuando el
+	 * campo de seguridad pisó al token de la invitación (ver la constante
+	 * `PROMOTUR_Acciones::CAMPO_TOKEN`), en wp-admin se veía la invitación
+	 * creada y después nada, como si nadie hubiera intentado usarla — y era
+	 * justo al revés. El motivo y los primeros caracteres del token que llegó
+	 * alcanzan para distinguir «no la usaron» de «la usaron y se rompió».
+	 *
+	 * @param array  $vars
+	 * @param string $motivo  Clave corta, para poder buscarla.
+	 * @param string $mensaje Lo que ve la persona.
+	 * @param array  $extra   Contexto, sin datos personales.
+	 * @return array
+	 */
+	private function fallo_registro( $vars, $motivo, $mensaje, $extra = array() ) {
+		$vars['error'] = $mensaje;
+		if ( class_exists( 'PROMOTUR_Audit' ) ) {
+			PROMOTUR_Audit::log( 'registro_fallido', array(
+				'user_id'     => 0,
+				'entity_type' => 'invitation',
+				'payload'     => array_merge( array( 'motivo' => $motivo ), $extra ),
+			) );
+		}
+		return $vars;
+	}
+
 	/* ----- Registro (INVITE-ONLY) ----- */
 	private function process_register( $vars ) {
 		// Token de invitación (de la query var o del POST).
-		$token = sanitize_text_field( get_query_var( 'promotur_token' ) );
+		$token  = sanitize_text_field( get_query_var( 'promotur_invitacion' ) );
+		$origen = $token ? 'url' : '';
 		if ( ! $token && isset( $_REQUEST['token'] ) ) {
-			$token = sanitize_text_field( wp_unslash( $_REQUEST['token'] ) );
+			$token  = sanitize_text_field( wp_unslash( $_REQUEST['token'] ) );
+			$origen = $token ? 'campo' : '';
 		}
 		$row    = PROMOTUR_Invitations::find_by_token( $token );
 		$status = PROMOTUR_Invitations::status( $row );
 
-		$vars['token']         = $token;
-		$vars['invite_status'] = $status;            // valid|used|expired|revoked|invalid
-		$vars['invite_role']   = $row ? PROMOTUR_Roles::label( $row['role'] ) : '';
+		$vars['token']          = $token;
+		$vars['invite_status']  = $status;            // valid|agotada|expired|revoked|invalid
+		$vars['invite_role']    = $row ? PROMOTUR_Roles::label( $row['role'] ) : '';
+		// La clave del rol además de la etiqueta: la pantalla explica qué va a
+		// poder hacer la persona, y eso depende del rol, no de cómo se llame.
+		$vars['invite_role_key'] = $row ? (string) $row['role'] : '';
+		$vars['invite_vence']    = ( $row && ! empty( $row['expires_at'] ) ) ? (string) $row['expires_at'] : '';
 
 		if ( empty( $_POST['promotur_auth'] ) || 'registro' !== $_POST['promotur_auth'] ) {
 			return $vars;
 		}
 		if ( ! $this->verify( 'promotur_registro' ) ) {
-			$vars['error'] = __( 'Tu sesión venció. Recargá la página.', 'caaguazu-portal' );
-			return $vars;
+			return $this->fallo_registro( $vars, 'sesion_vencida', __( 'Tu sesión venció. Recargá la página.', 'caaguazu-portal' ) );
 		}
 		// Sólo con invitación válida (invite-only).
 		if ( 'valid' !== $status ) {
-			$vars['error'] = __( 'Necesitás una invitación válida para registrarte.', 'caaguazu-portal' );
-			return $vars;
+			/*
+			 * El estado dice por qué no sirve, y el prefijo del token con su
+			 * origen dice QUÉ llegó: si el token viene de la URL y aun así es
+			 * `invalid`, o si su prefijo no se parece a un token nuestro, lo
+			 * que falla no es la invitación sino lo que la transporta.
+			 */
+			return $this->fallo_registro(
+				$vars,
+				'invitacion_' . $status,
+				__( 'Necesitás una invitación válida para registrarte.', 'caaguazu-portal' ),
+				array(
+					'token'  => substr( (string) $token, 0, 8 ),
+					'largo'  => strlen( (string) $token ),
+					'origen' => $origen,
+				)
+			);
 		}
 
 		$display_name = sanitize_text_field( wp_unslash( $_POST['user_login'] ?? '' ) );
@@ -188,12 +256,20 @@ class PROMOTUR_Auth {
 		$pass         = (string) ( $_POST['user_pass'] ?? '' );
 
 		if ( ! $display_name || ! is_email( $email ) || '' === $phone || ! Caaguazu_Cuentas_Passwords::is_valid( $pass ) ) {
-			$vars['error'] = __( 'Completá usuario, email, teléfono y una contraseña de al menos 6 caracteres.', 'caaguazu-portal' );
-			return $vars;
+			return $this->fallo_registro(
+				$vars,
+				'datos_incompletos',
+				__( 'Completá usuario, email, teléfono y una contraseña de al menos 6 caracteres.', 'caaguazu-portal' ),
+				array( 'invitacion' => (int) $row['id'] )
+			);
 		}
 		if ( Caaguazu_Cuentas_Accounts::email_exists( $email ) ) {
-			$vars['error'] = __( 'Ese email ya está registrado.', 'caaguazu-portal' );
-			return $vars;
+			return $this->fallo_registro(
+				$vars,
+				'email_duplicado',
+				__( 'Ese email ya está registrado.', 'caaguazu-portal' ),
+				array( 'invitacion' => (int) $row['id'] )
+			);
 		}
 
 		$role = array_key_exists( $row['role'], PROMOTUR_Roles::roles() ) ? $row['role'] : 'promotur_visitante';
@@ -205,8 +281,12 @@ class PROMOTUR_Auth {
 			'phone'        => $phone,
 		) );
 		if ( is_wp_error( $account ) ) {
-			$vars['error'] = $account->get_error_message();
-			return $vars;
+			return $this->fallo_registro(
+				$vars,
+				'alta_rechazada',
+				$account->get_error_message(),
+				array( 'invitacion' => (int) $row['id'], 'codigo' => $account->get_error_code() )
+			);
 		}
 		$account_id = (int) $account['id'];
 

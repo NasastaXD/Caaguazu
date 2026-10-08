@@ -36,6 +36,19 @@ class CEADSSO_Log {
 			'account_id' => isset( $datos['account_id'] ) ? (int) $datos['account_id'] : null,
 			'created_at' => current_time( 'mysql', true ),
 		) );
+
+		/*
+		 * La lista de «roles que llegaron y se rechazaron» se cachea diez
+		 * minutos, y esa lista es LA pantalla donde se arregla un rechazo por
+		 * rol. Sin esto, quien acaba de rebotar avisa, el admin abre
+		 * Herramientas → Acceso desde el CEAD y ve «Ninguno» durante los
+		 * siguientes diez minutos: la pantalla que existe para resolverlo
+		 * niega que haya algo que resolver. Un rechazo nuevo invalida el
+		 * caché, que es barato y pasa poquísimas veces.
+		 */
+		if ( 'ok' !== $resultado && class_exists( 'CEADSSO_Validacion' ) ) {
+			CEADSSO_Validacion::olvidar_cache();
+		}
 	}
 
 	/**

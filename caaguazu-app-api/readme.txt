@@ -2,7 +2,7 @@
 Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 0.7.0
+Stable tag: 0.8.2
 License: GPLv2 or later
 
 Capa REST que consume la app Android de turismo (Turismo App Czu).
@@ -21,7 +21,7 @@ duplicarlo.
 **No reimplementa nada de lo que ya existe:**
 
 * Identidad y cuentas → `caaguazu-cuentas`
-* Permisos (rol + nivel de confianza) → `caaguazu_account_can()`
+* Permisos (rol) → `caaguazu_account_can()`
 * Flujo editorial y visibilidad → `caaguazu-portal`
 * Fichas turísticas → CPT `promotur_destino`
 
@@ -56,8 +56,12 @@ Namespace: `/wp-json/czu-app/v1/`
 * `GET·POST·PUT·DELETE /mis-recorridos` — requiere token
 * `GET /articulos`, `GET /articulos/{id}` — filtros: `categoria`, `etiqueta`, `buscar`, `pagina`, `por_pagina`
 
+= Idioma =
+* `GET /idiomas` — en qué idiomas se puede pedir el contenido
+* Todo endpoint de contenido acepta `?idioma=es|en|pt` (o `Accept-Language`)
+
 = Interfaz =
-* `GET /strings/{locale}` — `es`, `en`, `gn`
+* `GET /strings/{locale}` — `es`, `en`, `gn`, `pt`
 * `GET /media-manifest`
 
 = Sincronización =
@@ -105,6 +109,106 @@ de evento.
 1. Requiere `caaguazu-cuentas` y `caaguazu-portal` activos.
 2. Subir a `/wp-content/plugins/` y activar. Crea sus dos tablas.
 3. Cargar icono y color de cada categoría en **Destinos → Categorías**.
+
+== Auto-actualización ==
+
+Desde 0.8.1 el plugin se actualiza desde wp-admin sin pasar por
+WordPress.org, con el mismo mecanismo que `caaguazu-portal`:
+plugin-update-checker (vendoreado en `vendor/`) contra los GitHub Releases de
+`NasastaXD/Caaguazu`. El job `app-api` de `.github/workflows/release.yml`
+publica el release con el tag `app-api-{version}` y el asset
+`caaguazu-app-api.zip` cada vez que sube la versión del header; el checker lo
+detecta (~cada 12 h) y ofrece la actualización en **Plugins** y en
+**Caaguazú API → Actualizaciones** (wp-admin, capability `update_plugins`).
+
+En ese mismo repositorio se publican también el theme, el panel, el SSO del
+CEAD y el espejo web para iOS, cada uno con su propio tag y su propio zip.
+Para que el updater de esta API no agarre el release de otro componente,
+sólo considera un release que traiga adjunto `caaguazu-app-api.zip` — no
+depende de cómo se llame el tag.
+
+* Versión en un solo lugar: header `Version:` + constante `CZUAPI_VERSION` (semver).
+* El updater y su pantalla no dependen de que `caaguazu-cuentas` ni
+  `caaguazu-portal` estén activos: comprobar y bajar una versión nueva de este
+  plugin es justo la herramienta que hace falta cuando el resto del ecosistema
+  no está funcionando.
+* Repo privado: definir `CZUAPI_GITHUB_TOKEN` (PAT de solo lectura) en
+  `wp-config.php`, o cargarlo desde **Caaguazú API → Actualizaciones**.
+
+== Cambios del contrato en 0.8.2 ==
+
+**`/categorias` y `/etiquetas` aceptan `?idioma=`, y cada `categoria`/`etiquetas[]`
+embebido en fichas, artículos y recorridos sale traducido.** Faltaba en la
+0.8.0: el `nombre` de una categoría o etiqueta seguía viniendo en castellano
+sin importar qué `?idioma` se pidiera, y el primer borrador de la
+documentación decía por error que había que resolverlo leyendo `/strings` con
+una clave `categoria.<slug>` que nunca existió ahí. Corregido de las dos
+formas: el contrato real (esto) y el documento
+(`docs/idiomas-en-la-api.md`, §7).
+
+* `GET /categorias?idioma=en`, `GET /etiquetas?idioma=en` — mismo parámetro que
+  el resto de los endpoints.
+* El `nombre` de `categoria` y de cada `etiquetas[]`, dondequiera que aparezcan
+  —ficha, artículo, recorrido, y el `categoria` de cada parada de un
+  recorrido—, sale en el idioma pedido si hay traducción cargada.
+* Se traduce sólo el `nombre`. `descripcion`, `color`, `icono` e `imagen` de
+  una categoría siguen en castellano.
+* Un objeto `categoria`/`etiqueta` no suma `idioma` ni `traducido` propios:
+  esos dos campos son del objeto de contenido que lo contiene, igual que
+  antes.
+* La traducción se carga en el panel, en **Estructura**, no en el bloque
+  Idiomas de una ficha: es un dato del término, compartido por todas las
+  fichas que lo usan.
+* `/strings/{locale}` no cambia: sigue siendo sólo para los textos fijos de
+  la interfaz y nunca tuvo ninguna clave de categoría o etiqueta.
+
+== Cambios del contrato en 0.8.0 ==
+
+**Multi-idioma en el contenido.** Nada de lo que ya funcionaba cambia: sin
+`?idioma`, cada endpoint responde exactamente lo que respondía.
+
+* **`GET /idiomas`** (nuevo) — los idiomas disponibles, con su nombre en su
+  propio idioma y cuál es el original.
+* **`?idioma=es|en|pt`** en `/inventario`, `/inventario/{id}`, `/articulos`,
+  `/articulos/{id}`, `/recorridos`, `/recorridos/{id}`, `/mis-recorridos` y
+  `/eventos`. Si no viene, se mira `Accept-Language` (sólo el código de
+  idioma: `pt-BR` y `pt-PT` son el mismo portugués). Un idioma desconocido
+  **no es error**: se sirve el castellano.
+* **Cada objeto de contenido suma `idioma` y `traducido`.** `idioma` es en qué
+  idioma están sus textos; `traducido` dice si TODOS sus campos traducibles lo
+  estaban. Importa porque la caída al original es **campo por campo**: una
+  ficha puede venir con el título en inglés y la descripción en castellano.
+  Sin ese dato el cliente muestra una mezcla de dos idiomas sin poder avisar de
+  nada; con él puede poner «parcialmente traducido».
+* Qué se traduce: los textos que una persona lee. Ficha: `titulo`,
+  `descripcion`, `practicos.horario`, `practicos.costo` (y `horario_resumen` en
+  la lista). Artículo: `antetitulo`, `titulo`, `subtitulo`, `entradilla`,
+  `cuerpo_html`. Recorrido: `titulo`, `resumen`, `articulo_html`,
+  `duracion_estimada` y el `texto` de cada parada.
+* Qué **no** se traduce, a propósito: coordenadas, enlaces, fechas,
+  `rango_precio`, `autores`, `fuentes`, y las categorías y etiquetas — esas son
+  del sistema y se traducen una sola vez en `/strings`, no una vez por ficha.
+* El **título de una parada** de recorrido sale de la ficha a la que apunta, no
+  de una copia: traducir la ficha una vez la traduce en todos los recorridos.
+* `/mapa/markers` no cambia: no lleva ningún texto.
+* Los eventos del CPT viejo traen `idioma: "es"` y `traducido: false` siempre —
+  no pasan por el panel, así que no hay dónde escribirles una traducción. Los
+  eventos que salen de una ficha sí se traducen.
+* `/strings/{locale}` acepta ahora también `pt`.
+* El `ETag` ya varía con el idioma (se calcula sobre el cuerpo), y el idioma
+  viaja en el query string, así que la caché intermedia no mezcla idiomas.
+
+== Cambios del contrato en 0.7.1 ==
+
+**`GET /auth/me` (y la respuesta de `POST /auth/login`) dejan de traer
+`cuenta.nivel`.** Existía un nivel de confianza por cuenta, aparte del rol
+—se sacó de `caaguazu-portal` en la 3.9.0, nadie lo estaba pidiendo y era una
+segunda fuente de verdad sobre lo mismo que ya decidía el rol—, así que el
+campo dejó de significar algo. `cuenta.permisos` sigue viniendo igual: es la
+lista de capabilities efectivas, resuelta del lado servidor, así que la app
+no tiene que reimplementar de qué depende cada botón. Un cliente que sólo
+leía `permisos` sigue andando sin cambios; uno que leía `nivel` deja de
+recibirlo.
 
 == Cambios del contrato en 0.7.0 ==
 
@@ -250,5 +354,3 @@ Están detallados, con payloads, en `docs/contrato-app-contenido.md`.
   `get_manifest()` y `set_manifest()`, que existen desde 0.2.0, contra una
   instalación 0.1.0 — y moría con un error fatal. Se vuelve a enchufar cuando
   la versión instalada acá sea la que esa pantalla necesita.
-* Este plugin todavía no tiene auto-updater, igual que `caaguazu-cuentas` y
-  `caaguazu-sso-cead`.

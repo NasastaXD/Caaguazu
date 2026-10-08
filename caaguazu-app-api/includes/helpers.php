@@ -81,10 +81,18 @@ function czuapi_autor( $post_id ) {
 /**
  * Término normalizado (categoría o zona) con su presentación.
  *
+ * El nombre sale en el idioma pedido cuando hay traducción cargada —ver
+ * `CZUAPI_Taxonomias::nombre()`— y si no, en castellano: nunca vacío. Se
+ * resuelve acá y no una vez por ficha en un archivo aparte porque una
+ * categoría es UNA fila de la base compartida por cientos de fichas; esta
+ * función siempre lee esa fila, así que traducirla una vez alcanza para que
+ * se vea traducida en todos lados donde aparece.
+ *
  * @param WP_Term|int|null $term
+ * @param string            $locale
  * @return array|null
  */
-function czuapi_termino( $term ) {
+function czuapi_termino( $term, $locale = 'es' ) {
 	if ( is_numeric( $term ) ) {
 		$term = get_term( (int) $term );
 	}
@@ -94,7 +102,7 @@ function czuapi_termino( $term ) {
 	$out = array(
 		'id'     => (int) $term->term_id,
 		'slug'   => $term->slug,
-		'nombre' => $term->name,
+		'nombre' => CZUAPI_Taxonomias::nombre( $term->term_id, $term->name, $locale ),
 	);
 	$color = get_term_meta( $term->term_id, CZUAPI_Taxonomias::META_COLOR, true );
 	if ( $color ) {
@@ -108,14 +116,15 @@ function czuapi_termino( $term ) {
  *
  * @param int    $post_id
  * @param string $taxonomy
+ * @param string $locale
  * @return array|null
  */
-function czuapi_primer_termino( $post_id, $taxonomy ) {
+function czuapi_primer_termino( $post_id, $taxonomy, $locale = 'es' ) {
 	$terms = get_the_terms( $post_id, $taxonomy );
 	if ( ! $terms || is_wp_error( $terms ) ) {
 		return null;
 	}
-	return czuapi_termino( reset( $terms ) );
+	return czuapi_termino( reset( $terms ), $locale );
 }
 
 /**

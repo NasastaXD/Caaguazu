@@ -202,8 +202,8 @@ class PROMOTUR_Ajax {
 				break;
 		}
 
-		// Confianza progresiva: editar algo PUBLICADO sin nivel suficiente lo deja
-		// en re-revisión (sin bajarlo del aire); con nivel Jr+ la edición es directa.
+		// Editar algo PUBLICADO sin permiso de revisar contenido lo deja en
+		// re-revisión (sin bajarlo del aire); quien revisa edita directo.
 		$message = __( 'Borrador guardado.', 'caaguazu-portal' );
 		$mine    = caaguazu_account_id();
 		if ( 'publicado' === PROMOTUR_Editorial::get_estado( $post_id )
@@ -342,11 +342,11 @@ class PROMOTUR_Ajax {
 
 		$vuelta = promotur_url( 'panel/mis-contenidos' );
 
-		// Confianza progresiva: nivel "De confianza" publica directo (con auditoría).
+		// Quien tiene permiso de publicar (promotur_publish_destino) publica directo.
 		if ( PROMOTUR_Stats::can_publish_directly( caaguazu_account_id() ) ) {
 			PROMOTUR_Editorial::set_estado( $post_id, 'publicado' );
-			PROMOTUR_Editorial::add_feedback( $post_id, caaguazu_account_id(), __( 'Publicación directa por nivel de confianza. Se hará una auditoría posterior.', 'caaguazu-portal' ) );
-			wp_send_json_success( array( 'message' => __( '¡Publicado! Se aplicó tu nivel de confianza.', 'caaguazu-portal' ), 'redirect' => $vuelta ) );
+			PROMOTUR_Editorial::add_feedback( $post_id, caaguazu_account_id(), __( 'Publicación directa: tu rol no pasa por revisión.', 'caaguazu-portal' ) );
+			wp_send_json_success( array( 'message' => __( '¡Publicado!', 'caaguazu-portal' ), 'redirect' => $vuelta ) );
 		}
 
 		PROMOTUR_Editorial::set_estado( $post_id, 'enviado' );

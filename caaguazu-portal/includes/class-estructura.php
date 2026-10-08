@@ -74,6 +74,20 @@ class PROMOTUR_Estructura {
 		return class_exists( 'CZUAPI_Taxonomias' ) ? CZUAPI_Taxonomias::META_IMAGEN : 'czuapi_imagen_id';
 	}
 
+	/**
+	 * La meta key donde vive el nombre traducido de un término, en un idioma.
+	 * Mismo acuerdo que `meta_imagen()`: la constante la define
+	 * `caaguazu-app-api` —es quien la sirve—, y acá se cae a un literal si esa
+	 * API no está activa, para poder guardar igual.
+	 *
+	 * @param string $locale
+	 * @return string
+	 */
+	public static function meta_i18n( $locale ) {
+		$prefijo = class_exists( 'CZUAPI_Taxonomias' ) ? CZUAPI_Taxonomias::META_I18N_PREFIJO : 'czuapi_i18n_';
+		return $prefijo . $locale;
+	}
+
 	/** Los términos de una taxonomía, con cuántas fichas usan cada uno. */
 	public static function terminos( $taxonomia ) {
 		$terms = get_terms( array(
@@ -154,6 +168,28 @@ class PROMOTUR_Estructura {
 				update_term_meta( $id, self::meta_imagen(), $imagen );
 			} else {
 				delete_term_meta( $id, self::meta_imagen() );
+			}
+		}
+
+		// El nombre traducido, en las dos taxonomías —una etiqueta es un chip
+		// de filtro en la misma pantalla que una categoría, y se lee en el
+		// mismo idioma—. Gatea por `promotur_traducir` y no por `self::CAP`:
+		// las dos capabilities las tiene hoy sólo Profesor, pero traducir es
+		// el permiso que efectivamente describe esta acción, y es el que hay
+		// que revisar si el día de mañana se separan.
+		if ( promotur_can( PROMOTUR_Traducciones::CAP ) && isset( $_POST['i18n'] ) && is_array( $_POST['i18n'] ) ) {
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+			$i18n = wp_unslash( $_POST['i18n'] );
+			foreach ( PROMOTUR_Traducciones::idiomas() as $locale => $nombre_idioma ) {
+				if ( ! isset( $i18n[ $locale ] ) || ! is_string( $i18n[ $locale ] ) ) {
+					continue;
+				}
+				$texto = sanitize_text_field( $i18n[ $locale ] );
+				if ( '' !== $texto ) {
+					update_term_meta( $id, self::meta_i18n( $locale ), $texto );
+				} else {
+					delete_term_meta( $id, self::meta_i18n( $locale ) );
+				}
 			}
 		}
 

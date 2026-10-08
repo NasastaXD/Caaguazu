@@ -3,7 +3,7 @@ Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 3.6.0
+Stable tag: 3.11.0
 License: GPLv2 or later
 
 Panel autenticado tipo app (PWA) bajo /turismo-panel, con enrutador propio, login propio, roles y flujo editorial para las tres cosas que la app muestra: fichas del inventario turístico, artículos y recorridos.
@@ -26,7 +26,7 @@ equipo (roles, suspensión, invitaciones) tienen pantalla ahí. Lo único que
 queda en wp-admin es el registro de auditoría y las actualizaciones del
 plugin, y ninguna de las dos cosas la necesita nadie del equipo.
 
-Roles: Promotor, Mini Promotor, Visitante (capabilities `promotur_*`).
+Roles: Profesor, Alumno, Visitante (capabilities `promotur_*`).
 
 == Instalación ==
 
@@ -52,45 +52,282 @@ que traiga adjunto `caaguazu-portal.zip` — la regla no depende de cómo se
 llamen los tags.
 
 * Versión en un solo lugar: header `Version:` + constante `PROMOTUR_VERSION` (semver).
-* Migraciones de BD: incrementar `PROMOTUR_DB_VERSION`; corren solas en `admin_init`
-  vía `promotur_run_migrations()`.
+* Migraciones de BD: incrementar `PROMOTUR_DB_VERSION`; corren solas en `init`
+  y en `admin_init` vía `promotur_run_migrations()`. En las dos a propósito: el
+  equipo no entra a wp-admin, así que colgarlas sólo de ahí dejaba sitios sin
+  migrar para siempre.
 * Repo privado: definir `PROMOTUR_GITHUB_TOKEN` (PAT de solo lectura) en `wp-config.php`.
 
 == Changelog ==
 
-= 3.6.0 =
-* **Los docentes ven los borradores de todo el equipo.** «Mis contenidos»
-  suma un selector «Míos / Del equipo» para quien revisa (el Promotor, que es
-  el rol con que entran los docentes del CEAD). Hacía falta: el editor ya le
-  dejaba abrir y corregir una ficha ajena, pero no había ningún lugar donde
-  encontrarla — el inventario sólo muestra lo publicado y la cola de revisión
-  sólo lo enviado, así que el borrador de un colega era invisible hasta que
-  su dueño lo mandaba. En «Del equipo» cada fila dice de quién es. El Mini
-  Promotor (los alumnos) sigue viendo sólo lo suyo. Los recorridos que arma
-  la gente en la app no aparecen: son privados de su dueño.
-* **El panel deja de tocar `wp-login.php`.** Hasta acá lo redirigía a
-  /turismo-panel/entrar, pensando en un promotor que cayera ahí por error. En
-  la práctica a esa pantalla sólo llega quien administra WordPress, y el
-  redirect lo mandaba a un login que no era el suyo — el portón `?admin=1`
-  de 3.5.3 lo destrababa, pero obligaba a acordarse de la URL. Se sacó entero:
-  los promotores entran por /turismo-panel/entrar, que es el único enlace que
-  conocen. El filtro `promotur_block_wp_login` deja de existir.
+= 3.11.0 =
+* **Los profesores ven los borradores de todo el equipo.** «Mis contenidos»
+  suma un selector «Míos / Del equipo» para el Profesor. Hacía falta: el
+  editor ya le dejaba abrir y corregir una ficha ajena, pero no había ningún
+  lugar donde encontrarla — el inventario sólo muestra lo publicado y la cola
+  de revisión sólo lo enviado, así que el borrador de un colega era invisible
+  hasta que su dueño lo mandaba. En «Del equipo» cada fila dice de quién es.
+  Se gatea con `promotur_review_content`, la misma capability que ya decide
+  «edita lo ajeno» y «ve la papelera entera». El Alumno sigue viendo sólo lo
+  suyo, y un `?de=equipo` escrito a mano no le muestra nada de más. Los
+  recorridos que arma la gente en la app no aparecen: son privados de su
+  dueño.
+* **El panel deja de tocar `wp-login.php`.** Lo redirigía a
+  /turismo-panel/entrar, pensando en alguien del equipo que cayera ahí por
+  error. En la práctica a esa pantalla sólo llega quien administra WordPress,
+  y la excepción para administradores no podía funcionar nunca: preguntaba
+  `current_user_can()` en la pantalla de login, donde todavía no hay sesión.
+  Encima redirigía también el POST del formulario, así que ni siquiera se
+  podían enviar las credenciales. Se sacó entero, con el filtro
+  `promotur_block_wp_login`: el equipo entra por /turismo-panel/entrar, que es
+  el único enlace que conoce.
+* Estos dos cambios se escribieron primero contra `main`, que había quedado
+  en 3.5.2 mientras el sitio avanzaba hasta 3.10.1 desde otra rama. Llegaron
+  a numerarse 3.5.3 y 3.6.0 ahí, pero ninguno de los dos se publicó con ese
+  número — el tag `portal-3.6.0` ya era el de «Pegar datos». Esta es su
+  primera salida, ya sobre 3.10.1.
 
-= 3.5.3 =
-* **Los administradores vuelven a poder entrar a wp-admin.** El bloqueo de
-  `wp-login.php` —que manda a los promotores al login del panel, porque no son
-  usuarios de WordPress y ahí no pueden entrar— exceptuaba a los
-  administradores con `current_user_can( 'manage_options' )`. Esa excepción no
-  podía funcionar nunca: corre en `login_init`, o sea en la pantalla de login,
-  donde por definición todavía no hay sesión. Un administrador deslogueado que
-  entraba a `/wp-admin` terminaba siempre en `/turismo-panel/entrar`.
-* Peor todavía, se redirigía también el POST: el formulario de WordPress envía
-  sin `action`, así que caía en el `'login'` por defecto y las credenciales se
-  perdían en el redirect. Quien llegaba al formulario igual no podía entrar.
-* Ahora el envío del formulario pasa siempre, y `/wp-login.php?admin=1` saltea
-  el bloqueo — hacía falta un portón que funcione sin sesión. Ese parámetro no
-  es un secreto ni protege nada: lo único que destapa es el formulario estándar
-  de WordPress. El bloqueo siempre fue comodidad, no control de acceso.
+= 3.10.1 =
+* **Categorías y etiquetas también se traducen ahora**, desde **Estructura**:
+  cada término tiene un desplegable «Traducciones» con un campo de nombre por
+  idioma. Faltaba: la 3.10.0 traducía fichas, artículos y recorridos, pero el
+  nombre de una categoría —que aparece en cada uno de ellos— seguía en
+  castellano sin importar el idioma pedido.
+* Es un campo por idioma, no el bloque completo de una ficha: una categoría no
+  tiene descripción, horario ni cuerpo que traducir, sólo el nombre. Sin
+  archivo para bajar y subir tampoco — son pocos términos.
+
+= 3.10.0 =
+* **Cada ficha, artículo y recorrido se puede traducir a inglés y a portugués.**
+  Nuevo bloque «Idiomas» al pie de los tres editores, con el original al lado
+  del cuadro donde se escribe la traducción. El castellano es el original y no
+  se toca desde ahí; lo que quede sin traducir la app lo sirve en castellano,
+  **campo por campo** — una ficha con el título traducido y la descripción no,
+  muestra el título en inglés y la descripción en castellano, en vez de caer
+  entera a un idioma.
+* **Traducir una pieza entera de una sola vez, con un archivo.** «Bajar para
+  traducir» da un `.json` con todos los textos y **las instrucciones adentro**:
+  qué es cada campo, qué no hay que tocar (nombres propios, montos en
+  guaraníes), que los párrafos se conservan y que un campo vacío significa «sin
+  traducir». Se le puede pasar a cualquiera —o a un modelo de lenguaje— sin
+  adjuntar nada más, y vuelve por «Subir el archivo».
+* El importador no confía en lo que sube: rechaza lo que no sea un archivo de
+  acá, y **rechaza el archivo de otra pieza de contenido**. Ese es el error
+  caro: los campos se llaman igual en todas, así que pisar una ficha con los
+  textos de otra queda perfectamente normal hasta que alguien lee la app.
+* Traducir es de **Profesor** (`promotur_traducir`). Un Alumno no ve el bloque:
+  una traducción sale publicada tal cual, sin pasar por revisión —el flujo
+  editorial revisa el castellano, que es el original—, así que quien la escribe
+  está publicando.
+* Cada idioma muestra su estado: sin empezar, a medias, completa, o **«el
+  castellano cambió después»** — que es el que importa, porque una traducción
+  vieja y una al día se ven idénticas y la app estaría mostrando texto que ya
+  no dice lo mismo que el original.
+* Guardar una traducción mueve la fecha de modificación de la pieza. No es
+  cosmético: `/sync`, el delta de la caché offline de la app, busca por esa
+  fecha, y guardar un meta no la mueve. Sin esto una traducción nueva no
+  entraba nunca en el delta.
+* Sumar un idioma (el guaraní, cuando se pida) es agregarlo a
+  `PROMOTUR_Traducciones::idiomas()`: el formulario, el archivo y la API
+  recorren esa misma lista.
+* `tools/verificar-traducciones.php`, nuevo en `npm run verificar`.
+
+= 3.9.4 =
+* **Un alta que falla ahora deja rastro.** Hasta acá, si alguien abría su
+  enlace de invitación y el registro se le caía, el error se le mostraba a esa
+  persona y ahí moría: en Registros se veía la invitación creada y después
+  nada, exactamente igual que si nunca la hubiera usado. Con eso a la vista, un
+  bug de tres versiones parecía «no la abrieron todavía». Ahora se anota
+  `registro_fallido` con el motivo (`sesion_vencida`, `invitacion_expired`,
+  `datos_incompletos`, `email_duplicado`, `alta_rechazada`) y, cuando el
+  problema es el token, con sus primeros caracteres y de dónde llegó (de la URL
+  o de un campo). Sin datos personales: ni email ni contraseña.
+* **Registros mostraba menos de lo que guardaba.** La pestaña Usuarios filtra
+  por una lista de acciones, y tres eventos que sí se escriben no estaban en
+  ella: `account_registered` —el alta de verdad, tapada por el
+  `user_registered` viejo de WordPress, que ya no se escribe—, e
+  `invitation_error`, que se agregó en la 3.9.2 justamente para diagnosticar
+  esto y era invisible. Un registro exitoso no aparecía en la pantalla que uno
+  mira para saber si hubo un registro exitoso.
+
+= 3.9.3 =
+* **El alta por invitación fallaba justo al enviar el formulario**, con
+  «Necesitás una invitación válida para registrarte» — aunque el enlace fuera
+  recién creado y la pantalla anterior lo hubiera dado por válido.
+* La causa: `promotur_token` era **dos cosas distintas con el mismo nombre**.
+  Por un lado la query var que transporta el token de la invitación en
+  `/turismo-panel/i/<token>`; por el otro el campo oculto de seguridad que
+  `PROMOTUR_Acciones::campos()` mete en TODOS los formularios del panel. Y
+  `WP::parse_request()` le da prioridad a `$_POST` por encima de lo que
+  matcheó la regla de reescritura: al enviar el alta, el HMAC de seguridad
+  ocupaba el lugar del token de la invitación, y buscar esa invitación no
+  encontraba ninguna.
+* Por eso sólo fallaba en el último paso: abrir el enlace es un GET, que no
+  manda ese campo, así que la pantalla se veía bien y el formulario aparecía.
+  El síntoma estaba a un paso de distancia de la causa.
+* La query var pasa a llamarse `promotur_invitacion`. **Las URLs no cambian**:
+  los enlaces ya repartidos siguen sirviendo igual.
+* `tools/verificar-rutas.php` comprueba ahora que ninguna query var se llame
+  como un campo de formulario del panel. Probado en las dos direcciones:
+  con el nombre viejo la verificación falla y sale con código 1.
+
+= 3.9.2 =
+* **El caché servía el bucle de redirecciones aunque la 3.9.1 ya lo hubiera
+  arreglado.** LiteSpeed se había guardado la redirección vieja de
+  `/turismo-panel/entrar` con `public,max-age=604800` —siete días— y la seguía
+  entregando sin que PHP corriera. La página buena sólo aparecía agregándole un
+  parámetro cualquiera a la URL.
+* **La causa de fondo, que es más grave que una redirección vieja:** el panel
+  nunca le dijo a ningún caché de página que no lo guardara, y la sesión del
+  panel es una cookie de `caaguazu-cuentas`, no de WordPress. Todo caché decide
+  «esta persona está logueada, no le sirvo caché» buscando las cookies de
+  WordPress, que acá no existen — así que veía a cada promotor como visitante
+  anónimo y guardaba sus pantallas como públicas. Ahora el panel se marca como
+  no cacheable en todas sus rutas (`DONOTCACHEPAGE` y la API de LiteSpeed).
+* Al detectar un cambio de versión, además de rehacer las reglas de reescritura
+  se **purga el caché de página**. Arreglar a dónde va una URL no sirve de nada
+  si el caché sigue entregando la respuesta anterior.
+* **Las migraciones de base de datos corrían sólo en `admin_init`.** El motivo
+  de existir de este plugin es que el equipo no entre a wp-admin, así que un
+  sitio donde nadie abre el escritorio se quedaba con la base vieja para
+  siempre. Ahora corren también en `init`.
+* Eso último no daba ningún error visible, y ahí estaba lo peor: a una tabla
+  sin las columnas de la 3.8.0, `$wpdb->insert()` le devuelve `false` y sigue.
+  Crear una invitación «funcionaba» —aparecía el enlace— pero no guardaba
+  ninguna fila, y a quien abría ese enlace le decía «necesitás una invitación
+  válida». Ahora un insert que falla no devuelve token, queda registrado en
+  auditoría, y quien invita ve un error en vez de un enlace fantasma.
+
+= 3.9.1 =
+* **Nadie podía iniciar sesión: «demasiadas redirecciones».** El mapa de reglas
+  de reescritura estaba ordenado al revés y el comodín de sección
+  (`^turismo-panel/(.+?)/?$`) quedaba primero, comiéndose TODO lo que viene
+  detrás: login, registro, recuperar contraseña, salir, el enlace de invitación
+  y los cuatro recursos de la PWA. Cada una de esas URLs caía en el guard del
+  panel, que redirige a login… que tampoco resolvía. El navegador rebotaba
+  hasta cortar.
+* La causa era un comentario equivocado en el propio código:
+  `add_rewrite_rule( …, 'top' )` NO antepone regla por regla —hace un
+  `array_merge` que appendea dentro del grupo—, así que dentro del grupo manda
+  el orden de inserción. El mapa estaba escrito de menos a más específico
+  creyendo lo contrario.
+* Lo disimulaba que el panel andaba con la sesión ya abierta (quien ya estaba
+  adentro no pasa por /entrar) y que guardar contenido funcionaba, porque
+  `accion` y `datos` tienen una red de contención dentro de `dispatch()`. Sólo
+  fallaba lo que exige entrar de cero — que es exactamente una invitación.
+* **`tools/verificar-rutas.php` es nuevo**: comprueba a dónde resuelve cada una
+  de las 28 URLs del panel, y que el comodín sea la última regla. Corre en
+  `npm run verificar`. Un error de orden no tira ningún error, cambia en
+  silencio a dónde va una URL.
+* `promotur_asegurar_rewrite_rules()` ahora compara también el **orden** de las
+  reglas guardadas, no sólo que estén todas: en el sitio afectado estaban las
+  22, mal ordenadas, y comprobar presencia sola no lo veía.
+* **La pantalla de crear cuenta explica el proceso.** Quien la abre casi
+  siempre llega de un enlace que le pasaron, no sabe qué es este panel y tiene
+  que decidir si deja su correo y su teléfono: ahora dice qué es el portal, con
+  qué rol va a entrar y qué va a poder hacer con él, los tres pasos del alta,
+  para qué sirve cada dato (y que el teléfono no se publica), y hasta cuándo
+  vale el enlace. Se suma a las pantallas que audita `auditar-movil.mjs`, que
+  no la miraba.
+* Una invitación agotada decía «El registro es solo por invitación» en vez de
+  «este enlace ya se usó las veces permitidas»: la plantilla seguía buscando el
+  estado `used`, renombrado a `agotada` en la 3.8.0.
+* El rol en el aviso de invitación válida se iba al costado de la frase:
+  `.promotur-notice` es un flex y el `<strong>` contaba como otro ítem.
+
+= 3.9.0 =
+* **Se saca el nivel de confianza.** Era un segundo eje de permisos, aparte
+  del rol —Aprendiz / Alumno Jr / De confianza, guardado por cuenta—, que
+  dejaba editar lo ya publicado o publicar directo sin pasar por el rol. Nadie
+  lo había pedido, y una capability por cuenta además del rol es una segunda
+  fuente de verdad sobre lo mismo. Publicar directo y editar sin re-revisión
+  siguen existiendo, pero dependen únicamente del rol (`promotur_publish_destino`
+  y `promotur_review_content`, las dos del Profesor).
+* Se saca de Equipo el selector «Nivel de confianza» de cada Alumno, y de Mi
+  perfil la barra «Tu progreso de confianza». La acción `set_nivel` deja de
+  existir.
+* **`caaguazu-app-api` 0.7.1** deja de traer `cuenta.nivel` en `/auth/me` y
+  `/auth/login` por este mismo motivo — no llamaba más a nada que ya no
+  existe acá. `permisos` sigue viniendo igual.
+
+= 3.8.0 =
+* **El vencimiento de una invitación deja de tener un techo de 90 días: ahora
+  es cualquier número de días, o permanente si se deja vacío (o en 0).** El
+  selector fijo de la 3.7.0 se cambia por un campo numérico —con sugerencias
+  en un `<datalist>`, no una lista cerrada—.
+* **Suma un límite de usos, también customizable.** Antes una invitación
+  moría al primer registro; ahora se le puede poner cuántas cuentas puede
+  crear (por default sigue siendo 1, que es el comportamiento de siempre), o
+  dejarlo vacío para que sirva sin límite —un enlace para un grupo entero, en
+  vez de uno por persona—.
+* El estado «Usada» pasa a llamarse **«Agotada»**: con un límite de más de
+  uno, una invitación no se apaga en el primer registro, sólo cuando llega al
+  máximo que se le puso. `usos`/`max_usos` son las columnas nuevas de la
+  tabla, y la migración le pone `max_usos = 1` a toda invitación existente
+  —para que nada que antes fuera de un solo uso pase a ser «sin límite» de
+  golpe— y `usos = 1` a la que ya estuviera usada, para que siga contando
+  como agotada.
+* «Vence» y «Usos» en la lista de invitaciones abiertas dicen «No vence» y
+  «sin límite» cuando corresponde, en el panel y en wp-admin.
+
+= 3.7.0 =
+* **Promotor pasa a llamarse Profesor, y Mini Promotor pasa a llamarse
+  Alumno.** Sólo el nombre que se ve: la clave interna del rol
+  (`promotur_promotor`, `promotur_mini`) y sus capabilities no cambiaron, así
+  que no hace falta reasignarle el rol a nadie.
+* **Las invitaciones se arreglan de raíz.** El enlace recién creado sólo se
+  mostraba una vez, adentro de un mensaje que se borraba solo a los 60
+  segundos: si no se llegaba a copiar a tiempo, o la página se recargaba, se
+  perdía para siempre aunque la invitación siguiera siendo válida — no había
+  forma de volver a verlo sin ir a la base de datos. Ahora cada invitación de
+  «Invitaciones abiertas» muestra su enlace con un botón de copiar, todo el
+  tiempo que esté abierta, no sólo al crearla.
+* **El tiempo de validez ahora se elige** (1, 3, 7, 14, 30 o 90 días) en vez
+  de estar fijo en 14.
+* El formulario de invitar ya no se le mostraba a cualquiera que entrara a
+  Equipo —el servidor lo rechazaba igual, pero como un error confuso—: ahora
+  sólo lo ve quien tiene permiso.
+* **Invitaciones también desde wp-admin** (`Portal Turismo → Invitaciones`):
+  crear, listar y revocar, sin depender de un usuario de WordPress. No es
+  volver a lo que se sacó de wp-admin en su momento —«Usuarios» operaba sobre
+  usuarios de WordPress que los promotores ya no tienen; invitar no toca
+  usuarios de WordPress en absoluto, sólo la tabla propia de invitaciones—.
+
+= 3.6.3 =
+* Se saca la ayuda de «Descripción» en Categorías («una o dos líneas; encabeza
+  la categoría en la app»): no hacía falta, y encima salía en rojo —el color
+  de campo obligatorio— porque estaba metida en el mismo `<em>` que el
+  asterisco, no en una ayuda de verdad.
+
+= 3.6.2 =
+* **Categorías: la descripción y la imagen se pisaban con el nombre y el
+  badge de fichas.** El `<form>` de cada categoría —nombre, descripción,
+  imagen, botón Guardar— es un solo flex sin salto de línea, y desde que la
+  3.5.2 le agregó descripción e imagen quedaba todo apretado en una fila:
+  campos amontonados y el badge de «N fichas» flotando centrado en el medio
+  del formulario. Ahora cada campo va en su propio renglón.
+
+= 3.6.1 =
+* **«Pegar datos» en los tres editores.** Un cuadro plegable arriba del
+  formulario donde se pega un JSON y los valores se reparten solos en las
+  casillas. Es para cuando el contenido ya está escrito en otro lado —un
+  documento, una planilla, un archivo de la Municipalidad— y cargarlo era
+  copiar quince veces entre dos ventanas.
+* No guarda ni envía nada: deja el formulario lleno y editable, y quien carga
+  revisa y aprieta Guardar como siempre. El checklist y la validación del
+  servidor siguen siendo los mismos, que es lo que sostiene la calidad de lo
+  que se publica.
+* Las claves del JSON son los nombres de los campos, con el prefijo largo
+  (`_promotur_horario`) o sin él (`horario`), sin acentos ni mayúsculas que
+  importen. Los desplegables aceptan tanto el valor como el texto que se ve
+  («Sitio Natural», «Asfalto»). Al terminar dice cuántos campos llenó y cuáles
+  no reconoció, en vez de fallar en silencio.
+* La foto sigue subiéndose con su botón: un id de adjunto pegado a mano
+  apuntaría a cualquier cosa que tenga ese id en la biblioteca.
+* **No instalar la 3.6.0.** Se publicó por error desde una rama que todavía no
+  tenía la 3.5.1 ni la 3.5.2, así que su zip no las trae: instalarla haría
+  retroceder el rendimiento del panel y devolvería el menú de Etiquetas a
+  wp-admin. Esta 3.6.1 es la misma función, ya sobre las dos.
 
 = 3.5.2 =
 * **El panel deja de hacer ~124 consultas de más en cada pantalla.** La barra

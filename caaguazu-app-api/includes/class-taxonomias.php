@@ -44,6 +44,21 @@ class CZUAPI_Taxonomias {
 	 * eso son dos metas.
 	 */
 
+	/**
+	 * Prefijo del meta donde vive el nombre traducido de un término, en las
+	 * dos taxonomías que sirve la app. + locale, igual que
+	 * `PROMOTUR_Traducciones::META_PREFIJO` del lado del contenido — mismo
+	 * principio, aplicado a un término en vez de a un post: un solo campo
+	 * (el nombre), así que no hace falta el array por idioma que usan las
+	 * fichas, alcanza con una meta por idioma.
+	 *
+	 * La edita `caaguazu-portal` (pantalla Estructura), la constante vive acá
+	 * porque este plugin es quien la sirve — mismo acuerdo que con
+	 * `META_IMAGEN`: el panel referencia esta clase si está cargada y cae a
+	 * un literal si no, para poder guardar aunque esta API no esté activa.
+	 */
+	const META_I18N_PREFIJO = 'czuapi_i18n_';
+
 	public static function instance() {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -79,6 +94,53 @@ class CZUAPI_Taxonomias {
 				'show_in_rest' => false,
 			) );
 		}
+
+		// El nombre traducido, en las dos taxonomías: una etiqueta es un chip
+		// de filtro en la misma pantalla que una categoría, y se lee en el
+		// mismo idioma.
+		foreach ( array( self::TAX_CATEGORIA, self::TAX_ETIQUETA ) as $tax ) {
+			foreach ( $this->locales_de_contenido() as $locale ) {
+				register_term_meta( $tax, self::META_I18N_PREFIJO . $locale, array(
+					'type'              => 'string',
+					'single'            => true,
+					'show_in_rest'      => false,
+					'sanitize_callback' => 'sanitize_text_field',
+				) );
+			}
+		}
+	}
+
+	/**
+	 * Los idiomas a los que se traduce el contenido — mismo origen que
+	 * `PROMOTUR_Traducciones::idiomas()`, para no mantener una segunda lista
+	 * que se pueda desincronizar. `caaguazu-portal` es dependencia dura de
+	 * este plugin, así que la clase siempre está cargada cuando esto corre.
+	 *
+	 * @return string[]
+	 */
+	private function locales_de_contenido() {
+		return class_exists( 'PROMOTUR_Traducciones' )
+			? array_keys( PROMOTUR_Traducciones::idiomas() )
+			: array();
+	}
+
+	/**
+	 * El nombre de un término en el idioma pedido, o el original si no hay
+	 * traducción o no se pidió ninguno. Un solo campo, así que no hace falta
+	 * nada del tamaño de `PROMOTUR_Traducciones::resolver()`: cae al
+	 * castellano igual, pero no hay más que un campo del que caer.
+	 *
+	 * @param int    $term_id
+	 * @param string $original nombre en castellano, ya resuelto por el llamador
+	 * @param string $locale
+	 * @return string
+	 */
+	public static function nombre( $term_id, $original, $locale ) {
+		if ( ! $locale || 'es' === $locale ) {
+			return $original;
+		}
+		$trad = get_term_meta( (int) $term_id, self::META_I18N_PREFIJO . $locale, true );
+		return ( is_string( $trad ) && '' !== trim( $trad ) ) ? $trad : $original;
 	}
 
 	/* --------------------------------------------------------------------- */
@@ -140,17 +202,24 @@ class CZUAPI_Taxonomias {
 			'methods'             => 'GET',
 			'callback'            => array( $this, 'categorias' ),
 			'permission_callback' => '__return_true',
+			'args'                => array(
+				'idioma' => array( 'type' => 'string' ),
+			),
 		) );
 
 		register_rest_route( CZUAPI_NS, '/etiquetas', array(
 			'methods'             => 'GET',
 			'callback'            => array( $this, 'etiquetas' ),
 			'permission_callback' => '__return_true',
+			'args'                => array(
+				'idioma' => array( 'type' => 'string' ),
+			),
 		) );
 	}
 
 	public function categorias( $request ) {
-		$terms = get_terms( array(
+		$idioma = CZUAPI_Idiomas::del_pedido( $request );
+		$terms  = get_terms( array(
 			'taxonomy'   => self::TAX_CATEGORIA,
 			'hide_empty' => false,
 		) );
@@ -166,7 +235,7 @@ class CZUAPI_Taxonomias {
 			$out[] = array(
 				'id'     => (int) $t->term_id,
 				'slug'   => $t->slug,
-				'nombre' => $t->name,
+				'nombre' => self::nombre( $t->term_id, $t->name, $idioma ),
 				// Una o dos líneas que explican de qué se trata la categoría,
 				// para encabezar su pantalla en la app. Cadena vacía —y no
 				// `null`— cuando nadie la escribió: el campo existe siempre,
@@ -199,7 +268,8 @@ class CZUAPI_Taxonomias {
 	 * nada todavía es ruido en un selector de filtro.
 	 */
 	public function etiquetas( $request ) {
-		$terms = get_terms( array(
+		$idioma = CZUAPI_Idiomas::del_pedido( $request );
+		$terms  = get_terms( array(
 			'taxonomy'   => self::TAX_ETIQUETA,
 			'hide_empty' => true,
 		) );
@@ -212,7 +282,7 @@ class CZUAPI_Taxonomias {
 			$out[] = array(
 				'id'     => (int) $t->term_id,
 				'slug'   => $t->slug,
-				'nombre' => $t->name,
+				'nombre' => self::nombre( $t->term_id, $t->name, $idioma ),
 				'total'  => (int) $t->count,
 			);
 		}

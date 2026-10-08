@@ -14,7 +14,7 @@
  *
  * «DEL EQUIPO»
  *
- * Quien revisa (el Promotor, que es el rol con que entran los docentes) puede
+ * Quien revisa (el Profesor, que es el rol con que entran los docentes) puede
  * pasar a ver lo de todos, borradores incluidos. Hacía falta: el editor ya le
  * dejaba abrir y corregir una ficha ajena, pero no había ningún lugar donde
  * encontrarla — el inventario sólo muestra lo publicado y la cola de revisión

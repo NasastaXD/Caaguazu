@@ -138,6 +138,8 @@ $body = function () use ( $post, $post_id, $estado, $checklist, $feedback, $grup
 			<input type="hidden" name="post_id" value="<?php echo esc_attr( $post_id ); ?>">
 			<input type="hidden" name="tipo" value="articulo">
 
+			<?php promotur_pegar_datos( 'articulo' ); ?>
+
 			<?php
 			// La cabeza va antes que el título porque así se lee la nota: el
 			// ante título es la primera línea que ve alguien en la app.
@@ -237,6 +239,12 @@ $body = function () use ( $post, $post_id, $estado, $checklist, $feedback, $grup
 			<?php promotur_acciones_de_estado( $post_id ); ?>
 		</aside>
 	</div>
+
+	<?php
+	// Las versiones en otro idioma. Va fuera del formulario del editor a
+	// propósito: ver el comentario de arriba del partial.
+	include PROMOTUR_DIR . 'templates/partials/traducciones.php';
+	?>
 	<?php
 };
 

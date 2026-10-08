@@ -203,7 +203,7 @@ No es "un CPT con un formulario": es una **aplicación completa** montada sobre 
 | `/turismo/panel/...` | El panel en sí |
 | `/promotur-manifest.webmanifest`, `/promotur-sw.js`, `/promotur-icon-{n}.png`, `/promotur-offline` | PWA |
 
-El plugin **no toca `wp-login.php`**: esa pantalla queda para quien administra WordPress, y los promotores entran por el login del panel. (Hasta `caaguazu-portal` 3.5.3 la redirigía al login del panel; se sacó porque dejaba afuera de wp-admin a los administradores.)
+El plugin **no toca `wp-login.php`**: esa pantalla queda para quien administra WordPress, y los promotores entran por el login del panel. (Hasta `caaguazu-portal` 3.10.1 la redirigía al login del panel; se sacó porque dejaba afuera de wp-admin a los administradores.)
 
 ### 5.2 Modelo de contenido
 
@@ -235,8 +235,8 @@ Tres roles, definidos en `class-roles.php` como fuente única de verdad. **Toda 
 
 | Rol | Puede |
 |---|---|
-| **Promotor** | Todo: crear, editar, revisar, publicar, asignar tareas, curar destacados, moderar, gestionar equipo, ver reportes, gestionar biblioteca y estructura |
-| **Mini Promotor** | Crear borradores, editar sus fichas, ver sus tareas, editar su perfil |
+| **Profesor** | Todo: crear, editar, revisar, publicar, asignar tareas, curar destacados, moderar, gestionar equipo, ver reportes, gestionar biblioteca y estructura |
+| **Alumno** | Crear borradores, editar sus fichas, ver sus tareas, editar su perfil |
 | **Visitante** | Solo ver el panel y editar su perfil |
 
 Las 15 secciones del panel (`home`, `buscar`, `editor`, `captura`, `mis-contenidos`, `revision`, `tareas`, `curaduria`, `moderacion`, `equipo`, `reportes`, `biblioteca`, `estructura`, `perfil`, `ayuda`) están mapeadas cada una a la capability que requieren.
@@ -303,7 +303,7 @@ Por la URL viaja **solo un código sin significado**. Los datos de la persona (e
 **Reglas de negocio decididas:**
 
 - Un email que **ya tiene cuenta** en el portal sin vincular se **rechaza**, no se vincula solo. Vincular automáticamente por email sería la puerta de un robo de cuenta: quien controle esa dirección en el CEAD pasaría a manejar la cuenta existente con todos sus permisos. Un admin lo vincula a mano desde **Herramientas → Acceso desde el CEAD**.
-- Mapeo de roles: quien cursa entra como Mini Promotor, quien enseña como Promotor. Un rol que el CEAD mande y no caiga en el mapa se rechaza — no se inventa un permiso. **Desde v1.1.0 el mapa dejó de ser una constante de dos entradas**: el CEAD es un WordPress y manda roles de WordPress (`alumno`, `cead_alumno`, `subscriber`, `Docente`), ninguno de los cuales era `alumno_turismo`. Ahora los nombres se comparan normalizados (sin acentos, sin mayúsculas, sin el prefijo del colegio ni el sufijo del curso) y el mapa se edita desde **Herramientas → Acceso desde el CEAD**. Los roles administrativos del colegio siguen sin entrar, a propósito.
+- Mapeo de roles: quien cursa entra como Alumno, quien enseña como Profesor. Un rol que el CEAD mande y no caiga en el mapa se rechaza — no se inventa un permiso. **Desde v1.1.0 el mapa dejó de ser una constante de dos entradas**: el CEAD es un WordPress y manda roles de WordPress (`alumno`, `cead_alumno`, `subscriber`, `Docente`), ninguno de los cuales era `alumno_turismo`. Ahora los nombres se comparan normalizados (sin acentos, sin mayúsculas, sin el prefijo del colegio ni el sufijo del curso) y el mapa se edita desde **Herramientas → Acceso desde el CEAD**. Los roles administrativos del colegio siguen sin entrar, a propósito.
 - Entran al panel `promotor` que ya existe, no a uno aparte.
 - Las cuentas creadas por SSO llevan una contraseña aleatoria de 64 caracteres que nunca se muestra: la cuenta existe y entra por SSO, pero no hay ninguna contraseña real que adivinar.
 - Sesión **sin "recordarme"** — el acceso vive del vínculo con el CEAD.
@@ -347,7 +347,7 @@ No reimplementa identidad, permisos ni flujo editorial — delega en `caaguazu-c
 
 El mapa base **no** lo sirve este plugin: la app usa tiles vectoriales embebidos (2 MB, contra los ~250 MB que pesaría una pirámide ráster). Lo que sí sirve son los markers, separados del mapa base — eso es lo que hace que registrar un lugar haga aparecer su pin sin regenerar nada.
 
-**Pendiente:** `POST /contenido` (alta de fichas desde el teléfono) no está implementado; la lectura sí. Y no tiene auto-updater (§7.5).
+**Pendiente:** `POST /contenido` (alta de fichas desde el teléfono) no está implementado; la lectura sí.
 
 ---
 
@@ -429,11 +429,11 @@ No es un defecto, pero es la causa raíz de 7.2 y 7.4, y conviene tenerlo escrit
 | Componente | Mecanismo |
 |---|---|
 | Theme, `caaguazu-modulos`, `caaguazu-turismo`, `caaguazu-editor-ux` | Clase compartida `Caaguazu_Component_Updater`, compara contra `manifest.json` del release |
-| `caaguazu-portal` | `plugin-update-checker` vendoreado, lee los GitHub Releases directamente |
+| `caaguazu-portal`, `caaguazu-app-api` | `plugin-update-checker` vendoreado, lee los GitHub Releases directamente |
 | `caaguazu-locales` | Manifiesto JSON manual en `updates/` *(roto, ver 7.4)* |
-| `caaguazu-cuentas`, `caaguazu-sso-cead`, `caaguazu-app-api` | **Ninguno** — instalación y actualización a mano |
+| `caaguazu-cuentas`, `caaguazu-sso-cead` | **Ninguno** — instalación y actualización a mano |
 
-Los tres plugins sin updater son los de identidad y el que sirve la API de la app — o sea los que más conviene poder parchear rápido si aparece un problema de seguridad. Con una app publicada dependiendo de esa API, deja de ser incómodo y pasa a ser un riesgo.
+`caaguazu-app-api` sumó el mismo mecanismo que el Portal en la 0.8.1 —era el más urgente de parchear rápido, con una app publicada dependiendo de él—. Quedan los dos plugins de identidad sin updater; son los siguientes candidatos a migrar.
 
 ### 7.6 El conteo de páginas está mal documentado en tres lugares
 

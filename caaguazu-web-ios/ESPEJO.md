@@ -1,4 +1,8 @@
-# caaguazu-web
+# El espejo iOS por dentro
+
+Los archivos de `sitio/` —lo que el plugin sirve en `/ios/`—. Cómo se
+instala y se publica el plugin está en `readme.txt`; esto es cómo está hecha
+la página.
 
 Espejo web temporal de la app Android de turismo de Caaguazú
 (`Turismo-app-czu`), pensado para darle algo a quien usa iPhone mientras no
@@ -74,4 +78,6 @@ assets/icon-*.png         isotipo oficial, copiado de caaguazu-theme
 - Splits de idioma guarani: igual que la app, sale de la lista hasta que el
   panel tenga textos.
 
-Ver `DESPLIEGUE.md` para como publicar esto.
+No hay despliegue aparte: hasta `caaguazu-web-ios` 1.0.0 esto vivía en
+`caaguazu-web/` y se iba a hostear en GitHub Pages o un subdominio; ahora lo
+sirve el propio WordPress desde este plugin. Ver `readme.txt`.

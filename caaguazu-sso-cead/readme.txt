@@ -2,7 +2,7 @@
 Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.1.0
+Stable tag: 1.1.3
 License: GPLv2 or later
 
 Acceso de un clic desde el panel del CEAD al Portal de Promotores Turísticos, sin registro nuevo ni contraseña propia del portal.
@@ -40,10 +40,14 @@ ninguno de ellos** — es WordPress pelado más el endpoint del contrato.
   cuenta existente). Un admin lo vincula a mano desde
   **Herramientas → Acceso desde el CEAD**.
 * Rol del CEAD → rol del panel `promotor` de `caaguazu-portal`: quien cursa
-  entra como Mini Promotor, quien enseña como Promotor. Un rol que no caiga en
+  entra como Alumno, quien enseña como Profesor. Un rol que no caiga en
   el mapa se rechaza (no se inventa un permiso), pero queda registrado y se
   habilita de un clic desde esa misma pantalla.
 * Entran al panel `promotor` que ya existe — no a uno aparte.
+
+**1.1.1** — los nombres de rol que se muestran acá (Alumno, Profesor) se
+sincronizan con el rename de `caaguazu-portal` 3.9.0. Sólo texto: la clave
+interna del rol y el mapa de la sección de abajo no cambiaron.
 
 == El mapa de roles (1.1.0) ==
 
@@ -136,3 +140,34 @@ Cada intento de canje (éxito, rechazo o error) queda en
   `redirect_to=`: eso sería un open-redirect justo después de abrir sesión.
 * Sesión de SSO sin "recordarme" (dura lo que dura cualquier sesión del
   sistema de cuentas, no más) — el acceso vive del vínculo con el CEAD.
+
+== Changelog ==
+
+= 1.1.3 =
+* **Quien dirige la carrera de turismo del CEAD ahora entra como Profesor.**
+  `direccion`, `coordinacion`, `director` y `directora` se suman al mapa base:
+  dirigir este programa es estar del lado de quien enseña. `administrator` y
+  `editor` siguen afuera a propósito — ser administrador del CEAD no es ser
+  promotor turístico de Caaguazú.
+* **Un rol escrito como frase perdía el sufijo del curso y quedaba a medias.**
+  «Dirección de Turismo» se normalizaba a `direccion_de`, con la preposición
+  colgando, que no coincide con ningún rol. El nombre visible de un rol se
+  escribe así, y quien lo escribe del otro lado no tiene por qué saber cómo lo
+  partimos acá.
+
+= 1.1.2 =
+* **Un rol que llegaba con espacios rebotaba, y no había forma de verlo.** El
+  canje limpiaba el rol con `sanitize_key()` antes de que lo viera el
+  normalizador, y `sanitize_key()` no convierte los separadores: los borra.
+  «Docente Turismo» llegaba como `docenteturismo`, que ya no pierde el sufijo
+  del curso ni coincide con nada, y la persona veía «Tu rol en el CEAD todavía
+  no está habilitado para entrar al portal». El normalizador —que maneja
+  espacios, guiones, acentos y mayúsculas— nunca llegaba a hacer su trabajo.
+  Ahora el rol viaja entero y se normaliza donde corresponde.
+* **La pantalla que arregla un rechazo decía que no había nada que arreglar.**
+  La lista de «roles que llegaron y se rechazaron» se cachea diez minutos, así
+  que quien rebotaba avisaba, el admin abría Herramientas → Acceso desde el
+  CEAD y veía «Ninguno». Un rechazo nuevo ahora invalida ese caché.
+* `tools/verificar-logica.php` comprueba las dos formas del nombre visible
+  («Docente Turismo», «Alumno Turismo») y que nadie vuelva a mutilar el rol
+  antes de normalizarlo.

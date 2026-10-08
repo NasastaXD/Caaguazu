@@ -51,9 +51,9 @@ Cada ruta anterior responde **301** a su equivalente nueva, conservando la query
 
 La identidad **no es de WordPress**: corre entera sobre `caaguazu-cuentas` (tabla propia, sesión propia firmada, contraseñas bcrypt). Ningún promotor tiene usuario de WordPress. Los administradores de WP entran por su login de siempre gracias al bypass de ese plugin.
 
-Tres roles, y la UI se gatea **por capability, nunca por rol**:
+Tres roles —**Profesor** (`promotur_promotor`), **Alumno** (`promotur_mini`) y **Visitante** (`promotur_visitante`)—, y la UI se gatea **por capability, nunca por rol**. Los nombres son de la UI; la clave interna del rol y sus capabilities no cambiaron:
 
-| Capability | Promotor | Mini Promotor | Visitante |
+| Capability | Profesor | Alumno | Visitante |
 | --- | :---: | :---: | :---: |
 | `promotur_view_panel` | ● | ● | ● |
 | `promotur_edit_profile` | ● | ● | ● |
@@ -128,7 +128,7 @@ Tres de ellas —Inventario, Artículos y Recorridos— hacen de lista y de deta
 | Sección | Ruta | Capability | Qué hace |
 | --- | --- | --- | --- |
 | **Inicio** | `/turismo-panel` | `promotur_view_panel` | Pulso del día: cuántas fichas esperan revisión, publicadas, esperando tu corrección, en proceso, reseñas por moderar y consultas sin responder — cada una es un link a donde se resuelve. Más la actividad editorial de los últimos 7 días y los accesos rápidos. |
-| **Mis contenidos** | `/mis-contenidos` | `promotur_create_draft` | Todo lo tuyo —fichas, artículos y recorridos— ordenado por última modificación, con su tipo y su estado editorial. Quien tiene `promotur_review_content` (el Promotor) puede pasar a «Del equipo» y ver lo de todos, borradores incluidos, con el nombre de quién lo escribió. |
+| **Mis contenidos** | `/mis-contenidos` | `promotur_create_draft` | Todo lo tuyo —fichas, artículos y recorridos— ordenado por última modificación, con su tipo y su estado editorial. Quien tiene `promotur_review_content` (el Profesor) puede pasar a «Del equipo» y ver lo de todos, borradores incluidos, con el nombre de quién lo escribió. |
 | **Nueva ficha / Editor** | `/editor[/<id>]` | `promotur_edit_destino` | Ficha guiada por grupos de campos, con checklist de mínimos en vivo que bloquea el envío si falta algo, subida de fotos y geolocalización. Muestra el feedback de quien revisó. |
 | **Inventario turístico** | `/inventario[/<id>]` | `promotur_view_panel` | El catálogo de fichas publicadas del departamento, con sus datos. Es de donde los recorridos toman sus paradas. |
 | **Artículos** | `/articulos[/nuevo\|<id>]` | `promotur_create_draft` | Las notas que la app muestra: ante título, título, foto con su pie, autores, subtítulo, entradilla, cuerpo y fuentes, más categoría y etiquetas. |
@@ -136,12 +136,12 @@ Tres de ellas —Inventario, Artículos y Recorridos— hacen de lista y de deta
 | **Salida de campo** | `/captura` | `promotur_create_draft` | Captura offline: título, nota, foto y GPS quedan en el teléfono y se sincronizan cuando hay señal. |
 | **Cola de revisión** | `/revision[/<id>]` | `promotur_review_content` | Lo que espera revisión, con badge en el menú. Asignarse una ficha, aprobar, publicar o devolver con feedback (hay motivos de un clic). |
 | **Tareas** | `/tareas` | `promotur_view_own_tasks` | Encargos del equipo: reclamar y completar. Badge con las pendientes. |
-| **Equipo** | `/equipo` | `promotur_manage_team` | Quién es quién, su rol y su nivel de confianza. Cambiar el rol, suspender, sacar del panel, e invitar: crear enlaces de invitación, ver los que están abiertos y revocarlos. |
+| **Equipo** | `/equipo` | `promotur_manage_team` | Quién es quién y su rol. Cambiar el rol, suspender, sacar del panel, e invitar: crear enlaces de invitación, ver los que están abiertos y revocarlos. |
 | **Reportes** | `/reportes` | `promotur_view_reports` | Producción por autor y salud del contenido: fichas publicadas sin portada y fichas sin verificar hace más de seis meses. |
 | **Biblioteca** | `/biblioteca` | `upload_files` | La galería: grilla de fotos, subida de a tandas, nombre, descripción y crédito de cada una, y borrado —bloqueado si la foto es la portada de una ficha. Filtro por nombre y por «sólo las mías». |
 | **Estructura** | `/estructura` | `promotur_view_panel` (editar: `promotur_manage_structure`) | Categorías, zonas y etiquetas: cuántas fichas usa cada una, crear, renombrar en su lugar y borrar lo que no esté en uso. |
 | **Buscar** | `/buscar?q=` | `promotur_view_panel` | Búsqueda de fichas dentro del panel. |
-| **Mi perfil** | `/perfil` | `promotur_edit_profile` | La cuenta: nombre, correo, teléfono, foto y contraseña. Más el nivel de confianza y el portafolio de fichas publicadas. |
+| **Mi perfil** | `/perfil` | `promotur_edit_profile` | La cuenta: nombre, correo, teléfono, foto y contraseña. Más el portafolio de fichas publicadas. |
 | **Ayuda** | `/ayuda` | `promotur_view_panel` | Cómo se usa el panel. |
 
 ### El flujo editorial
@@ -182,18 +182,29 @@ Cuatro decisiones que conviene tener presentes:
 
 ### Quién publica sin pasar por revisión
 
-Conviene saberlo porque cambia quién mira la cola: **el paso de revisión no es obligatorio para todos.** `PROMOTUR_Stats::can_publish_directly()` deja publicar directo por dos caminos independientes:
+Conviene saberlo porque cambia quién mira la cola: **el paso de revisión no es obligatorio para todos.** `PROMOTUR_Stats::can_publish_directly()` deja publicar directo a quien tiene `promotur_publish_destino` —una capability del rol **Profesor**—. O sea: **todo Profesor publica lo suyo sin revisión**, y su contenido nunca entra a la cola; un Alumno, que no tiene esa capability, siempre pasa por revisión.
 
-1. **Tener `promotur_publish_destino`** — que es una capability del rol **Promotor**. O sea: **todo Promotor publica lo suyo sin revisión**, y su contenido nunca entra a la cola.
-2. **Tener nivel de confianza «De confianza»** — con lo que un Mini Promotor, que no tiene esa capability, también publica directo.
+Hubo un segundo camino —un nivel de confianza por cuenta, que le daba autonomía a un Alumno puntual sin cambiarle el rol— que se sacó: nadie lo había pedido, y una capability por cuenta además del rol es una segunda fuente de verdad sobre lo mismo. Si algún día hace falta que un Alumno puntual publique directo, la forma es cambiarle el rol, no un atributo aparte.
 
-En los dos casos queda una entrada en el hilo de feedback («Publicación directa por nivel de confianza. Se hará una auditoría posterior») y su registro en auditoría, así que se puede revisar después — pero no antes.
+Publicar directo deja una entrada en el hilo de feedback y su registro en auditoría, así que se puede revisar después — pero no antes.
 
-La consecuencia práctica: **la cola de revisión sólo se llena con lo que escriben los Mini Promotores en nivel Aprendiz.** Si se quiere que un Promotor pase por revisión, hay que sacarle `promotur_publish_destino` del rol; si se quiere lo contrario para un Mini Promotor puntual, se le sube el nivel desde Equipo.
+La consecuencia práctica: **la cola de revisión sólo se llena con lo que escriben los Alumnos.** Si se quiere que un Profesor pase por revisión, hay que sacarle `promotur_publish_destino` del rol.
 
-Lo mismo con editar lo ya publicado: `can_edit_published()` deja editar sin volver a revisión a quien revisa y a los niveles Jr y De confianza. Al resto, editar algo publicado lo devuelve a `en revisión` **sin bajarlo del aire**.
+Lo mismo con editar lo ya publicado: `can_edit_published()` deja editar sin volver a revisión a quien tiene `promotur_review_content` —Profesor—. Al resto, editar algo publicado lo devuelve a `en revisión` **sin bajarlo del aire**.
 
 Cada paso queda en el log de auditoría con quién, qué y cuándo, y la acción lleva el tipo adelante (`articulo_publicado`, `recorrido_enviado`) para que el registro siga diciendo qué se movió. Los estados tienen su pastilla de color, y el color viene del sistema de tokens (§5), no de un hex suelto.
+
+### Invitaciones: el enlace no se pierde
+
+El registro es invite-only: `PROMOTUR_Invitations` guarda cada invitación en su propia tabla (`{prefijo}promotur_invitations`), con el rol, cuándo vence y el token en claro guardado en `metadata` —no sólo su hash— justo para poder reconstruir el enlace (`registration_url()` + `plain_token()`) cada vez que haga falta, no una sola vez.
+
+Eso importa porque antes el enlace recién creado sólo se mostraba una vez, adentro de un mensaje flash con 60 segundos de vida (`promotur_flash()`, un transient que se borra al leerse): si no se llegaba a copiar a tiempo, o la página se recargaba, el enlace se perdía para siempre aunque la invitación siguiera siendo válida — no había forma de volver a verlo sin ir a la base de datos. Ahora **cada invitación de la lista «Invitaciones abiertas» muestra su enlace, con un botón de copiar, todo el tiempo que esté abierta** — no sólo en el momento de crearla.
+
+El tiempo de validez y el límite de usos son los dos campos numéricos del formulario, y en los dos **vacío o 0 es la elección explícita de «sin límite»**, no un valor por completar: un enlace permanente para un grupo que se va anotando durante meses, o uno que sirve para cualquier cantidad de cuentas, son casos de uso reales. `expires_at` y `max_usos` son NULL en la base para ese caso —no una fecha lejana ni un número gigante—, y `status()` los trata como tal: sin vencimiento no hay «expirada» posible, sin límite de usos no hay «agotada» posible. `PROMOTUR_Invitations::dias_sugeridos()` sólo alimenta el `<datalist>` del campo de días —una ayuda para tipear, no las únicas opciones—, y `create()` acota lo que llegue a un techo de cordura (10 años, 100.000 usos) para que un cero de más no guarde un disparate; el default sigue siendo 14 días y una sola cuenta, que es el caso más común y el más conservador.
+
+El límite de usos reemplaza al viejo «usada una sola vez»: `usos` cuenta cuántas cuentas ya se crearon con ese enlace, y una invitación pasa a **agotada** —el estado que reemplaza a «usada»— recién cuando `usos` llega a `max_usos`. Con el default de 1, eso es exactamente el comportamiento de antes; con un número más alto, el mismo enlace sirve para un grupo. Quién usó cada vez queda en el log de auditoría (`invitation_used`, una fila por registro), no en la fila de la invitación —esa sólo guarda la última—.
+
+**wp-admin también puede invitar** (`Portal Turismo → Invitaciones`, gateado por `promotur_manage_team`): crea, lista y revoca sobre la misma tabla, sin depender de un usuario de WordPress —`invited_by` queda en 0 cuando la crea un administrador de WP, que es el mismo bypass que ya usaba el resto del panel—. No es volver a lo que se sacó de wp-admin (ver «Nada de lo que hace el equipo pasa por WordPress», en §2): «Usuarios» estaba roto porque operaba sobre usuarios de WordPress que los promotores ya no tienen; invitar no toca usuarios de WordPress en absoluto, sólo esta tabla propia.
 
 ### La ubicación de una ficha
 
@@ -212,6 +223,18 @@ Una ficha empieza declarando **qué es**: un sitio (está siempre) o un evento (
 Antes los eventos eran otro tipo de contenido, en `caaguazu-app-api`, cargable sólo desde wp-admin y con la mitad de los campos: sin gancho, sin galería, sin fuentes y sin pasar por revisión. Duplicar el modelo entero para agregarle dos fechas costaba mantener dos editores y dos checklists que se iban a separar con el tiempo. Lo que ya está cargado ahí se sigue sirviendo —los teléfonos lo tienen en caché y sacarlo de la API lo haría desaparecer sin lápida—, pero no se carga más por ahí.
 
 Que un campo aplique o no según el tipo no es cosa del formulario: `PROMOTUR_Destinos::aplica_campo()` lo decide, el editor lo usa para mostrar y esconder, y el checklist de mínimos lo usa para no exigir la fecha de un evento a una ficha que es un sitio. Si sólo lo supiera el formulario, un sitio no se podría publicar nunca.
+
+### Pegar datos en vez de copiar quince veces
+
+Los tres editores tienen arriba un cuadro plegable, **«Pegar datos»**, donde se pega un JSON y los valores se reparten solos en las casillas. Existe porque el texto de una ficha casi nunca se escribe en el panel: sale de un documento, de una planilla, de un archivo de la Municipalidad. Cargarlo era ir y volver quince veces entre dos ventanas, y ese trabajo aburrido es lo que hace que una ficha ya escrita quede sin cargar.
+
+**Llena el formulario y para ahí.** No guarda, no envía y no toca el servidor: deja los campos escritos y todavía editables, y quien carga revisa y aprieta Guardar como siempre. Es a propósito — un importador que escribe directo en la base mete datos que nadie miró y saltea el checklist, que es justamente lo que sostiene la calidad de lo que sale publicado. Acá el checklist se tacha solo mientras se pega, igual que si se hubiera tipeado.
+
+Las claves son los nombres de los campos, con el prefijo largo (`_promotur_horario`) o sin él (`horario`), y sin que importen acentos, mayúsculas ni si el separador es guion o guion bajo. Un `meta: { … }` anidado se aplana contra el resto, así se puede pegar tal cual lo que sale del modelo. Los desplegables aceptan tanto el valor (`asfalto`) como el texto que se ve (`Asfalto`, `Sitio Natural`), que es lo que alguien copia de una planilla.
+
+El índice de campos **se arma leyendo el formulario**, no de una lista escrita en el JavaScript: cada editor tiene sus campos y su prefijo de meta (`_promotur_` la ficha y el artículo, `_recorrido_` el recorrido), y una lista a mano quedaría vieja el día que se agregue un campo. Un campo nuevo en el modelo se puede pegar sin tocar `caaguazu-portal.js`.
+
+Dos cosas que no entran, y lo dice en vez de fallar en silencio: **la foto** —es un id de adjunto, y un número pegado a mano apuntaría a cualquier cosa que tenga ese id en la biblioteca— y **las paradas de un recorrido**, que son filas repetidas y piden su propio armador. Al terminar informa cuántos campos llenó, cuáles no reconoció y cuáles rechazó.
 
 ### Los recorridos
 
@@ -306,7 +329,19 @@ Comprueba las **dos únicas funciones del ecosistema que transforman un dato en 
 
 Los casos son los reales: los cuatro formatos de enlace que escribe Google (incluido el corto, que no trae el punto, y uno con la latitud fuera del planeta), y las formas en que un WordPress escribe el nombre de un rol. Corre sin WordPress: probar esto no puede costar levantar un sitio.
 
-Y un tercero, que no comprueba código sino que **el documento de datos no quede viejo**:
+Y un tercero, para lo que ninguno de los dos ve — **a dónde va cada URL**:
+
+```bash
+php tools/verificar-rutas.php
+```
+
+Comprueba las 28 URLs del panel contra `PROMOTUR_Router::reglas()` (el mapa de verdad, no una copia), y que el comodín de sección sea la última regla. El orden importa tanto como el contenido: WordPress se queda con la **primera** regla que matchea, y `^turismo-panel/(.+?)/?$` matchea cualquier cosa colgada de la base, así que todo lo que quede después es inalcanzable.
+
+Existe porque eso pasó. `add_rewrite_rule( …, 'top' )` no antepone regla por regla —`WP_Rewrite::add_rule()` hace `array_merge()`, que appendea dentro del grupo—, y el mapa estaba escrito de menos a más específico creyendo lo contrario. El comodín iba primero y se comía login, registro, recuperar, salir, el enlace de invitación y los cuatro recursos de la PWA: `/turismo-panel/entrar` caía en el guard del panel, que redirige a `/turismo-panel/entrar`, que volvía a caer en el guard. El navegador cortaba con «demasiadas redirecciones» y **nadie podía iniciar sesión**. Lo disimulaba que el panel andaba con la sesión ya abierta, y que `accion`/`datos` tienen una red de contención dentro de `dispatch()`.
+
+Un error de orden no tira ningún error: cambia en silencio a dónde va una URL. Por eso `promotur_asegurar_rewrite_rules()` ahora también compara el **orden** de las reglas guardadas contra el mapa, no sólo que estén todas — comprobar presencia sola era justo el punto ciego que dejó pasar esto.
+
+Y un cuarto, que no comprueba código sino que **el documento de datos no quede viejo**:
 
 ```bash
 php tools/inventario-de-datos.php              # regenera docs/datos-para-la-app.md

@@ -3,7 +3,7 @@
  * Plugin Name:       Caaguazú Portal — Promotores Turísticos
  * Plugin URI:        https://turismo.caaguazu.net
  * Description:       Panel autenticado tipo app bajo /turismo-panel, instalable como PWA, donde el equipo escribe las tres cosas que la aplicación muestra —fichas del inventario turístico, artículos y recorridos— con un mismo flujo editorial: borrador → revisión → publicación. Corre sobre rutas propias y no depende del theme: trae su propio CSS y su propia tipografía, y desencola los del theme activo en sus rutas. La identidad de los promotores corre sobre el sistema de cuentas universal (caaguazu-cuentas): no son usuarios de WordPress.
- * Version:           3.6.0
+ * Version:           3.11.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Requires Plugins:  caaguazu-cuentas
@@ -17,8 +17,8 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'PROMOTUR_VERSION', '3.6.0' );
-define( 'PROMOTUR_DB_VERSION', 2 ); // se incrementa cuando cambia la estructura de datos.
+define( 'PROMOTUR_VERSION', '3.11.0' );
+define( 'PROMOTUR_DB_VERSION', 3 ); // se incrementa cuando cambia la estructura de datos.
 define( 'PROMOTUR_FILE', __FILE__ );
 define( 'PROMOTUR_DIR', plugin_dir_path( __FILE__ ) );
 define( 'PROMOTUR_URI', plugin_dir_url( __FILE__ ) );
@@ -58,6 +58,9 @@ require_once PROMOTUR_DIR . 'includes/class-destinos.php';
 require_once PROMOTUR_DIR . 'includes/class-articulos.php';
 require_once PROMOTUR_DIR . 'includes/class-recorridos.php';
 require_once PROMOTUR_DIR . 'includes/class-editorial.php';
+require_once PROMOTUR_DIR . 'includes/class-traducciones.php';
+require_once PROMOTUR_DIR . 'includes/class-traducciones-archivo.php';
+require_once PROMOTUR_DIR . 'includes/class-traducciones-acciones.php';
 require_once PROMOTUR_DIR . 'includes/class-estados.php';
 require_once PROMOTUR_DIR . 'includes/class-ajax.php';
 require_once PROMOTUR_DIR . 'includes/class-tareas.php';
@@ -140,6 +143,7 @@ function promotur_boot() {
 	PROMOTUR_Articulos::instance();
 	PROMOTUR_Recorridos::instance();
 	PROMOTUR_Editorial::instance();
+	PROMOTUR_Traducciones_Acciones::instance();
 	PROMOTUR_Estados::instance();
 	PROMOTUR_Ajax::instance();
 	PROMOTUR_Tareas::instance();
@@ -185,23 +189,57 @@ function promotur_asegurar_rewrite_rules() {
 	 * URLs y el shell devuelve su página 404 en HTML, que el JavaScript no
 	 * puede parsear. Comprobar el juego completo cuesta lo mismo que comprobar
 	 * una: `rewrite_rules` ya está en memoria.
+	 *
+	 * Y SE COMPRUEBA EL ORDEN, no sólo que estén. Comprobar presencia sola
+	 * también tenía un punto ciego, y costó caro: con el comodín de sección
+	 * guardado ANTES de las rutas de auth —todas presentes, todas inalcanzables
+	 * porque el comodín matchea primero— el login redirigía al login y el
+	 * navegador cortaba por «demasiadas redirecciones». Estaban las 22 reglas;
+	 * lo que estaba mal era en qué orden. WP se queda con la primera que
+	 * matchea, así que el orden ES parte de la definición.
 	 */
 	$reglas = get_option( 'rewrite_rules' );
-	$falta  = ! is_array( $reglas );
-	if ( ! $falta ) {
-		foreach ( array_keys( PROMOTUR_Router::reglas() ) as $patron ) {
+	$mal    = ! is_array( $reglas );
+	if ( ! $mal ) {
+		$esperadas = array_keys( PROMOTUR_Router::reglas() );
+		foreach ( $esperadas as $patron ) {
 			if ( ! isset( $reglas[ $patron ] ) ) {
-				$falta = true;
+				$mal = true;
 				break;
 			}
 		}
+		// Mismas reglas, mismo orden relativo entre ellas. Las de WordPress y
+		// las de otros plugins se ignoran: pueden estar intercaladas.
+		if ( ! $mal ) {
+			$guardadas = array_values( array_intersect( array_keys( $reglas ), $esperadas ) );
+			$mal       = ( $guardadas !== $esperadas );
+		}
 	}
 
-	if ( ! $version_nueva && ! $falta ) {
+	if ( ! $version_nueva && ! $mal ) {
 		return;
 	}
 
 	flush_rewrite_rules();
+
+	/*
+	 * Y se tira el caché de página, porque acaba de cambiar a dónde va una URL.
+	 *
+	 * Sin esto, arreglar el enrutado no arregla nada de cara a quien entra: el
+	 * caché sigue sirviendo la respuesta vieja —una redirección, un 404— hasta
+	 * que expire. Pasó exactamente eso: con el enrutado ya corregido y subido,
+	 * `/turismo-panel/entrar` seguía devolviendo el bucle de redirecciones
+	 * desde el caché de LiteSpeed, y la página buena sólo aparecía agregándole
+	 * un parámetro cualquiera a la URL.
+	 *
+	 * Los dos son do_action / comprobaciones blandas: si el plugin de caché no
+	 * está, no pasa nada.
+	 */
+	do_action( 'litespeed_purge_all' );          // LiteSpeed Cache v3+
+	if ( function_exists( 'rocket_clean_domain' ) ) { rocket_clean_domain(); }  // WP Rocket
+	if ( function_exists( 'w3tc_flush_all' ) )      { w3tc_flush_all(); }       // W3 Total Cache
+	if ( function_exists( 'wp_cache_clear_cache' ) ) { wp_cache_clear_cache(); } // WP Super Cache
+
 	update_option( 'promotur_version', PROMOTUR_VERSION );
 }
 // Prioridad 20: después de que el router (10) y los CPTs registraron las suyas,
@@ -339,6 +377,28 @@ function promotur_run_migrations( $from ) {
 	if ( $from < 2 ) {
 		PROMOTUR_Install::create_tables();
 	}
+	// v3: invitaciones con vencimiento opcional (permanentes) y un límite de
+	// usos configurable en vez de una sola vez fija. `create_tables()` sólo
+	// agrega columnas que faltan —dbDelta no toca una columna que ya
+	// existe—, así que `expires_at` necesita su propio ALTER para dejar de
+	// ser NOT NULL en una instalación que ya tenía la tabla de la v2.
+	if ( $from < 3 ) {
+		global $wpdb;
+		$wpdb->query( 'ALTER TABLE ' . $wpdb->prefix . 'promotur_invitations MODIFY expires_at DATETIME NULL' ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		PROMOTUR_Install::create_tables(); // agrega max_usos y usos, que no existían.
+
+		// Backfill: antes de esto una invitación era de un solo uso siempre,
+		// sin excepción. Sin este paso, `max_usos` y `usos` quedarían en NULL
+		// y 0 —los defaults de columnas nuevas— para TODA fila ya existente,
+		// y eso las volvería «sin límite» de golpe: una invitación que ya se
+		// había usado (y que por eso hoy figura como agotada) pasaría a
+		// verse otra vez válida y reutilizable sin fin. Se preserva el
+		// comportamiento de siempre —de un solo uso— y, para la que ya se
+		// había usado, que siga contando como agotada.
+		$table = $wpdb->prefix . 'promotur_invitations';
+		$wpdb->query( "UPDATE {$table} SET max_usos = 1 WHERE max_usos IS NULL" ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		$wpdb->query( "UPDATE {$table} SET usos = 1 WHERE used_at IS NOT NULL AND usos = 0" ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+	}
 	do_action( 'promotur_run_migrations', $from );
 }
 
@@ -352,6 +412,21 @@ function promotur_maybe_upgrade() {
 		update_option( 'promotur_db_version', PROMOTUR_DB_VERSION );
 	}
 }
+/*
+ * En `init` y no sólo en `admin_init`, que es donde estaba.
+ *
+ * El motivo de existir de este plugin es que el equipo NO entre a wp-admin:
+ * el contenido, las cuentas, la galería y el equipo se manejan en el panel.
+ * Con la migración colgada de `admin_init`, un sitio donde nadie abre el
+ * escritorio se quedaba con la base vieja para siempre — y una tabla a la que
+ * le falta una columna no da un error visible: `$wpdb->insert()` devuelve
+ * false y sigue. Así, crear una invitación «funcionaba» (aparecía el enlace)
+ * pero no guardaba ninguna fila, y el enlace salía inválido al usarlo.
+ *
+ * Correrlo en `init` no cuesta: la guarda de arriba es una lectura de opción
+ * ya cacheada, y sólo hace trabajo cuando la versión de verdad cambió.
+ */
+add_action( 'init', 'promotur_maybe_upgrade', 5 ); // antes del router (10).
 add_action( 'admin_init', 'promotur_maybe_upgrade' );
 
 register_activation_hook( __FILE__, array( 'PROMOTUR_Install', 'activate' ) );

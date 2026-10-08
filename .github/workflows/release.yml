@@ -1,8 +1,9 @@
 name: Publicar releases
 
-# En este repo conviven cuatro cosas que se instalan por separado: el theme del
-# sitio publico, el plugin del panel de promotores, la API de la app y el SSO
-# del CEAD. Cada uno tiene su propia version, su propio tag y su propio zip.
+# En este repo conviven cinco cosas que se instalan por separado: el theme del
+# sitio publico, el plugin del panel de promotores, la API de la app, el SSO
+# del CEAD y el espejo web para iOS. Cada uno tiene su propia version, su
+# propio tag y su propio zip.
 #
 # La regla que hace que convivan sin pisarse: **cada release lleva un solo
 # zip**, y cada updater se queda con el release que trae EL SUYO
@@ -14,8 +15,9 @@ name: Publicar releases
 # subio el numero de version en su header. No hace falta taggear a mano.
 #
 # Cada componente tiene su propio prefijo de tag: theme-X.Y.Z, portal-X.Y.Z,
-# app-api-X.Y.Z y sso-X.Y.Z. No es cosmetico. Antes theme y portal usaban los
-# dos vX.Y.Z, y el repo ya traia los tags v1.x a v5.0.1 del sistema viejo:
+# app-api-X.Y.Z, sso-X.Y.Z y web-ios-X.Y.Z. No es cosmetico. Antes theme y
+# portal usaban los dos vX.Y.Z, y el repo ya traia los tags v1.x a v5.0.1 del
+# sistema viejo:
 # cuando al theme le toco 5.0.1 y al panel 3.1.0, los dos tags ya existian y
 # ninguno de los dos releases se publico nunca. Con un prefijo por componente
 # cada serie es suya y no se cruza ni con la otra ni con la historia vieja.
@@ -30,11 +32,11 @@ name: Publicar releases
 # eligiendo la rama y que componente publicar.
 #
 # ---------------------------------------------------------------------------
-# LOS CUATRO SON UNA MATRIZ, NO CUATRO JOBS COPIADOS
+# LOS CINCO SON UNA MATRIZ, NO CINCO JOBS COPIADOS
 #
-# Eran dos jobs casi identicos; con cuatro, la copia se paga en el primer
-# arreglo que se hace en uno y se olvida en los otros tres. Sumar un
-# componente ahora es agregar cuatro lineas a `include`.
+# Eran dos jobs casi identicos; con mas de uno, la copia se paga en el primer
+# arreglo que se hace en uno y se olvida en los demas. Sumar un componente
+# ahora es agregar cuatro lineas a `include`.
 #
 # `fail-fast: false` a proposito: que el theme falle no puede impedir que salga
 # el release del panel.
@@ -47,6 +49,7 @@ on:
       - 'caaguazu-portal/caaguazu-portal.php'
       - 'caaguazu-app-api/caaguazu-app-api.php'
       - 'caaguazu-sso-cead/caaguazu-sso-cead.php'
+      - 'caaguazu-web-ios/caaguazu-web-ios.php'
   workflow_dispatch:
     inputs:
       componente:
@@ -59,6 +62,7 @@ on:
           - portal
           - app-api
           - sso
+          - web-ios
 
 permissions:
   contents: write
@@ -86,6 +90,10 @@ jobs:
             archivo: caaguazu-sso-cead/caaguazu-sso-cead.php
             zip: caaguazu-sso-cead.zip
             titulo: SSO CEAD
+          - componente: web-ios
+            archivo: caaguazu-web-ios/caaguazu-web-ios.php
+            zip: caaguazu-web-ios.zip
+            titulo: Web (espejo iOS)
 
     steps:
       - name: Checkout
