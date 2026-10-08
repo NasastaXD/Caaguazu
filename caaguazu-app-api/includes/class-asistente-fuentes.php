@@ -229,11 +229,17 @@ class CZUAPI_Asistente_Fuentes {
 		$eventos = array();
 		$lugares = array();
 		$items   = array();
+		$on      = CZUAPI_Asistente::fuentes_activas();
 
 		foreach ( self::todas( '/inventario', $idioma, self::MAX_FICHAS ) as $f ) {
 			$id     = (int) $f['id'];
 			$evento = 'evento' === ( $f['tipo_item'] ?? '' );
 			$fechas = isset( $f['fechas'] ) && is_array( $f['fechas'] ) ? $f['fechas'] : null;
+
+			// Una fuente apagada no entra al catálogo: el modelo no puede citarla.
+			if ( $evento ? empty( $on['eventos'] ) : empty( $on['lugares'] ) ) {
+				continue;
+			}
 
 			// Un evento que ya pasó no le sirve a nadie que está planeando, y
 			// recomendarlo sería mandar a alguien a un lugar vacío.
@@ -263,7 +269,7 @@ class CZUAPI_Asistente_Fuentes {
 		ksort( $eventos );
 
 		$recorridos = array();
-		foreach ( self::todas( '/recorridos', $idioma, self::MAX_RECORRIDOS ) as $r ) {
+		foreach ( empty( $on['recorridos'] ) ? array() : self::todas( '/recorridos', $idioma, self::MAX_RECORRIDOS ) as $r ) {
 			$id           = (int) $r['id'];
 			$ref          = 'R' . $id;
 			$recorridos[] = self::linea_recorrido( $ref, $r );
@@ -278,7 +284,7 @@ class CZUAPI_Asistente_Fuentes {
 		}
 
 		$articulos = array();
-		foreach ( self::todas( '/articulos', $idioma, self::MAX_ARTICULOS ) as $a ) {
+		foreach ( empty( $on['articulos'] ) ? array() : self::todas( '/articulos', $idioma, self::MAX_ARTICULOS ) as $a ) {
 			$id          = (int) $a['id'];
 			$ref         = 'A' . $id;
 			$articulos[] = self::linea_articulo( $ref, $a );

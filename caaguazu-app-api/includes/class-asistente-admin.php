@@ -388,16 +388,7 @@ class CZUAPI_Asistente_Admin {
 		 * de fábrica mejore en una versión nueva, le llega a quien nunca la
 		 * tocó. Guardarla copiada la congelaría en la versión de hoy.
 		 */
-		$persona = trim( (string) wp_unslash( $_POST['persona'] ?? '' ) );
-		if ( ! empty( $_POST['persona_fabrica'] ) || self::normalizar( $persona ) === self::normalizar( CZUAPI_Asistente::persona_de_fabrica() ) ) {
-			$persona = '';
-		}
-		update_option( 'czuapi_ia_persona', sanitize_textarea_field( $persona ), false );
+		CZUAPI_Asistente::set_persona( wp_unslash( $_POST['persona'] ?? '' ), ! empty( $_POST['persona_fabrica'] ) );
 		CZUAPI_Asistente::set_conocimiento( wp_unslash( $_POST['conocimiento'] ?? '' ) );
-	}
-
-	/** Para comparar textos sin que un salto de línea de Windows los separe. */
-	private static function normalizar( $texto ) {
-		return trim( str_replace( array( "\r\n", "\r" ), "\n", (string) $texto ) );
 	}
 }

@@ -191,6 +191,13 @@ $aviso = $A::mensaje_caida( 'respaldo', array( 'code' => 0, 'error' => 'cURL err
 comprobar( 'ni un Bearer que venga en el error', false !== strpos( $aviso['cuerpo'], 'abcdefghijklmnop' ), false );
 comprobar( 'el aviso de respaldo lo dice en el asunto', $aviso['asunto'], 'Asistente de la app: falló el proveedor principal' );
 
+/* Lo que el profesor puede elegir desde el panel: cada valor tiene que quedar en un rango seguro. */
+comprobar( 'memoria: turnos fuera de rango se recortan (ni negativos ni 500)', array( $A::normalizar_turnos( -3 ), $A::normalizar_turnos( 500 ), $A::normalizar_turnos( '7' ) ), array( 0, 20, 7 ) );
+comprobar( 'memoria: horas entre 1 y 24', array( $A::normalizar_horas( 0 ), $A::normalizar_horas( 99 ), $A::normalizar_horas( 6 ) ), array( 1, 24, 6 ) );
+comprobar( 'fuentes: sólo valores conocidos, en orden fijo', $A::normalizar_fuentes( array( 'articulos', 'basura', 'lugares', '<script>' ) ), array( 'lugares', 'articulos' ) );
+comprobar( 'fuentes: lo que no es lista no prende nada', $A::normalizar_fuentes( 'lugares' ), array() );
+comprobar( 'personalidad: los saltos de Windows no hacen diferencia para saber si es la de fábrica', $A::normalizar_texto( "a\r\nb" ), "a\nb" );
+
 /* ------------------------------------------------------------------------- */
 echo "\n" . ( $fallos ? "\033[31m{$fallos} comprobación(es) fallaron.\033[0m\n" : "\033[32mTodo bien.\033[0m\n" );
 exit( $fallos ? 1 : 0 );

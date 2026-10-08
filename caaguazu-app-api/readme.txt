@@ -2,7 +2,7 @@
 Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 0.9.1
+Stable tag: 0.10.0
 License: GPLv2 or later
 
 Capa REST que consume la app Android de turismo (Turismo App Czu).
@@ -156,6 +156,20 @@ depende de cómo se llame el tag.
   no está funcionando.
 * Repo privado: definir `CZUAPI_GITHUB_TOKEN` (PAT de solo lectura) en
   `wp-config.php`, o cargarlo desde **Caaguazú API → Actualizaciones**.
+
+== Cambios en 0.10.0 ==
+
+* Personalidad, memoria y fuentes del asistente se guardan por funciones
+  públicas: `CZUAPI_Asistente::set_persona()`, `set_memoria()`, `set_fuentes()` y
+  `olvidar_conversaciones()`. Las usan wp-admin y el panel (la sección
+  «Asistente» para los profesores, panel 3.14.0 o posterior).
+* Memoria: se puede elegir cuántas horas recuerda una charla (1 a 24; por
+  defecto, 2). «Olvidar todas» corta la memoria de todas las charlas a la vez.
+* Fuentes: se puede apagar lugares, eventos, recorridos o artículos. Lo apagado
+  no entra al catálogo, así que el asistente no lo puede citar. Por defecto, todo.
+* `CZUAPI_Asistente::charlar()`: el pipeline de una pregunta sin el HTTP. El
+  endpoint público lo usa después de su tope por IP; el panel, para la prueba de
+  los profesores. Lo que se guarda y se registra es lo mismo.
 
 == Cambios en 0.9.1 ==
 
