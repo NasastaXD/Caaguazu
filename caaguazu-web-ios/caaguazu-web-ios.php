@@ -3,7 +3,7 @@
  * Plugin Name:       Caaguazú Web turismo
  * Plugin URI:        https://caaguazu.net
  * Description:       La web de turismo de acceso fácil (HTML/CSS/JS sin build), en /turismo/ y en /ios/: el mismo contenido que la app, sin instalar nada ni crear una cuenta. Nació como espejo para iPhone mientras no exista una app nativa.
- * Version:           2.0.1
+ * Version:           2.0.2
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Municipalidad de Caaguazú
@@ -45,7 +45,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'CZUWIOS_VERSION', '2.0.1' );
+define( 'CZUWIOS_VERSION', '2.0.2' );
 define( 'CZUWIOS_FILE', __FILE__ );
 define( 'CZUWIOS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'CZUWIOS_BASENAME', plugin_basename( __FILE__ ) );
@@ -353,6 +353,123 @@ final class CZUWIOS_Servidor {
 	}
 
 	/**
+	 * Dónde sirve el servidor web los archivos de `sitio/` SIN pasar por PHP.
+	 *
+	 * Es la ruta (desde la raíz del sitio, sin dominio) de la carpeta del
+	 * plugin: `/wp-content/plugins/caaguazu-web-ios/sitio/`. Cualquier archivo
+	 * de ahí lo contesta el servidor directo, sin arrancar WordPress ni abrir
+	 * una conexión a la base de datos.
+	 *
+	 * ESO ES LO QUE IMPORTA. Hasta 2.0.1 cada archivo —el CSS, cada uno de los
+	 * ~20 módulos— se pedía por `/turismo/…` y pasaba por WordPress completo.
+	 * Un teléfono los pide casi a la vez, y un hosting compartido tiene un tope
+	 * de conexiones a la base de datos: pasado el tope, WordPress contesta
+	 * «Database Error» (500) a los que sobran, y a la web le faltaban archivos
+	 * al azar —el CSS, tres módulos, `qrcode.js`— y quedaba en blanco. Medido
+	 * en producción: 22 pedidos en paralelo por `/turismo/js/…` devolvían 500 en
+	 * más de la mitad; los mismos 22 por esta ruta, 200 todos, tres tandas.
+	 *
+	 * Ruta relativa a propósito (no `https://dominio/…`): tiene que ser del
+	 * MISMO origen que la página, o los módulos pedirían permiso CORS.
+	 *
+	 * @return string '' si no se pudo averiguar (se sirve todo por PHP, como antes).
+	 */
+	public static function base_directa() {
+		$ruta = wp_parse_url( plugins_url( 'sitio/', CZUWIOS_FILE ), PHP_URL_PATH );
+		return is_string( $ruta ) && '' !== $ruta ? $ruta : '';
+	}
+
+	/**
+	 * El mapa de importaciones: le dice al navegador que cada módulo de la
+	 * carpeta directa se pide con su versión en la URL.
+	 *
+	 * Los archivos que sirve el servidor sin PHP no pasan por `estampar_js()`,
+	 * así que sus `import "./x.js"` no llevan `?v=`. Y el servidor los deja
+	 * guardar una semana: tras una actualización, un teléfono podría juntar un
+	 * `app.js` nuevo con un `idioma.js` viejo. El import map cierra ese hueco
+	 * desde el HTML —que sí es nuestro y se revalida siempre—: reescribe cada
+	 * URL a su versión, y como el fuente de `sitio/` no se toca, la web sigue
+	 * andando igual con un servidor de archivos cualquiera.
+	 *
+	 * Lo entienden Safari 16.4+, Chrome 89+ y Firefox 108+; el resto lo ignora
+	 * (y la página, al no verlo, usa la ruta por PHP: ver `cargador()`).
+	 *
+	 * @param string $base    resultado de base_directa()
+	 * @param string $version
+	 * @return string etiqueta <script type="importmap">
+	 */
+	public static function mapa_importaciones( $base, $version ) {
+		$imports = array();
+		foreach ( self::grafo_modulos() as $rel ) {
+			$imports[ $base . $rel ] = $base . $rel . '?v=' . rawurlencode( $version );
+		}
+		return '<script type="importmap">' . wp_json_encode( array( 'imports' => $imports ), JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP ) . '</script>';
+	}
+
+	/**
+	 * La etiqueta que arranca la app. Es un script en línea y no un
+	 * `<script type="module" src>` fijo porque tiene que elegir de dónde
+	 * cargar: si el navegador entiende import maps, de la carpeta directa
+	 * (rápido, sin PHP); si no, por `/turismo/js/…`, donde PHP le pone la
+	 * versión a cada import. Sin esa segunda ruta, un iPhone viejo se quedaría
+	 * sin la web en vez de tenerla un poco más lenta.
+	 *
+	 * @param string $base    resultado de base_directa()
+	 * @param string $version
+	 * @return string
+	 */
+	public static function cargador( $base, $version ) {
+		$v = rawurlencode( $version );
+		return '<script>(function () {'
+			. ' var directo = !!(window.HTMLScriptElement && HTMLScriptElement.supports && HTMLScriptElement.supports("importmap"));'
+			. ' var s = document.createElement("script"); s.type = "module";'
+			. ' s.src = (directo ? ' . wp_json_encode( $base, JSON_UNESCAPED_SLASHES ) . ' : "") + "js/app.js?v=' . $v . '";'
+			. ' document.body.appendChild(s); })();</script>';
+	}
+
+	/**
+	 * Arma la página: le pone la versión y la dirección directa a cada
+	 * archivo que pide, la lista de módulos a precargar, los ajustes adentro y
+	 * el cargador de la app. El fuente `index.html` queda sin nada de esto y
+	 * anda igual con un servidor de archivos cualquiera.
+	 *
+	 * @param string $html
+	 * @param string $version
+	 * @param string $base    base_directa(), o '' para servir todo por PHP
+	 * @param array  $ajustes lo que devuelve ajustes()
+	 * @return string
+	 */
+	public static function preparar_html( $html, $version, $base, $ajustes ) {
+		$v = rawurlencode( $version );
+
+		// Los ajustes viajan en la página: es un pedido menos, y un pedido que
+		// pasa por WordPress es justo el que puede fallar.
+		$json = wp_json_encode( $ajustes, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP );
+		$html = str_replace( '<!--ajustes-->', '<script type="application/json" id="czu-ajustes">' . $json . '</script>', $html );
+
+		if ( '' === $base ) {
+			$html = self::estampar_html( $html, $version );
+			return str_replace( '<!--precarga-->', self::precarga_modulos( $version ), $html );
+		}
+
+		$entrada = '<script type="module" src="js/app.js"></script>';
+		$html    = str_replace( $entrada, self::cargador( $base, $version ), $html );
+
+		// Código: directo y con versión. Fuentes e íconos: directo, sin versión
+		// (nunca cambian, y la precarga de la fuente tiene que ser la MISMA URL
+		// que usa el CSS). El manifest se queda por PHP: el servidor lo daría
+		// como texto plano, y su `start_url` es relativo a donde vive.
+		$html = preg_replace( '/\b(src|href)="((?:js|css)\/[^"?#]+\.(?:js|css))"/', '$1="' . $base . '$2?v=' . $v . '"', $html );
+		$html = preg_replace( '/\bhref="((?:fuentes|assets)\/[^"?#]+)"/', 'href="' . $base . '$1"', $html );
+
+		$precarga = self::mapa_importaciones( $base, $version );
+		foreach ( self::grafo_modulos() as $rel ) {
+			$precarga .= "\n" . '<link rel="modulepreload" href="' . esc_html( $base . $rel ) . '?v=' . $v . '">';
+		}
+		return str_replace( '<!--precarga-->', $precarga, $html );
+	}
+
+	/**
 	 * ¿El `If-None-Match` del navegador corresponde a este ETag?
 	 *
 	 * La comparación que corresponde para una revalidación es la DÉBIL
@@ -452,15 +569,29 @@ final class CZUWIOS_Servidor {
 			$this->error_404();
 		}
 
+		// «Versionado»: la URL pidió exactamente esta versión del plugin
+		// (`?v=2.0.2`). Una `?v=` de otra versión no cuenta —no se le promete
+		// «para siempre» a algo que ya quedó viejo—.
+		$versionado = isset( $_GET['v'] ) && is_string( $_GET['v'] ) && CZUWIOS_VERSION === wp_unslash( $_GET['v'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+
+		// El código se arma en el momento (la página con sus direcciones, los
+		// módulos con la versión en cada import); lo demás sale del disco tal
+		// cual. El ETag del que se arma sale de LO QUE SE ENVÍA: la página
+		// cambia con los ajustes de wp-admin sin que cambie ningún archivo, y
+		// con un ETag de archivo un 304 la dejaría con los enlaces viejos.
+		$contenido = null;
+		if ( 'js' === $ext ) {
+			$contenido = self::estampar_js( (string) file_get_contents( $real_pedido ), CZUWIOS_VERSION );
+		} elseif ( 'html' === $ext ) {
+			$contenido = self::preparar_html( (string) file_get_contents( $real_pedido ), CZUWIOS_VERSION, self::base_directa(), $this->ajustes() );
+		}
+
 		// La versión entra en el ETag además de la fecha y el tamaño: una
 		// actualización que reescribe un archivo con el mismo largo en el
 		// mismo segundo igual lo invalida. Ver cache_para().
-		$etag = '"' . md5( CZUWIOS_VERSION . '|' . filemtime( $real_pedido ) . '|' . filesize( $real_pedido ) ) . '"';
-
-		// «Versionado»: la URL pidió exactamente esta versión del plugin
-		// (`?v=2.0.1`). Una `?v=` de otra versión no cuenta —no se le promete
-		// «para siempre» a algo que ya quedó viejo—.
-		$versionado = isset( $_GET['v'] ) && is_string( $_GET['v'] ) && CZUWIOS_VERSION === wp_unslash( $_GET['v'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		$etag = null === $contenido
+			? '"' . md5( CZUWIOS_VERSION . '|' . filemtime( $real_pedido ) . '|' . filesize( $real_pedido ) ) . '"'
+			: '"' . md5( CZUWIOS_VERSION . '|' . $contenido ) . '"';
 
 		header( 'Content-Type: ' . $tipos[ $ext ] );
 		header( 'Cache-Control: ' . self::cache_para( $ext, $versionado ) );
@@ -472,17 +603,8 @@ final class CZUWIOS_Servidor {
 			exit;
 		}
 
-		// El código se arma en el momento, con la versión puesta en cada URL.
-		// Lo demás (imágenes, fuentes, json) sale tal cual está en el disco.
-		if ( in_array( $ext, array( 'html', 'js' ), true ) ) {
-			$contenido = (string) file_get_contents( $real_pedido );
-			if ( 'js' === $ext ) {
-				$contenido = self::estampar_js( $contenido, CZUWIOS_VERSION );
-			} else {
-				$contenido = self::estampar_html( $contenido, CZUWIOS_VERSION );
-				$contenido = str_replace( '<!--precarga-->', self::precarga_modulos( CZUWIOS_VERSION ), $contenido );
-			}
-			echo $contenido; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- archivo propio del plugin, no entrada del usuario
+		if ( null !== $contenido ) {
+			echo $contenido; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- archivo propio del plugin y ajustes ya codificados como JSON
 			exit;
 		}
 

@@ -65,6 +65,9 @@ function get_option( $clave, $defecto = false ) {
 	return $GLOBALS['czu_opciones'][ $clave ] ?? $defecto;
 }
 function esc_html( $v ) { return htmlspecialchars( (string) $v, ENT_QUOTES, 'UTF-8' ); }
+function wp_json_encode( $d, $f = 0 ) { return json_encode( $d, $f ); }
+function wp_parse_url( $u, $c = -1 ) { return parse_url( $u, $c ); }
+function plugins_url( $ruta = '', $plugin = '' ) { return 'https://ejemplo.test/wp-content/plugins/caaguazu-web-ios/' . ltrim( $ruta, '/' ); }
 function rest_url( $ruta = '' ) { return 'https://ejemplo.test/wp-json/' . $ruta; }
 function home_url( $ruta = '' ) { return 'https://ejemplo.test' . $ruta; }
 
@@ -230,6 +233,52 @@ comprobar( 'la precarga trae una etiqueta por módulo, con versión', substr_cou
 comprobar( 'y todas con ?v=', substr_count( $precarga, '?v=' . $v . '">' ), count( $modulos ) );
 $index = (string) file_get_contents( CZUWIOS_SITIO . 'index.html' );
 comprobar( 'index.html tiene el marcador donde se inserta la precarga', substr_count( $index, '<!--precarga-->' ), 1 );
+comprobar( 'y el de los ajustes', substr_count( $index, '<!--ajustes-->' ), 1 );
+
+echo "\n" . $gris . '== La página: código directo, sin pasar por WordPress ==' . $fin . "\n";
+
+$base = CZUWIOS_Servidor::base_directa();
+comprobar( 'la carpeta directa es la del plugin, sin dominio (mismo origen que la página)', $base, '/wp-content/plugins/caaguazu-web-ios/sitio/' );
+
+$aj_prueba = array( 'version' => $v, 'api' => 'https://ejemplo.test/wp-json/czu-app/v1/', 'tiendas' => array( 'android' => 'https://play.google.com/x', 'ios' => '' ) );
+$pagina    = CZUWIOS_Servidor::preparar_html( $index, $v, $base, $aj_prueba );
+
+comprobar( 'no queda ningún marcador sin reemplazar', preg_match( '/<!--(precarga|ajustes)-->/', $pagina ), 0 );
+comprobar( 'el CSS sale de la carpeta directa, con versión', (bool) strpos( $pagina, '<link rel="stylesheet" href="' . $base . 'css/estilo.css?v=' . $v . '">' ), true );
+comprobar( 'qrcode.js también', (bool) strpos( $pagina, '<script src="' . $base . 'js/vendor/qrcode.js?v=' . $v . '" defer>' ), true );
+comprobar( 'las fuentes y los íconos, directos y SIN versión', (bool) strpos( $pagina, 'href="' . $base . 'fuentes/inter-400.woff2"' ) && (bool) strpos( $pagina, 'href="' . $base . 'assets/icon-192.png"' ), true );
+comprobar( 'el manifest se queda por PHP (su start_url es relativo)', (bool) strpos( $pagina, '<link rel="manifest" href="manifest.webmanifest">' ), true );
+comprobar( 'el script de módulo fijo ya no está: lo reemplaza el cargador', strpos( $pagina, '<script type="module" src="js/app.js"></script>' ), false );
+comprobar( 'el cargador elige la ruta directa con import maps y la de PHP sin ellos',
+	(bool) strpos( $pagina, 'supports("importmap")' ) && (bool) strpos( $pagina, '"' . $base . '" : "")' ) && (bool) strpos( $pagina, 'js/app.js?v=' . $v ), true );
+
+// El import map tiene que ir ANTES de cualquier módulo: uno que llega después
+// el navegador lo descarta, y los módulos se pedirían sin versión.
+$pos_mapa = strpos( $pagina, '<script type="importmap">' );
+$pos_pre  = strpos( $pagina, '<link rel="modulepreload" href=' ); // (el comentario del HTML también nombra la etiqueta)
+$pos_ini  = strpos( $pagina, 'document.createElement("script"); s.type = "module"' );
+comprobar( 'el import map va antes de la precarga y del cargador', $pos_mapa !== false && $pos_mapa < $pos_pre && $pos_pre < $pos_ini, true );
+
+preg_match( '#<script type="importmap">(.*?)</script>#s', $pagina, $mm );
+$mapa = json_decode( $mm[1] ?? '', true );
+comprobar( 'el import map es JSON válido', is_array( $mapa ) && isset( $mapa['imports'] ), true );
+$esperado = array();
+foreach ( CZUWIOS_Servidor::grafo_modulos() as $rel ) { $esperado[ $base . $rel ] = $base . $rel . '?v=' . $v; }
+comprobar( 'y trae TODOS los módulos de la web, cada uno con su versión', $mapa['imports'] ?? null, $esperado );
+
+preg_match( '#<script type="application/json" id="czu-ajustes">(.*?)</script>#s', $pagina, $ma );
+comprobar( 'los ajustes viajan en la página, tal cual', json_decode( $ma[1] ?? '', true ), $aj_prueba );
+
+$hostil = $aj_prueba;
+$hostil['tiendas']['android'] = 'https://x.test/</script><script>alert(1)</script>';
+$pagina_h = CZUWIOS_Servidor::preparar_html( $index, $v, $base, $hostil );
+comprobar( 'un valor con </script> en los ajustes no puede salirse de su etiqueta', strpos( $pagina_h, '</script><script>alert(1)' ), false );
+
+$sin_base = CZUWIOS_Servidor::preparar_html( $index, $v, '', $aj_prueba );
+comprobar( 'sin carpeta directa (plan B) todo sale por PHP, con versión',
+	(bool) strpos( $sin_base, 'href="css/estilo.css?v=' . $v . '"' ) && (bool) strpos( $sin_base, 'src="js/app.js?v=' . $v . '"' ), true );
+comprobar( 'y sin import map: no hace falta', strpos( $sin_base, 'importmap' ), false );
+comprobar( 'pero con la precarga relativa', (bool) strpos( $sin_base, '<link rel="modulepreload" href="js/app.js?v=' . $v . '">' ), true );
 
 echo "\n" . $gris . '== Revalidación: el ETag que el hosting reescribe ==' . $fin . "\n";
 

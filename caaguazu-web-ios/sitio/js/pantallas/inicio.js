@@ -4,6 +4,7 @@
 
 import { Api } from "../api.js";
 import { t } from "../idioma.js";
+import { urlSitio } from "../config.js";
 import {
   escapar, Icono, tarjetaLugar, tarjetaCategoria, filaArticulo, botonAjustes,
   esqueletoGrilla, error, vacio, fechaCorta,
@@ -13,7 +14,7 @@ export async function render(el, { vigente, hayAsistente }) {
   el.innerHTML = `
     <div class="cabeza">
       <a class="marca" href="#/inicio" aria-label="Caaguazú Turismo">
-        <img src="assets/icon-192.png" alt="">
+        <img src="${urlSitio("assets/icon-192.png")}" alt="">
         <span>
           <span class="marca__nombre">Caaguazú</span><br>
           <span class="marca__lema">${escapar(t("web.lema"))}</span>
