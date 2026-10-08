@@ -586,6 +586,9 @@ body.promotur-nav-open .promotur-sidebar { transform: translateX(0); }
    items no se encogen: un rótulo cortado no es una opción legible. */
 .promotur-seg { display: inline-flex; gap: 2px; max-width: 100%; padding: 3px; border-radius: var(--r-full); background: var(--hueco); overflow-x: auto; scrollbar-width: none; }
 .promotur-seg::-webkit-scrollbar { display: none; }
+/* Dos selectores en fila (de quién · en qué estado): se separan y, en un
+   teléfono angosto, el segundo baja de línea en vez de desbordar. */
+.promotur-segs { display: flex; flex-wrap: wrap; gap: .5rem; }
 .promotur-seg__item { flex: 0 0 auto; padding: .3em .8em; border: 0; border-radius: var(--r-full); background: none; color: var(--texto-2); font: inherit; font-size: .8rem; font-weight: 600; white-space: nowrap; text-decoration: none; cursor: pointer; }
 .promotur-seg__item.is-active { background: var(--tinta); color: var(--sobre-tinta); }
 
