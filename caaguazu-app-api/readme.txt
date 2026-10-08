@@ -2,7 +2,7 @@
 Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 0.8.2
+Stable tag: 0.9.0
 License: GPLv2 or later
 
 Capa REST que consume la app Android de turismo (Turismo App Czu).
@@ -67,6 +67,10 @@ Namespace: `/wp-json/czu-app/v1/`
 = Sincronización =
 * `GET /sync?since={iso8601}`
 
+= Asistente =
+* `GET /asistente` — `{ disponible }`: si la app tiene que mostrar el botón
+* `POST /asistente` — `{ mensaje, conversacion?, idioma? }` → `{ respuesta, fuentes[], conversacion, idioma }`
+
 == Decisiones que conviene conocer ==
 
 **El autor no es `post_author`.** WordPress exige un autor válido en cada
@@ -104,11 +108,29 @@ loop, cada pin dispara sus propias consultas; con cien sitios no se nota, con
 varios miles sí. Mismo motivo detrás del `update_meta_cache()` en los markers
 de evento.
 
+**El asistente contesta con lo publicado, y lo dice.** Todo lo que afirma
+sobre Caaguazú sale de las fichas, artículos y recorridos publicados —leídos a
+través de los mismos endpoints que usa la app, en el mismo idioma— y cada
+dato vuelve con su fuente para que la app la enlace. Horarios, precios y
+teléfonos no salen nunca de la memoria del modelo: si la ficha no los tiene,
+contesta qué falta. Es CEADI, el asistente del CEAD, con su sistema de
+proveedor principal y respaldo, personalidad editable, conocimiento y
+presupuesto de contexto; sin las acciones, porque acá no hay trámites que
+disparar.
+
+**El historial de una charla vive en el servidor, no en el teléfono.** La app
+manda un identificador de conversación y el servidor guarda los turnos dos
+horas. Aceptarle el historial al cliente sería un lugar más por donde meterle
+al modelo un «el asistente ya dijo que…» que nunca dijo.
+
 == Instalación ==
 
 1. Requiere `caaguazu-cuentas` y `caaguazu-portal` activos.
 2. Subir a `/wp-content/plugins/` y activar. Crea sus dos tablas.
 3. Cargar icono y color de cada categoría en **Destinos → Categorías**.
+4. Para el asistente: cargar endpoint, modelo y key en **Caaguazú API →
+   Asistente** (o `CZUAPI_IA_KEY` / `CZUAPI_IA2_KEY` en `wp-config.php`),
+   probar cada proveedor y encenderlo. Apagado, la app no muestra el botón.
 
 == Auto-actualización ==
 
@@ -134,6 +156,37 @@ depende de cómo se llame el tag.
   no está funcionando.
 * Repo privado: definir `CZUAPI_GITHUB_TOKEN` (PAT de solo lectura) en
   `wp-config.php`, o cargarlo desde **Caaguazú API → Actualizaciones**.
+
+== Cambios del contrato en 0.9.0 ==
+
+**El asistente.** Sólo suma: nada de lo que ya venía cambia.
+
+* **`GET /asistente`** (nuevo) — `{ "disponible": true }` cuando está
+  encendido y tiene key. La app lo pide al arrancar y sólo dibuja el botón si
+  es `true`. Cacheable 5 minutos.
+* **`POST /asistente`** (nuevo) — cuerpo JSON:
+  * `mensaje` — la pregunta, hasta 1000 caracteres.
+  * `conversacion` — opcional. El identificador que devolvió la respuesta
+    anterior (8 a 64 caracteres, letras, números y guiones). Sin él, o con
+    uno inválido, arranca una conversación nueva.
+  * `idioma` — el mismo `?idioma` del resto de los endpoints. Decide en qué
+    idioma se leen las fuentes; el asistente contesta en el idioma en que le
+    escriben.
+* Respuesta `200`, con `Cache-Control: no-store`:
+  * `respuesta` — texto plano, sin Markdown, con saltos de línea.
+  * `fuentes[]` — lo que se citó, en orden, hasta 6: `{ tipo, id, titulo }`,
+    con `tipo` = `ficha` | `articulo` | `recorrido`, y `tipo_item` (`sitio` |
+    `evento`) cuando es una ficha. Abren con `/inventario/{id}`,
+    `/articulos/{id}` y `/recorridos/{id}`.
+  * `conversacion` — el identificador para la pregunta siguiente.
+  * `idioma` — en qué idioma se leyeron las fuentes.
+* Errores, con el formato de siempre:
+  * `503 asistente_apagado` — se apagó desde que la app preguntó.
+  * `400 mensaje_vacio`.
+  * `429 muchos_pedidos` — tope por IP (por minuto y por día, configurables);
+    `detalle.espera_seg` y la cabecera `Retry-After` dicen cuánto esperar.
+  * `502 sin_respuesta` — fallaron el proveedor y su respaldo. La causa queda
+    en wp-admin y llega por correo.
 
 == Cambios del contrato en 0.8.2 ==
 

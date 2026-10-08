@@ -44,10 +44,10 @@ directamente**: `bash bin/build-zip.sh` los arma los cinco (o
 ## Antes de dar nada por bueno
 
 ```bash
-npm run verificar   # diseño + lógica + rutas + auditoría + idiomas + 23 pantallas
+npm run verificar   # diseño + lógica + rutas + auditoría + idiomas + asistente + 23 pantallas
 ```
 
-Son seis cosas, y las seis salen con código 1 si algo falla:
+Son siete cosas, y las siete salen con código 1 si algo falla:
 
 - `tools/verificar-diseno.php` — las reglas del sistema de diseño del panel
   (colores, radios, sombras, tipografía, clases sin estilo, URLs a mano).
@@ -73,6 +73,12 @@ Son seis cosas, y las seis salen con código 1 si algo falla:
   que falte ahí se traduce, se guarda, se ve completo en el panel — y la app lo
   sigue recibiendo en castellano, sin ningún error. Comprueba además la vuelta
   entera del archivo y que el importador rechace el de otra pieza.
+- `tools/verificar-asistente.php` — las piezas del asistente de la app que
+  transforman un dato: la búsqueda (un plural tiene que encontrar al
+  singular), las citas (una marca inventada por el modelo no puede volverse un
+  enlace, y ninguna puede quedar a la vista en el texto), la limpieza del
+  Markdown, el orden de recorte del prompt y el aviso de caída, que nunca
+  puede llevar la API key.
 - `tools/auditar-movil.mjs` — nada se sale de la pantalla, nada que se toque
   baja de 44px.
 
