@@ -17,7 +17,10 @@ $promotur_item = function ( $item, $badges ) {
 	if ( ! promotur_can( $item['cap'] ) ) {
 		return false;
 	}
-	$activa = promotur_route_activa( $item['route'] );
+	// Un item con `url` sale del panel (la web pública): nunca es «la sección
+	// que se ve», y se abre aparte para no sacar a nadie de su trabajo.
+	$externo = ! empty( $item['url'] );
+	$activa  = ! $externo && promotur_route_activa( $item['route'] );
 	$badge  = isset( $item['badge'] ) && ! empty( $badges[ $item['badge'] ] ) ? (int) $badges[ $item['badge'] ] : 0;
 	$hijos  = array();
 	foreach ( isset( $item['hijos'] ) ? $item['hijos'] : array() as $hijo ) {
@@ -34,7 +37,8 @@ $promotur_item = function ( $item, $badges ) {
 	$sub_id = 'promotur-sub-' . sanitize_html_class( str_replace( '/', '-', $item['route'] ) );
 	?>
 	<a class="promotur-nav__item<?php echo $activa ? ' is-active' : ''; ?>"
-	   href="<?php echo esc_url( promotur_url( $item['route'] ) ); ?>"<?php echo $activa ? ' aria-current="page"' : ''; ?>>
+	   href="<?php echo esc_url( $externo ? $item['url'] : promotur_url( $item['route'] ) ); ?>"<?php echo $activa ? ' aria-current="page"' : ''; ?>
+	   <?php if ( $externo ) : ?>target="_blank" rel="noopener" aria-label="<?php echo esc_attr( sprintf( /* translators: %s: nombre del enlace */ __( '%s (se abre en otra pestaña)', 'caaguazu-portal' ), $item['label'] ) ); ?>"<?php endif; ?>>
 		<?php echo promotur_icon( $item['icon'] ); // phpcs:ignore WordPress.Security.EscapeOutput -- SVG controlado ?>
 		<span class="promotur-nav__label"><?php echo esc_html( $item['label'] ); ?></span>
 		<?php if ( $badge ) : ?>

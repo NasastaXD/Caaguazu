@@ -735,10 +735,29 @@ function promotur_nav_grupos() {
  * @return array[]
  */
 function promotur_nav_pie() {
-	return apply_filters( 'promotur_nav_pie', array(
+	$items = array(
 		array( 'route' => 'panel/perfil', 'label' => __( 'Mi perfil', 'caaguazu-portal' ), 'icon' => 'user', 'cap' => 'promotur_edit_profile' ),
 		array( 'route' => 'panel/ayuda',  'label' => __( 'Ayuda', 'caaguazu-portal' ),     'icon' => 'help', 'cap' => 'promotur_view_panel' ),
-	) );
+	);
+
+	// «Ver la web» va primero: es el único item que no lleva a otra pantalla
+	// del panel sino afuera, y en el teléfono —donde la barra de arriba es
+	// angosta y este menú es lo que se abre— tiene que estar a mano. Lleva
+	// `url` en vez de `route` y se abre en otra pestaña. Sin el plugin de la
+	// web (o desactivado) no hay URL y el item no existe: ver promotur_url_web().
+	$url_web = promotur_url_web();
+	if ( '' !== $url_web ) {
+		array_unshift( $items, array(
+			'url'     => $url_web,
+			'route'   => '',
+			'label'   => __( 'Ver la web', 'caaguazu-portal' ),
+			'icon'    => 'externo',
+			'cap'     => 'promotur_view_panel',
+			'externo' => true,
+		) );
+	}
+
+	return apply_filters( 'promotur_nav_pie', $items );
 }
 
 /**

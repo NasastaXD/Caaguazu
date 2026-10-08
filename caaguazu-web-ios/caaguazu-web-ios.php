@@ -3,7 +3,7 @@
  * Plugin Name:       Caaguazú Web turismo
  * Plugin URI:        https://caaguazu.net
  * Description:       La web de turismo de acceso fácil (HTML/CSS/JS sin build), en /turismo/ y en /ios/: el mismo contenido que la app, sin instalar nada ni crear una cuenta. Nació como espejo para iPhone mientras no exista una app nativa.
- * Version:           2.0.0
+ * Version:           2.0.1
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Municipalidad de Caaguazú
@@ -45,7 +45,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'CZUWIOS_VERSION', '2.0.0' );
+define( 'CZUWIOS_VERSION', '2.0.1' );
 define( 'CZUWIOS_FILE', __FILE__ );
 define( 'CZUWIOS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'CZUWIOS_BASENAME', plugin_basename( __FILE__ ) );
@@ -204,24 +204,181 @@ final class CZUWIOS_Servidor {
 	/**
 	 * Cómo se cachea cada tipo de archivo.
 	 *
-	 * El código —html, css, js, json— se revalida en cada carga (`no-cache`
-	 * con ETag: si no cambió, la respuesta es un 304 sin cuerpo). Hasta 1.2.0
-	 * se cacheaba una hora entera, y eso estaba bien mientras una versión
-	 * tocaba un archivo o dos. Pero los módulos se importan entre sí: después
-	 * de una actualización que cambia varios, un teléfono podía quedarse con
-	 * el `index.html` nuevo y `js/piezas.js` viejo, y la página se rompe sin
-	 * ningún error a la vista durante la hora que dura el caché.
+	 * Hay tres casos, y la diferencia entre ellos es lo que evita los dos
+	 * problemas opuestos —la web lenta y la web rota—:
 	 *
-	 * Imágenes y fuentes no se importan entre sí ni cambian con cada versión:
-	 * esas sí se guardan una semana.
+	 * 1. CÓDIGO CON SU VERSIÓN EN LA URL (`js/app.js?v=2.0.1`): para siempre
+	 *    (`immutable`). Ese archivo no puede cambiar sin que cambie la URL,
+	 *    porque el HTML y cada `import` la arman con la versión del plugin
+	 *    (ver `estampar_js()`). El teléfono lo baja una vez por versión y las
+	 *    siguientes visitas no hacen ni una consulta.
+	 * 2. CÓDIGO SIN VERSIÓN (la página en sí, y cualquier copia vieja que
+	 *    todavía pida `js/app.js` a secas): `no-cache` con ETag, o sea se
+	 *    revalida siempre y, si no cambió, es un 304 sin cuerpo. Hasta 1.2.0
+	 *    esto se cacheaba una hora entera, y como los módulos se importan
+	 *    entre sí, tras una actualización un teléfono podía quedarse con el
+	 *    `index.html` nuevo y `js/piezas.js` viejo: la página se rompía sin
+	 *    ningún error a la vista durante la hora que duraba el caché.
+	 * 3. IMÁGENES Y FUENTES: una semana. No se importan entre sí ni cambian
+	 *    con cada versión.
 	 *
 	 * @param string $ext
+	 * @param bool   $versionado la URL pidió exactamente esta versión del plugin
 	 * @return string valor de Cache-Control
 	 */
-	public static function cache_para( $ext ) {
-		return in_array( $ext, array( 'png', 'woff2' ), true )
-			? 'public, max-age=604800'
-			: 'no-cache';
+	public static function cache_para( $ext, $versionado = false ) {
+		if ( in_array( $ext, array( 'png', 'woff2' ), true ) ) {
+			return 'public, max-age=604800';
+		}
+		if ( $versionado && in_array( $ext, array( 'css', 'js' ), true ) ) {
+			return 'public, max-age=31536000, immutable';
+		}
+		return 'no-cache';
+	}
+
+	/**
+	 * Le pone `?v=<versión>` a los `import` relativos de un módulo.
+	 *
+	 * Es lo que hace que la versión llegue a TODO el grafo de módulos y no
+	 * sólo al primero: `app.js?v=2.0.1` importa `idioma.js?v=2.0.1`, que
+	 * importa `config.js?v=2.0.1`… Una actualización cambia todas las URLs de
+	 * golpe, así que es imposible mezclar un módulo nuevo con uno viejo. Y la
+	 * misma URL en todos los importadores es además lo que hace que el
+	 * navegador cargue cada módulo UNA vez: `config.js` y `config.js?v=…` son,
+	 * para él, módulos distintos.
+	 *
+	 * Toca `from "./x.js"`, `import "./x.js"` e `import("./x.js")` —el dinámico
+	 * también: uno sin versión metería una segunda copia del módulo en la
+	 * página—. El fuente en disco queda sin versiones, por eso anda igual con
+	 * un servidor de archivos cualquiera.
+	 *
+	 * @param string $js
+	 * @param string $version
+	 * @return string
+	 */
+	public static function estampar_js( $js, $version ) {
+		return preg_replace_callback(
+			'/(\bfrom\s*|\bimport\s*\(?\s*)(["\'])(\.{1,2}\/[^"\'?#]+\.js)\2/',
+			function ( $m ) use ( $version ) {
+				return $m[1] . $m[2] . $m[3] . '?v=' . rawurlencode( $version ) . $m[2];
+			},
+			$js
+		);
+	}
+
+	/**
+	 * Lo mismo para la página: el CSS y los scripts que pide el HTML. Las
+	 * fuentes y los íconos no llevan versión a propósito: se cachean una
+	 * semana igual, y la precarga de la fuente tiene que ser la MISMA URL que
+	 * usa el CSS o el navegador la baja dos veces.
+	 *
+	 * @param string $html
+	 * @param string $version
+	 * @return string
+	 */
+	public static function estampar_html( $html, $version ) {
+		return preg_replace(
+			'/\b(src|href)="((?:js|css)\/[^"?#]+\.(?:js|css))"/',
+			'$1="$2?v=' . rawurlencode( $version ) . '"',
+			$html
+		);
+	}
+
+	/**
+	 * Los módulos que la página va a necesitar, en el orden en que los
+	 * encuentra: el grafo de `import` estáticos que arranca en `js/app.js`.
+	 *
+	 * Sirve para `<link rel="modulepreload">`: sin esa lista, el navegador se
+	 * entera de cada módulo recién cuando termina de leer al que lo importa, y
+	 * los baja en fila —cada escalón es una vuelta de red completa, que en un
+	 * teléfono con mala señal son segundos—. Con la lista los pide todos a la
+	 * vez desde el primer byte de la página.
+	 *
+	 * @param string $entrada ruta relativa a `sitio/`
+	 * @return string[] rutas relativas a `sitio/`
+	 */
+	public static function grafo_modulos( $entrada = 'js/app.js' ) {
+		$orden = array();
+		$cola  = array( $entrada );
+		$base  = realpath( CZUWIOS_SITIO );
+		while ( $cola ) {
+			$rel = array_shift( $cola );
+			if ( isset( $orden[ $rel ] ) ) {
+				continue;
+			}
+			$ruta = realpath( CZUWIOS_SITIO . $rel );
+			if ( ! $base || ! $ruta || 0 !== strpos( $ruta, $base . DIRECTORY_SEPARATOR ) || ! is_file( $ruta ) ) {
+				continue;
+			}
+			$orden[ $rel ] = true;
+			// Los dinámicos (`import(`) quedan afuera: son los que se cargan a
+			// pedido, y precargarlos sería bajar lo que quizá nunca se use.
+			if ( preg_match_all( '/(?:\bfrom\s*|\bimport\s*)(["\'])(\.{1,2}\/[^"\'?#]+\.js)\1/', (string) file_get_contents( $ruta ), $m ) ) {
+				foreach ( $m[2] as $spec ) {
+					$cola[] = self::normalizar_ruta( dirname( $rel ) . '/' . $spec );
+				}
+			}
+		}
+		return array_keys( $orden );
+	}
+
+	/** `js/pantallas/../config.js` → `js/config.js`. */
+	private static function normalizar_ruta( $ruta ) {
+		$partes = array();
+		foreach ( explode( '/', $ruta ) as $parte ) {
+			if ( '' === $parte || '.' === $parte ) {
+				continue;
+			}
+			if ( '..' === $parte ) {
+				array_pop( $partes );
+				continue;
+			}
+			$partes[] = $parte;
+		}
+		return implode( '/', $partes );
+	}
+
+	/**
+	 * Las etiquetas `<link rel="modulepreload">` de la página, con su versión.
+	 *
+	 * @param string $version
+	 * @return string
+	 */
+	public static function precarga_modulos( $version ) {
+		$links = array();
+		foreach ( self::grafo_modulos() as $rel ) {
+			$links[] = '<link rel="modulepreload" href="' . esc_html( $rel ) . '?v=' . rawurlencode( $version ) . '">';
+		}
+		return implode( "\n", $links );
+	}
+
+	/**
+	 * ¿El `If-None-Match` del navegador corresponde a este ETag?
+	 *
+	 * La comparación que corresponde para una revalidación es la DÉBIL
+	 * (RFC 7232 §3.2): un `W/"x"` coincide con `"x"`. Importa porque el
+	 * servidor de este hosting (LiteSpeed) y los que comprimen con gzip
+	 * reescriben el ETag al salir —lo vuelven débil o le pegan `-gzip`—, y con
+	 * una comparación exacta ningún pedido de revalidación coincidía jamás: la
+	 * página se bajaba entera en cada visita en vez de contestar 304.
+	 *
+	 * @param string $cabecera valor de If-None-Match
+	 * @param string $etag     el ETag de este archivo, con sus comillas
+	 * @return bool
+	 */
+	public static function etag_coincide( $cabecera, $etag ) {
+		foreach ( explode( ',', (string) $cabecera ) as $candidato ) {
+			$candidato = trim( $candidato );
+			if ( '*' === $candidato ) {
+				return true;
+			}
+			$candidato = preg_replace( '/^W\//', '', $candidato );
+			$candidato = preg_replace( '/-(?:gzip|br|deflate)"$/', '"', $candidato );
+			if ( $candidato === $etag ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -300,13 +457,32 @@ final class CZUWIOS_Servidor {
 		// mismo segundo igual lo invalida. Ver cache_para().
 		$etag = '"' . md5( CZUWIOS_VERSION . '|' . filemtime( $real_pedido ) . '|' . filesize( $real_pedido ) ) . '"';
 
+		// «Versionado»: la URL pidió exactamente esta versión del plugin
+		// (`?v=2.0.1`). Una `?v=` de otra versión no cuenta —no se le promete
+		// «para siempre» a algo que ya quedó viejo—.
+		$versionado = isset( $_GET['v'] ) && is_string( $_GET['v'] ) && CZUWIOS_VERSION === wp_unslash( $_GET['v'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+
 		header( 'Content-Type: ' . $tipos[ $ext ] );
-		header( 'Cache-Control: ' . self::cache_para( $ext ) );
+		header( 'Cache-Control: ' . self::cache_para( $ext, $versionado ) );
 		header( 'ETag: ' . $etag );
 
 		$si_no = isset( $_SERVER['HTTP_IF_NONE_MATCH'] ) ? trim( wp_unslash( $_SERVER['HTTP_IF_NONE_MATCH'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		if ( $si_no === $etag ) {
+		if ( '' !== $si_no && self::etag_coincide( $si_no, $etag ) ) {
 			status_header( 304 );
+			exit;
+		}
+
+		// El código se arma en el momento, con la versión puesta en cada URL.
+		// Lo demás (imágenes, fuentes, json) sale tal cual está en el disco.
+		if ( in_array( $ext, array( 'html', 'js' ), true ) ) {
+			$contenido = (string) file_get_contents( $real_pedido );
+			if ( 'js' === $ext ) {
+				$contenido = self::estampar_js( $contenido, CZUWIOS_VERSION );
+			} else {
+				$contenido = self::estampar_html( $contenido, CZUWIOS_VERSION );
+				$contenido = str_replace( '<!--precarga-->', self::precarga_modulos( CZUWIOS_VERSION ), $contenido );
+			}
+			echo $contenido; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- archivo propio del plugin, no entrada del usuario
 			exit;
 		}
 

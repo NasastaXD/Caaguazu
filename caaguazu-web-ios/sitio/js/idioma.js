@@ -50,18 +50,49 @@ export function aplicarDisponibles(lista) {
   if (Array.isArray(lista) && lista.length > 0) disponibles = lista;
 }
 
-/** El castellano embebido es el piso de todo: una clave que falta en otro
- * idioma sale en castellano, nunca marcada. */
+// Los textos se arman con tres capas, de menor a mayor prioridad: el castellano
+// embebido (el piso), el idioma elegido embebido, y lo que el panel mande por
+// /strings/{idioma}. Las dos primeras salen del mismo servidor que la página y
+// alcanzan para dibujar; la tercera depende de la API y NO se espera de más.
+let embebidos = {};
+let delServidor = {};
+
+function recomponer() {
+  textos = { ...embebidos, ...delServidor };
+}
+
+/**
+ * Lo embebido: el castellano y, si hace falta, el idioma elegido, pedidos a la
+ * vez. Es todo lo que se necesita para dibujar la primera pantalla. Se vuelve
+ * a llamar al cambiar de idioma.
+ */
 export async function cargarTextos() {
-  const piso = await cargarEmbebido(ORIGINAL);
-  const propio = actual === ORIGINAL ? {} : await cargarEmbebido(actual);
-  let delServidor = {};
+  const [piso, propio] = await Promise.all([
+    cargarEmbebido(ORIGINAL),
+    actual === ORIGINAL ? {} : cargarEmbebido(actual),
+  ]);
+  embebidos = { ...piso, ...propio };
+  delServidor = {};
+  recomponer();
+}
+
+/**
+ * Lo que el panel edita encima de lo embebido. Va aparte de cargarTextos()
+ * porque depende de la API: si la API tarda, la web no tiene por qué esperar.
+ * Lo que llegue tarde entra igual y se ve en la próxima pantalla.
+ */
+export async function cargarTextosDelServidor(ms = 4000) {
+  const idioma = actual;
   try {
-    delServidor = await conTiempo(`${ajuste().api}strings/${actual}`, {}, 4000).then((r) => (r.ok ? r.json() : {}));
+    const r = await conTiempo(`${ajuste().api}strings/${idioma}`, {}, ms);
+    const nuevos = r.ok ? await r.json() : {};
+    // Si mientras tanto se cambió de idioma, estos ya no corresponden.
+    if (idioma !== actual || !nuevos || typeof nuevos !== "object") return;
+    delServidor = nuevos;
+    recomponer();
   } catch {
     /* sin red: se sigue con el respaldo embebido */
   }
-  textos = { ...piso, ...propio, ...delServidor };
 }
 
 async function cargarEmbebido(codigo) {

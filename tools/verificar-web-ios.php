@@ -64,6 +64,7 @@ $GLOBALS['czu_opciones'] = array();
 function get_option( $clave, $defecto = false ) {
 	return $GLOBALS['czu_opciones'][ $clave ] ?? $defecto;
 }
+function esc_html( $v ) { return htmlspecialchars( (string) $v, ENT_QUOTES, 'UTF-8' ); }
 function rest_url( $ruta = '' ) { return 'https://ejemplo.test/wp-json/' . $ruta; }
 function home_url( $ruta = '' ) { return 'https://ejemplo.test' . $ruta; }
 
@@ -156,6 +157,91 @@ comprobar( 'js se revalida en cada carga', CZUWIOS_Servidor::cache_para( 'js' ),
 comprobar( 'html se revalida en cada carga', CZUWIOS_Servidor::cache_para( 'html' ), 'no-cache' );
 comprobar( 'css se revalida en cada carga', CZUWIOS_Servidor::cache_para( 'css' ), 'no-cache' );
 comprobar( 'las fuentes se guardan una semana', CZUWIOS_Servidor::cache_para( 'woff2' ), 'public, max-age=604800' );
+comprobar( 'un js sin versión en la URL se sigue revalidando', CZUWIOS_Servidor::cache_para( 'js', false ), 'no-cache' );
+comprobar( 'un js con su versión en la URL se guarda «para siempre»', CZUWIOS_Servidor::cache_para( 'js', true ), 'public, max-age=31536000, immutable' );
+comprobar( 'y un css igual', CZUWIOS_Servidor::cache_para( 'css', true ), 'public, max-age=31536000, immutable' );
+comprobar( 'pero la página NUNCA, ni con ?v=', CZUWIOS_Servidor::cache_para( 'html', true ), 'no-cache' );
+comprobar( 'ni los ajustes ni los textos', CZUWIOS_Servidor::cache_para( 'json', true ), 'no-cache' );
+
+echo "\n" . $gris . '== Versiones en las URLs: que una actualización no pueda mezclar archivos ==' . $fin . "\n";
+
+$v = '2.0.1';
+comprobar( 'from "./x.js" lleva la versión',
+	CZUWIOS_Servidor::estampar_js( 'import { a } from "./x.js";', $v ),
+	'import { a } from "./x.js?v=2.0.1";' );
+comprobar( 'from "../x.js" (módulos de pantallas) también',
+	CZUWIOS_Servidor::estampar_js( "import * as P from '../piezas.js';", $v ),
+	"import * as P from '../piezas.js?v=2.0.1';" );
+comprobar( 'import "./x.js" (sin nombres) también',
+	CZUWIOS_Servidor::estampar_js( 'import "./efecto.js";', $v ),
+	'import "./efecto.js?v=2.0.1";' );
+comprobar( 'un import partido en líneas también',
+	CZUWIOS_Servidor::estampar_js( "import {\n  a,\n  b\n} from\n  \"./x.js\";", $v ),
+	"import {\n  a,\n  b\n} from\n  \"./x.js?v=2.0.1\";" );
+comprobar( 'import() dinámico también',
+	CZUWIOS_Servidor::estampar_js( 'const m = await import("./lazy.js");', $v ),
+	'const m = await import("./lazy.js?v=2.0.1");' );
+comprobar( 'una URL absoluta no se toca (no es nuestra)',
+	CZUWIOS_Servidor::estampar_js( 'import x from "https://cdn.test/x.js";', $v ),
+	'import x from "https://cdn.test/x.js";' );
+comprobar( 'una cadena cualquiera con ./x.js no se toca',
+	CZUWIOS_Servidor::estampar_js( 'const ruta = "./x.js"; fetch("./datos.json");', $v ),
+	'const ruta = "./x.js"; fetch("./datos.json");' );
+comprobar( 'si ya trae versión no se le pone otra',
+	CZUWIOS_Servidor::estampar_js( 'import { a } from "./x.js?v=1";', $v ),
+	'import { a } from "./x.js?v=1";' );
+
+comprobar( 'el HTML versiona el módulo, el css y el script clásico',
+	CZUWIOS_Servidor::estampar_html( '<link rel="stylesheet" href="css/estilo.css"><script src="js/vendor/qrcode.js" defer></script><script type="module" src="js/app.js"></script>', $v ),
+	'<link rel="stylesheet" href="css/estilo.css?v=2.0.1"><script src="js/vendor/qrcode.js?v=2.0.1" defer></script><script type="module" src="js/app.js?v=2.0.1"></script>' );
+comprobar( 'pero no las fuentes ni los íconos (su precarga tiene que coincidir con el css)',
+	CZUWIOS_Servidor::estampar_html( '<link rel="preload" href="fuentes/inter-400.woff2"><link rel="icon" href="assets/icon-192.png">', $v ),
+	'<link rel="preload" href="fuentes/inter-400.woff2"><link rel="icon" href="assets/icon-192.png">' );
+
+// Todo `import` relativo que existe de verdad en sitio/ termina con versión, y
+// ninguno queda afuera: es la garantía de que un grafo no se mezcla.
+$sin_version = array();
+$modulos     = array();
+$it = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( CZUWIOS_SITIO . 'js', FilesystemIterator::SKIP_DOTS ) );
+foreach ( $it as $f ) {
+	if ( 'js' !== $f->getExtension() || false !== strpos( $f->getPathname(), '/vendor/' ) ) {
+		continue;
+	}
+	$modulos[] = substr( $f->getPathname(), strlen( CZUWIOS_SITIO ) );
+	$estampado = CZUWIOS_Servidor::estampar_js( (string) file_get_contents( $f->getPathname() ), $v );
+	if ( preg_match_all( '/(?:\bfrom\s*|\bimport\s*\(?\s*)(["\'])(\.{1,2}\/[^"\']+\.js)(\?[^"\']*)?\1/', $estampado, $m, PREG_SET_ORDER ) ) {
+		foreach ( $m as $coincidencia ) {
+			if ( ( $coincidencia[3] ?? '' ) !== '?v=' . $v ) {
+				$sin_version[] = substr( $f->getPathname(), strlen( CZUWIOS_SITIO ) ) . ' → ' . $coincidencia[2];
+			}
+		}
+	}
+}
+comprobar( 'ningún import de sitio/js queda sin versión', $sin_version, array() );
+
+$grafo = CZUWIOS_Servidor::grafo_modulos();
+sort( $modulos );
+$del_grafo = $grafo;
+sort( $del_grafo );
+comprobar( 'el grafo que se precarga es EXACTAMENTE el de los módulos que hay', $del_grafo, $modulos );
+comprobar( 'y arranca por app.js', $grafo[0], 'js/app.js' );
+$precarga = CZUWIOS_Servidor::precarga_modulos( $v );
+comprobar( 'la precarga trae una etiqueta por módulo, con versión', substr_count( $precarga, '<link rel="modulepreload" href="js/' ), count( $modulos ) );
+comprobar( 'y todas con ?v=', substr_count( $precarga, '?v=' . $v . '">' ), count( $modulos ) );
+$index = (string) file_get_contents( CZUWIOS_SITIO . 'index.html' );
+comprobar( 'index.html tiene el marcador donde se inserta la precarga', substr_count( $index, '<!--precarga-->' ), 1 );
+
+echo "\n" . $gris . '== Revalidación: el ETag que el hosting reescribe ==' . $fin . "\n";
+
+$et = '"abc123"';
+comprobar( 'exacto', CZUWIOS_Servidor::etag_coincide( $et, $et ), true );
+comprobar( 'débil (W/"…"), como lo deja LiteSpeed o el CDN', CZUWIOS_Servidor::etag_coincide( 'W/' . $et, $et ), true );
+comprobar( 'con sufijo de gzip, como lo deja Apache', CZUWIOS_Servidor::etag_coincide( '"abc123-gzip"', $et ), true );
+comprobar( 'con sufijo de brotli', CZUWIOS_Servidor::etag_coincide( '"abc123-br"', $et ), true );
+comprobar( 'una lista con el nuestro adentro', CZUWIOS_Servidor::etag_coincide( '"otro", W/"abc123"', $et ), true );
+comprobar( 'el comodín', CZUWIOS_Servidor::etag_coincide( '*', $et ), true );
+comprobar( 'uno distinto NO coincide', CZUWIOS_Servidor::etag_coincide( '"abc124"', $et ), false );
+comprobar( 'vacío NO coincide', CZUWIOS_Servidor::etag_coincide( '', $et ), false );
 
 echo "\n";
 if ( $fallos ) {
