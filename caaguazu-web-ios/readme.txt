@@ -2,7 +2,7 @@
 Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 2.0.2
+Stable tag: 2.0.3
 License: GPLv2 or later
 
 La guía de turismo de Caaguazú en una página web de acceso fácil, en `caaguazu.net/turismo/` (y en `/ios/`): se abre y se usa, sin instalar nada y sin crear una cuenta.
@@ -130,6 +130,15 @@ que guarda cada visitante es su propio `localStorage` (favoritos, recorrido
 propio, idioma elegido), y eso vive en su navegador, no acá.
 
 == Changelog ==
+
+= 2.0.3 =
+* El asistente va en el medio de la barra, como un orbe negro que sube por
+  encima de la pastilla. Antes estaba en la cuarta posición, corrido.
+* El asistente ya no lleva nombre: el aviso dice «Preguntale a nuestra IA!»
+  (en inglés y portugués, su traducción directa). Sale en el inicio y en la
+  pantalla del asistente.
+* La pantalla del asistente ya no tiene el párrafo de presentación: queda el
+  título, las preguntas de ejemplo y la aclaración de que puede equivocarse.
 
 = 2.0.2 =
 * **Por fin, la causa de la pantalla en blanco.** Con el informe que 2.0.1 le
