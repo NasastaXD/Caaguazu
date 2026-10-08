@@ -2,7 +2,7 @@
 Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.2.0
+Stable tag: 1.3.0
 License: GPLv2 or later
 
 Espejo web de la app de turismo, servido en `caaguazu.net/ios/`, para quien usa iPhone mientras no exista una app nativa.
@@ -19,7 +19,10 @@ transpilar, sin `npm install`. Vive en `sitio/` tal cual saldría de un
 opciones más allá de recordar su propia versión para saber cuándo
 reflushear las rewrite rules. Todo el contenido sale en vivo de
 `https://caaguazu.net/wp-json/czu-app/v1/` (`caaguazu-app-api`), con CORS ya
-abierto. Sin esa API respondiendo, no hay página.
+abierto. Sin esa API respondiendo, no hay página. Casi todo es lectura: lo
+único que el espejo le manda a la API, desde la 1.3.0, es la pregunta al
+asistente (`POST /asistente`), sin cookies y sin cuenta. La charla no se
+guarda en ningún lado del lado del espejo: vive en la página abierta.
 
 **Por qué es un plugin y no un sitio aparte.** La primera versión de esto se
 pensó para hostearse sola —GitHub Pages, un subdominio propio—, pero eso pide
@@ -90,6 +93,54 @@ que guarda cada visitante es su propio `localStorage` (favoritos, recorrido
 propio, idioma elegido), y eso vive en su navegador, no acá.
 
 == Changelog ==
+
+= 1.3.0 =
+* **El asistente, como en la app.** El botón redondo del medio de la barra
+  —entre Buscar y Artículos— abre una charla que responde con lo publicado
+  en el panel, y debajo de cada respuesta van las fichas, los artículos y los
+  recorridos de donde salió. El botón aparece **sólo si `GET /asistente` dice
+  `disponible`**: con una `caaguazu-app-api` anterior a la 0.9.0 ese pedido
+  da 404 y el botón no se dibuja, que es lo correcto — un botón que no puede
+  hacer nada no se dibuja. Para verlo hace falta la API 0.9.0 instalada, con
+  el asistente encendido y su key cargada (wp-admin → Caaguazú API →
+  Asistente; sin una sesión ya abierta en wp-admin, para llegar ahí hace
+  falta el panel 3.11.0 o posterior, que dejó de redirigir `wp-login.php`).
+* **La charla se abre sin la barra**, con el campo abajo, y el teclado de iOS
+  sube hasta él: Safari no achica la página con el teclado, así que la charla
+  se ajusta a mano con `visualViewport`. El campo va a 16px para que iOS no
+  haga zoom al enfocarlo. Dura lo que dura la página abierta: sobrevive a
+  abrir una fuente y a cerrar y volver a abrir la charla, y se pierde al
+  recargar o al cambiar de idioma.
+* **Las fuentes abren la misma ficha, artículo o recorrido** que el resto del
+  espejo, y volver regresa a la charla. Hasta acá, volver desde un artículo o
+  un recorrido llevaba siempre a su lista; abiertos desde la charla, ahora
+  vuelven a ella. Abiertos desde cualquier otro lado, siguen como antes.
+* La respuesta se pinta siempre como texto, nunca como HTML: es la salida de
+  un modelo, y no se le cree que sea texto plano porque el servidor lo diga.
+* `js/pantallas/asistente.js` se carga con `import()` dinámico y no con un
+  import estático: si ese archivo falla —un caché desparejo, un error—, el
+  resto del espejo sigue andando sin el botón, en vez de quedar en blanco
+  como en la 1.0.1.
+* Cada navegación pinta en un lienzo nuevo: una pantalla que termina de
+  cargar tarde ya no pisa a la que se abrió después.
+* **Qué probar**, en un iPhone, en Safari y con el espejo agregado a inicio:
+  que el botón aparezca con la API 0.9.0 y el asistente encendido, y no
+  aparezca con la API anterior; que al tocarlo suba el teclado sin zoom y el
+  campo quede pegado arriba del teclado, sin hueco; que la última pregunta
+  quede arriba al llegar la respuesta; que las fuentes abran y vuelvan a la
+  charla con lo que se había escrito; cambiar el idioma en Perfil y
+  preguntar; apagar el asistente desde wp-admin con la charla abierta y
+  preguntar de nuevo — tiene que mostrar el error y, al volver, el botón ya
+  no está. Y la barra a 360px en los tres idiomas.
+
+* Sin señal, el botón del asistente no desaparece: sólo se va ante un 404 o
+  si la API dice que no está disponible, igual que la app.
+* Una pregunta que no recibe respuesta en 50 segundos se corta y ofrece
+  reintentar, como en la app. «Pensando…» se ve también en una charla larga.
+* Una ficha, un artículo o un recorrido que no cargan ofrecen volver, además de
+  reintentar: antes, desde la charla, no había salida sin señal.
+* En 320 px (iPhone SE, o el zoom de pantalla) la barra entra. Ahí sólo se
+  muestra la etiqueta de la sección activa, como en la app.
 
 = 1.2.0 =
 * **Compartir una ficha, un artículo o un recorrido**, con un botón en cada

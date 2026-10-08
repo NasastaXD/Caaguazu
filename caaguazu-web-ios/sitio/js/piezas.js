@@ -28,6 +28,12 @@ export const Icono = {
   inicio: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v9a1 1 0 001 1h4v-6h2v6h4a1 1 0 001-1v-9"/></svg>`,
   articulo: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>`,
   recorrido: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19l6-14 4 9 3-5 3 10"/></svg>`,
+  // Los dos del asistente, con los trazos de Iconos.kt de la app. Van como
+  // claves de este objeto y no como exports nuevos: con un piezas.js viejo en
+  // caché, una clave que falta da undefined; un export que falta deja el
+  // espejo en blanco.
+  nueva: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4.5H6.5C5.4 4.5 4.5 5.4 4.5 6.5V17.5C4.5 18.6 5.4 19.5 6.5 19.5H17.5C18.6 19.5 19.5 18.6 19.5 17.5V13M17.8 3.8L20.2 6.2L12.5 13.9L9.5 14.5L10.1 11.5Z"/></svg>`,
+  enviar: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5.5M6 11.5L12 5.5L18 11.5"/></svg>`,
 };
 
 export function precioA(rango) {
@@ -77,13 +83,20 @@ export function estadoVacio(mensaje) {
   return `<div class="estado">${escapar(mensaje || t("estado.vacio"))}</div>`;
 }
 
-export function estadoError(alReintentar) {
+// Con `alVolver`, el error ofrece también volver. Una pantalla de detalle sin
+// datos y sin volver deja a la persona sin salida cuando no hay señal, que en
+// el distrito es lo normal: la barra está oculta en las pantallas de detalle.
+export function estadoError(alReintentar, alVolver = null) {
   const id = "r" + Math.random().toString(36).slice(2, 8);
   setTimeout(() => {
     document.getElementById(id)?.addEventListener("click", alReintentar);
+    if (alVolver) document.getElementById(id + "v")?.addEventListener("click", alVolver);
   });
+  const volver = alVolver
+    ? `<button id="${id}v" class="boton-secundario" style="width:auto;display:inline-flex;margin-top:14px;margin-left:10px">${escapar(t("accion.volver"))}</button>`
+    : "";
   return `<div class="estado">${escapar(t("estado.error"))}<br>
-    <button id="${id}" class="boton-secundario" style="width:auto;display:inline-flex;margin-top:14px">${escapar(t("estado.reintentar"))}</button>
+    <button id="${id}" class="boton-secundario" style="width:auto;display:inline-flex;margin-top:14px">${escapar(t("estado.reintentar"))}</button>${volver}
   </div>`;
 }
 

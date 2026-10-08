@@ -35,10 +35,14 @@ js/app.js                 router por hash + barra inferior
 js/pantallas/*.js         una pantalla por archivo: inicio, buscar, ficha,
                           articulos, articulo, recorridos, recorrido, mapa,
                           perfil
+js/pantallas/asistente.js la charla del asistente, su estado de página y si
+                          hay botón; app.js la carga con import() dinámico
 js/compartir.js           hoja de compartir: Web Share API o enlace + QR
 js/qr.js                  envoltorio del generador de QR vendoreado
 js/vendor/qrcode.js       qrcode-generator de Kazuhiko Arase (MIT), sin tocar
-textos/{es,en,pt}.json    copia exacta de los respaldos de la app Android
+textos/{es,en,pt}.json    los respaldos de la app Android, iguales clave por
+                          clave, más las dos de compartir (accion.copiarEnlace
+                          y accion.enlaceCopiado) que la app no tiene
 manifest.webmanifest      para "agregar a inicio" en iOS/Android
 assets/icon-*.png         isotipo oficial, copiado de caaguazu-theme
 ```
@@ -68,6 +72,34 @@ assets/icon-*.png         isotipo oficial, copiado de caaguazu-theme
   propia con el enlace para copiar y un código QR. El QR se genera en el
   propio navegador con una copia vendoreada de `qrcode-generator` — no hay
   ningún servicio externo que reciba la URL que se está compartiendo.
+- **El asistente lo decide el panel.** El botón del medio de la barra aparece
+  sólo si `GET /asistente` dice `disponible`; cualquier otra cosa —el 404 de
+  una API anterior a la 0.9.0, sin red— es «no hay», y no se dibuja. La charla
+  replica `Asistente.kt`: pregunta a la derecha, respuesta suelta, fuentes en
+  píldoras que abren las mismas pantallas de detalle y vuelven a la charla.
+  - **Se carga aparte**, con `import()` dinámico, para que una falla suya no
+    tumbe el espejo: el plugin cachea cada archivo una hora sin revalidar, y
+    durante una actualización puede llegar un `app.js` nuevo junto a un
+    `piezas.js` viejo. Por lo mismo, lo nuevo en módulos que ya existían son
+    claves dentro de `Api` e `Icono`, nunca exports con nombre: una clave que
+    falta da `undefined`; un export que falta deja la página en blanco.
+  - **El teclado de iOS** no achica la página: corre el viewport visual. La
+    charla es un contenedor fijo que se ajusta con `visualViewport` (alto y
+    corrimiento), y el foco del campo se pone sin ningún `await` desde el
+    toque del botón —un `<button>` con `pushState`, no un enlace—, porque
+    iOS sólo sube el teclado si el foco llega dentro del gesto. El campo va a
+    16px: con menos, iOS hace zoom al enfocarlo.
+  - **La charla vive mientras la página viva**, en el módulo, como el filtro
+    de Buscar: sobrevive a abrir fuentes y a cerrar y abrir la charla, y se
+    pierde al recargar (cambiar el idioma recarga). No hay `localStorage`: una
+    charla no es algo que el teléfono tenga que guardar.
+  - **La respuesta se pinta como texto, nunca como HTML**: es la salida de un
+    modelo. Pasa por `escapar()` con `white-space: pre-wrap` para los saltos;
+    cada fuente pasa por una lista blanca de tipos y un id entero antes de
+    armar su enlace, y una rota se omite sin tumbar la respuesta.
+  - **Cada navegación pinta en un lienzo nuevo.** Las pantallas escriben
+    cuando termina su fetch; sin esto, una ficha abierta desde la charla que
+    termina de cargar después de volver pisaría la charla.
 
 ## Que falta a proposito
 

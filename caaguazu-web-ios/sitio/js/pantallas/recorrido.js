@@ -10,8 +10,14 @@ export async function render(contenedor, params, id) {
     const r = await Api.recorrido(id);
     pintar(contenedor, r);
   } catch {
-    contenedor.innerHTML = estadoError(() => render(contenedor, params, id));
+    contenedor.innerHTML = estadoError(() => render(contenedor, params, id), volverAtras);
   }
+}
+
+/** Volver desde un error: a la charla si se llegó desde ella, a la lista si no. */
+function volverAtras() {
+  if (history.state?.desdeAsistente) history.back();
+  else location.hash = "#/recorridos";
 }
 
 function pintar(contenedor, r) {
@@ -19,10 +25,17 @@ function pintar(contenedor, r) {
   const conPunto = paradas.filter((p) => p.disponible && p.coordenadas);
   const enlace = r.googleMaps || enlaceRecorrido(conPunto.map((p) => p.coordenadas));
   const noEntra = !r.googleMaps && conPunto.length >= 2 && !enlace;
+  // Abierto desde una respuesta del asistente, volver regresa a la charla y
+  // no a la lista de recorridos. Las paradas abren su ficha, que ya vuelve
+  // con history.back(), así que el camino ficha → recorrido → charla se
+  // desanda paso por paso.
+  const desdeAsistente = history.state?.desdeAsistente === true;
 
   contenedor.innerHTML = `
     <div style="display:flex;justify-content:space-between;margin:-4px 0 14px">
-      <a href="#/recorridos" class="boton-perfil" style="width:36px;height:36px" aria-label="volver">${Icono.volver}</a>
+      ${desdeAsistente
+        ? `<button type="button" class="boton-icono" id="rec-volver" aria-label="${escapar(t("accion.volver"))}">${Icono.volver}</button>`
+        : `<a href="#/recorridos" class="boton-perfil" style="width:36px;height:36px" aria-label="${escapar(t("accion.volver"))}">${Icono.volver}</a>`}
       <button class="boton-perfil" id="rec-compartir" style="width:36px;height:36px" aria-label="compartir">${Icono.compartir}</button>
     </div>
     ${r.portada?.url ? `<div style="border-radius:var(--radio-tarjeta);overflow:hidden;margin-bottom:20px;aspect-ratio:16/9;background:var(--banda)"><img src="${escapar(r.portada.url)}" alt="" style="width:100%;height:100%;object-fit:cover"></div>` : ""}
@@ -48,6 +61,7 @@ function pintar(contenedor, r) {
       </div>` : ""}
   `;
 
+  contenedor.querySelector("#rec-volver")?.addEventListener("click", () => history.back());
   contenedor.querySelector("#rec-compartir").addEventListener("click", () => {
     compartir({ titulo: r.titulo, ruta: `recorrido/${r.id}` });
   });

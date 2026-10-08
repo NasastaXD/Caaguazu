@@ -13,7 +13,7 @@ export async function render(contenedor, params, id) {
     const ficha = await Api.ficha(id);
     pintar(contenedor, ficha);
   } catch {
-    contenedor.innerHTML = estadoError(() => render(contenedor, params, id));
+    contenedor.innerHTML = estadoError(() => render(contenedor, params, id), () => history.back());
   }
 }
 

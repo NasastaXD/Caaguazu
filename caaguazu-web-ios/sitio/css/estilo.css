@@ -203,6 +203,9 @@ img { display: block; max-width: 100%; }
 
 .buscador input {
   flex: 1;
+  /* Sin esto, el campo no se achica por debajo de su ancho natural y en 320 px
+     empuja toda la página: la barra inferior se ensancha con ella. */
+  min-width: 0;
   border: none;
   background: none;
   outline: none;
@@ -790,6 +793,270 @@ img { display: block; max-width: 100%; }
 }
 .fila-idioma .tilde { color: var(--primario); font-weight: 700; }
 
+/* --- Asistente: el botón del medio y la charla --- */
+
+/* Una puerta, no una quinta sección: un círculo de contraste que se despega
+   de la barra con la sombra flotante, como el BotonCentral de la app. */
+.boton-asistente {
+  flex: none;
+  align-self: center;
+  width: 72px;
+  height: 72px;
+  margin: 0 4px;
+  border-radius: var(--radio-completo);
+  background: var(--contraste);
+  color: var(--sobre-contraste);
+  box-shadow: var(--sombra-flotante);
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Con el círculo la barra pasa de 64 a 88: sin esto, el final de las listas
+   quedaría tapado. */
+body.con-barra.con-asistente {
+  padding-bottom: calc(88px + env(safe-area-inset-bottom) + var(--cola-de-lista));
+}
+
+/* La charla tiene su propio desplazamiento: la página de atrás no tiene que
+   poder arrastrarse ni dejar alto de sobra debajo. */
+body.en-asistente {
+  overflow: hidden;
+  min-height: 0;
+  padding-bottom: 0;
+}
+
+/* Fija a pantalla completa: cabecera, lista con scroll propio y entrada
+   abajo. El alto y el corrimiento los ajusta asistente.js con visualViewport
+   cuando sube el teclado de iOS; 100dvh es sólo el punto de partida. */
+.pantalla-asistente {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  max-width: 640px;
+  margin: 0 auto;
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--fondo);
+}
+
+.charla-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--margen);
+  padding: calc(8px + env(safe-area-inset-top)) var(--margen) 14px;
+}
+.charla-cabecera .titulo-pantalla {
+  margin: 0;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.charla-acciones {
+  display: flex;
+  gap: 10px;
+  flex: none;
+}
+
+.boton-icono {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border-radius: var(--radio-completo);
+  background: var(--campo);
+  color: var(--tinta);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.boton-icono svg { width: 20px; height: 20px; }
+
+/* position: relative para que el offsetTop de cada pregunta se mida desde la
+   lista y subirla arriba sea un scrollTo directo. */
+.charla-lista {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+  gap: var(--entre-tarjetas);
+  padding: 4px var(--margen) 16px;
+}
+
+/* La pregunta, a la derecha sobre el relleno de control. La respuesta va
+   suelta sobre el fondo, sin globo: es lo que se vino a leer, y un globo le
+   restaría ancho a la línea en un teléfono, que es donde menos sobra. Las dos
+   en el tamaño de descripción, que no se achica. */
+.charla-pregunta {
+  align-self: flex-end;
+  max-width: min(300px, 85%);
+  background: var(--campo);
+  border-radius: var(--radio-tarjeta);
+  padding: 12px var(--dentro-tarjeta);
+}
+.charla-pregunta,
+.charla-texto {
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--tinta);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.charla-respuesta,
+.charla-fallo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.charla-fuentes {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: 100%;
+}
+
+.charla-rotulo {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+  color: var(--tinta-suave);
+}
+
+.charla-estado {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pildora-suave {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 13px 20px;
+  border-radius: var(--radio-completo);
+  background: var(--campo);
+  color: var(--tinta);
+  font-size: 14px;
+  font-weight: 500;
+}
+.pildora-suave svg { width: 17px; height: 17px; flex: none; }
+.pildora-suave span {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.charla-entrada {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 10px var(--margen) calc(10px + env(safe-area-inset-bottom));
+  background: var(--fondo);
+}
+/* Con el teclado arriba, el margen del indicador de inicio dejaría un hueco
+   entre el campo y el teclado. */
+.pantalla-asistente.teclado-abierto .charla-entrada { padding-bottom: 10px; }
+
+/* 22 de línea + 28 de relleno: 50, igual que el botón de mandar. */
+.charla-campo {
+  flex: 1;
+  min-width: 0;
+  background: var(--campo);
+  border-radius: var(--radio-tarjeta);
+  padding: 14px 18px;
+}
+
+/* 16px y no 15: iOS hace zoom al enfocar cualquier campo de menos de 16, y
+   el zoom queda puesto. Agrandar un punto no rompe la regla de no achicar la
+   descripción; tocar el viewport con maximum-scale le sacaría el zoom a quien
+   lo necesita. */
+.charla-campo textarea {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: none;
+  -webkit-appearance: none;
+  appearance: none;
+  resize: none;
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 22px;
+  max-height: 88px;
+  overflow-y: auto;
+  color: var(--tinta);
+}
+.charla-campo textarea::placeholder { color: var(--tinta-suave); }
+
+/* Mandar es la acción de la pantalla: va en el verde sólo cuando hay algo
+   para mandar. Si no, relleno de control y tinta suave. */
+.boton-enviar {
+  width: 50px;
+  height: 50px;
+  flex: none;
+  border-radius: var(--radio-completo);
+  background: var(--campo);
+  color: var(--tinta-suave);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.boton-enviar:disabled { cursor: default; }
+.boton-enviar.listo {
+  background: var(--primario);
+  color: var(--sobre-primario);
+}
+
 @media (min-width: 720px) {
   .barra-inferior { max-width: 640px; left: 50%; transform: translateX(-50%); border-radius: var(--radio-hoja) var(--radio-hoja) 0 0; }
+}
+
+/* --- La charla: nada se encoge dentro de la lista --- */
+/* Un mensaje o el «Pensando…» son hijos de una columna flex de alto fijo. Con
+   el default (flex-shrink: 1) se achican a 0 cuando la charla pasa de la
+   pantalla, y el indicador de espera desaparece justo cuando más hace falta. */
+.charla-lista > * { flex-shrink: 0; }
+
+/* Texto para lectores de pantalla que no se dibuja. */
+.solo-lectores {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* --- 320 px (iPhone SE, o el zoom de pantalla que se usa mucho) ---
+   Con el círculo del asistente, cuatro etiquetas no caben: «Recorridos» pide
+   unos 70 px y cada ítem tiene unos 59. La app resuelve esto mostrando sólo la
+   etiqueta de la sección activa, y acá se hace igual, sólo en este ancho. A 360
+   y 390 no cambia nada. */
+@media (max-width: 359px) {
+  .barra-inferior { padding-left: 4px; padding-right: 4px; }
+  .boton-asistente { width: 56px; height: 56px; margin: 0 2px; }
+  .item-nav { min-width: 0; }
+  .item-nav:not(.activo) .etiqueta-nav { display: none; }
 }
