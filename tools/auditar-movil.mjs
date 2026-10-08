@@ -57,7 +57,7 @@ const PANTALLAS = [
 	'sections/recorridos', 'sections/recorridos 100',
 	'sections/revision', 'sections/revision 100',
 	'sections/tareas', 'sections/equipo', 'sections/reportes',
-	'sections/biblioteca', 'sections/estructura', 'sections/buscar', 'sections/perfil',
+	'sections/biblioteca', 'sections/estructura', 'sections/buscar', 'sections/perfil', 'sections/asistente',
 	// Crear cuenta es la primera pantalla que ve alguien invitado, y se abre
 	// casi siempre desde un enlace de WhatsApp en un teléfono. Estaba fuera de
 	// la lista, así que nadie comprobaba que entrara en 390px.

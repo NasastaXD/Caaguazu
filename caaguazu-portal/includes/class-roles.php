@@ -39,6 +39,8 @@ class PROMOTUR_Roles {
 			'promotur_manage_media'    => true,
 			'promotur_manage_structure'=> true,
 			'promotur_manage_app'      => true,
+			// El conocimiento del asistente lo edita el Profesor, no el Alumno.
+			'promotur_manage_asistente' => true,
 			// Traducir a otro idioma es de Profesor y no de Alumno: una
 			// traducción se publica tal cual en la app, sin pasar por
 			// revisión —el flujo editorial revisa el castellano, que es el
@@ -99,6 +101,7 @@ class PROMOTUR_Roles {
 			'reportes'       => 'promotur_view_reports',
 			'biblioteca'     => 'promotur_manage_media',
 			'estructura'     => 'promotur_manage_structure',
+			'asistente'      => 'promotur_manage_asistente',
 		);
 
 		/*
@@ -158,6 +161,35 @@ class PROMOTUR_Roles {
 		if ( $admin ) {
 			foreach ( self::all_caps() as $cap ) {
 				$admin->add_cap( $cap );
+			}
+		}
+	}
+
+	/**
+	 * Suma a los roles existentes las capabilities que hoy definen y no tienen.
+	 *
+	 * `install()` corre al activar el plugin, no al actualizarlo: sin esto, una
+	 * capability nueva sólo llega a los sitios que reactivan. Es aditivo, no quita
+	 * nada. Lo llama el cambio de versión (ver promotur_asegurar_rewrite_rules()).
+	 */
+	public static function sumar_caps_nuevas() {
+		foreach ( self::roles() as $key => $def ) {
+			$rol = get_role( $key );
+			if ( ! $rol ) {
+				continue;
+			}
+			foreach ( $def['caps'] as $cap => $otorgada ) {
+				if ( $otorgada && ! $rol->has_cap( $cap ) ) {
+					$rol->add_cap( $cap );
+				}
+			}
+		}
+		$admin = get_role( 'administrator' );
+		if ( $admin ) {
+			foreach ( self::all_caps() as $cap ) {
+				if ( ! $admin->has_cap( $cap ) ) {
+					$admin->add_cap( $cap );
+				}
 			}
 		}
 	}

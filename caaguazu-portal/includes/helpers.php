@@ -519,6 +519,7 @@ function promotur_icon( $name ) {
 		'caret'   => '<path d="m6 9 6 6 6-6"/>',
 		'chevron' => '<path d="m9 6 6 6-6 6"/>',
 		'moon'    => '<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/>',
+		'chat'    => '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12Z"/><path d="M8.5 12h.01M12 12h.01M15.5 12h.01"/>',
 		'movil'   => '<rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/>',
 		'pin'     => '<path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/>',
 		'externo' => '<path d="M14 4h6v6"/><path d="M20 4 10 14"/><path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/>',
@@ -700,6 +701,7 @@ function promotur_nav_grupos() {
 				array( 'route' => 'panel/inventario', 'label' => __( 'Inventario turístico', 'caaguazu-portal' ), 'icon' => 'pin',  'cap' => 'promotur_view_panel' ),
 				array( 'route' => 'panel/articulos',  'label' => __( 'Artículos', 'caaguazu-portal' ),            'icon' => 'nota', 'cap' => 'promotur_create_draft' ),
 				array( 'route' => 'panel/recorridos', 'label' => __( 'Recorridos', 'caaguazu-portal' ),           'icon' => 'ruta', 'cap' => 'promotur_create_draft' ),
+				array( 'route' => 'panel/asistente', 'label' => __( 'Asistente', 'caaguazu-portal' ),           'icon' => 'chat', 'cap' => 'promotur_manage_asistente' ),
 			),
 		),
 		array(

@@ -3,7 +3,7 @@ Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 3.12.1
+Stable tag: 3.13.0
 License: GPLv2 or later
 
 Panel autenticado tipo app (PWA) bajo /turismo-panel, con enrutador propio, login propio, roles y flujo editorial para las tres cosas que la app muestra: fichas del inventario turístico, artículos y recorridos.
@@ -59,6 +59,17 @@ llamen los tags.
 * Repo privado: definir `PROMOTUR_GITHUB_TOKEN` (PAT de solo lectura) en `wp-config.php`.
 
 == Changelog ==
+
+= 3.13.0 =
+* **Asistente: los profesores editan lo que sabe.** Nueva sección «Asistente»
+  en el menú, para el Profesor. Muestra lo que el asistente sabe además de lo
+  publicado (su conocimiento) y lo deja cambiar. Las claves, los proveedores y
+  la personalidad siguen en wp-admin: el panel no los ve. Cada cambio queda en
+  «Registros».
+* Requiere la API de la app 0.9.1 o posterior. Si no está, la sección dice que
+  el asistente no está disponible.
+* Las capabilities nuevas llegan a los roles existentes al actualizar, sin hace
+  falta desactivar y reactivar el plugin.
 
 = 3.12.1 =
 * **«Ver la web» también en el menú lateral.** Estaba sólo en la barra de arriba,

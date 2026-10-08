@@ -482,6 +482,14 @@ class PROMOTUR_Audit {
 }
 /* La API de la app: el panel la controla, así que la vista previa la simula
    con el mismo contrato público que expone el plugin real. */
+class PROMOTUR_Asistente_Panel {
+	public static function disponible() { return true; }
+	public static function conocimiento() { return CZUAPI_Asistente::conocimiento(); }
+}
+class CZUAPI_Asistente {
+	public static function conocimiento() { return 'Ykua La Patria abre todos los días de 8 a 17. Los precios son de referencia.'; }
+	public static function set_conocimiento( $texto ) {}
+}
 class CZUAPI_UI_Content {
 	const LOCALES = array( 'es', 'en', 'gn' );
 	public static function base() {

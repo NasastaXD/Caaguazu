@@ -2,7 +2,7 @@
 Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 0.9.0
+Stable tag: 0.9.1
 License: GPLv2 or later
 
 Capa REST que consume la app Android de turismo (Turismo App Czu).
@@ -156,6 +156,14 @@ depende de cómo se llame el tag.
   no está funcionando.
 * Repo privado: definir `CZUAPI_GITHUB_TOKEN` (PAT de solo lectura) en
   `wp-config.php`, o cargarlo desde **Caaguazú API → Actualizaciones**.
+
+== Cambios en 0.9.1 ==
+
+* El conocimiento del asistente tiene un solo punto de escritura,
+  `CZUAPI_Asistente::set_conocimiento()`. Lo usan wp-admin y el panel, donde los
+  profesores lo editan desde la sección «Asistente» (panel 3.13.0 o posterior).
+  No cambia el contrato de la API ni lo que guarda: el mismo texto, la misma
+  limpieza.
 
 == Cambios del contrato en 0.9.0 ==
 

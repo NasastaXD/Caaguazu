@@ -229,6 +229,15 @@ class CZUAPI_Asistente {
 		return trim( (string) get_option( 'czuapi_ia_conocimiento', '' ) );
 	}
 
+	/**
+	 * Guarda el conocimiento. Lo escriben wp-admin y el panel (los profesores),
+	 * así que la limpieza vive en un solo lugar. `$texto` viene de $_POST con
+	 * wp_unslash() ya aplicado, igual que lo que recibía wp-admin.
+	 */
+	public static function set_conocimiento( $texto ) {
+		update_option( 'czuapi_ia_conocimiento', sanitize_textarea_field( trim( (string) $texto ) ), false );
+	}
+
 	/* --------------------------------------------------------------------- */
 	/*  La personalidad                                                       */
 	/* --------------------------------------------------------------------- */
