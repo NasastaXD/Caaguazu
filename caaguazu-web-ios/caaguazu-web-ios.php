@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name:       Caaguazú Web (espejo iOS)
+ * Plugin Name:       Caaguazú Web turismo
  * Plugin URI:        https://caaguazu.net
- * Description:       Sirve el espejo web de la app de turismo (HTML/CSS/JS sin build) bajo /ios/, para darle algo instalable a quien usa iPhone mientras no exista una app nativa. Temporal a propósito: se desinstala el día que esa app exista.
- * Version:           1.3.0
+ * Description:       La web de turismo de acceso fácil (HTML/CSS/JS sin build), en /turismo/ y en /ios/: el mismo contenido que la app, sin instalar nada ni crear una cuenta. Nació como espejo para iPhone mientras no exista una app nativa.
+ * Version:           2.0.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Municipalidad de Caaguazú
@@ -34,7 +34,8 @@
  *
  * QUÉ HACE, EN UNA LÍNEA
  *
- * Registra `/ios/` como su propio espacio de URLs y sirve ahí, tal cual, los
+ * Registra `/turismo/` y `/ios/` (ver czuwios_bases()) como su propio
+ * espacio de URLs y sirve ahí, tal cual, los
  * archivos de `sitio/` — el mismo HTML/CSS/JS que iba a vivir en GitHub
  * Pages, sin ningún cambio: ya usaba rutas relativas (`css/estilo.css`,
  * `./index.html` en el manifest), así que mudarlo de un dominio propio a un
@@ -44,13 +45,42 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'CZUWIOS_VERSION', '1.3.0' );
+define( 'CZUWIOS_VERSION', '2.0.0' );
 define( 'CZUWIOS_FILE', __FILE__ );
 define( 'CZUWIOS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'CZUWIOS_BASENAME', plugin_basename( __FILE__ ) );
 
-/** Dónde vive: caaguazu.net/ios/. Un solo lugar si algún día conviene otro. */
-define( 'CZUWIOS_BASE', 'ios' );
+/**
+ * Dónde vive. La primera es la dirección que se anuncia —la que enlaza el
+ * panel y la que conviene dar a la gente—; las demás siguen andando para
+ * siempre, porque hay teléfonos que agregaron la web a su pantalla de inicio
+ * con esa dirección y un ícono que deja de abrir no avisa por qué.
+ *
+ * `/turismo/` se sumó en 2.0.0, cuando la web dejó de ser «lo de iPhone» y
+ * pasó a ser la versión de acceso fácil para cualquiera. `/ios/` es la de
+ * 1.x. Ninguna de las dos se come `/turismo-panel/`: la regla exige la barra
+ * justo después del nombre.
+ */
+function czuwios_bases() {
+	return array( 'turismo', 'ios' );
+}
+
+/**
+ * URL pública de la web, en su dirección principal. La usa el panel para su
+ * acceso directo —preguntando antes `function_exists()`, para no depender de
+ * que este plugin esté activo—.
+ *
+ * @param string $ruta
+ * @return string
+ */
+function czuwios_url( $ruta = '' ) {
+	$bases = czuwios_bases();
+	return home_url( '/' . $bases[0] . '/' . ltrim( (string) $ruta, '/' ) );
+}
+
+/** Opciones de wp-admin: el enlace a la app en cada tienda. */
+define( 'CZUWIOS_OPT_ANDROID', 'czuwios_tienda_android' );
+define( 'CZUWIOS_OPT_IOS', 'czuwios_tienda_ios' );
 
 /**
  * Repo y nombre del asset para el auto-updater. Mismo repo que
@@ -115,16 +145,83 @@ final class CZUWIOS_Servidor {
 	}
 
 	/**
-	 * Dos reglas nada más, y sin comodín que se coma nada de WordPress: todo
-	 * lo que cuelga de `/ios/` es de este plugin, así que no hay con qué
-	 * chocar. `index.html` es el shell de una SPA que rutea por hash
-	 * (`#/ficha/123`), no por path — el navegador nunca le pide al servidor
-	 * una URL distinta de `/ios/` al navegar adentro de la app, sólo cuando
-	 * alguien la abre por primera vez o la recarga.
+	 * Dos reglas por dirección, y sin comodín que se coma nada de WordPress:
+	 * todo lo que cuelga de `/turismo/` o de `/ios/` es de este plugin, así
+	 * que no hay con qué chocar. `index.html` es el shell de una SPA que rutea
+	 * por hash (`#/ficha/123`), no por path — el navegador nunca le pide al
+	 * servidor una URL distinta de la base al navegar adentro de la web, sólo
+	 * cuando alguien la abre por primera vez o la recarga.
+	 *
+	 * Las dos direcciones sirven exactamente los mismos archivos: todo en
+	 * `sitio/` usa rutas relativas, así que no hay nada que dependa de cuál
+	 * se usó para entrar.
 	 */
 	public function reglas() {
-		add_rewrite_rule( '^' . CZUWIOS_BASE . '/?$', 'index.php?czuwios_archivo=index.html', 'top' );
-		add_rewrite_rule( '^' . CZUWIOS_BASE . '/(.+)$', 'index.php?czuwios_archivo=$matches[1]', 'top' );
+		foreach ( czuwios_bases() as $base ) {
+			add_rewrite_rule( '^' . $base . '/?$', 'index.php?czuwios_archivo=index.html', 'top' );
+			add_rewrite_rule( '^' . $base . '/(.+)$', 'index.php?czuwios_archivo=$matches[1]', 'top' );
+		}
+	}
+
+	/**
+	 * Lo que la página necesita saber y no puede traer escrito: dónde está la
+	 * API y adónde mandar a quien quiere los recorridos (las tiendas, que se
+	 * cargan en wp-admin → Web turismo). Se sirve como `ajustes.json`, un
+	 * archivo que no existe en `sitio/`: lo arma este plugin en cada pedido.
+	 *
+	 * La API sale de `rest_url()` y no de una constante: así la misma copia
+	 * de la web anda en un sitio de prueba sin tocar una línea.
+	 *
+	 * @return array
+	 */
+	public function ajustes() {
+		return array(
+			'version' => CZUWIOS_VERSION,
+			'api'     => rest_url( 'czu-app/v1/' ),
+			'tiendas' => array(
+				'android' => self::enlace_tienda( get_option( CZUWIOS_OPT_ANDROID, '' ) ),
+				'ios'     => self::enlace_tienda( get_option( CZUWIOS_OPT_IOS, '' ) ),
+			),
+		);
+	}
+
+	/**
+	 * Un enlace de tienda sólo se acepta si es https: va a un botón que la
+	 * gente toca sin mirar, y un `javascript:` o un `http:` cargado por error
+	 * en wp-admin no tiene que llegar nunca a la página.
+	 *
+	 * @param mixed $url
+	 * @return string URL https, o '' si no hay o no sirve.
+	 */
+	public static function enlace_tienda( $url ) {
+		$url = trim( (string) $url );
+		if ( '' === $url || 0 !== stripos( $url, 'https://' ) ) {
+			return '';
+		}
+		return filter_var( $url, FILTER_VALIDATE_URL ) ? $url : '';
+	}
+
+	/**
+	 * Cómo se cachea cada tipo de archivo.
+	 *
+	 * El código —html, css, js, json— se revalida en cada carga (`no-cache`
+	 * con ETag: si no cambió, la respuesta es un 304 sin cuerpo). Hasta 1.2.0
+	 * se cacheaba una hora entera, y eso estaba bien mientras una versión
+	 * tocaba un archivo o dos. Pero los módulos se importan entre sí: después
+	 * de una actualización que cambia varios, un teléfono podía quedarse con
+	 * el `index.html` nuevo y `js/piezas.js` viejo, y la página se rompe sin
+	 * ningún error a la vista durante la hora que dura el caché.
+	 *
+	 * Imágenes y fuentes no se importan entre sí ni cambian con cada versión:
+	 * esas sí se guardan una semana.
+	 *
+	 * @param string $ext
+	 * @return string valor de Cache-Control
+	 */
+	public static function cache_para( $ext ) {
+		return in_array( $ext, array( 'png', 'woff2' ), true )
+			? 'public, max-age=604800'
+			: 'no-cache';
 	}
 
 	/**
@@ -155,6 +252,7 @@ final class CZUWIOS_Servidor {
 			'json'        => 'application/json; charset=utf-8',
 			'webmanifest' => 'application/manifest+json; charset=utf-8',
 			'png'         => 'image/png',
+			'woff2'       => 'font/woff2',
 		);
 	}
 
@@ -174,6 +272,15 @@ final class CZUWIOS_Servidor {
 		}
 
 		$pedido = ltrim( $pedido, '/' );
+
+		// El único archivo que no está en disco: ver ajustes().
+		if ( 'ajustes.json' === $pedido ) {
+			header( 'Content-Type: application/json; charset=utf-8' );
+			header( 'Cache-Control: no-cache' );
+			echo wp_json_encode( $this->ajustes() );
+			exit;
+		}
+
 		$ext    = strtolower( (string) pathinfo( $pedido, PATHINFO_EXTENSION ) );
 		$tipos  = $this->tipos();
 
@@ -188,12 +295,21 @@ final class CZUWIOS_Servidor {
 			$this->error_404();
 		}
 
-		nocache_headers();
+		// La versión entra en el ETag además de la fecha y el tamaño: una
+		// actualización que reescribe un archivo con el mismo largo en el
+		// mismo segundo igual lo invalida. Ver cache_para().
+		$etag = '"' . md5( CZUWIOS_VERSION . '|' . filemtime( $real_pedido ) . '|' . filesize( $real_pedido ) ) . '"';
+
 		header( 'Content-Type: ' . $tipos[ $ext ] );
-		// Los archivos versionan con el plugin entero, así que cachear un rato
-		// es seguro: la próxima actualización cambia la versión y con ella el
-		// flush de arriba, no hace falta invalidar por archivo.
-		header( 'Cache-Control: public, max-age=3600' );
+		header( 'Cache-Control: ' . self::cache_para( $ext ) );
+		header( 'ETag: ' . $etag );
+
+		$si_no = isset( $_SERVER['HTTP_IF_NONE_MATCH'] ) ? trim( wp_unslash( $_SERVER['HTTP_IF_NONE_MATCH'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		if ( $si_no === $etag ) {
+			status_header( 304 );
+			exit;
+		}
+
 		readfile( $real_pedido ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_read_readfile
 		exit;
 	}

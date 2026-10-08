@@ -521,6 +521,7 @@ function promotur_icon( $name ) {
 		'moon'    => '<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/>',
 		'movil'   => '<rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/>',
 		'pin'     => '<path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/>',
+		'externo' => '<path d="M14 4h6v6"/><path d="M20 4 10 14"/><path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/>',
 		'ruta'    => '<circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.5 6H15a3 3 0 0 1 0 6H9a3 3 0 0 0 0 6h6.5"/>',
 		'nota'    => '<path d="M4 5h13v14a2 2 0 0 0 2 2H5a1 1 0 0 1-1-1Z"/><path d="M17 9h3v10a2 2 0 0 1-2 2"/><path d="M7 9h7M7 13h7M7 17h4"/>',
 		'apps'    => '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
@@ -641,6 +642,22 @@ function promotur_inventario( $busqueda = '', $limite = 200 ) {
  */
 function promotur_app_api_activa() {
 	return false;
+}
+
+/**
+ * Dirección de la web de turismo —la guía pública que el equipo está
+ * alimentando desde acá— o '' si no hay ninguna.
+ *
+ * Vive en otro plugin (`caaguazu-web-ios`), que se puede desactivar sin que
+ * el panel se entere: por eso se pregunta por la FUNCIÓN y no por la clase, y
+ * se la llama sólo si existe. Mismo criterio que `promotur_app_api_activa()`:
+ * el panel no da por sentado el interior de otro plugin. Sin el plugin
+ * simplemente no hay botón, y el resto del panel no cambia.
+ *
+ * @return string URL absoluta, o ''.
+ */
+function promotur_url_web() {
+	return function_exists( 'czuwios_url' ) ? (string) czuwios_url() : '';
 }
 
 /**

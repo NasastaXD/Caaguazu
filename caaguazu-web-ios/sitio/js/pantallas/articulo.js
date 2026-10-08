@@ -1,48 +1,69 @@
 import { Api } from "../api.js";
-import { t } from "../idioma.js";
-import { escapar, estadoCargando, estadoError, fechaCorta, Icono } from "../piezas.js";
+import { t, idiomaActual } from "../idioma.js";
+import { escapar, Icono, fechaCorta, filaArticulo, error } from "../piezas.js";
 import { compartir } from "../compartir.js";
 
-export async function render(contenedor, params, id) {
-  contenedor.innerHTML = estadoCargando();
+export async function render(el, { id, vigente }) {
+  el.innerHTML = `
+    <div class="cabeza-pantalla"><span class="esqueleto" style="width:44px;height:44px;border-radius:999px"></span></div>
+    <div class="esqueleto esqueleto--linea" style="width:40%"></div>
+    <div class="esqueleto esqueleto--linea" style="width:85%;height:28px;margin-top:10px"></div>
+    <div class="esqueleto esqueleto--bloque" style="margin-top:18px"></div>`;
+
+  let a;
   try {
-    const a = await Api.articulo(id);
-    pintar(contenedor, a);
+    a = await Api.articulo(id);
   } catch {
-    contenedor.innerHTML = estadoError(() => render(contenedor, params, id), volverAtras);
+    if (vigente()) el.innerHTML = `<div class="cabeza-pantalla"><button type="button" class="boton-icono" data-volver aria-label="${escapar(t("accion.volver"))}">${Icono.volver}</button></div>${error()}`;
+    return;
   }
-}
+  if (!vigente()) return;
 
-/** Volver desde un error: a la charla si se llegó desde ella, a la lista si no. */
-function volverAtras() {
-  if (history.state?.desdeAsistente) history.back();
-  else location.hash = "#/articulos";
-}
+  const autores = (a.autores ?? []).map((x) => x.nombre).filter(Boolean).join(", ");
+  const meta = [autores, fechaCorta(a.publicado)].filter(Boolean).join(" · ");
+  const parcial = a.traducido === false && idiomaActual() !== "es";
+  const fuentes = Array.isArray(a.fuentes) ? a.fuentes : [];
+  const relacionados = a.relacionados ?? [];
 
-function pintar(contenedor, a) {
-  const autores = (a.autores ?? []).map((au) => au.nombre).filter(Boolean).join(", ");
-  // Abierto desde una respuesta del asistente, volver regresa a la charla y
-  // no a la lista de artículos: ahí el destino es lo anterior del historial.
-  const desdeAsistente = history.state?.desdeAsistente === true;
-  contenedor.innerHTML = `
-    <div style="display:flex;justify-content:space-between;margin:-4px 0 14px">
-      ${desdeAsistente
-        ? `<button type="button" class="boton-icono" id="art-volver" aria-label="${escapar(t("accion.volver"))}">${Icono.volver}</button>`
-        : `<a href="#/articulos" class="boton-perfil" style="width:36px;height:36px" aria-label="${escapar(t("accion.volver"))}">${Icono.volver}</a>`}
-      <button class="boton-perfil" id="art-compartir" style="width:36px;height:36px" aria-label="compartir">${Icono.compartir}</button>
+  el.innerHTML = `
+    <div class="cabeza-pantalla" style="justify-content:space-between">
+      <button type="button" class="boton-icono" data-volver aria-label="${escapar(t("accion.volver"))}">${Icono.volver}</button>
+      <button type="button" class="boton-icono" id="art-compartir" aria-label="${escapar(t("diag.compartir"))}">${Icono.compartir}</button>
     </div>
-    ${a.portada?.url ? `<div style="border-radius:var(--radio-tarjeta);overflow:hidden;margin-bottom:20px;aspect-ratio:16/10;background:var(--banda)"><img src="${escapar(a.portada.url)}" alt="" style="width:100%;height:100%;object-fit:cover"></div>` : ""}
-    ${a.antetitulo ? `<div class="texto-fecha">${escapar(a.antetitulo)}</div>` : ""}
-    <h1 class="titular-articulo">${escapar(a.titulo)}</h1>
-    ${a.subtitulo ? `<div class="descripcion" style="margin-bottom:10px">${escapar(a.subtitulo)}</div>` : ""}
-    ${autores || a.publicado ? `<div class="meta" style="color:var(--tinta-suave);font-size:13px;margin-bottom:20px">${escapar([autores, fechaCorta(a.publicado)].filter(Boolean).join(" · "))}</div>` : ""}
-    ${a.entradilla ? `<p class="bajada-articulo">${escapar(a.entradilla)}</p>` : ""}
-    <div class="cuerpo-articulo">${a.cuerpo_html || ""}</div>
-    ${a.fuentes?.length ? `<div class="descripcion" style="margin-top:20px">${escapar(t("ficha.fuentes"))}: ${a.fuentes.map(escapar).join(", ")}</div>` : ""}
+
+    <article class="ficha" style="margin-top:0;padding-top:0">
+      <header>
+        ${a.antetitulo ? `<div class="eyebrow">${escapar(a.antetitulo)}</div>` : ""}
+        <h1 class="ficha__titulo">${escapar(a.titulo)}</h1>
+        ${a.subtitulo ? `<p class="apagado" style="margin:8px 0 0;font-size:1.05rem">${escapar(a.subtitulo)}</p>` : ""}
+        ${meta ? `<p class="debil" style="margin:10px 0 0">${escapar(meta)}</p>` : ""}
+      </header>
+
+      ${a.portada?.url ? `
+        <figure style="margin:0">
+          <img src="${escapar(a.portada.url)}" alt="${escapar(a.portada.alt || "")}" style="width:100%;border-radius:var(--r-3)">
+          ${a.portada.credito ? `<figcaption class="debil" style="margin-top:6px">${escapar(a.portada.credito)}</figcaption>` : ""}
+        </figure>` : ""}
+
+      ${parcial ? `<div class="aviso-parcial">${escapar(t("ficha.parcial"))}</div>` : ""}
+      ${a.entradilla ? `<p class="entradilla">${escapar(a.entradilla)}</p>` : ""}
+      <div class="prosa">${a.cuerpo_html || ""}</div>
+
+      ${(a.etiquetas ?? []).length ? `<div class="chips">${a.etiquetas.map((e) => `<span class="chip chip--quieto">${escapar(e.nombre)}</span>`).join("")}</div>` : ""}
+
+      ${fuentes.length ? `
+        <section>
+          <h2 class="eyebrow" style="margin-bottom:8px">${escapar(t("ficha.fuentes"))}</h2>
+          <div class="fuentes">${fuentes.map(escapar).join("\n")}</div>
+        </section>` : ""}
+
+      ${relacionados.length ? `
+        <section>
+          <h2 class="subtitulo" style="margin-bottom:10px">${escapar(t("ficha.relacionados"))}</h2>
+          <div class="lista">${relacionados.map(filaArticulo).join("")}</div>
+        </section>` : ""}
+    </article>
   `;
 
-  contenedor.querySelector("#art-volver")?.addEventListener("click", () => history.back());
-  contenedor.querySelector("#art-compartir").addEventListener("click", () => {
-    compartir({ titulo: a.titulo, ruta: `articulo/${a.id}` });
-  });
+  el.querySelector("#art-compartir").addEventListener("click", () => compartir({ titulo: a.titulo, ruta: `articulo/${a.id}` }));
 }

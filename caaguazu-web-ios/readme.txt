@@ -1,47 +1,71 @@
-=== Caaguazú Web (espejo iOS) ===
+=== Caaguazú Web turismo ===
 Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.3.0
+Stable tag: 2.0.0
 License: GPLv2 or later
 
-Espejo web de la app de turismo, servido en `caaguazu.net/ios/`, para quien usa iPhone mientras no exista una app nativa.
+La guía de turismo de Caaguazú en una página web de acceso fácil, en `caaguazu.net/turismo/` (y en `/ios/`): se abre y se usa, sin instalar nada y sin crear una cuenta.
 
 == Description ==
 
-**Qué es.** El mismo contenido, la misma API y — hasta donde una página web
-lo permite — el mismo sistema visual que la app Android de turismo
-(`Turismo-app-czu`), empaquetado sin build: HTML, CSS y JS puro, sin
-transpilar, sin `npm install`. Vive en `sitio/` tal cual saldría de un
+**Qué es.** La guía de turismo en una página: qué visitar, artículos y un
+asistente para preguntar, con el mismo contenido y la misma API que la app
+Android (`Turismo-app-czu`) y el mismo sistema visual que el panel. Está
+pensada como la puerta de entrada fácil —el colegio la quiere así—: nada que
+instalar, ninguna cuenta, modo claro y oscuro. Va empaquetada sin build: HTML,
+CSS y JS puro, sin `npm install`. Vive en `sitio/` tal cual saldría de un
 `git clone`.
 
-**Qué no es.** No guarda contenido propio, no tiene tablas, no tiene
-opciones más allá de recordar su propia versión para saber cuándo
-reflushear las rewrite rules. Todo el contenido sale en vivo de
+**Qué hace la app que la web no.** Armar y seguir un recorrido propio, con el
+mapa sin conexión. En la web «Recorridos» es una pantalla que explica eso y
+lleva a la tienda de cada teléfono; los enlaces se cargan en wp-admin →
+**Web turismo → Enlaces a la app**.
+
+**Qué no es.** No guarda contenido propio y no tiene tablas. Sus únicas
+opciones son su versión (para saber cuándo reflushear las rewrite rules) y los
+dos enlaces a las tiendas. Todo el contenido sale en vivo de
 `https://caaguazu.net/wp-json/czu-app/v1/` (`caaguazu-app-api`), con CORS ya
-abierto. Sin esa API respondiendo, no hay página. Casi todo es lectura: lo
-único que el espejo le manda a la API, desde la 1.3.0, es la pregunta al
-asistente (`POST /asistente`), sin cookies y sin cuenta. La charla no se
-guarda en ningún lado del lado del espejo: vive en la página abierta.
+abierto. Sin esa API respondiendo, no hay página.
 
 **Por qué es un plugin y no un sitio aparte.** La primera versión de esto se
 pensó para hostearse sola —GitHub Pages, un subdominio propio—, pero eso pide
 acceso a DNS y a un panel de hosting que nadie tenía a mano para algo
 pensado para durar semanas o meses. Sirviéndolo desde acá, en el mismo
 dominio, no hace falta ninguno de los dos: se instala como cualquier otro
-plugin de este ecosistema y ya está online en `/ios/`. Y por qué no un
+plugin de este ecosistema y ya está online en `/turismo/`. Y por qué no un
 toggle del theme: el theme del sitio está para rehacerse entero: mezclar ahí
 algo temporal lo deja enganchado a un cambio que va a pasar por otros
 motivos.
 
 == Cómo sirve los archivos ==
 
-Dos reglas de reescritura nada más: `/ios/` (y cualquier ruta debajo) resuelve
-a un archivo dentro de `sitio/`, con su Content-Type según la extensión —
-`html`, `css`, `js`, `json`, `webmanifest`, `png`, ninguna otra. La app de
-adentro rutea por hash (`#/ficha/123`), así que el navegador nunca le pide al
-servidor una URL distinta de `/ios/` al navegar dentro de ella; sólo al abrirla
-o recargarla.
+Dos reglas de reescritura por dirección: `/turismo/` y `/ios/` (y cualquier
+ruta debajo de cada una) resuelven a un archivo dentro de `sitio/`, con su
+Content-Type según la extensión — `html`, `css`, `js`, `json`, `webmanifest`,
+`png`, `woff2`, ninguna otra. Las dos direcciones sirven exactamente los mismos
+archivos. `/turismo/` es la que se anuncia y la que enlaza el panel; `/ios/`
+sigue andando para siempre, porque hay teléfonos que agregaron la web a su
+pantalla de inicio con esa dirección y un ícono que deja de abrir no avisa
+por qué. La web rutea por hash (`#/ficha/123`), así que el navegador nunca le
+pide al servidor una URL distinta de la base al navegar; sólo al abrirla o
+recargarla.
+
+Las reglas exigen la barra justo después del nombre, así que `/turismo/` **no**
+toca a `/turismo-panel/` (lo prueba `tools/verificar-web-ios.php`).
+
+**Una página con esa dirección queda tapada.** Si en el sitio existe una
+página de WordPress con la dirección `/turismo` —por ejemplo, de contenido que
+se sembró antes—, la web la reemplaza: las reglas de este plugin van primero.
+Si esa página hace falta, hay que moverla a otra dirección antes de activar
+2.0.0.
+
+Un archivo más lo arma el plugin en cada pedido y no está en `sitio/`:
+`ajustes.json`, con la dirección de la API y los enlaces a las tiendas. Así la
+misma copia de la web anda en un sitio de prueba sin tocar una línea.
+
+El código —`html`, `css`, `js`, `json`— se revalida en cada carga (con ETag:
+si no cambió, es un 304 sin cuerpo); imágenes y fuentes se guardan una semana.
 
 Los archivos de `sitio/` usan rutas relativas (`css/estilo.css`, y
 `"start_url": "./index.html"` en el manifest), así que mudarlos de un dominio
@@ -50,10 +74,13 @@ propio a un subdirectorio de éste no les tocó una línea.
 == Instalación ==
 
 1. Subir `caaguazu-web-ios` a `/wp-content/plugins/` y activar.
-2. Entrar a `caaguazu.net/ios/` y confirmar que carga.
-3. En un iPhone: abrir esa URL en Safari, «Compartir» → «Agregar a inicio».
-   Tiene que abrir en modo standalone (sin la barra de Safari) con el ícono
-   correcto.
+2. Entrar a `caaguazu.net/turismo/` y confirmar que carga. `caaguazu.net/ios/`
+   tiene que mostrar lo mismo.
+3. En wp-admin → **Web turismo → Enlaces a la app**, pegar el enlace de
+   Google Play (y el de App Store cuando exista). Sin enlaces, «Recorridos»
+   explica que están en la app pero no muestra botones de descarga.
+4. En un teléfono: abrir la URL, «Compartir» → «Agregar a inicio». Tiene que
+   abrir en modo standalone (sin la barra del navegador) con el ícono correcto.
 
 No hace falta tocar Ajustes → Enlaces permanentes: el plugin flushea las
 rewrite rules solo, al activarse y al detectar un cambio de versión.
@@ -94,63 +121,54 @@ propio, idioma elegido), y eso vive en su navegador, no acá.
 
 == Changelog ==
 
-= 1.3.0 =
-* **El asistente, como en la app.** El botón redondo del medio de la barra
-  —entre Buscar y Artículos— abre una charla que responde con lo publicado
-  en el panel, y debajo de cada respuesta van las fichas, los artículos y los
-  recorridos de donde salió. El botón aparece **sólo si `GET /asistente` dice
-  `disponible`**: con una `caaguazu-app-api` anterior a la 0.9.0 ese pedido
-  da 404 y el botón no se dibuja, que es lo correcto — un botón que no puede
-  hacer nada no se dibuja. Para verlo hace falta la API 0.9.0 instalada, con
-  el asistente encendido y su key cargada (wp-admin → Caaguazú API →
-  Asistente; sin una sesión ya abierta en wp-admin, para llegar ahí hace
-  falta el panel 3.11.0 o posterior, que dejó de redirigir `wp-login.php`).
-* **La charla se abre sin la barra**, con el campo abajo, y el teclado de iOS
-  sube hasta él: Safari no achica la página con el teclado, así que la charla
-  se ajusta a mano con `visualViewport`. El campo va a 16px para que iOS no
-  haga zoom al enfocarlo. Dura lo que dura la página abierta: sobrevive a
-  abrir una fuente y a cerrar y volver a abrir la charla, y se pierde al
-  recargar o al cambiar de idioma.
-* **Las fuentes abren la misma ficha, artículo o recorrido** que el resto del
-  espejo, y volver regresa a la charla. Hasta acá, volver desde un artículo o
-  un recorrido llevaba siempre a su lista; abiertos desde la charla, ahora
-  vuelven a ella. Abiertos desde cualquier otro lado, siguen como antes.
-* La respuesta se pinta siempre como texto, nunca como HTML: es la salida de
-  un modelo, y no se le cree que sea texto plano porque el servidor lo diga.
-* `js/pantallas/asistente.js` se carga con `import()` dinámico y no con un
-  import estático: si ese archivo falla —un caché desparejo, un error—, el
-  resto del espejo sigue andando sin el botón, en vez de quedar en blanco
-  como en la 1.0.1.
-* Cada navegación pinta en un lienzo nuevo: una pantalla que termina de
-  cargar tarde ya no pisa a la que se abrió después.
-* **Qué probar**, en un iPhone, en Safari y con el espejo agregado a inicio:
-  que el botón aparezca con la API 0.9.0 y el asistente encendido, y no
-  aparezca con la API anterior; que al tocarlo suba el teclado sin zoom y el
-  campo quede pegado arriba del teclado, sin hueco; que la última pregunta
-  quede arriba al llegar la respuesta; que las fuentes abran y vuelvan a la
-  charla con lo que se había escrito; cambiar el idioma en Perfil y
-  preguntar; apagar el asistente desde wp-admin con la charla abierta y
-  preguntar de nuevo — tiene que mostrar el error y, al volver, el botón ya
-  no está. Y la barra a 360px en los tres idiomas.
-
-* Sin señal, el botón del asistente no desaparece: sólo se va ante un 404 o
-  si la API dice que no está disponible, igual que la app.
-* Una pregunta que no recibe respuesta en 50 segundos se corta y ofrece
-  reintentar, como en la app. «Pensando…» se ve también en una charla larga.
-* Una ficha, un artículo o un recorrido que no cargan ofrecen volver, además de
-  reintentar: antes, desde la charla, no había salida sin señal.
-* En 320 px (iPhone SE, o el zoom de pantalla) la barra entra. Ahí sólo se
-  muestra la etiqueta de la sección activa, como en la app.
-
-* Arreglos que venían de antes, sin relación con el asistente:
-  - Los artículos abrían sólo con el título: el texto llega como `cuerpo_html`
-    y el espejo lo buscaba como `cuerpoHtml`.
-  - Las fichas no mostraban descripción ni estado del camino, y el mapa y la
-    agenda dependían de nombres de campo que la API no manda (`google_maps`,
-    `tipo_item`). Por eso un evento nunca mostraba «Agendar».
-  - Los recorridos no mostraban duración ni cantidad de paradas, y el costo por
-    parada se veía como «[object Object]» cuando lo había.
-  - El evento destacado del inicio se montaba sobre el buscador.
+= 2.0.0 =
+* **La web deja de ser «lo de iPhone» y pasa a ser la guía de acceso fácil.**
+  Mismo contenido, pero ya no calca la app Android: habla el sistema de diseño
+  del panel —los mismos colores, la misma letra (Inter, servida desde el
+  plugin y no desde Google), los mismos radios—, sin degradados ni emojis
+  haciendo de íconos.
+* **Modo claro y oscuro.** Sigue al teléfono, y se puede elegir en Ajustes. El
+  tema se decide antes de dibujar, así que no hay un destello del otro.
+* **Animaciones cortas, con sentido**: entrar a una pantalla, abrir una hoja,
+  guardar un favorito. Con «reducir movimiento» activado en el teléfono, nada
+  se anima.
+* **Sin cuenta.** Los favoritos viven en el teléfono. Se dice en Ajustes.
+* **Nueva dirección: `/turismo/`.** `/ios/` sigue funcionando y sirve lo mismo.
+  Ver «Una página con esa dirección queda tapada» arriba.
+* **Recorridos se mudan a la app.** Armar un recorrido propio y seguirlo sin
+  conexión es cosa de la app. La pestaña pasa a explicarlo y a llevar a la
+  tienda de cada teléfono (el que entra desde un iPhone ve primero la de
+  Apple), con enlaces que se cargan en **Web turismo → Enlaces a la app**.
+  Los enlaces viejos (`#/recorridos`, `#/recorrido/12`) llevan a esa pantalla.
+* **El asistente (CEADI).** Una pestaña para preguntar, que contesta con lo
+  publicado y cita las fuentes. Aparece sólo si la API lo tiene prendido
+  (`GET /asistente`), así que esta versión se puede instalar antes que la
+  API que lo trae. Muestra cuánto esperar cuando hay demasiadas preguntas
+  seguidas.
+* **Guardados**, Ajustes (tema, idioma, compartir) y búsqueda con los filtros
+  en la dirección: al volver de una ficha se encuentran los mismos
+  resultados.
+* **Las categorías muestran su foto y su descripción** (API 0.7.0).
+* **Arreglo: la descripción de una ficha no se mostraba nunca.** La web leía
+  los campos con los nombres de los modelos Kotlin de la app (`articuloHtml`,
+  `tipoItem`, `googleMaps`), que en el JSON no existen: la API manda
+  `descripcion`, `tipo_item`, `google_maps`. Venía así desde 1.0.0.
+* **Arreglo: una pantalla lenta podía pisar a la que ya estabas viendo** al
+  navegar rápido. Cada pantalla ahora pregunta si sigue vigente antes de
+  dibujar.
+* **Arreglo: sin buena señal la página quedaba en blanco.** El arranque
+  esperaba sin límite de tiempo a los ajustes y a los textos. Ahora cada uno
+  tiene un tope y la web abre igual con lo que tiene.
+* **Más liviana al abrir:** Leaflet (~150 KB) se pide recién al abrir el mapa;
+  antes se cargaba en cada visita. En modo oscuro el mapa se oscurece.
+* **Cache.** Hasta 1.2.0 todo se guardaba una hora. Los módulos JS se importan
+  entre sí, así que tras una actualización un teléfono podía quedarse con la
+  página nueva y un módulo viejo, y romperse sin ningún error a la vista. El
+  código se revalida en cada carga y sólo imágenes y fuentes se guardan.
+* En wp-admin el menú pasa a llamarse **Web turismo**, con dos pantallas:
+  *Enlaces a la app* y *Actualizaciones*.
+* El QR de «Compartir» va siempre sobre fondo blanco, también en modo oscuro:
+  un lector de cámara no encuentra un código claro sobre fondo oscuro.
 
 = 1.2.0 =
 * **Compartir una ficha, un artículo o un recorrido**, con un botón en cada

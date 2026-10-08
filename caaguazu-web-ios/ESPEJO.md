@@ -1,115 +1,96 @@
-# El espejo iOS por dentro
+# La web de turismo por dentro
 
-Los archivos de `sitio/` —lo que el plugin sirve en `/ios/`—. Cómo se
-instala y se publica el plugin está en `readme.txt`; esto es cómo está hecha
-la página.
+Los archivos de `sitio/` —lo que el plugin sirve en `/turismo/` y en
+`/ios/`—. Cómo se instala y se publica el plugin está en `readme.txt`; esto es
+cómo está hecha la página.
 
-Espejo web temporal de la app Android de turismo de Caaguazú
-(`Turismo-app-czu`), pensado para darle algo a quien usa iPhone mientras no
-exista una app nativa de iOS. No es un producto nuevo: es el mismo contenido,
-la misma API y — hasta donde una pagina web lo permite — el mismo sistema
-visual, empaquetado sin build.
+Es la guía de turismo de Caaguazú de acceso fácil: se abre y se usa, sin
+instalar nada y **sin cuenta**. Nació como espejo temporal de la app Android
+para quien usa iPhone (de ahí el nombre de la carpeta), y desde 2.0.0 es la
+puerta de entrada para cualquiera. La app sigue siendo lo que arma y sigue
+recorridos.
 
-## Que es y que no es
+## Qué es y qué no es
 
 - **Es** HTML + CSS + JS sin transpilar, sin bundler, sin `npm install`. Se
-  abre `index.html` con cualquier servidor de archivos estatico y funciona.
-- **No** guarda contenido propio: todo sale en vivo de
-  `https://caaguazu.net/wp-json/czu-app/v1/`, la misma API que consume la
-  app. Sin API no hay pagina — no hay copia local mas alla de lo que el
-  navegador cachea solo.
-- **No** reemplaza a la app. El dia que exista una app nativa de iOS, esto se
-  da de baja. Esta pensado para vivir semanas o meses, no anos.
+  abre `index.html` con cualquier servidor de archivos estático y funciona
+  (sin el plugin no hay `ajustes.json`: usa la API de producción y no muestra
+  botones de tienda).
+- **No** guarda contenido propio. Todo sale en vivo de la API de la app
+  (`/wp-json/czu-app/v1/`). Lo único que guarda es del lado del teléfono:
+  favoritos, idioma, tema y, mientras dura la visita, la charla con el
+  asistente. Sin cuenta, sin servidor, sin sincronizar entre dispositivos.
+- **No** arma recorridos: la pestaña «Recorridos» explica eso y lleva a la
+  tienda.
 
 ## Estructura
 
 ```
-index.html              cascaron, carga Leaflet + Google Fonts por CDN
-css/estilo.css           tokens calcados de ui/tema/Tokens.kt y Tipografia.kt
-js/api.js                cliente de la API, calcado de ApiHttp.kt
-js/idioma.js             idioma actual + fusion de textos (piso es + servidor)
-js/estado.js             favoritos y recorrido propio en localStorage
-js/mapas.js               enlaces a Google Maps (limite de 9 paradas incluido)
-js/piezas.js              piezas de UI reutilizables (tarjetas, chips, iconos)
-js/app.js                 router por hash + barra inferior
-js/pantallas/*.js         una pantalla por archivo: inicio, buscar, ficha,
-                          articulos, articulo, recorridos, recorrido, mapa,
-                          perfil
-js/pantallas/asistente.js la charla del asistente, su estado de página y si
-                          hay botón; app.js la carga con import() dinámico
-js/compartir.js           hoja de compartir: Web Share API o enlace + QR
-js/qr.js                  envoltorio del generador de QR vendoreado
-js/vendor/qrcode.js       qrcode-generator de Kazuhiko Arase (MIT), sin tocar
-textos/{es,en,pt}.json    los respaldos de la app Android, iguales clave por
-                          clave, más las dos de compartir (accion.copiarEnlace
-                          y accion.enlaceCopiado) que la app no tiene
-manifest.webmanifest      para "agregar a inicio" en iOS/Android
-assets/icon-*.png         isotipo oficial, copiado de caaguazu-theme
+index.html               cascarón; el tema se decide ahí, antes de dibujar
+ajustes.json             NO está en disco: lo arma el plugin en cada pedido
+                         (API + enlaces a las tiendas)
+css/estilo.css           el sistema de diseño del panel, con claro y oscuro
+fuentes/inter-*.woff2    la letra del panel (Inter), servida desde acá
+js/app.js                router por hash, barra inferior, delegados de clic
+js/config.js             ajustes.json, fetch con tope de tiempo, plataforma
+js/tema.js               claro / oscuro / como el teléfono
+js/api.js                cliente de la API (campos con los nombres del JSON)
+js/idioma.js             idioma actual + fusión de textos (piso es + servidor)
+js/estado.js             favoritos en localStorage
+js/piezas.js             tarjetas, íconos, estados, hoja inferior
+js/mapas.js              enlace a Google Maps
+js/compartir.js, qr.js   Web Share API, o enlace + QR hecho en el navegador
+js/pantallas/*.js        inicio, buscar, ficha, articulos, articulo, mapa,
+                         asistente, app, ajustes, guardados
+js/vendor/qrcode.js      qrcode-generator de Kazuhiko Arase (MIT), sin tocar
+textos/{es,en,pt}.json   respaldo embebido de los textos de la interfaz
+manifest.webmanifest     para «agregar a inicio» en iOS y Android
+assets/icon-*.png        isotipo oficial, copiado de caaguazu-theme
 ```
 
 ## Decisiones que vale la pena explicar
 
-- **Sin build.** Un Vite o un webpack para tres pantallas y nueve modulos es
-  ceremonia que nadie va a mantener despues de que esto se dé de baja.
-- **Mapa con Leaflet + tiles raster de OSM**, no MapLibre + PMTiles offline
-  como la app. La app precisa el mapa sin conexion porque un turista puede
-  estar sin señal en medio del departamento; una pagina web ya asume
-  internet, asi que cargar tiles en vivo es mas simple y no pesa nada en el
-  primer arranque.
-- **Los mismos tokens de color, radio y tipografia** que `Tono`/`Radio`/
-  `Elevacion`/`Medida`/`Letra` de la app, copiados a mano a
-  `css/estilo.css`. No hay forma de compartirlos automaticamente entre un
-  proyecto Kotlin y uno JS sin un paso de build que esto explicitamente evita
-  — si el sistema visual de la app cambia, esto se actualiza a mano.
-- **Favoritos y recorrido propio en `localStorage`**, igual que `Guardado.kt`
-  en la app: sin cuenta, sin servidor, sin sincronizar entre dispositivos.
-- **Idioma**: mismo criterio que la app — el castellano embebido es el piso,
-  se completa con el idioma elegido (persistido en `localStorage`) y encima
-  se fusiona lo que traiga `/strings/{idioma}` del panel, sin reemplazar el
-  respaldo. `/idiomas` decide que idiomas ofrecer, igual que en la app.
-- **Compartir con `navigator.share` cuando existe** (la mayoría de los
-  navegadores de teléfono, incluido Safari en iOS) y, cuando no, una hoja
-  propia con el enlace para copiar y un código QR. El QR se genera en el
-  propio navegador con una copia vendoreada de `qrcode-generator` — no hay
-  ningún servicio externo que reciba la URL que se está compartiendo.
-- **El asistente lo decide el panel.** El botón del medio de la barra aparece
-  sólo si `GET /asistente` dice `disponible`; cualquier otra cosa —el 404 de
-  una API anterior a la 0.9.0, sin red— es «no hay», y no se dibuja. La charla
-  replica `Asistente.kt`: pregunta a la derecha, respuesta suelta, fuentes en
-  píldoras que abren las mismas pantallas de detalle y vuelven a la charla.
-  - **Se carga aparte**, con `import()` dinámico, para que una falla suya no
-    tumbe el espejo: el plugin cachea cada archivo una hora sin revalidar, y
-    durante una actualización puede llegar un `app.js` nuevo junto a un
-    `piezas.js` viejo. Por lo mismo, lo nuevo en módulos que ya existían son
-    claves dentro de `Api` e `Icono`, nunca exports con nombre: una clave que
-    falta da `undefined`; un export que falta deja la página en blanco.
-  - **El teclado de iOS** no achica la página: corre el viewport visual. La
-    charla es un contenedor fijo que se ajusta con `visualViewport` (alto y
-    corrimiento), y el foco del campo se pone sin ningún `await` desde el
-    toque del botón —un `<button>` con `pushState`, no un enlace—, porque
-    iOS sólo sube el teclado si el foco llega dentro del gesto. El campo va a
-    16px: con menos, iOS hace zoom al enfocarlo.
-  - **La charla vive mientras la página viva**, en el módulo, como el filtro
-    de Buscar: sobrevive a abrir fuentes y a cerrar y abrir la charla, y se
-    pierde al recargar (cambiar el idioma recarga). No hay `localStorage`: una
-    charla no es algo que el teléfono tenga que guardar.
-  - **La respuesta se pinta como texto, nunca como HTML**: es la salida de un
-    modelo. Pasa por `escapar()` con `white-space: pre-wrap` para los saltos;
-    cada fuente pasa por una lista blanca de tipos y un id entero antes de
-    armar su enlace, y una rota se omite sin tumbar la respuesta.
-  - **Cada navegación pinta en un lienzo nuevo.** Las pantallas escriben
-    cuando termina su fetch; sin esto, una ficha abierta desde la charla que
-    termina de cargar después de volver pisaría la charla.
+- **El estilo es el del panel**, no el de la app. Hasta 1.2.0 calcaba los
+  tokens Kotlin de la app (oscuro fijo, Poppins, degradados sobre las fotos).
+  Ahora son los mismos tokens que `caaguazu-portal/assets/css`, copiados a mano
+  —sin paso de build no hay otra forma—: si cambian allá, se cambian acá. El
+  texto va debajo de la foto y nunca encima con un velo oscuro.
+- **Movimiento corto, y la pantalla sólo hace fundido.** Una pantalla no puede
+  animar `transform`: un ancestro con `transform` —aunque termine en `none`—
+  pasa a ser el punto de referencia de sus hijos `position: fixed`, y la barra
+  para escribir al asistente y la capa del mapa viven adentro. El movimiento
+  está en tarjetas y globos. Con «reducir movimiento» nada se anima.
+- **Los campos son los del JSON**, no los de los modelos Kotlin:
+  `tipo_item`, `google_maps`, `descripcion`, `cuerpo_html`. Hasta 1.2.0 se
+  leían los de Kotlin y la descripción de una ficha no se mostraba nunca.
+- **Cada pantalla pregunta `vigente()` antes de dibujar**, y el arranque pone
+  tope de tiempo a lo que espera. Sin lo primero, una pantalla lenta pisa a la
+  que ya se está viendo; sin lo segundo, una conexión mala deja la página en
+  blanco.
+- **Mapa con Leaflet + teselas de OpenStreetMap**, pedido sólo al abrir el
+  mapa. La app necesita el mapa sin conexión porque un turista puede estar sin
+  señal en medio del departamento; una página web ya asume internet.
+- **El asistente aparece sólo si `GET /asistente` dice que está disponible.**
+  Así esta web se puede instalar antes que la API que lo trae.
+- **Compartir con `navigator.share`** cuando existe y, si no, una hoja con el
+  enlace y un QR hecho en el navegador con una copia de `qrcode-generator`:
+  ningún servicio externo recibe la URL que se comparte.
+- **Una pestaña de la barra por idea:** Principal, Buscar, Artículos,
+  Asistente (si está) y Recorridos. Ajustes se abre desde el ícono de arriba.
 
-## Que falta a proposito
+## Que falta a propósito
 
-- Push/avisos: la app tampoco los tiene (ver CLAUDE.md de Turismo-app-czu,
-  §7) — nada que replicar.
-- Registro/diagnostico: es una herramienta de desarrollo de la app nativa,
-  no algo que un espejo temporal necesite.
-- Splits de idioma guarani: igual que la app, sale de la lista hasta que el
+- Registro o cuenta: la web no los necesita ni los va a necesitar.
+- Push/avisos: la app tampoco los tiene.
+- Splits de idioma guaraní: igual que la app, sale de la lista hasta que el
   panel tenga textos.
 
-No hay despliegue aparte: hasta `caaguazu-web-ios` 1.0.0 esto vivía en
-`caaguazu-web/` y se iba a hostear en GitHub Pages o un subdominio; ahora lo
-sirve el propio WordPress desde este plugin. Ver `readme.txt`.
+## Cómo se probó sin WordPress
+
+Las pantallas se probaron en un navegador real con la API simulada, a 390 y
+360 px, claro y oscuro: que no desborde nada, que lo que se toca llegue a
+44 px, que no queden claves sin traducir, y los flujos —guardar un favorito,
+cambiar de tema, preguntarle al asistente, el error de «demasiadas
+preguntas», las direcciones de 1.x—. `tools/verificar-web-ios.php` cubre el
+plugin: las dos direcciones, que `/turismo/` no toque `/turismo-panel/`, los
+enlaces de tienda y la caché.

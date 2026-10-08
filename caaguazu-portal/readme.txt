@@ -3,7 +3,7 @@ Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 3.11.0
+Stable tag: 3.12.0
 License: GPLv2 or later
 
 Panel autenticado tipo app (PWA) bajo /turismo-panel, con enrutador propio, login propio, roles y flujo editorial para las tres cosas que la app muestra: fichas del inventario turístico, artículos y recorridos.
@@ -59,6 +59,16 @@ llamen los tags.
 * Repo privado: definir `PROMOTUR_GITHUB_TOKEN` (PAT de solo lectura) en `wp-config.php`.
 
 == Changelog ==
+
+= 3.12.0 =
+* **Un botón en la barra superior para ir a la web de turismo.** Abre
+  `/turismo/` en otra pestaña, siempre a mano, junto al del tema. El equipo
+  alimenta esa guía desde acá y hasta ahora, para ver cómo quedaba lo que
+  cargaban, había que acordarse de la dirección.
+* Aparece sólo si el plugin de la web (`caaguazu-web-ios`) está activo. El
+  panel pregunta por su función `czuwios_url()` y no por su clase: se puede
+  desactivar ese plugin sin que el panel se entere, y simplemente deja de
+  haber botón. Mismo criterio que con la API de la app.
 
 = 3.11.0 =
 * **Los profesores ven los borradores de todo el equipo.** «Mis contenidos»

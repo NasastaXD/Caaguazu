@@ -55,6 +55,18 @@ function get_query_var( $var ) {
 	return $GLOBALS['czu_query_vars'][ $var ] ?? '';
 }
 
+// Para las reglas, los ajustes y la URL pública (2.0.0).
+$GLOBALS['czu_reglas'] = array();
+function add_rewrite_rule( $patron, $destino, $donde ) {
+	$GLOBALS['czu_reglas'][ $patron ] = $destino;
+}
+$GLOBALS['czu_opciones'] = array();
+function get_option( $clave, $defecto = false ) {
+	return $GLOBALS['czu_opciones'][ $clave ] ?? $defecto;
+}
+function rest_url( $ruta = '' ) { return 'https://ejemplo.test/wp-json/' . $ruta; }
+function home_url( $ruta = '' ) { return 'https://ejemplo.test' . $ruta; }
+
 require dirname( __DIR__ ) . '/caaguazu-web-ios/caaguazu-web-ios.php';
 
 $verde = "\033[32m"; $rojo = "\033[31m"; $gris = "\033[90m"; $fin = "\033[0m";
@@ -97,9 +109,57 @@ comprobar(
 	'https://caaguazu.net/alguna-pagina/'
 );
 
+/*
+ * Las dos direcciones (2.0.0). Se comprueba la regla real que registra el
+ * plugin, ejecutada como la ejecuta WordPress —una regex contra el path sin
+ * la barra inicial—, no una copia escrita a mano acá.
+ */
+echo "\n" . $gris . '== Direcciones: /turismo/ y /ios/ ==' . $fin . "\n";
+
+$servidor->reglas();
+function resuelve( $path ) {
+	foreach ( $GLOBALS['czu_reglas'] as $patron => $destino ) {
+		if ( preg_match( '#' . $patron . '#', $path, $m ) ) {
+			return preg_replace_callback( '/\$matches\[(\d+)\]/', function ( $x ) use ( $m ) { return $m[ (int) $x[1] ]; }, $destino );
+		}
+	}
+	return null;
+}
+comprobar( '/turismo/ abre la web', resuelve( 'turismo/' ), 'index.php?czuwios_archivo=index.html' );
+comprobar( '/turismo sin barra también', resuelve( 'turismo' ), 'index.php?czuwios_archivo=index.html' );
+comprobar( '/turismo/js/app.js sirve el archivo', resuelve( 'turismo/js/app.js' ), 'index.php?czuwios_archivo=js/app.js' );
+comprobar( '/ios/ sigue abriendo la web', resuelve( 'ios/' ), 'index.php?czuwios_archivo=index.html' );
+comprobar( '/ios/css/estilo.css sigue sirviendo', resuelve( 'ios/css/estilo.css' ), 'index.php?czuwios_archivo=css/estilo.css' );
+comprobar( '/turismo-panel/ NO es de este plugin', resuelve( 'turismo-panel/' ), null );
+comprobar( '/turismo-panel/entrar NO es de este plugin', resuelve( 'turismo-panel/entrar' ), null );
+comprobar( 'czuwios_url() apunta a la dirección principal', czuwios_url(), 'https://ejemplo.test/turismo/' );
+
+echo "\n" . $gris . '== ajustes.json: la API y las tiendas ==' . $fin . "\n";
+
+$aj = $servidor->ajustes();
+comprobar( 'la API sale de rest_url()', $aj['api'], 'https://ejemplo.test/wp-json/czu-app/v1/' );
+comprobar( 'sin tiendas cargadas, vienen vacías', array( $aj['tiendas']['android'], $aj['tiendas']['ios'] ), array( '', '' ) );
+
+$GLOBALS['czu_opciones'][ CZUWIOS_OPT_ANDROID ] = 'https://play.google.com/store/apps/details?id=py.caaguazu.turismo';
+$GLOBALS['czu_opciones'][ CZUWIOS_OPT_IOS ]     = '  https://apps.apple.com/app/id123  ';
+$aj = $servidor->ajustes();
+comprobar( 'un enlace https a Google Play pasa', $aj['tiendas']['android'], 'https://play.google.com/store/apps/details?id=py.caaguazu.turismo' );
+comprobar( 'los espacios de más se recortan', $aj['tiendas']['ios'], 'https://apps.apple.com/app/id123' );
+
+comprobar( 'un javascript: nunca llega a la página', CZUWIOS_Servidor::enlace_tienda( 'javascript:alert(1)' ), '' );
+comprobar( 'un http: sin TLS tampoco', CZUWIOS_Servidor::enlace_tienda( 'http://play.google.com/x' ), '' );
+comprobar( 'basura sin esquema tampoco', CZUWIOS_Servidor::enlace_tienda( 'play.google.com/x' ), '' );
+
+echo "\n" . $gris . '== Caché: el código se revalida, lo pesado se guarda ==' . $fin . "\n";
+
+comprobar( 'js se revalida en cada carga', CZUWIOS_Servidor::cache_para( 'js' ), 'no-cache' );
+comprobar( 'html se revalida en cada carga', CZUWIOS_Servidor::cache_para( 'html' ), 'no-cache' );
+comprobar( 'css se revalida en cada carga', CZUWIOS_Servidor::cache_para( 'css' ), 'no-cache' );
+comprobar( 'las fuentes se guardan una semana', CZUWIOS_Servidor::cache_para( 'woff2' ), 'public, max-age=604800' );
+
 echo "\n";
 if ( $fallos ) {
 	echo $rojo . "  $fallos comprobación/es fallaron." . $fin . "\n\n";
 	exit( 1 );
 }
-echo $verde . '  El espejo iOS no deja que WordPress le agregue una barra a sus archivos.' . $fin . "\n\n";
+echo $verde . '  La web de turismo responde en sus dos direcciones, sin barras de más ni enlaces peligrosos.' . $fin . "\n\n";
