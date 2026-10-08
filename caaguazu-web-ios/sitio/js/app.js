@@ -47,15 +47,18 @@ function pintarBarra(activa) {
   const items = [
     ["inicio", Icono.inicio, t("nav.principal")],
     ["buscar", Icono.buscar, t("barra.buscar")],
-    ["articulos", Icono.articulo, t("web.articulos")],
+    // El asistente va en el medio: ahí lo destaca el orbe. Sin asistente, la
+    // barra tiene cuatro pestañas, como antes.
     hayAsistente ? ["asistente", Icono.asistente, t("web.asistente")] : null,
+    ["articulos", Icono.articulo, t("web.articulos")],
     ["app", Icono.ruta, t("nav.recorridos")],
   ].filter(Boolean);
 
   barra.innerHTML = items
     .map(([clave, icono, etiqueta]) => {
       const activo = clave === activa;
-      return `<a class="barra__item ${activo ? "activo" : ""}" href="#/${clave}" aria-label="${escapar(etiqueta)}"${
+      const orbe = clave === "asistente" ? " barra__item--ia" : "";
+      return `<a class="barra__item${orbe} ${activo ? "activo" : ""}" href="#/${clave}" aria-label="${escapar(etiqueta)}"${
         activo ? ' aria-current="page"' : ""
       }>${icono}<span>${escapar(etiqueta)}</span></a>`;
     })

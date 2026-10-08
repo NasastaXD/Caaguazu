@@ -66,8 +66,6 @@ export async function render(el, { hayAsistente }) {
     })}
     <div id="presentacion" ${charla.mensajes.length ? "hidden" : ""}>
       <div class="ilustracion">${Icono.asistente}</div>
-      <h2 class="subtitulo" style="font-size:1.3rem">${escapar(t("web.ia.aviso.titulo"))}</h2>
-      <p class="apagado" style="margin:6px 0 18px">${escapar(t("web.ia.intro"))}</p>
       <div class="chips" style="flex-direction:column;align-items:flex-start">
         ${["web.ia.ejemplo1", "web.ia.ejemplo2", "web.ia.ejemplo3"].map((k) => `<button type="button" class="chip" data-ejemplo>${escapar(t(k))}</button>`).join("")}
       </div>

@@ -514,7 +514,8 @@ a.eyebrow { display: inline-flex; align-items: center; min-height: 44px; margin:
 .redactar {
 	position: fixed;
 	left: 50%;
-	bottom: calc(env(safe-area-inset-bottom) + 84px);
+	/* Por encima de la barra (70px) y del orbe, que sube 21px más arriba. */
+	bottom: calc(env(safe-area-inset-bottom) + 120px);
 	z-index: 40;
 	display: flex;
 	gap: 8px;
@@ -578,24 +579,60 @@ a.eyebrow { display: inline-flex; align-items: center; min-height: 44px; margin:
    como una pastillita huérfana abajo de todo —es lo que se veía en el teléfono
    mientras la web no terminaba de arrancar—. Sin pestañas, no hay barra. */
 .barra:empty { display: none; }
+/* Cada pestaña tiene el mismo ancho, esté activa o no. Antes la etiqueta de la
+   activa se abria al costado y corria todo lo que habia del otro lado: el orbe
+   del asistente quedaba corrido del medio. Ahora la etiqueta va debajo, en un
+   hueco que siempre esta reservado, asi la barra no cambia de forma al tocar. */
 .barra__item {
 	display: inline-flex;
+	flex-direction: column;
 	align-items: center;
-	justify-content: center;
-	min-width: 44px;
+	flex: 0 0 60px;
+	width: 60px;
 	min-height: 44px;
-	padding: 0 13px;
 	border-radius: var(--r-full);
 	color: var(--texto-debil);
-	font-size: .82rem;
+	font-size: .68rem;
 	font-weight: 600;
+	transition: color .2s ease;
+}
+.barra__item svg {
+	width: 44px;
+	height: 44px;
+	padding: 11px;
+	box-sizing: border-box;
+	border-radius: var(--r-full);
+	flex: none;
 	transition: background .2s ease, color .2s ease;
 }
-.barra__item svg { width: 22px; height: 22px; flex: none; }
-.barra__item span { max-width: 0; overflow: hidden; opacity: 0; white-space: nowrap; transition: max-width .24s ease, opacity .18s ease, margin .24s ease; }
-.barra__item.activo { background: var(--tinta); color: var(--sobre-tinta); }
-.barra__item.activo span { max-width: 7rem; margin-left: 8px; opacity: 1; }
+.barra__item span { margin-top: 3px; line-height: 1; white-space: nowrap; visibility: hidden; }
+.barra__item.activo svg { background: var(--tinta); color: var(--sobre-tinta); }
+.barra__item.activo span { visibility: visible; color: var(--tinta); }
 .barra__item:not(.activo):hover { color: var(--texto); }
+
+/* El asistente, en el medio: un orbe negro (--tinta, como los controles de
+   maximo contraste) que sube por encima de la pastilla. Sin etiqueta visible:
+   el nombre queda en aria-label. */
+.barra__item--ia {
+	flex: 0 0 64px;
+	width: 64px;
+	height: 64px;
+	align-self: flex-start;
+	margin-top: -26px;
+	justify-content: center;
+	border-radius: var(--r-full);
+	background: var(--tinta);
+	color: var(--sobre-tinta);
+	box-shadow: var(--sombra-flotante);
+}
+.barra__item--ia svg,
+.barra__item--ia.activo svg { width: 26px; height: 26px; padding: 0; background: none; color: var(--sobre-tinta); }
+.barra__item--ia span { display: none; }
+.barra__item--ia.activo { box-shadow: 0 0 0 3px var(--papel), 0 0 0 5px var(--tinta), var(--sombra-flotante); }
+@media (max-width: 359px) {
+	.barra__item { flex-basis: 54px; width: 54px; }
+	.barra__item--ia { flex-basis: 56px; width: 56px; height: 56px; }
+}
 
 /* ---------------------------------------------------------------------------
  * Hojas (filtros, idioma, compartir)
