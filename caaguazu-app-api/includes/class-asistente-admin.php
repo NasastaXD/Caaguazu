@@ -393,7 +393,7 @@ class CZUAPI_Asistente_Admin {
 			$persona = '';
 		}
 		update_option( 'czuapi_ia_persona', sanitize_textarea_field( $persona ), false );
-		update_option( 'czuapi_ia_conocimiento', sanitize_textarea_field( trim( (string) wp_unslash( $_POST['conocimiento'] ?? '' ) ) ), false );
+		CZUAPI_Asistente::set_conocimiento( wp_unslash( $_POST['conocimiento'] ?? '' ) );
 	}
 
 	/** Para comparar textos sin que un salto de línea de Windows los separe. */
