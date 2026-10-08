@@ -1,6 +1,7 @@
 <?php
 /**
- * Lo único que este plugin pone en wp-admin: la pantalla de actualizaciones.
+ * La pantalla de actualizaciones, y el menú del que cuelga también la del
+ * asistente (`CZUAPI_Asistente_Admin`).
  *
  * Hasta la 0.8.0 este plugin no tenía auto-updater —se instalaba a mano,
  * bajando el zip de cada release—, a diferencia de `caaguazu-portal`, que sí
@@ -45,6 +46,17 @@ class CZUAPI_Admin {
 			array( $this, 'render_updates' ),
 			'dashicons-rest-api',
 			58 // justo debajo de «Portal Turismo» (57).
+		);
+		// Con un segundo submenú (el Asistente), WordPress repite el padre
+		// como primer ítem con el nombre del menú. Nombrarlo explícito es lo
+		// que hace que diga «Actualizaciones» y no «Caaguazú API» dos veces.
+		add_submenu_page(
+			'czuapi-updates',
+			__( 'Actualizaciones de la API', 'caaguazu-app-api' ),
+			__( 'Actualizaciones', 'caaguazu-app-api' ),
+			self::CAP,
+			'czuapi-updates',
+			array( $this, 'render_updates' )
 		);
 	}
 
