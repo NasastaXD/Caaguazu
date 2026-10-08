@@ -26,14 +26,14 @@ function pintar(contenedor, f) {
   const practicos = [
     f.practicos?.horario && [t("ficha.horario"), f.practicos.horario],
     f.practicos?.costo && [t("ficha.costo"), f.practicos.costo],
-    f.practicos?.rangoPrecio != null && [t("ficha.costo"), precioA(f.practicos.rangoPrecio)],
+    f.practicos?.rango_precio != null && [t("ficha.costo"), precioA(f.practicos.rango_precio)],
     f.practicos?.contacto && [t("ficha.contacto"), f.practicos.contacto],
-    f.acceso?.estadoCamino && [t("ficha.camino"), f.acceso.estadoCamino],
+    f.acceso?.estado_camino && [t("ficha.camino"), f.acceso.estado_camino],
   ].filter(Boolean);
 
   const galeria = (f.galeria ?? []).filter((im) => im.url);
 
-  const esEvento = f.tipoItem === "evento" && f.fechas;
+  const esEvento = f.tipo_item === "evento" && f.fechas;
   const puedeAgendar = esEvento && f.fechas.inicio;
 
   contenedor.innerHTML = `
@@ -69,14 +69,14 @@ function pintar(contenedor, f) {
           <a class="boton-secundario" id="ficha-agendar">${Icono.calendario} ${escapar(t("ficha.agendar"))}</a>
         </div>` : ""}
 
-      ${f.googleMaps || f.coordenadas ? `
+      ${f.google_maps || f.coordenadas ? `
         <div style="margin-bottom:var(--entre-secciones)">
           <a class="boton-primario" target="_blank" rel="noopener" href="${escapar(
-            f.googleMaps || enlacePunto(f.coordenadas.lat, f.coordenadas.lng, f.titulo),
+            f.google_maps || enlacePunto(f.coordenadas.lat, f.coordenadas.lng, f.titulo),
           )}">${Icono.pin} ${escapar(t("ficha.mapa"))}</a>
         </div>` : ""}
 
-      ${f.articuloHtml ? `<div class="descripcion" style="margin-bottom:var(--entre-secciones)">${f.articuloHtml}</div>` : ""}
+      ${f.descripcion ? `<div class="descripcion" style="margin-bottom:var(--entre-secciones)">${f.descripcion}</div>` : ""}
 
       ${galeria.length ? `
         <div class="seccion">
@@ -114,7 +114,7 @@ function abrirCalendario(f) {
     action: "TEMPLATE",
     text: f.titulo,
     dates: `${fmt(inicio)}/${fmt(fin)}`,
-    details: f.googleMaps ? `${f.titulo} — ${f.googleMaps}` : f.titulo,
+    details: f.google_maps ? `${f.titulo} — ${f.google_maps}` : f.titulo,
   });
   window.open(`https://calendar.google.com/calendar/render?${params.toString()}`, "_blank", "noopener");
 }

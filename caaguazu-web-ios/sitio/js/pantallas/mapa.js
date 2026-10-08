@@ -62,7 +62,7 @@ async function mostrarPin(contenedor, id) {
         <div>
           <div class="titulo-tarjeta">${escapar(f.titulo)}</div>
           <div class="meta" style="color:var(--tinta-suave);font-size:13px">
-            ${escapar([f.zona?.nombre, precioA(f.practicos?.rangoPrecio)].filter(Boolean).join(" · "))}
+            ${escapar([f.zona?.nombre, precioA(f.practicos?.rango_precio)].filter(Boolean).join(" · "))}
           </div>
         </div>
       </a>`;

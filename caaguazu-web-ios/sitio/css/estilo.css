@@ -379,6 +379,9 @@ img { display: block; max-width: 100%; }
 /* --- El destacado (evento grande) --- */
 
 .destacado-evento {
+  /* Un <a> es inline por defecto: sin esto, aspect-ratio no aplica y el bloque
+     se dibuja encima del buscador y los chips. */
+  display: block;
   position: relative;
   border-radius: var(--radio-tarjeta);
   overflow: hidden;

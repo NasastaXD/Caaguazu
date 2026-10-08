@@ -37,7 +37,7 @@ function pintar(contenedor, a) {
     ${a.subtitulo ? `<div class="descripcion" style="margin-bottom:10px">${escapar(a.subtitulo)}</div>` : ""}
     ${autores || a.publicado ? `<div class="meta" style="color:var(--tinta-suave);font-size:13px;margin-bottom:20px">${escapar([autores, fechaCorta(a.publicado)].filter(Boolean).join(" · "))}</div>` : ""}
     ${a.entradilla ? `<p class="bajada-articulo">${escapar(a.entradilla)}</p>` : ""}
-    <div class="cuerpo-articulo">${a.cuerpoHtml || ""}</div>
+    <div class="cuerpo-articulo">${a.cuerpo_html || ""}</div>
     ${a.fuentes?.length ? `<div class="descripcion" style="margin-top:20px">${escapar(t("ficha.fuentes"))}: ${a.fuentes.map(escapar).join(", ")}</div>` : ""}
   `;
 

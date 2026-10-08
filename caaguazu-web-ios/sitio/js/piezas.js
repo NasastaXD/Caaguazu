@@ -45,7 +45,7 @@ export function precioA(rango) {
 export function tarjetaLugar(item) {
   const foto = item.portada?.url ?? "";
   const activo = esFavorito(item.id);
-  const esEvento = item.tipoItem === "evento";
+  const esEvento = item.tipo_item === "evento";
   const meta = [item.zona?.nombre, precioA(item.rangoPrecio ?? item.rango_precio)].filter(Boolean).join(" · ");
   return `
     <a class="tarjeta-lugar" href="#/ficha/${item.id}">

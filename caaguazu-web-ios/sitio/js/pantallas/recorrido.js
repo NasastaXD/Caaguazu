@@ -23,8 +23,8 @@ function volverAtras() {
 function pintar(contenedor, r) {
   const paradas = r.paradas ?? [];
   const conPunto = paradas.filter((p) => p.disponible && p.coordenadas);
-  const enlace = r.googleMaps || enlaceRecorrido(conPunto.map((p) => p.coordenadas));
-  const noEntra = !r.googleMaps && conPunto.length >= 2 && !enlace;
+  const enlace = r.google_maps || enlaceRecorrido(conPunto.map((p) => p.coordenadas));
+  const noEntra = !r.google_maps && conPunto.length >= 2 && !enlace;
   // Abierto desde una respuesta del asistente, volver regresa a la charla y
   // no a la lista de recorridos. Las paradas abren su ficha, que ya vuelve
   // con history.back(), así que el camino ficha → recorrido → charla se
@@ -41,7 +41,7 @@ function pintar(contenedor, r) {
     ${r.portada?.url ? `<div style="border-radius:var(--radio-tarjeta);overflow:hidden;margin-bottom:20px;aspect-ratio:16/9;background:var(--banda)"><img src="${escapar(r.portada.url)}" alt="" style="width:100%;height:100%;object-fit:cover"></div>` : ""}
     <h1 class="titulo-pagina">${escapar(r.titulo)}</h1>
     <div class="meta" style="color:var(--tinta-suave);margin:6px 0 var(--entre-secciones)">
-      ${escapar([r.duracionEstimada, r.cantidadParadas ? `${r.cantidadParadas} ${t("rec.paradas").toLowerCase()}` : ""].filter(Boolean).join(" · "))}
+      ${escapar([r.duracion_estimada, r.cantidad_paradas ? `${r.cantidad_paradas} ${t("rec.paradas").toLowerCase()}` : ""].filter(Boolean).join(" · "))}
     </div>
 
     ${r.resumen ? `<p class="descripcion" style="margin-bottom:var(--entre-secciones)">${escapar(r.resumen)}</p>` : ""}
@@ -54,10 +54,10 @@ function pintar(contenedor, r) {
       ${paradas.map(parada).join("")}
     </div>
 
-    ${r.costoTotal?.detalle?.length ? `
+    ${r.costo_total?.hay_pago && r.costo_total.detalle?.length ? `
       <div class="seccion">
         <h2 class="titulo-seccion">${escapar(t("ficha.costo"))}</h2>
-        <ul class="descripcion">${r.costoTotal.detalle.map((d) => `<li>${escapar(d)}</li>`).join("")}</ul>
+        <ul class="descripcion">${r.costo_total.detalle.map((d) => `<li>${escapar(d.titulo)} · ${escapar(d.costo)}</li>`).join("")}</ul>
       </div>` : ""}
   `;
 

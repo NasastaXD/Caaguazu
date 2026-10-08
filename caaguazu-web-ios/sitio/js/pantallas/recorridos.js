@@ -32,7 +32,7 @@ function tarjeta(r) {
       </div>
       <div class="titulo-tarjeta" style="margin-top:10px;white-space:normal">${escapar(r.titulo)}</div>
       <div class="meta" style="color:var(--tinta-suave);font-size:13px">
-        ${[r.duracionEstimada, r.cantidadParadas ? `${r.cantidadParadas} ${t("rec.paradas").toLowerCase()}` : ""].filter(Boolean).map(escapar).join(" · ")}
+        ${[r.duracion_estimada, r.cantidad_paradas ? `${r.cantidad_paradas} ${t("rec.paradas").toLowerCase()}` : ""].filter(Boolean).map(escapar).join(" · ")}
       </div>
     </a>`;
 }

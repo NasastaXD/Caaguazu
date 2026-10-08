@@ -142,6 +142,16 @@ propio, idioma elegido), y eso vive en su navegador, no acá.
 * En 320 px (iPhone SE, o el zoom de pantalla) la barra entra. Ahí sólo se
   muestra la etiqueta de la sección activa, como en la app.
 
+* Arreglos que venían de antes, sin relación con el asistente:
+  - Los artículos abrían sólo con el título: el texto llega como `cuerpo_html`
+    y el espejo lo buscaba como `cuerpoHtml`.
+  - Las fichas no mostraban descripción ni estado del camino, y el mapa y la
+    agenda dependían de nombres de campo que la API no manda (`google_maps`,
+    `tipo_item`). Por eso un evento nunca mostraba «Agendar».
+  - Los recorridos no mostraban duración ni cantidad de paradas, y el costo por
+    parada se veía como «[object Object]» cuando lo había.
+  - El evento destacado del inicio se montaba sobre el buscador.
+
 = 1.2.0 =
 * **Compartir una ficha, un artículo o un recorrido**, con un botón en cada
   una de esas pantallas; y desde Perfil, compartir el espejo entero. Usa la
