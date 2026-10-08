@@ -603,12 +603,36 @@ a.eyebrow { display: inline-flex; align-items: center; min-height: 44px; margin:
 	box-sizing: border-box;
 	border-radius: var(--r-full);
 	flex: none;
-	transition: background .2s ease, color .2s ease;
+	transition: background .2s ease, color .2s ease, transform .2s ease;
 }
-.barra__item span { margin-top: 3px; line-height: 1; white-space: nowrap; visibility: hidden; }
-.barra__item.activo svg { background: var(--tinta); color: var(--sobre-tinta); }
-.barra__item.activo span { visibility: visible; color: var(--tinta); }
+.barra__item span {
+	margin-top: 3px;
+	line-height: 1;
+	white-space: nowrap;
+	opacity: 0;
+	transform: translateY(4px);
+	transition: opacity .2s ease, transform .25s ease;
+}
+.barra__item.activo svg {
+	background: var(--tinta);
+	color: var(--sobre-tinta);
+	animation: pestana-activa .35s cubic-bezier(.2, .8, .2, 1);
+}
+.barra__item.activo span { opacity: 1; transform: none; color: var(--tinta); }
+/* Al tocar una pestaña inactiva, el disco se encoge un poco: confirma el toque. */
+.barra__item:not(.activo):active svg { transform: scale(.9); }
 .barra__item:not(.activo):hover { color: var(--texto); }
+
+/* Entradas: el disco de la pestaña activa aparece con un pequeño crecimiento, y el
+   orbe sube desde abajo la primera vez que se dibuja. Transform y opacidad solamente. */
+@keyframes pestana-activa {
+	from { transform: scale(.82); }
+	to   { transform: scale(1); }
+}
+@keyframes orbe-entra {
+	from { transform: translateY(14px) scale(.7); opacity: 0; }
+	to   { transform: none; opacity: 1; }
+}
 
 /* El asistente, en el medio: un orbe negro (--tinta, como los controles de
    maximo contraste) que sube por encima de la pastilla. Sin etiqueta visible:
@@ -618,7 +642,10 @@ a.eyebrow { display: inline-flex; align-items: center; min-height: 44px; margin:
 	width: 64px;
 	height: 64px;
 	align-self: flex-start;
-	margin-top: -26px;
+	/* El centro del orbe cae en el centro de los íconos (6px de borde y aire + 22px del disco). */
+	margin-top: -10px;
+	animation: orbe-entra .45s cubic-bezier(.2, .8, .2, 1);
+	transition: transform .15s ease;
 	justify-content: center;
 	border-radius: var(--r-full);
 	background: var(--tinta);
@@ -626,12 +653,13 @@ a.eyebrow { display: inline-flex; align-items: center; min-height: 44px; margin:
 	box-shadow: var(--sombra-flotante);
 }
 .barra__item--ia svg,
-.barra__item--ia.activo svg { width: 26px; height: 26px; padding: 0; background: none; color: var(--sobre-tinta); }
+.barra__item--ia.activo svg { width: 26px; height: 26px; padding: 0; background: none; color: var(--sobre-tinta); animation: none; }
+.barra__item--ia:active { transform: scale(.94); }
 .barra__item--ia span { display: none; }
 .barra__item--ia.activo { box-shadow: 0 0 0 3px var(--papel), 0 0 0 5px var(--tinta), var(--sombra-flotante); }
 @media (max-width: 359px) {
 	.barra__item { flex-basis: 54px; width: 54px; }
-	.barra__item--ia { flex-basis: 56px; width: 56px; height: 56px; }
+	.barra__item--ia { flex-basis: 56px; width: 56px; height: 56px; margin-top: -6px; }
 }
 
 /* ---------------------------------------------------------------------------
