@@ -5,6 +5,7 @@ import { t, idiomaActual } from "../idioma.js";
 import { escapar, precioA, estadoCargando, estadoError, Icono } from "../piezas.js";
 import { esFavorito, alternarFavorito } from "../estado.js";
 import { enlacePunto } from "../mapas.js";
+import { compartir } from "../compartir.js";
 
 export async function render(contenedor, params, id) {
   contenedor.innerHTML = estadoCargando();
@@ -41,6 +42,7 @@ function pintar(contenedor, f) {
       <div class="velo-degradado"></div>
     </div>
     <button class="ficha-boton-volver" id="ficha-volver" aria-label="volver">${Icono.volver}</button>
+    <button class="ficha-boton-compartir" id="ficha-compartir" aria-label="compartir">${Icono.compartir}</button>
     <button class="ficha-boton-favorito ${activo ? "activo" : ""}" id="ficha-favorito" aria-label="favorito">
       ${activo ? Icono.corazon : Icono.corazonBorde}
     </button>
@@ -91,6 +93,9 @@ function pintar(contenedor, f) {
   contenedor.querySelector("#ficha-favorito").addEventListener("click", () => {
     alternarFavorito(f.id);
     pintar(contenedor, f);
+  });
+  contenedor.querySelector("#ficha-compartir").addEventListener("click", () => {
+    compartir({ titulo: f.titulo, ruta: `ficha/${f.id}` });
   });
 
   if (puedeAgendar) {

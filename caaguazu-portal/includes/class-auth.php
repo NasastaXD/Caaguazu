@@ -6,8 +6,7 @@
  * Corre enteramente sobre el sistema de cuentas universal (caaguazu-cuentas,
  * plugin hermano) — ninguna persona del panel tiene ya un usuario de
  * WordPress. Los administradores siguen entrando por wp-login.php/wp-admin
- * como siempre (ver PROMOTUR_Router::maybe_block_wp_login()); esta clase no
- * los toca.
+ * como siempre —el panel no intercepta esa pantalla—; esta clase no los toca.
  */
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }

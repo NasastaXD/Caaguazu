@@ -2,6 +2,7 @@ import { Api } from "../api.js";
 import { t } from "../idioma.js";
 import { escapar, estadoCargando, estadoError, Icono } from "../piezas.js";
 import { enlaceRecorrido, MAX_PARADAS_INTERMEDIAS } from "../mapas.js";
+import { compartir } from "../compartir.js";
 
 export async function render(contenedor, params, id) {
   contenedor.innerHTML = estadoCargando();
@@ -20,8 +21,9 @@ function pintar(contenedor, r) {
   const noEntra = !r.googleMaps && conPunto.length >= 2 && !enlace;
 
   contenedor.innerHTML = `
-    <div style="margin:-4px 0 14px">
+    <div style="display:flex;justify-content:space-between;margin:-4px 0 14px">
       <a href="#/recorridos" class="boton-perfil" style="width:36px;height:36px" aria-label="volver">${Icono.volver}</a>
+      <button class="boton-perfil" id="rec-compartir" style="width:36px;height:36px" aria-label="compartir">${Icono.compartir}</button>
     </div>
     ${r.portada?.url ? `<div style="border-radius:var(--radio-tarjeta);overflow:hidden;margin-bottom:20px;aspect-ratio:16/9;background:var(--banda)"><img src="${escapar(r.portada.url)}" alt="" style="width:100%;height:100%;object-fit:cover"></div>` : ""}
     <h1 class="titulo-pagina">${escapar(r.titulo)}</h1>
@@ -45,6 +47,10 @@ function pintar(contenedor, r) {
         <ul class="descripcion">${r.costoTotal.detalle.map((d) => `<li>${escapar(d)}</li>`).join("")}</ul>
       </div>` : ""}
   `;
+
+  contenedor.querySelector("#rec-compartir").addEventListener("click", () => {
+    compartir({ titulo: r.titulo, ruta: `recorrido/${r.id}` });
+  });
 }
 
 function parada(p) {
