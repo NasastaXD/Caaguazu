@@ -2,9 +2,9 @@
 
 import { cargarAjustes } from "./config.js";
 import { aplicarTema } from "./tema.js";
-import { cargarTextos, aplicarDisponibles, idiomaActual, t } from "./idioma.js";
+import { cargarTextos, cargarTextosDelServidor, aplicarDisponibles, idiomaActual, t } from "./idioma.js";
 import { Api } from "./api.js";
-import { escapar, Icono, cerrarHojaAbierta } from "./piezas.js";
+import { escapar, Icono, cerrarHojaAbierta, error as estadoError } from "./piezas.js";
 import { alSuscribirEstado, esFavorito, alternarFavorito } from "./estado.js";
 
 import * as Inicio from "./pantallas/inicio.js";
@@ -101,8 +101,18 @@ async function enrutar() {
   const pantalla = document.createElement("div");
   pantalla.className = "pantalla";
   contenedor.replaceChildren(pantalla);
+  // Desde acá la página ya no es la de «Cargando…» del HTML: lo que falle o
+  // tarde lo muestra la propia pantalla, con su esqueleto y su reintentar.
+  avisarListo();
 
-  await encontrada.pantalla.render(pantalla, { params, id, vigente, hayAsistente });
+  try {
+    await encontrada.pantalla.render(pantalla, { params, id, vigente, hayAsistente });
+  } catch (e) {
+    // Una pantalla que revienta no deja la página vacía: dice que falló y
+    // ofrece reintentar. El detalle va a la consola para quien la mire.
+    console.error(e);
+    if (vigente()) pantalla.innerHTML = estadoError();
+  }
 
   if (!vigente()) return;
   const h1 = pantalla.querySelector("h1");
@@ -157,11 +167,25 @@ alSuscribirEstado((idCambiado) => {
 
 /* --- Arranque ----------------------------------------------------------- */
 
+/** Le avisa al HTML que la app arrancó, para que deje de vigilar (ver index.html). */
+function avisarListo() {
+  if (window.czuArranque) window.czuArranque.listo();
+}
+
+const esperar = (ms) => new Promise((resolver) => setTimeout(resolver, ms));
+
 async function iniciar() {
-  await cargarAjustes();
+  // Los ajustes y los textos embebidos salen del mismo servidor que la página
+  // y no dependen uno del otro: se piden a la vez. Antes iban en fila, y con
+  // un hosting lento sumaban varios segundos de pantalla vacía.
+  await Promise.all([cargarAjustes(), cargarTextos()]);
   aplicarTema();
-  await cargarTextos();
   document.documentElement.lang = idiomaActual();
+
+  // Lo que el panel edita de los textos depende de la API (que ya se sabe
+  // dónde está). Se espera poco: si tarda, la web abre con los embebidos y lo
+  // que llegue después se ve en la próxima pantalla.
+  await Promise.race([cargarTextosDelServidor(), esperar(1500)]);
 
   // Idiomas y asistente se preguntan en paralelo y sin frenar el primer
   // dibujado: si la red tarda, la web abre igual y la pestaña del asistente
@@ -186,4 +210,7 @@ async function iniciar() {
   await enrutar();
 }
 
-iniciar();
+iniciar().catch((e) => {
+  console.error(e);
+  if (window.czuArranque) window.czuArranque.fallo(e);
+});

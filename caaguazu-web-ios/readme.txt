@@ -2,7 +2,7 @@
 Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 2.0.0
+Stable tag: 2.0.1
 License: GPLv2 or later
 
 La guía de turismo de Caaguazú en una página web de acceso fácil, en `caaguazu.net/turismo/` (y en `/ios/`): se abre y se usa, sin instalar nada y sin crear una cuenta.
@@ -64,8 +64,14 @@ Un archivo más lo arma el plugin en cada pedido y no está en `sitio/`:
 `ajustes.json`, con la dirección de la API y los enlaces a las tiendas. Así la
 misma copia de la web anda en un sitio de prueba sin tocar una línea.
 
-El código —`html`, `css`, `js`, `json`— se revalida en cada carga (con ETag:
-si no cambió, es un 304 sin cuerpo); imágenes y fuentes se guardan una semana.
+La caché tiene tres reglas. La página, los ajustes y los textos —`html`, `json`—
+se revalidan en cada carga (con ETag: si no cambió, es un 304 sin cuerpo). El
+código —`css`, `js`— se pide con la versión en la URL (`js/app.js?v=2.0.1`, y
+también cada `import` entre módulos: lo estampa el plugin al servirlo, el
+fuente en `sitio/` queda sin versiones) y por eso se guarda «para siempre»: no
+puede cambiar sin que cambie la URL. Imágenes y fuentes se guardan una semana.
+La página además trae un `<link rel="modulepreload">` por módulo, armado
+leyendo los `import`, para que se bajen todos a la vez.
 
 Los archivos de `sitio/` usan rutas relativas (`css/estilo.css`, y
 `"start_url": "./index.html"` en el manifest), así que mudarlos de un dominio
@@ -120,6 +126,41 @@ que guarda cada visitante es su propio `localStorage` (favoritos, recorrido
 propio, idioma elegido), y eso vive en su navegador, no acá.
 
 == Changelog ==
+
+= 2.0.1 =
+* **La página ya no puede quedar vacía.** Hasta 2.0.0 el HTML salía sin nada
+  adentro y todo lo dibujaba JavaScript: si tardaba, fallaba o no corría, la
+  persona veía un fondo liso y una pastillita huérfana abajo, sin ninguna pista.
+  Ahora el HTML trae una pantalla de «Cargando…», la barra vacía no se dibuja,
+  y un vigilante en línea avisa si la app no arranca: a los 5 segundos dice que
+  está tardando, y si un script no carga o pasan 15 segundos sin arrancar, muestra
+  qué pasó, un botón para reintentar y un informe técnico (qué archivo no cargó,
+  qué error, qué navegador) que se puede copiar o sacar en captura. En español,
+  inglés o portugués según el idioma elegido.
+* **Arranque en paralelo.** Los ajustes y los textos embebidos se pedían uno
+  después del otro y recién ahí se dibujaba; ahora van juntos. Los textos que
+  edita el panel (`/strings`) dependen de la API: se esperan, pero como mucho un
+  segundo y medio, y si llegan tarde se ven en la próxima pantalla. Una pantalla
+  que revienta ya no deja la página vacía: dice que falló y ofrece reintentar.
+* **Cada archivo de código lleva su versión en la URL** (`js/app.js?v=2.0.1`),
+  también los `import` entre módulos. Una actualización cambia todas las URLs de
+  golpe, así que un teléfono no puede juntar un módulo nuevo con uno viejo que
+  tenía guardado —lo que dejaba la página en blanco sin ningún error a la vista
+  después de actualizar—. Y como esas URLs no pueden cambiar de contenido, se
+  guardan «para siempre» (`immutable`): la segunda visita no vuelve a pedir ni un
+  archivo de código. La página, los ajustes y los textos siguen revalidándose.
+* **Los módulos se piden todos a la vez** (`<link rel="modulepreload">`, que arma
+  el plugin leyendo los `import`). Antes el navegador se enteraba de cada módulo
+  recién al terminar de leer el anterior y los bajaba en fila, una vuelta de red
+  por escalón: con mala señal eran segundos de pantalla vacía.
+* **La revalidación ahora contesta 304.** El hosting (y los que comprimen) le
+  vuelven débil el ETag —`W/"…"`, o le pegan `-gzip`—, y como se comparaba
+  exacto, ninguna revalidación coincidía jamás: la página se bajaba entera en
+  cada visita. Ahora se compara como corresponde (RFC 7232).
+* Prueba nueva, con el plugin de verdad y sin WordPress (`tools/web-prueba/`):
+  `node tools/probar-web.mjs` ahora arranca el servidor PHP con la API real
+  guardada y comprueba la pantalla de arranque, el vigilante, las versiones, la
+  precarga y la segunda visita.
 
 = 2.0.0 =
 * **La web deja de ser «lo de iPhone» y pasa a ser la guía de acceso fácil.**

@@ -21,6 +21,15 @@
  *    la pantalla por el ancho natural de un <input>.
  *  - La página abre aunque `ajustes.json` no responda. Sin un tope de tiempo,
  *    el arranque esperaba para siempre y la pantalla quedaba en blanco.
+ *  - La página NUNCA queda vacía: antes de que app.js corra ya hay una
+ *    pantalla de «Cargando…», y si la app no arranca (el script no carga, o
+ *    se cuelga) aparece qué pasó y un botón para reintentar, con el informe.
+ *    Es lo que faltaba cuando el teléfono mostraba un fondo liso y nada más.
+ *  - Lo que el PLUGIN le dice al navegador, probado con el plugin de verdad
+ *    (tools/web-prueba/router.php, sin WordPress): cada archivo de código
+ *    lleva su versión en la URL, ningún módulo se baja dos veces, la segunda
+ *    visita no vuelve a pedir nada de código, y una revalidación contesta 304
+ *    aunque el hosting le haya vuelto débil el ETag.
  *  - Ninguna clave de texto sin traducir en pantalla, en los tres idiomas.
  *  - Los flujos: guardar un favorito sin abrir la ficha, cambiar de tema,
  *    preguntarle al asistente, el error de «demasiadas preguntas», las
@@ -32,7 +41,10 @@
 
 import { createRequire } from 'module';
 import { createServer } from 'http';
-import { readFileSync, existsSync } from 'fs';
+import { createServer as servidorTcp } from 'net';
+import { spawn, spawnSync } from 'child_process';
+import { readFileSync, existsSync, writeFileSync } from 'fs';
+import { tmpdir } from 'os';
 import { join, dirname, extname, normalize } from 'path';
 import { fileURLToPath } from 'url';
 import { deflateSync, crc32 } from 'zlib';
@@ -412,6 +424,164 @@ seccion( 'Compartir y mapa' );
 	ok( 'tocar un pin abre la tarjeta, que lleva a la ficha', ( await p.locator( '.tarjeta-pin a' ).getAttribute( 'href' ) ) === '#/ficha/260' );
 	ok( 'sin errores de página', errores.length === 0, errores.join( '|' ) );
 	await ctx.close();
+}
+
+/* ---------------------------------------------------------------------------
+ * 5. El plugin de verdad: arranque, versiones y caché
+ * ------------------------------------------------------------------------ */
+
+seccion( 'Arranque y caché con el plugin de verdad (PHP)' );
+if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
+	console.log( `${ gris }  (sin php en el equipo: se salta)${ fin }` );
+} else {
+	const puerto = await new Promise( ( r ) => { const t = servidorTcp(); t.listen( 0, '127.0.0.1', () => { const n = t.address().port; t.close( () => r( n ) ); } ); } );
+	const PHP = `http://127.0.0.1:${ puerto }`;
+	// WEB_LATENCIA_MS: lo que cuesta arrancar WordPress en un hosting compartido.
+	const registro = join( tmpdir(), `probar-web-${ puerto }.log` );
+	writeFileSync( registro, '' );
+	const hijo = spawn( 'php', [ '-S', `127.0.0.1:${ puerto }`, join( aqui, 'web-prueba', 'router.php' ) ], { stdio: 'ignore', env: { ...process.env, PHP_CLI_SERVER_WORKERS: '8', WEB_LATENCIA_MS: '120', WEB_ASISTENTE: '0', WEB_REGISTRO: registro } } );
+	// Lo que llegó de verdad al servidor (y no lo que contestó el caché del
+	// navegador) queda anotado en un archivo: ver WEB_REGISTRO en router.php.
+	const pedidosAlServidor = () => ( existsSync( registro ) ? readFileSync( registro, 'utf8' ).split( '\n' ).filter( Boolean ).map( ( l ) => { const [ estado, , ruta ] = l.split( ' ' ); return { estado, ruta }; } ) : [] );
+	for ( let i = 0; i < 50; i++ ) { try { await fetch( PHP + '/turismo/ajustes.json' ); break; } catch { await new Promise( ( r ) => setTimeout( r, 100 ) ); } }
+
+	const abrir = async ( opciones = {} ) => {
+		const ctx = await navegador.newContext( { viewport: { width: 390, height: 844 }, locale: 'es-AR', hasTouch: true, isMobile: true, ...opciones } );
+		const p = await ctx.newPage();
+		const errores = [];
+		p.on( 'pageerror', ( e ) => errores.push( e.message ) );
+		return { ctx, p, errores };
+	};
+	const esModulo = ( ruta ) => /\/js\/.+\.js(\?|$)/.test( ruta ) && ! /vendor\//.test( ruta );
+
+	// --- Primera visita -------------------------------------------------------
+	{
+		const { ctx, p, errores } = await abrir();
+		const vistos = [];
+		p.on( 'request', ( r ) => { const u = new URL( r.url() ); if ( u.origin === PHP ) { vistos.push( u.pathname + u.search ); } } );
+		await p.goto( PHP + '/turismo/#/inicio', { waitUntil: 'load' } );
+		await p.waitForSelector( '#barra .barra__item', { timeout: 9000 } );
+		await p.waitForTimeout( 800 );
+
+		ok( 'la app arranca y reemplaza la pantalla de «Cargando…»', await p.locator( '#arranque' ).count() === 0 && await p.locator( '.pantalla' ).count() === 1 );
+		ok( 'sin errores de página', errores.length === 0, errores.join( '|' ) );
+
+		const codigo = vistos.filter( ( r ) => /\/(js|css)\//.test( r ) );
+		ok( 'todo el código se pide con su versión en la URL', codigo.length > 15 && codigo.every( ( r ) => /\?v=\d+\.\d+\.\d+$/.test( r ) ), codigo.filter( ( r ) => ! /\?v=/.test( r ) ).join( ',' ) );
+		const repetidos = Object.entries( codigo.reduce( ( a, r ) => ( ( a[ r ] = ( a[ r ] || 0 ) + 1 ), a ), {} ) ).filter( ( [ , n ] ) => n > 1 ).map( ( [ r ] ) => r );
+		ok( 'ningún módulo se baja dos veces (con dos URLs distintas se ejecutaría dos veces)', repetidos.length === 0, repetidos.join( ',' ) );
+
+		const html = await ( await fetch( PHP + '/turismo/' ) ).text();
+		const precargados = new Set( [ ...html.matchAll( /rel="modulepreload" href="([^"]+)"/g ) ].map( ( m ) => '/turismo/' + m[ 1 ] ) );
+		const pedidosModulos = vistos.filter( esModulo );
+		const sinPrecarga = pedidosModulos.filter( ( r ) => ! precargados.has( r ) );
+		ok( 'la precarga cubre todos los módulos que la app necesitó (si no, bajan en fila)', precargados.size > 15 && sinPrecarga.length === 0, sinPrecarga.join( ',' ) );
+		await ctx.close();
+	}
+
+	// --- Segunda visita: nada de código vuelve al servidor --------------------
+	{
+		const { ctx, p } = await abrir();
+		await p.goto( PHP + '/turismo/#/inicio', { waitUntil: 'load' } );
+		await p.waitForSelector( '#barra .barra__item', { timeout: 9000 } );
+		const antes = pedidosAlServidor().length;
+		// Otra URL de la página, mismas URLs de código: una visita nueva, no un recargar.
+		await p.goto( PHP + '/turismo/?visita=2#/inicio', { waitUntil: 'load' } );
+		await p.waitForSelector( '#barra .barra__item', { timeout: 9000 } );
+		await p.waitForTimeout( 500 );
+		const segunda = pedidosAlServidor().slice( antes ).map( ( x ) => x.ruta );
+		const codigo = segunda.filter( ( r ) => /\/(js|css)\//.test( r ) );
+		ok( 'en la segunda visita ningún js ni css vuelve al servidor', codigo.length === 0, codigo.slice( 0, 4 ).join( ',' ) );
+		ok( 'sí se revalidan la página y los ajustes (lo único que puede cambiar sin cambiar de URL)', segunda.some( ( r ) => r.startsWith( '/turismo/?visita=2' ) ) && segunda.some( ( r ) => r.endsWith( 'ajustes.json' ) ), segunda.slice( 0, 6 ).join( ',' ) );
+		await ctx.close();
+	}
+
+	// --- Revalidación: el ETag que vuelve cambiado por el hosting -------------
+	{
+		const url = PHP + '/turismo/js/app.js';
+		const etag = ( await fetch( url ) ).headers.get( 'etag' );
+		const estado = async ( cabecera ) => ( await fetch( url, { headers: { 'If-None-Match': cabecera } } ) ).status;
+		ok( 'ETag exacto → 304', await estado( etag ) === 304 );
+		ok( 'ETag vuelto débil por el servidor (W/"…") → 304', await estado( 'W/' + etag ) === 304 );
+		ok( 'ETag con sufijo de compresión → 304', await estado( etag.replace( /"$/, '-gzip"' ) ) === 304 );
+		ok( 'otro ETag → 200 con el archivo', await estado( '"otro"' ) === 200 );
+		const versionado = ( await fetch( url + '?v=' + ( ( await ( await fetch( PHP + '/turismo/ajustes.json' ) ).json() ).version ) ) ).headers.get( 'cache-control' );
+		ok( 'el código con su versión se cachea «para siempre»', /immutable/.test( versionado ), versionado );
+		ok( 'una versión ajena no recibe esa promesa', ! /immutable/.test( ( await fetch( url + '?v=0.0.1' ) ).headers.get( 'cache-control' ) ) );
+	}
+
+	// --- La pantalla de arranque ---------------------------------------------
+	{
+		const { ctx, p } = await abrir();
+		// app.js tarda: lo que se ve mientras tanto NO es una pantalla vacía.
+		await p.route( '**/js/app.js*', async ( route ) => { await new Promise( ( r ) => setTimeout( r, 1800 ) ); await route.continue(); } );
+		await p.goto( PHP + '/turismo/#/inicio', { waitUntil: 'commit' } );
+		await p.waitForTimeout( 900 );
+		ok( 'mientras la app carga hay una pantalla de «Cargando…», no un fondo liso', /Cargando/.test( await p.locator( '#contenido' ).innerText() ) );
+		ok( 'y la barra vacía no se ve como una pastilla huérfana', await p.locator( '#barra' ).isHidden() );
+		await p.waitForSelector( '#barra .barra__item', { timeout: 9000 } );
+		ok( 'cuando la app arranca, la pantalla de arranque desaparece', await p.locator( '#arranque' ).count() === 0 );
+		await ctx.close();
+	}
+	{
+		const { ctx, p } = await abrir();
+		// El script de la app no carga (bloqueado, sin red, hosting caído).
+		await p.route( '**/js/app.js*', ( route ) => route.abort() );
+		await p.goto( PHP + '/turismo/#/inicio', { waitUntil: 'load' } );
+		await p.waitForSelector( '#arranque-fallo:not([hidden])', { timeout: 3000 } ).catch( () => {} );
+		const visible = await p.locator( '#arranque-fallo' ).isVisible();
+		ok( 'si la app no carga, la página lo dice en vez de quedar vacía', visible );
+		const boton = await p.locator( '#arranque-reintentar' ).boundingBox();
+		ok( 'ofrece reintentar, con un botón táctil de 44px', Boolean( boton ) && boton.height >= 44, JSON.stringify( boton ) );
+		await p.locator( '#arranque summary' ).click();
+		const informe = await p.locator( '#arranque-informe' ).innerText();
+		ok( 'el informe dice qué archivo no cargó y con qué navegador (para quien lo mire)', /js\/app\.js/.test( informe ) && /Mozilla/.test( informe ), informe.slice( 0, 160 ) );
+		ok( 'en el idioma del teléfono', /No se pudo abrir la web/.test( await p.locator( '#arranque-titulo' ).innerText() ) );
+		await ctx.close();
+	}
+	{
+		const { ctx, p } = await abrir( { locale: 'pt-BR' } );
+		await p.addInitScript( () => { try { localStorage.setItem( 'czu.idioma', 'pt' ); } catch {} } );
+		await p.route( '**/js/app.js*', ( route ) => route.abort() );
+		await p.goto( PHP + '/turismo/#/inicio', { waitUntil: 'load' } );
+		await p.waitForSelector( '#arranque-fallo:not([hidden])', { timeout: 3000 } ).catch( () => {} );
+		ok( 'y en portugués si ése es el idioma elegido', /Não foi possível abrir/.test( await p.locator( '#arranque-titulo' ).innerText() ) );
+		await ctx.close();
+	}
+	{
+		const { ctx, p } = await abrir();
+		// El script nunca responde: ni error ni éxito. Es el caso que más cuesta
+		// ver desde afuera, y el reloj falso evita esperar 15 segundos de verdad.
+		await p.clock.install();
+		await p.route( '**/js/app.js*', () => {} );
+		await p.goto( PHP + '/turismo/#/inicio', { waitUntil: 'commit' } );
+		// Hay que esperar a que el vigilante exista: si no, los timers que
+		// adelanta el reloj todavía no están programados.
+		await p.waitForFunction( () => window.czuArranque );
+		await p.clock.fastForward( 6000 );
+		ok( 'a los pocos segundos avisa que está tardando', /tardando/.test( await p.locator( '#arranque-texto' ).innerText() ) );
+		ok( 'pero todavía no da la web por perdida', await p.locator( '#arranque-fallo' ).isHidden() );
+		await p.clock.fastForward( 10000 );
+		ok( 'si sigue sin arrancar, muestra el fallo y el botón', await p.locator( '#arranque-fallo' ).isVisible() && await p.locator( '#arranque-reintentar' ).isVisible() );
+		await ctx.close();
+	}
+
+	// --- Los textos que edita el panel no frenan la web -----------------------
+	{
+		const { ctx, p, errores } = await abrir();
+		// /strings no responde: depende de la API, y la API puede tardar.
+		await p.route( '**/wp-json/czu-app/v1/strings/**', () => {} );
+		const t0 = Date.now();
+		await p.goto( PHP + '/turismo/#/inicio', { waitUntil: 'load' } );
+		await p.waitForSelector( '#barra .barra__item', { timeout: 9000 } );
+		const seg = ( Date.now() - t0 ) / 1000;
+		ok( 'si /strings no responde, la web abre igual en pocos segundos', seg < 4, `${ seg.toFixed( 1 ) }s` );
+		ok( 'con los textos que trae la propia web, no con claves crudas', ! /\b(?:web|nav|barra)\.[a-z]+/.test( await p.locator( '#barra' ).innerText() ) );
+		ok( 'sin errores de página', errores.length === 0, errores.join( '|' ) );
+		await ctx.close();
+	}
+
+	hijo.kill();
 }
 
 await navegador.close();

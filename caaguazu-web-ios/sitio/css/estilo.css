@@ -574,6 +574,10 @@ a.eyebrow { display: inline-flex; align-items: center; min-height: 44px; margin:
 	        backdrop-filter: saturate(180%) blur(20px);
 }
 @supports not (backdrop-filter: blur(1px)) { .barra, .redactar { background: var(--papel); } }
+/* Antes de que la app dibuje sus pestañas la barra está vacía, y vacía se ve
+   como una pastillita huérfana abajo de todo —es lo que se veía en el teléfono
+   mientras la web no terminaba de arrancar—. Sin pestañas, no hay barra. */
+.barra:empty { display: none; }
 .barra__item {
 	display: inline-flex;
 	align-items: center;

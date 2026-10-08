@@ -36,12 +36,150 @@
 <link rel="preload" href="fuentes/inter-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fuentes/inter-600.woff2" as="font" type="font/woff2" crossorigin>
 
+<!-- Los módulos de la app, pedidos todos juntos. Sin esto el navegador se entera
+     de cada uno recién al leer el anterior (app.js → pantallas → piezas → …) y
+     los baja en fila, una vuelta de red por escalón. El plugin completa esta
+     lista al servir la página (ver CZUWIOS_Servidor::precarga_modulos()); con
+     un servidor de archivos cualquiera simplemente no hay lista y todo anda
+     igual, un poco más lento. -->
+<!--precarga-->
+
 <link rel="stylesheet" href="css/estilo.css">
+
+<!--
+  La pantalla de arranque. Existe por una sola razón: que NUNCA se vea una
+  página vacía. Hasta 2.0.0 el <main> salía en blanco y todo lo dibujaba
+  app.js, así que si el JavaScript tardaba, fallaba o no corría, la persona
+  veía un fondo liso y una pastillita vacía, sin ninguna pista de qué pasaba.
+  Ahora el HTML ya trae algo que ver, y un vigilante avisa si la app no
+  arranca. Está en línea y no en estilo.css a propósito: tiene que verse
+  aunque el CSS o el JS no lleguen.
+-->
+<style>
+  .arranque { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 28vh 24px 0; text-align: center; font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #55555e; }
+  [data-theme="dark"] .arranque { color: #b3b3ba; }
+  .arranque__aro { width: 30px; height: 30px; border: 3px solid rgba(128, 128, 128, .28); border-top-color: currentColor; border-radius: 50%; animation: arranque-giro .8s linear infinite; }
+  .arranque__texto { margin: 0; font-size: 15px; line-height: 1.5; }
+  .arranque__fallo { max-width: 360px; }
+  .arranque__fallo p { margin: 0 0 14px; }
+  .arranque__fallo strong { display: block; margin-bottom: 4px; font-size: 17px; color: #18181b; }
+  [data-theme="dark"] .arranque__fallo strong { color: #f2f2f0; }
+  .arranque__boton { min-height: 44px; padding: 0 22px; border: 0; border-radius: 999px; background: #101012; color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+  [data-theme="dark"] .arranque__boton { background: #f4f4f2; color: #101012; }
+  .arranque details { margin-top: 18px; font-size: 12px; text-align: left; }
+  .arranque summary { cursor: pointer; text-align: center; padding: 10px; }
+  .arranque pre { margin: 6px 0 0; padding: 10px; max-height: 40vh; overflow: auto; border-radius: 8px; background: rgba(128, 128, 128, .14); white-space: pre-wrap; word-break: break-word; }
+  @keyframes arranque-giro { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .arranque__aro { animation-duration: 3s; } }
+</style>
+<noscript><style>.arranque__aro { display: none; }</style></noscript>
 </head>
 <body>
 <a class="saltar" href="#contenido">Saltar al contenido</a>
-<main id="contenido" class="pagina" tabindex="-1"></main>
+<main id="contenido" class="pagina" tabindex="-1">
+  <div class="arranque" id="arranque">
+    <div class="arranque__aro" id="arranque-aro" aria-hidden="true"></div>
+    <p class="arranque__texto" id="arranque-texto" role="status">Cargando…</p>
+    <div class="arranque__fallo" id="arranque-fallo" hidden>
+      <p><strong id="arranque-titulo"></strong><span id="arranque-ayuda"></span></p>
+      <button type="button" class="arranque__boton" id="arranque-reintentar"></button>
+      <details>
+        <summary id="arranque-detalles"></summary>
+        <pre id="arranque-informe"></pre>
+      </details>
+    </div>
+    <noscript><p class="arranque__texto">Esta web necesita JavaScript para funcionar. · This site needs JavaScript. · Este site precisa de JavaScript.</p></noscript>
+  </div>
+</main>
 <nav id="barra" class="barra" aria-label="Secciones"></nav>
+<!--
+  El vigilante. JavaScript clásico y en línea, a propósito: es lo único que
+  corre aunque un módulo no cargue, no se entienda o se cuelgue. Hace tres
+  cosas: anota los errores que ocurran antes de que la app arranque; avisa si
+  el navegador no sabe lo que la web necesita; y si pasan unos segundos sin
+  que app.js diga «listo» (window.czuArranque.listo()), muestra qué pasó y un
+  botón para reintentar, con el informe a mano para quien tenga que mirarlo.
+-->
+<script>
+  (function () {
+    var DICC = {
+      es: { cargando: "Cargando…", lento: "Está tardando más de lo normal…", titulo: "No se pudo abrir la web", ayuda: "Revisá tu conexión y probá de nuevo. Si sigue igual, probá desde otra pestaña o navegador.", reintentar: "Reintentar", detalles: "Detalles técnicos" },
+      en: { cargando: "Loading…", lento: "This is taking longer than usual…", titulo: "The site could not open", ayuda: "Check your connection and try again. If it keeps happening, try another tab or browser.", reintentar: "Try again", detalles: "Technical details" },
+      pt: { cargando: "Carregando…", lento: "Está demorando mais que o normal…", titulo: "Não foi possível abrir o site", ayuda: "Verifique sua conexão e tente de novo. Se continuar, tente outra aba ou navegador.", reintentar: "Tentar de novo", detalles: "Detalhes técnicos" }
+    };
+    var idioma = "es";
+    try { idioma = localStorage.getItem("czu.idioma") || (navigator.language || "es").slice(0, 2); } catch (e) {}
+    var tx = DICC[idioma] || DICC.es;
+    function $(id) { return document.getElementById(id); }
+
+    var listo = false, informe = [], reloj1, reloj2;
+    function anotar(linea) { if (informe.length < 12) informe.push(linea); }
+
+    // Errores que ocurren antes de que la app arranque. `true` (captura) es
+    // lo que deja ver también los de recursos, que no burbujean: un <script>
+    // que no cargó, un módulo que no se pudo leer.
+    window.addEventListener("error", function (e) {
+      if (listo) return;
+      var el = e.target;
+      if (el && el !== window && (el.src || el.href)) {
+        anotar("No cargó: " + (el.src || el.href));
+        if (el.tagName === "SCRIPT") mostrarFallo();
+      } else {
+        anotar((e.message || "Error") + (e.filename ? " (" + String(e.filename).split("/").slice(-2).join("/") + ":" + e.lineno + ")" : ""));
+      }
+    }, true);
+    window.addEventListener("unhandledrejection", function (e) {
+      if (listo) return;
+      var r = e.reason;
+      anotar("Promesa rechazada: " + (r && r.message ? r.message : r));
+    });
+
+    var faltan = [];
+    if (!window.Promise || !window.fetch || !window.URLSearchParams) faltan.push("fetch/Promise");
+    if (!("noModule" in document.createElement("script"))) faltan.push("módulos ES");
+    if (!Element.prototype.replaceChildren) faltan.push("replaceChildren");
+
+    function mostrarFallo() {
+      if (listo) return;
+      var u = $("arranque-fallo");
+      if (!u || !u.hidden) return;
+      $("arranque-aro").hidden = true;
+      $("arranque-texto").hidden = true;
+      u.hidden = false;
+      var lineas = informe.slice();
+      if (faltan.length) lineas.unshift("El navegador no soporta: " + faltan.join(", "));
+      lineas.push("", (navigator.userAgent || ""), location.href);
+      $("arranque-informe").textContent = lineas.join("\n");
+    }
+
+    window.czuArranque = {
+      listo: function () {
+        if (listo) return;
+        listo = true;
+        clearTimeout(reloj1); clearTimeout(reloj2);
+      },
+      fallo: function (e) {
+        anotar("Arranque: " + (e && e.message ? e.message : e));
+        mostrarFallo();
+      }
+    };
+
+    // Se arma ya, sin esperar a DOMContentLoaded: ese evento llega DESPUÉS de
+    // los módulos, así que si la red los cuelga, el vigilante nunca arrancaría.
+    // Los elementos de arriba ya existen: este script va después del <main>.
+    (function () {
+      $("arranque-texto").textContent = tx.cargando;
+      $("arranque-titulo").textContent = tx.titulo;
+      $("arranque-ayuda").textContent = tx.ayuda;
+      $("arranque-reintentar").textContent = tx.reintentar;
+      $("arranque-detalles").textContent = tx.detalles;
+      $("arranque-reintentar").addEventListener("click", function () { location.reload(); });
+      if (faltan.length) { anotar("Falta: " + faltan.join(", ")); mostrarFallo(); return; }
+      reloj1 = setTimeout(function () { if (!listo) $("arranque-texto").textContent = tx.lento; }, 5000);
+      reloj2 = setTimeout(mostrarFallo, 15000);
+    })();
+  })();
+</script>
 <script src="js/vendor/qrcode.js" defer></script>
 <script type="module" src="js/app.js"></script>
 </body>

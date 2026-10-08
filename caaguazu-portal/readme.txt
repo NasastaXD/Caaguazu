@@ -3,7 +3,7 @@ Contributors: municipalidadcaaguazu
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 3.12.0
+Stable tag: 3.12.1
 License: GPLv2 or later
 
 Panel autenticado tipo app (PWA) bajo /turismo-panel, con enrutador propio, login propio, roles y flujo editorial para las tres cosas que la app muestra: fichas del inventario turístico, artículos y recorridos.
@@ -59,6 +59,13 @@ llamen los tags.
 * Repo privado: definir `PROMOTUR_GITHUB_TOKEN` (PAT de solo lectura) en `wp-config.php`.
 
 == Changelog ==
+
+= 3.12.1 =
+* **«Ver la web» también en el menú lateral.** Estaba sólo en la barra de arriba,
+  pero en el teléfono el menú que se abre con las tres rayitas es lo que se usa
+  y ahí no estaba. Ahora es el primer item del pie del menú, arriba de «Mi
+  perfil», y se abre en otra pestaña. Igual que el botón de la barra, aparece
+  sólo si el plugin de la web está activo.
 
 = 3.12.0 =
 * **Un botón en la barra superior para ir a la web de turismo.** Abre
