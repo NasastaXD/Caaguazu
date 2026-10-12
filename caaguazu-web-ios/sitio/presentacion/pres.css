@@ -193,6 +193,12 @@ button { font: inherit; color: inherit; }
 	overflow: hidden;
 }
 
+.respuesta {
+	transition: opacity 1200ms var(--curva);
+}
+
+.respuesta.desvanecida { opacity: 0; }
+
 .respuesta .palabra {
 	opacity: .16;
 	transition: opacity 260ms var(--curva);

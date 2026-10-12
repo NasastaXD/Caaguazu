@@ -716,10 +716,11 @@ if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
 		ok( 'la esfera se mueve: el video corre (MP4 o WebM, el que el navegador pueda)', ! v2.error && v2.t > v1.t, JSON.stringify( v2 ) );
 		await pantalla.p.keyboard.press( 'Space' );
 		await pantalla.p.waitForTimeout( 400 );
-		ok( 'la barra espaciadora (o el control de diapositivas) la pone a escuchar', ( await pantalla.p.textContent( '#estado' ) ) === 'Escuchando' );
+		ok( 'la barra espaciadora (o el control de diapositivas) la pone a escuchar', await pantalla.p.evaluate( () => document.body.dataset.estado ) === 'escuchando' );
+		ok( 'y la pantalla queda limpia: ni rótulo de estado ni lo que se va entendiendo', ( await pantalla.p.textContent( '#estado' ) ) === '' && ( await pantalla.p.textContent( '#respuesta' ) ) === '' );
 		ok( 'y escuchando, la esfera acelera', ( await video() ).vel > v2.vel, `${ v2.vel } → ${ ( await video() ).vel }` );
 		await pantalla.p.waitForFunction( () => document.querySelectorAll( '#respuesta .palabra' ).length > 5, null, { timeout: 9000 } ).catch( () => {} );
-		ok( 'contesta, con lo preguntado arriba', ( await pantalla.p.textContent( '#pregunta' ) ).includes( 'cómo funciona esto' ) && await pantalla.p.locator( '#respuesta .palabra' ).count() > 5 );
+		ok( 'contesta, y en la pantalla se lee sólo la respuesta (no lo preguntado)', ( await pantalla.p.textContent( '#pregunta' ) ) === '' && await pantalla.p.locator( '#respuesta .palabra' ).count() > 5 );
 
 		// La sala: el teléfono habla, la pantalla muestra y dice.
 		await pantalla.p.keyboard.press( 'Escape' );
@@ -736,7 +737,7 @@ if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
 		await tel.p.click( '#empezar' );
 		await tel.p.waitForTimeout( 300 );
 		await tel.p.locator( '#orbe' ).tap();
-		const vioEscuchar = await pantalla.p.waitForFunction( () => document.getElementById( 'estado' ).textContent === 'Escuchando', null, { timeout: 5000 } ).then( () => true ).catch( () => false );
+		const vioEscuchar = await pantalla.p.waitForFunction( () => document.body.dataset.estado === 'escuchando', null, { timeout: 5000 } ).then( () => true ).catch( () => false );
 		ok( 'la pantalla ve que el teléfono está escuchando', vioEscuchar );
 		const dijo = await pantalla.p.waitForFunction( () => ( document.getElementById( 'respuesta' ).textContent || '' ).includes( 'cómo funciona esto' ), null, { timeout: 9000 } ).then( () => true ).catch( () => false );
 		ok( 'y dice la respuesta a lo que se habló en el teléfono', dijo );

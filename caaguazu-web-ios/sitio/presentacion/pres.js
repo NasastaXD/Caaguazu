@@ -320,18 +320,25 @@ let escuchaRemota = false;
 function poner(estado, { mensaje = "", error = false } = {}) {
   Estado.actual = estado;
   if (estado !== "escuchando") escuchaRemota = false;
+  // El estado queda escrito en el body para quien lo necesite (las pruebas,
+  // un lector de pantalla por aria-pressed), no en la pantalla.
+  document.body.dataset.estado = estado;
   const el = $("estado");
-  const texto =
-    mensaje ||
-    {
-      // La pantalla no dice nada en reposo: la esfera alcanza. El teléfono,
-      // que es quien tiene que tocar, sí.
-      listo: modoControl && hayOidoLocal() ? TX.listo : "",
-      escuchando: TX.escuchando,
-      pensando: TX.pensando,
-      apagada: TX.apagada,
-    }[estado] ||
-    "";
+  // La pantalla es sólo la esfera: lo que hace se ve en cómo se mueve, y lo
+  // único que se escribe es un problema que alguien tiene que resolver. El
+  // teléfono, que es quien toca, sí dice qué está pasando.
+  const texto = modoControl
+    ? mensaje ||
+      {
+        listo: hayOidoLocal() ? TX.listo : "",
+        escuchando: TX.escuchando,
+        pensando: TX.pensando,
+        apagada: TX.apagada,
+      }[estado] ||
+      ""
+    : error || estado === "apagada"
+      ? mensaje || TX.apagada
+      : "";
   el.textContent = texto;
   el.classList.toggle("es-error", error);
   $("orbe").setAttribute("aria-pressed", String(estado === "escuchando"));
@@ -348,6 +355,8 @@ function avisar(mensaje, { error = true } = {}) {
 }
 
 function mostrarPregunta(texto) {
+  // En la pantalla no se repite lo que se preguntó: se escuchó en la sala.
+  if (!modoControl) texto = "";
   const el = $("pregunta");
   el.textContent = texto || "";
   el.classList.toggle("visible", Boolean(texto));
@@ -355,7 +364,10 @@ function mostrarPregunta(texto) {
 
 /** Lo que se va entendiendo mientras se habla, en gris. */
 function mostrarEscuchado(texto) {
+  // Tampoco lo que se va entendiendo: en la pantalla sólo se lee la respuesta.
+  if (!modoControl) texto = "";
   const el = $("respuesta");
+  el.classList.remove("desvanecida");
   el.classList.add("parcial");
   el.textContent = texto || "";
   el.scrollTop = el.scrollHeight;
@@ -365,9 +377,21 @@ function mostrarEscuchado(texto) {
 
 let subtitulo = null; // { palabras: [span], cortes: [índice de carácter], dichas }
 
+/**
+ * Terminada la respuesta, queda unos segundos para terminar de leerla y se
+ * apaga: la pantalla vuelve a ser sólo la esfera.
+ */
+let relojDesvanecer = 0;
+function desvanecerRespuesta() {
+  if (modoControl) return;
+  clearTimeout(relojDesvanecer);
+  relojDesvanecer = setTimeout(() => $("respuesta").classList.add("desvanecida"), 6000);
+}
+
 function prepararSubtitulo(texto) {
+  clearTimeout(relojDesvanecer);
   const el = $("respuesta");
-  el.classList.remove("parcial");
+  el.classList.remove("parcial", "desvanecida");
   el.textContent = "";
   el.scrollTop = 0;
   const palabras = [];
@@ -430,6 +454,7 @@ function decir(texto, audioUrl) {
       terminado = true;
       cortarVoz = null;
       decirHasta(Infinity);
+      desvanecerRespuesta();
       if (Estado.actual === "hablando") poner("listo");
       listo();
     };

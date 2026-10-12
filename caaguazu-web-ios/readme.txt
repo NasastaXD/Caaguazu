@@ -142,7 +142,12 @@ propio, idioma elegido), y eso vive en su navegador, no acá.
   mismos 148 cuadros), porque a un video se le puede cambiar la velocidad. Con
   la voz acelera, crece, brilla más y se le abre un resplandor azul detrás. Se
   sirve directo desde la carpeta del plugin, sin PHP: Safari necesita pedidos
-  por partes para reproducir un video. En reposo la pantalla no muestra texto.
+  por partes para reproducir un video.
+* La pantalla es sólo la esfera: sin rótulos de estado, sin repetir lo que se
+  preguntó y sin lo que se va entendiendo. Se lee únicamente la respuesta,
+  mientras se dice, y a los seis segundos de terminar se desvanece. Sólo se
+  escribe algo si hay un problema que resolver (sin micrófono, sin conexión).
+  El teléfono, que es quien toca, sí dice qué está pasando.
 * Un teléfono puede hacer de micrófono: desde los ajustes de la página
   (el engranaje de abajo, o la tecla S) se crea una sala con un QR; el teléfono
   la abre, se le habla a él y la pantalla contesta.
