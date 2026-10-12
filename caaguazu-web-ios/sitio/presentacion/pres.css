@@ -16,7 +16,8 @@
 @font-face { font-family: "Inter"; font-style: normal; font-weight: 600; font-display: swap; src: url("../fuentes/inter-600.woff2") format("woff2"); }
 
 :root {
-	--fondo:        #02020a;
+	/* Negro puro: es el fondo del video, y así no se le ven los bordes. */
+	--fondo:        #000000;
 	--texto:        #f4f4f2;
 	--texto-2:      #a3a3ad;
 	--texto-debil:  #6b6b75;
@@ -25,14 +26,9 @@
 	--linea:        #2a2a31;
 	--error:        #ff8a80;
 
-	/* La esfera: vidrio rosa y violeta, anillo blanco, cintas y halo azules. */
+	/* La esfera: el brillo que se suma con la voz, y el medidor. */
 	--orbe-halo:    #2b1bff;
-	--orbe-cinta:   #b9b2ff;
 	--orbe-anillo:  #d9d6ff;
-	--orbe-luz:     #f6d2ff;
-	--orbe-rosa:    #e86bf2;
-	--orbe-violeta: #7c46f0;
-	--orbe-hondo:   #3a1fb0;
 
 	--r-2:          14px;
 	--r-full:       999px;
@@ -92,7 +88,8 @@ button { font: inherit; color: inherit; }
 
 .orbe {
 	position: relative;
-	width: min(60vmin, 540px);
+	/* El botón es la esfera; el video es mucho más grande y la rodea. */
+	width: min(38vmin, 340px);
 	aspect-ratio: 1;
 	border: 0;
 	padding: 0;
@@ -102,18 +99,52 @@ button { font: inherit; color: inherit; }
 	touch-action: manipulation;
 }
 
-.orbe canvas {
+.orbe__escena {
 	position: absolute;
-	/* El lienzo es más grande que el botón: el halo se derrama alrededor. */
-	inset: -30%;
-	width: 160%;
-	height: 160%;
+	left: 50%;
+	top: 50%;
+	/* En el video (800×600) la esfera ocupa unos 300 px de ancho y su centro
+	   está un poco arriba de la mitad: por eso 267% y el corrimiento. */
+	width: 267%;
+	aspect-ratio: 4 / 3;
+	transform: translate(-50%, -46%) scale(var(--escala, 1));
 	pointer-events: none;
+	will-change: transform;
+}
+
+.orbe__video {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	filter: brightness(var(--luz, 1)) saturate(var(--color, 1));
+	/* El original trae un rectángulo apenas más claro en el centro y el halo
+	   cortado arriba: el borde se desvanece en el negro y no se ve ninguno. */
+	-webkit-mask-image: radial-gradient(closest-side, #000 52%, transparent 100%);
+	mask-image: radial-gradient(closest-side, #000 52%, transparent 100%);
+}
+
+/* Un resplandor azul detrás, que crece con la voz. */
+.orbe__brillo {
+	position: absolute;
+	left: 50%;
+	top: 46%;
+	width: 60%;
+	aspect-ratio: 1;
+	border-radius: var(--r-full);
+	background: radial-gradient(closest-side, var(--orbe-halo), transparent);
+	opacity: var(--brillo, 0);
+	transform: translate(-50%, -50%) scale(var(--abre, 1));
+	mix-blend-mode: screen;
 }
 
 .orbe:focus-visible { outline: 2px solid var(--texto-2); outline-offset: 12px; }
 
 .estado {
+	/* Por encima del video, que es más grande que la esfera y la rodea de negro. */
+	position: relative;
+	z-index: 2;
 	margin: 0;
 	min-height: 1.4em;
 	font-size: clamp(14px, 1.6vmin, 18px);
@@ -130,6 +161,8 @@ button { font: inherit; color: inherit; }
  * ------------------------------------------------------------------------ */
 
 .subtitulos {
+	position: relative;
+	z-index: 2;
 	width: min(100%, 1040px);
 	min-height: 7.5em;
 	text-align: center;

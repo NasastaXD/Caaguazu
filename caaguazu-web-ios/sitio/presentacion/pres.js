@@ -52,16 +52,21 @@ const quieto = matchMedia("(prefers-reduced-motion: reduce)");
  * Configuración y red
  * ---------------------------------------------------------------------- */
 
-/** Dónde está la API: la deja escrita el plugin en la página. */
-function direccionApi() {
+/** Lo que el plugin deja escrito en la página: la API y la carpeta directa. */
+function ajustesDeLaPagina() {
   try {
     const el = document.getElementById("czu-ajustes");
     const j = el ? JSON.parse(el.textContent) : null;
-    if (j && typeof j.api === "string" && j.api) return j.api;
+    return j && typeof j === "object" ? j : {};
   } catch {
-    /* sin el plugin: la de producción */
+    return {};
   }
-  return "https://caaguazu.net/wp-json/czu-app/v1/";
+}
+
+/** Dónde está la API. Sin el plugin, la de producción. */
+function direccionApi() {
+  const api = ajustesDeLaPagina().api;
+  return typeof api === "string" && api ? api : "https://caaguazu.net/wp-json/czu-app/v1/";
 }
 const API = direccionApi();
 
@@ -202,223 +207,84 @@ function guardar(clave, valor) {
  * La esfera
  * ---------------------------------------------------------------------- */
 
-/** Un color de pres.css como [r, g, b]. */
-function colorDe(variable) {
-  const v = getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
-  const m = /^#?([0-9a-f]{6})$/i.exec(v);
-  const n = m ? parseInt(m[1], 16) : 0x999999;
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-}
-
-const rgba = (c, a) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${Math.max(0, Math.min(1, a))})`;
-
 /*
- * Tres capas, de afuera hacia adentro:
+ * La esfera es la animación que dibujó un amigo del proyecto, tal cual: el GIF
+ * original pasado a video (esfera.mp4, los mismos 148 cuadros), porque a un
+ * video se le puede cambiar la velocidad y a un GIF no.
  *
- *  1. HALO azul profundo, que se abre con la voz.
- *  2. CINTAS: tres haces de hilos finos que giran alrededor de la esfera y se
- *     deforman con ondas. Cada hilo es la misma curva un poco corrida, y
- *     sumados con «lighter» dan esa luz de cinta de seda. Con la voz, las
- *     ondas crecen y los hilos se abren.
- *  3. LA ESFERA: vidrio rosa y violeta con dos ondas de luz que se mueven
- *     adentro, un reflejo arriba y un anillo blanco que brilla en el borde.
- *
- * Todo sale de los colores de pres.css: cambiar la paleta es cambiar esas
- * líneas, no esto.
+ * Lo que la hace reaccionar va encima, sin tocar la animación:
+ *  - la VELOCIDAD: lenta en reposo, normal escuchando, rápida pensando, y
+ *    hablando sigue el volumen de la voz;
+ *  - el TAMAÑO y la LUZ, que crecen con la energía;
+ *  - un RESPLANDOR azul detrás, que se abre con la voz.
  */
 const Orbe = (() => {
-  const lienzo = $("lienzo");
-  const ctx = lienzo.getContext("2d");
-  const C = {
-    halo: colorDe("--orbe-halo"),
-    cinta: colorDe("--orbe-cinta"),
-    anillo: colorDe("--orbe-anillo"),
-    luz: colorDe("--orbe-luz"),
-    rosa: colorDe("--orbe-rosa"),
-    violeta: colorDe("--orbe-violeta"),
-    hondo: colorDe("--orbe-hondo"),
-  };
-  // Cuánto gira y cuánto se agita en cada estado, sin contar la voz.
-  const RITMO = { inicio: 0.25, apagada: 0.06, listo: 0.3, escuchando: 0.55, pensando: 1.3, hablando: 0.7 };
-  const BASE = { inicio: 0.12, apagada: 0.03, listo: 0.18, escuchando: 0.32, pensando: 0.45, hablando: 0.3 };
+  const video = $("esfera");
+  const escena = $("escena-orbe");
+  const brillo = $("brillo");
 
-  const CINTAS = 3;
-  const HILOS = 14;
-  const PASOS = 120;
+  // Se pide directo a la carpeta del plugin cuando se puede (ver
+  // CZUWIOS_Servidor::ajustes()): el servidor web atiende los pedidos por
+  // partes que Safari exige para un video, y no pasa por WordPress.
+  // Hay dos copias: MP4 (H.264), que reproducen Chrome, Edge y Safari, y
+  // WebM (VP9) para los navegadores que no traen H.264 — algunos Chromium y
+  // Firefox de Linux. Una esfera que no arranca sería la imagen quieta.
+  const directa = ajustesDeLaPagina().directa;
+  const formato = video.canPlayType('video/mp4; codecs="avc1.42E01E"') ? "mp4" : "webm";
+  video.src = `${directa ? `${directa}presentacion/` : ""}esfera.${formato}`;
 
-  let t = 0;
+  const VELOCIDAD = { inicio: 0.6, apagada: 0.25, listo: 0.6, escuchando: 0.95, pensando: 1.5, hablando: 0.9 };
+  const BASE = { inicio: 0.12, apagada: 0.02, listo: 0.15, escuchando: 0.3, pensando: 0.45, hablando: 0.3 };
+
   let nivel = 0;
   let energia = 0.15;
-  let antes = performance.now();
+  let velocidad = 1;
   let alCuadro = null;
 
-  function medir() {
-    const caja = lienzo.getBoundingClientRect();
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    const lado = Math.max(1, Math.round(caja.width * dpr));
-    if (lienzo.width !== lado) {
-      lienzo.width = lado;
-      lienzo.height = lado;
+  function reproducir() {
+    if (quieto.matches) {
+      video.pause();
+      return;
     }
+    video.play().catch(() => {});
   }
-  new ResizeObserver(medir).observe(lienzo);
+  quieto.addEventListener?.("change", reproducir);
+  reproducir();
 
   function cuadro(ahora) {
-    const dt = Math.min(0.05, (ahora - antes) / 1000);
-    antes = ahora;
     alCuadro?.(ahora);
 
     const e = Estado.actual;
     const objetivo = nivelObjetivo(e, ahora);
     nivel += (objetivo - nivel) * (objetivo > nivel ? 0.35 : 0.1);
-    energia += ((BASE[e] ?? 0.18) + nivel * 0.7 - energia) * 0.08;
+    energia += ((BASE[e] ?? 0.15) + nivel * 0.7 - energia) * 0.08;
+    const E = Math.min(1, energia);
+
+    // Cambiar la velocidad en cada cuadro hace saltar el video: sólo cuando
+    // la diferencia se nota.
+    const quiere = Math.max(0.25, Math.min(2.2, (VELOCIDAD[e] ?? 0.6) + nivel * 0.9));
+    if (!quieto.matches && Math.abs(quiere - velocidad) > 0.06) {
+      velocidad = quiere;
+      video.playbackRate = velocidad;
+    }
 
     const mueve = !quieto.matches;
-    if (mueve) t += dt * (RITMO[e] ?? 0.3) * (1 + nivel * 1.2);
-    dibujar(mueve ? energia : 0.25);
+    escena.style.setProperty("--escala", mueve ? String(0.94 + 0.14 * E) : "1");
+    video.style.setProperty("--luz", String(0.75 + 0.55 * E));
+    video.style.setProperty("--color", String(1 + 0.35 * E));
+    brillo.style.setProperty("--brillo", String(Math.min(0.85, E * 0.9)));
+    brillo.style.setProperty("--abre", mueve ? String(1 + 0.6 * E) : "1");
+
     requestAnimationFrame(cuadro);
   }
 
-  /** El radio de una cinta en el ángulo `a`: ondas que viajan y un lado más abierto. */
-  function radioCinta(R, a, k, j, E) {
-    const fk = k * 2.1;
-    const amp = 0.07 + 0.2 * E;
-    const onda =
-      Math.sin(2 * a + fk + t * (0.9 + k * 0.25) + j * 0.045) * 0.6 +
-      Math.sin(3 * a - fk * 1.3 - t * (0.6 + k * 0.2) + j * 0.07) * 0.4;
-    // Las cintas no son parejas: de un lado se abren y del otro se pegan a la
-    // esfera, y ese lado gira despacio.
-    const lado = 0.55 + 0.45 * Math.sin(a + t * 0.35 + k * 2.3);
-    return R * (1.02 + k * 0.03 + j * 0.007 * (1 + E * 2) + amp * onda * lado);
-  }
-
-  function dibujar(E) {
-    const S = lienzo.width;
-    const c = S / 2;
-    // El lienzo es 160% del botón; la esfera usa poco más de la mitad del
-    // botón y el resto es lugar para las cintas y el halo.
-    const R = S / 3.7;
-
-    ctx.globalCompositeOperation = "source-over";
-    ctx.clearRect(0, 0, S, S);
-
-    // 1. Halo.
-    // Termina antes del borde del lienzo y cae suave: si no, se ve el corte.
-    const halo = ctx.createRadialGradient(c, c, R * 0.9, c, c, R * 1.8);
-    const fuerza = 0.4 + 0.3 * E;
-    [[0, 1], [0.2, 0.55], [0.45, 0.22], [0.7, 0.07], [1, 0]].forEach(([p, a]) => halo.addColorStop(p, rgba(C.halo, fuerza * a)));
-    ctx.fillStyle = halo;
-    ctx.fillRect(0, 0, S, S);
-
-    // 2. Cintas, por detrás y por delante de la esfera a la vez: se dibujan
-    // antes y la esfera las tapa en el centro.
-    ctx.globalCompositeOperation = "lighter";
-    ctx.lineWidth = Math.max(1, S / 520);
-    for (let k = 0; k < CINTAS; k++) {
-      for (let j = 0; j < HILOS; j++) {
-        const medio = 1 - Math.abs(j / (HILOS - 1) - 0.5) * 2;
-        ctx.strokeStyle = rgba(C.cinta, (0.1 + 0.16 * E) * (0.3 + 0.7 * medio));
-        ctx.beginPath();
-        for (let i = 0; i <= PASOS; i++) {
-          const a = (i / PASOS) * Math.PI * 2;
-          const r = radioCinta(R, a, k, j, E);
-          const x = c + Math.cos(a) * r;
-          const y = c + Math.sin(a) * r * (0.96 + 0.04 * Math.sin(t * 0.5 + k));
-          if (i) ctx.lineTo(x, y);
-          else ctx.moveTo(x, y);
-        }
-        ctx.stroke();
-      }
-    }
-
-    // 3. La esfera.
-    ctx.globalCompositeOperation = "source-over";
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(c, c, R, 0, Math.PI * 2);
-    ctx.clip();
-
-    const cuerpo = ctx.createRadialGradient(c - R * 0.25, c - R * 0.35, R * 0.05, c + R * 0.1, c + R * 0.15, R * 1.15);
-    cuerpo.addColorStop(0, rgba(C.luz, 1));
-    cuerpo.addColorStop(0.45, rgba(C.rosa, 1));
-    cuerpo.addColorStop(0.85, rgba(C.violeta, 1));
-    cuerpo.addColorStop(1, rgba(C.hondo, 1));
-    ctx.fillStyle = cuerpo;
-    ctx.fillRect(c - R, c - R, R * 2, R * 2);
-
-    // Dos ondas de luz que giran adentro, en sentidos contrarios.
-    ctx.globalCompositeOperation = "screen";
-    [
-      { giro: t * 0.35, color: C.rosa, alfa: 0.55, alto: 0.22 },
-      { giro: -t * 0.27 + 2.2, color: C.violeta, alfa: 0.5, alto: 0.3 },
-    ].forEach(({ giro, color, alfa, alto }, n) => {
-      ctx.save();
-      ctx.translate(c, c);
-      ctx.rotate(giro);
-      ctx.beginPath();
-      ctx.moveTo(-R * 1.2, R * 1.2);
-      for (let i = 0; i <= 40; i++) {
-        const x = -R * 1.2 + (i / 40) * R * 2.4;
-        const y = Math.sin(x / R * 2.2 + t * (0.8 + n * 0.3)) * R * (alto + 0.08 * E);
-        ctx.lineTo(x, y);
-      }
-      ctx.lineTo(R * 1.2, R * 1.2);
-      ctx.closePath();
-      const g = ctx.createLinearGradient(0, -R * 0.3, 0, R);
-      g.addColorStop(0, rgba(color, alfa));
-      g.addColorStop(1, rgba(color, 0));
-      ctx.fillStyle = g;
-      ctx.fill();
-      ctx.restore();
-    });
-
-    // Sombra en el borde y reflejo arriba: es lo que la hace de vidrio.
-    ctx.globalCompositeOperation = "source-over";
-    const borde = ctx.createRadialGradient(c, c, R * 0.6, c, c, R);
-    borde.addColorStop(0, "rgba(0,0,0,0)");
-    borde.addColorStop(1, rgba(C.hondo, 0.55));
-    ctx.fillStyle = borde;
-    ctx.fillRect(c - R, c - R, R * 2, R * 2);
-    const reflejo = ctx.createRadialGradient(c - R * 0.3, c - R * 0.45, 0, c - R * 0.3, c - R * 0.45, R * 0.5);
-    reflejo.addColorStop(0, "rgba(255,255,255,0.22)");
-    reflejo.addColorStop(1, "rgba(255,255,255,0)");
-    ctx.fillStyle = reflejo;
-    ctx.fillRect(c - R, c - R, R * 2, R * 2);
-    ctx.restore();
-
-    // El anillo que brilla en el borde: ancho y azul afuera, fino y blanco
-    // en el centro, y apenas ondulado.
-    ctx.globalCompositeOperation = "lighter";
-    const capas = [
-      { ancho: 0.08, color: C.halo, alfa: 0.16 + 0.14 * E },
-      { ancho: 0.03, color: C.anillo, alfa: 0.35 + 0.25 * E },
-      { ancho: 0.01, color: [255, 255, 255], alfa: 0.9 },
-    ];
-    for (const capa of capas) {
-      ctx.lineWidth = R * capa.ancho;
-      ctx.strokeStyle = rgba(capa.color, capa.alfa);
-      ctx.beginPath();
-      for (let i = 0; i <= PASOS; i++) {
-        const a = (i / PASOS) * Math.PI * 2;
-        const r = R * (1.005 + (0.01 + 0.02 * E) * Math.sin(3 * a + t * 1.4) * Math.sin(a - t * 0.6));
-        const x = c + Math.cos(a) * r;
-        const y = c + Math.sin(a) * r;
-        if (i) ctx.lineTo(x, y);
-        else ctx.moveTo(x, y);
-      }
-      ctx.closePath();
-      ctx.stroke();
-    }
-    ctx.globalCompositeOperation = "source-over";
-  }
-
-  medir();
   requestAnimationFrame(cuadro);
   return {
     /** Algo que tiene que correr una vez por cuadro (los subtítulos). */
     set alCuadro(fn) {
       alCuadro = fn;
     },
+    reproducir,
   };
 })();
 
@@ -1157,6 +1023,7 @@ async function empezar() {
     }
   }
   mantenerDespierta();
+  Orbe.reproducir();
   $("inicio").classList.add("oculto");
   poner("listo");
   $("nota-microfono").textContent = config.oido === "servidor" ? "" : TX.notaNavegador;

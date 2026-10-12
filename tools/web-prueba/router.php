@@ -108,7 +108,7 @@ if ( 0 === strpos( $ruta, $directa ) ) {
 	}
 	$tipos = array(
 		'js' => 'application/x-javascript', 'css' => 'text/css', 'json' => 'application/json',
-		'png' => 'image/png', 'woff2' => 'font/woff2', 'webmanifest' => 'text/plain', 'html' => 'text/html',
+		'png' => 'image/png', 'woff2' => 'font/woff2', 'mp4' => 'video/mp4', 'webm' => 'video/webm', 'webmanifest' => 'text/plain', 'html' => 'text/html',
 	);
 	header( 'Content-Type: ' . ( $tipos[ strtolower( pathinfo( $archivo, PATHINFO_EXTENSION ) ) ] ?? 'application/octet-stream' ) );
 	header( 'Cache-Control: public, max-age=604800' );

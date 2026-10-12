@@ -709,9 +709,15 @@ if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
 		await pantalla.p.waitForFunction( () => ! document.getElementById( 'empezar' ).disabled, null, { timeout: 9000 } );
 		await pantalla.p.click( '#empezar' );
 		await pantalla.p.waitForTimeout( 400 );
+		const video = () => pantalla.p.evaluate( () => { const v = document.getElementById( 'esfera' ); return { t: v.currentTime, vel: v.playbackRate, error: v.error && v.error.code }; } );
+		const v1 = await video();
+		await pantalla.p.waitForTimeout( 500 );
+		const v2 = await video();
+		ok( 'la esfera se mueve: el video corre (MP4 o WebM, el que el navegador pueda)', ! v2.error && v2.t > v1.t, JSON.stringify( v2 ) );
 		await pantalla.p.keyboard.press( 'Space' );
-		await pantalla.p.waitForTimeout( 200 );
+		await pantalla.p.waitForTimeout( 400 );
 		ok( 'la barra espaciadora (o el control de diapositivas) la pone a escuchar', ( await pantalla.p.textContent( '#estado' ) ) === 'Escuchando' );
+		ok( 'y escuchando, la esfera acelera', ( await video() ).vel > v2.vel, `${ v2.vel } → ${ ( await video() ).vel }` );
 		await pantalla.p.waitForFunction( () => document.querySelectorAll( '#respuesta .palabra' ).length > 5, null, { timeout: 9000 } ).catch( () => {} );
 		ok( 'contesta, con lo preguntado arriba', ( await pantalla.p.textContent( '#pregunta' ) ).includes( 'cómo funciona esto' ) && await pantalla.p.locator( '#respuesta .palabra' ).count() > 5 );
 

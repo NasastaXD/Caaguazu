@@ -6,7 +6,7 @@
 <title>Caaguazú · Presentación</title>
 <!-- Es para un escenario, no para que la encuentre un buscador. -->
 <meta name="robots" content="noindex, nofollow">
-<meta name="theme-color" content="#02020a">
+<meta name="theme-color" content="#000000">
 <link rel="icon" href="../assets/icon-192.png">
 <link rel="preload" href="../fuentes/inter-600.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="pres.css">
@@ -21,7 +21,12 @@
 <main class="escena">
   <div class="escena__centro">
     <button type="button" class="orbe" id="orbe" aria-label="Hablar">
-      <canvas id="lienzo" aria-hidden="true"></canvas>
+      <!-- La animación es un video (ver pres.js): a un GIF no se le puede
+           cambiar la velocidad, y la esfera acelera con la voz. -->
+      <span class="orbe__escena" id="escena-orbe" aria-hidden="true">
+        <span class="orbe__brillo" id="brillo"></span>
+        <video class="orbe__video" id="esfera" muted loop playsinline preload="auto" poster="esfera.png"></video>
+      </span>
     </button>
     <p class="estado" id="estado" role="status"></p>
   </div>

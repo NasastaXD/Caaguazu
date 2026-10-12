@@ -50,6 +50,8 @@ presentacion/            página aparte: la esfera que habla, para un escenario
   index.html             (el plugin sirve una carpeta por su index.html)
   pres.css               siempre oscura; los colores de la esfera, arriba
   pres.js                esfera, oído, voz, subtítulos y la sala del teléfono
+  esfera.mp4 / .webm     la animación de la esfera (cedida), en dos formatos
+  esfera.png             su primer cuadro, mientras el video carga
 ```
 
 ## Decisiones que vale la pena explicar
@@ -119,5 +121,10 @@ encandila y apaga la esfera. Lo que tiene que saber:
   alguien habla) y la primera vez sólo aprende el turno, para no repetir lo que
   se dijo antes de abrirla. El teléfono avisa que escucha y manda lo que va
   entendiendo, como mucho dos veces por segundo.
-- Con «reducir movimiento», la esfera deja de moverse y sólo cambia de color.
+- **La esfera es un video**, el GIF que la originó convertido sin tocarlo: lo
+  que reacciona es la velocidad, el tamaño, la luz y un resplandor detrás. El
+  MP4 lo reproducen Chrome, Edge y Safari; el WebM queda para los navegadores
+  sin H.264. Se pide a la carpeta directa del plugin (`directa` en los ajustes),
+  que es la que atiende los pedidos por partes que Safari exige.
+- Con «reducir movimiento», el video se detiene y sólo cambia la luz.
 

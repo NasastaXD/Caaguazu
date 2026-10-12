@@ -137,9 +137,12 @@ propio, idioma elegido), y eso vive en su navegador, no acá.
   que dice, palabra por palabra mientras lo dice. Se habla tocando la esfera, con
   la barra espaciadora, Enter o el control remoto de diapositivas. Esc corta,
   F pone pantalla completa, N empieza otra charla.
-* La esfera es de vidrio rosa y violeta, con un anillo blanco en el borde y
-  cintas de hilos que giran alrededor sobre un halo azul; con la voz, las cintas
-  se abren y todo brilla más. En reposo la pantalla no muestra ningún texto.
+* La esfera es una animación cedida por un amigo del proyecto, usada tal cual:
+  el GIF original pasado a video (`presentacion/esfera.mp4` y `esfera.webm`, los
+  mismos 148 cuadros), porque a un video se le puede cambiar la velocidad. Con
+  la voz acelera, crece, brilla más y se le abre un resplandor azul detrás. Se
+  sirve directo desde la carpeta del plugin, sin PHP: Safari necesita pedidos
+  por partes para reproducir un video. En reposo la pantalla no muestra texto.
 * Un teléfono puede hacer de micrófono: desde los ajustes de la página
   (el engranaje de abajo, o la tecla S) se crea una sala con un QR; el teléfono
   la abre, se le habla a él y la pantalla contesta.

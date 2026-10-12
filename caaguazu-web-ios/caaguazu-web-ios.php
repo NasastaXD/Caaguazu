@@ -178,6 +178,10 @@ final class CZUWIOS_Servidor {
 		return array(
 			'version' => CZUWIOS_VERSION,
 			'api'     => rest_url( 'czu-app/v1/' ),
+			// Dónde sirve el servidor web los archivos sin pasar por PHP. Lo usa
+			// la presentación para su video: el servidor web atiende los pedidos
+			// por partes que Safari exige para reproducir uno, y PHP no.
+			'directa' => self::base_directa(),
 			'tiendas' => array(
 				'android' => self::enlace_tienda( get_option( CZUWIOS_OPT_ANDROID, '' ) ),
 				'ios'     => self::enlace_tienda( get_option( CZUWIOS_OPT_IOS, '' ) ),
@@ -227,7 +231,7 @@ final class CZUWIOS_Servidor {
 	 * @return string valor de Cache-Control
 	 */
 	public static function cache_para( $ext, $versionado = false ) {
-		if ( in_array( $ext, array( 'png', 'woff2' ), true ) ) {
+		if ( in_array( $ext, array( 'png', 'woff2', 'mp4', 'webm' ), true ) ) {
 			return 'public, max-age=604800';
 		}
 		if ( $versionado && in_array( $ext, array( 'css', 'js' ), true ) ) {
@@ -526,6 +530,8 @@ final class CZUWIOS_Servidor {
 			'json'        => 'application/json; charset=utf-8',
 			'webmanifest' => 'application/manifest+json; charset=utf-8',
 			'png'         => 'image/png',
+			'mp4'         => 'video/mp4',
+			'webm'        => 'video/webm',
 			'woff2'       => 'font/woff2',
 		);
 	}
