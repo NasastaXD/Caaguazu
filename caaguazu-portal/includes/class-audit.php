@@ -68,6 +68,7 @@ class PROMOTUR_Audit {
 			'media_borrada', 'estructura_creada', 'estructura_borrada',
 			'asistente_conocimiento', 'asistente_personalidad', 'asistente_memoria',
 			'asistente_fuentes', 'asistente_olvidar', 'asistente_presentacion',
+			'prueba_cargada', 'prueba_borrada',
 			'update_settings',
 			'traduccion_guardada', 'traduccion_importada', 'traduccion_rechazada',
 		);

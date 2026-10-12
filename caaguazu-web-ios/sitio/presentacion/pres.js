@@ -210,23 +210,45 @@ function colorDe(variable) {
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
 
-const mezclar = (a, b, t) => a.map((x, i) => x + (b[i] - x) * t);
 const rgba = (c, a) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${Math.max(0, Math.min(1, a))})`;
 
+/*
+ * Tres capas, de afuera hacia adentro:
+ *
+ *  1. HALO azul profundo, que se abre con la voz.
+ *  2. CINTAS: tres haces de hilos finos que giran alrededor de la esfera y se
+ *     deforman con ondas. Cada hilo es la misma curva un poco corrida, y
+ *     sumados con «lighter» dan esa luz de cinta de seda. Con la voz, las
+ *     ondas crecen y los hilos se abren.
+ *  3. LA ESFERA: vidrio rosa y violeta con dos ondas de luz que se mueven
+ *     adentro, un reflejo arriba y un anillo blanco que brilla en el borde.
+ *
+ * Todo sale de los colores de pres.css: cambiar la paleta es cambiar esas
+ * líneas, no esto.
+ */
 const Orbe = (() => {
   const lienzo = $("lienzo");
   const ctx = lienzo.getContext("2d");
-  const colores = [colorDe("--orbe-1"), colorDe("--orbe-2"), colorDe("--orbe-3"), colorDe("--orbe-4")];
-  const nucleo = colorDe("--orbe-nucleo");
-  // Cada estado tiñe la esfera con uno de los cuatro: escuchar es verde,
-  // pensar es mango (lo que está pasando ahora), hablar es coral.
-  const TINTE = { inicio: 3, apagada: 3, listo: 3, escuchando: 0, pensando: 2, hablando: 1 };
-  const RITMO = { inicio: 0.2, apagada: 0.05, listo: 0.25, escuchando: 0.6, pensando: 1.5, hablando: 0.8 };
+  const C = {
+    halo: colorDe("--orbe-halo"),
+    cinta: colorDe("--orbe-cinta"),
+    anillo: colorDe("--orbe-anillo"),
+    luz: colorDe("--orbe-luz"),
+    rosa: colorDe("--orbe-rosa"),
+    violeta: colorDe("--orbe-violeta"),
+    hondo: colorDe("--orbe-hondo"),
+  };
+  // Cuánto gira y cuánto se agita en cada estado, sin contar la voz.
+  const RITMO = { inicio: 0.25, apagada: 0.06, listo: 0.3, escuchando: 0.55, pensando: 1.3, hablando: 0.7 };
+  const BASE = { inicio: 0.12, apagada: 0.03, listo: 0.18, escuchando: 0.32, pensando: 0.45, hablando: 0.3 };
 
-  let fase = 0;
+  const CINTAS = 3;
+  const HILOS = 14;
+  const PASOS = 120;
+
+  let t = 0;
   let nivel = 0;
-  let energia = 0.2;
-  let tinte = colores[3];
+  let energia = 0.15;
   let antes = performance.now();
   let alCuadro = null;
 
@@ -248,87 +270,146 @@ const Orbe = (() => {
 
     const e = Estado.actual;
     const objetivo = nivelObjetivo(e, ahora);
-    nivel += (objetivo - nivel) * (objetivo > nivel ? 0.35 : 0.12);
-
-    const base = { inicio: 0.15, apagada: 0.05, listo: 0.2, escuchando: 0.35, pensando: 0.5, hablando: 0.35 }[e] ?? 0.2;
-    const meta = base + nivel * 0.65;
-    energia += (meta - energia) * 0.08;
-    tinte = mezclar(tinte, colores[TINTE[e] ?? 3], 0.04);
+    nivel += (objetivo - nivel) * (objetivo > nivel ? 0.35 : 0.1);
+    energia += ((BASE[e] ?? 0.18) + nivel * 0.7 - energia) * 0.08;
 
     const mueve = !quieto.matches;
-    if (mueve) fase += dt * (RITMO[e] ?? 0.25) * (1 + nivel * 1.5);
-
-    dibujar(mueve ? energia : 0.3, mueve);
+    if (mueve) t += dt * (RITMO[e] ?? 0.3) * (1 + nivel * 1.2);
+    dibujar(mueve ? energia : 0.25);
     requestAnimationFrame(cuadro);
   }
 
-  function dibujar(E, mueve) {
+  /** El radio de una cinta en el ángulo `a`: ondas que viajan y un lado más abierto. */
+  function radioCinta(R, a, k, j, E) {
+    const fk = k * 2.1;
+    const amp = 0.07 + 0.2 * E;
+    const onda =
+      Math.sin(2 * a + fk + t * (0.9 + k * 0.25) + j * 0.045) * 0.6 +
+      Math.sin(3 * a - fk * 1.3 - t * (0.6 + k * 0.2) + j * 0.07) * 0.4;
+    // Las cintas no son parejas: de un lado se abren y del otro se pegan a la
+    // esfera, y ese lado gira despacio.
+    const lado = 0.55 + 0.45 * Math.sin(a + t * 0.35 + k * 2.3);
+    return R * (1.02 + k * 0.03 + j * 0.007 * (1 + E * 2) + amp * onda * lado);
+  }
+
+  function dibujar(E) {
     const S = lienzo.width;
     const c = S / 2;
-    // El lienzo es 160% del botón: la esfera ocupa el centro y el halo, el resto.
-    const R = (S / 1.6) * 0.5;
-    const s = mueve ? 1 + 0.07 * E + 0.015 * Math.sin(fase * 2.1) : 1;
-    const r = R * s;
+    // El lienzo es 160% del botón; la esfera usa poco más de la mitad del
+    // botón y el resto es lugar para las cintas y el halo.
+    const R = S / 3.7;
 
+    ctx.globalCompositeOperation = "source-over";
     ctx.clearRect(0, 0, S, S);
 
-    // Halo: se agranda y se enciende con la energía.
-    const halo = ctx.createRadialGradient(c, c, r * 0.85, c, c, r * (1.35 + 0.35 * E));
-    halo.addColorStop(0, rgba(tinte, 0.18 + 0.32 * E));
-    halo.addColorStop(1, rgba(tinte, 0));
+    // 1. Halo.
+    // Termina antes del borde del lienzo y cae suave: si no, se ve el corte.
+    const halo = ctx.createRadialGradient(c, c, R * 0.9, c, c, R * 1.8);
+    const fuerza = 0.4 + 0.3 * E;
+    [[0, 1], [0.2, 0.55], [0.45, 0.22], [0.7, 0.07], [1, 0]].forEach(([p, a]) => halo.addColorStop(p, rgba(C.halo, fuerza * a)));
     ctx.fillStyle = halo;
     ctx.fillRect(0, 0, S, S);
 
+    // 2. Cintas, por detrás y por delante de la esfera a la vez: se dibujan
+    // antes y la esfera las tapa en el centro.
+    ctx.globalCompositeOperation = "lighter";
+    ctx.lineWidth = Math.max(1, S / 520);
+    for (let k = 0; k < CINTAS; k++) {
+      for (let j = 0; j < HILOS; j++) {
+        const medio = 1 - Math.abs(j / (HILOS - 1) - 0.5) * 2;
+        ctx.strokeStyle = rgba(C.cinta, (0.1 + 0.16 * E) * (0.3 + 0.7 * medio));
+        ctx.beginPath();
+        for (let i = 0; i <= PASOS; i++) {
+          const a = (i / PASOS) * Math.PI * 2;
+          const r = radioCinta(R, a, k, j, E);
+          const x = c + Math.cos(a) * r;
+          const y = c + Math.sin(a) * r * (0.96 + 0.04 * Math.sin(t * 0.5 + k));
+          if (i) ctx.lineTo(x, y);
+          else ctx.moveTo(x, y);
+        }
+        ctx.stroke();
+      }
+    }
+
+    // 3. La esfera.
+    ctx.globalCompositeOperation = "source-over";
     ctx.save();
     ctx.beginPath();
-    ctx.arc(c, c, r, 0, Math.PI * 2);
+    ctx.arc(c, c, R, 0, Math.PI * 2);
     ctx.clip();
 
-    // Núcleo oscuro, para que los colores floten adentro.
-    const fondo = ctx.createRadialGradient(c - r * 0.3, c - r * 0.35, r * 0.1, c, c, r);
-    fondo.addColorStop(0, rgba(mezclar(nucleo, [40, 42, 52], 0.6), 1));
-    fondo.addColorStop(1, rgba(nucleo, 1));
-    ctx.fillStyle = fondo;
-    ctx.fillRect(c - r, c - r, r * 2, r * 2);
+    const cuerpo = ctx.createRadialGradient(c - R * 0.25, c - R * 0.35, R * 0.05, c + R * 0.1, c + R * 0.15, R * 1.15);
+    cuerpo.addColorStop(0, rgba(C.luz, 1));
+    cuerpo.addColorStop(0.45, rgba(C.rosa, 1));
+    cuerpo.addColorStop(0.85, rgba(C.violeta, 1));
+    cuerpo.addColorStop(1, rgba(C.hondo, 1));
+    ctx.fillStyle = cuerpo;
+    ctx.fillRect(c - R, c - R, R * 2, R * 2);
 
-    // Las luces de colores, que giran y se mezclan.
+    // Dos ondas de luz que giran adentro, en sentidos contrarios.
     ctx.globalCompositeOperation = "screen";
-    const brillo = 0.62 + 0.38 * E;
-    colores.forEach((col, i) => {
-      const a = fase * (0.7 + 0.23 * i) + i * 1.7;
-      const d = r * (0.3 + 0.12 * Math.sin(fase * 0.9 + i));
-      const x = c + Math.cos(a) * d;
-      const y = c + Math.sin(a * 1.3) * d * 0.9;
-      const radio = r * (0.6 + 0.2 * E + 0.06 * Math.sin(fase * 1.7 + i * 2));
-      const g = ctx.createRadialGradient(x, y, 0, x, y, radio);
-      g.addColorStop(0, rgba(col, brillo));
-      g.addColorStop(0.55, rgba(col, brillo * 0.35));
-      g.addColorStop(1, rgba(col, 0));
+    [
+      { giro: t * 0.35, color: C.rosa, alfa: 0.55, alto: 0.22 },
+      { giro: -t * 0.27 + 2.2, color: C.violeta, alfa: 0.5, alto: 0.3 },
+    ].forEach(({ giro, color, alfa, alto }, n) => {
+      ctx.save();
+      ctx.translate(c, c);
+      ctx.rotate(giro);
+      ctx.beginPath();
+      ctx.moveTo(-R * 1.2, R * 1.2);
+      for (let i = 0; i <= 40; i++) {
+        const x = -R * 1.2 + (i / 40) * R * 2.4;
+        const y = Math.sin(x / R * 2.2 + t * (0.8 + n * 0.3)) * R * (alto + 0.08 * E);
+        ctx.lineTo(x, y);
+      }
+      ctx.lineTo(R * 1.2, R * 1.2);
+      ctx.closePath();
+      const g = ctx.createLinearGradient(0, -R * 0.3, 0, R);
+      g.addColorStop(0, rgba(color, alfa));
+      g.addColorStop(1, rgba(color, 0));
       ctx.fillStyle = g;
-      ctx.fillRect(c - r, c - r, r * 2, r * 2);
+      ctx.fill();
+      ctx.restore();
     });
 
-    // Sombra en el borde: es lo que la hace esfera y no disco.
+    // Sombra en el borde y reflejo arriba: es lo que la hace de vidrio.
     ctx.globalCompositeOperation = "source-over";
-    const borde = ctx.createRadialGradient(c, c, r * 0.55, c, c, r);
+    const borde = ctx.createRadialGradient(c, c, R * 0.6, c, c, R);
     borde.addColorStop(0, "rgba(0,0,0,0)");
-    borde.addColorStop(1, "rgba(0,0,0,0.42)");
+    borde.addColorStop(1, rgba(C.hondo, 0.55));
     ctx.fillStyle = borde;
-    ctx.fillRect(c - r, c - r, r * 2, r * 2);
-
-    // Reflejo arriba a la izquierda.
-    const reflejo = ctx.createRadialGradient(c - r * 0.35, c - r * 0.45, 0, c - r * 0.35, c - r * 0.45, r * 0.55);
-    reflejo.addColorStop(0, "rgba(255,255,255,0.20)");
+    ctx.fillRect(c - R, c - R, R * 2, R * 2);
+    const reflejo = ctx.createRadialGradient(c - R * 0.3, c - R * 0.45, 0, c - R * 0.3, c - R * 0.45, R * 0.5);
+    reflejo.addColorStop(0, "rgba(255,255,255,0.22)");
     reflejo.addColorStop(1, "rgba(255,255,255,0)");
     ctx.fillStyle = reflejo;
-    ctx.fillRect(c - r, c - r, r * 2, r * 2);
+    ctx.fillRect(c - R, c - R, R * 2, R * 2);
     ctx.restore();
 
-    ctx.beginPath();
-    ctx.arc(c, c, r, 0, Math.PI * 2);
-    ctx.strokeStyle = "rgba(255,255,255,0.07)";
-    ctx.lineWidth = Math.max(1, r * 0.012);
-    ctx.stroke();
+    // El anillo que brilla en el borde: ancho y azul afuera, fino y blanco
+    // en el centro, y apenas ondulado.
+    ctx.globalCompositeOperation = "lighter";
+    const capas = [
+      { ancho: 0.08, color: C.halo, alfa: 0.16 + 0.14 * E },
+      { ancho: 0.03, color: C.anillo, alfa: 0.35 + 0.25 * E },
+      { ancho: 0.01, color: [255, 255, 255], alfa: 0.9 },
+    ];
+    for (const capa of capas) {
+      ctx.lineWidth = R * capa.ancho;
+      ctx.strokeStyle = rgba(capa.color, capa.alfa);
+      ctx.beginPath();
+      for (let i = 0; i <= PASOS; i++) {
+        const a = (i / PASOS) * Math.PI * 2;
+        const r = R * (1.005 + (0.01 + 0.02 * E) * Math.sin(3 * a + t * 1.4) * Math.sin(a - t * 0.6));
+        const x = c + Math.cos(a) * r;
+        const y = c + Math.sin(a) * r;
+        if (i) ctx.lineTo(x, y);
+        else ctx.moveTo(x, y);
+      }
+      ctx.closePath();
+      ctx.stroke();
+    }
+    ctx.globalCompositeOperation = "source-over";
   }
 
   medir();
@@ -377,7 +458,9 @@ function poner(estado, { mensaje = "", error = false } = {}) {
   const texto =
     mensaje ||
     {
-      listo: hayOidoLocal() ? TX.listo : "",
+      // La pantalla no dice nada en reposo: la esfera alcanza. El teléfono,
+      // que es quien tiene que tocar, sí.
+      listo: modoControl && hayOidoLocal() ? TX.listo : "",
       escuchando: TX.escuchando,
       pensando: TX.pensando,
       apagada: TX.apagada,

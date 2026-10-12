@@ -73,6 +73,14 @@ llamen los tags.
   sabe que tiene que pedir la vista previa de lo no publicado. No es un permiso
   (lo decide la API con la sesión de verdad); sólo evita que cada visita haga un
   pedido de más. Se borra al salir.
+* **Datos de prueba.** En la misma pestaña, «Cargar los de prueba» trae los
+  sitios y eventos de la investigación (`datos-prueba/sitios-caaguazu.json`)
+  como borradores marcados de prueba: los ven sólo los profesores y no salen al
+  público sin revisión. Dirección, notas y fuentes de la investigación quedan en
+  «Fuentes / referencias». Cargar dos veces no duplica. «Borrar los de prueba»
+  los saca para siempre, con su foto y las categorías y etiquetas que se crearon
+  para ellos y quedaron sin uso; lo del equipo no se toca. Las dos cosas quedan
+  en «Registros» (`prueba_cargada`, `prueba_borrada`).
 * Requiere la API de la app 0.11.0 o posterior para la pestaña nueva; las otras
   cinco siguen andando con la 0.10.0.
 

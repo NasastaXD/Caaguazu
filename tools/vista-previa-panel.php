@@ -507,6 +507,11 @@ class PROMOTUR_Asistente_Panel {
 	public static function memoria_horas() { return 2; }
 	public static function fuentes() { return array( 'lugares' => true, 'eventos' => true, 'recorridos' => true, 'articulos' => false ); }
 }
+class PROMOTUR_Prueba {
+	const CAP = 'promotur_review_content';
+	public static function investigacion() { return array( 'herramienta' => 'Claude Research', 'generado' => '2026-10-12', 'sitios' => array_fill( 0, 16, array() ) ); }
+	public static function cargadas() { return array( 1, 2, 3 ); }
+}
 class CZUAPI_Asistente {
 	public static function conocimiento() { return 'Ykua La Patria abre todos los días de 8 a 17. Los precios son de referencia.'; }
 	public static function set_conocimiento( $texto ) {}

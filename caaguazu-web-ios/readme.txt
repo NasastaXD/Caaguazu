@@ -137,6 +137,9 @@ propio, idioma elegido), y eso vive en su navegador, no acá.
   que dice, palabra por palabra mientras lo dice. Se habla tocando la esfera, con
   la barra espaciadora, Enter o el control remoto de diapositivas. Esc corta,
   F pone pantalla completa, N empieza otra charla.
+* La esfera es de vidrio rosa y violeta, con un anillo blanco en el borde y
+  cintas de hilos que giran alrededor sobre un halo azul; con la voz, las cintas
+  se abren y todo brilla más. En reposo la pantalla no muestra ningún texto.
 * Un teléfono puede hacer de micrófono: desde los ajustes de la página
   (el engranaje de abajo, o la tecla S) se crea una sala con un QR; el teléfono
   la abre, se le habla a él y la pantalla contesta.

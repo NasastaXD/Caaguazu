@@ -174,6 +174,45 @@ $p = PROMOTUR_Asistente_Panel::presentacion();
 		</div>
 	</form>
 
+	<?php if ( caaguazu_account_can( 'promotor', PROMOTUR_Prueba::CAP ) ) : ?>
+		<?php
+		$investigacion = PROMOTUR_Prueba::investigacion();
+		$de_prueba     = count( PROMOTUR_Prueba::cargadas() );
+		$accion_prueba = PROMOTUR_Acciones::url( 'datos_prueba' );
+		?>
+		<div class="promotur-card promotur-mt">
+			<div class="promotur-card__head">
+				<?php echo promotur_icon( 'pin' ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
+				<span><?php esc_html_e( 'Datos de prueba', 'caaguazu-portal' ); ?></span>
+			</div>
+			<p class="promotur-muted">
+				<?php
+				printf(
+					/* translators: 1: cantidad de sitios en el archivo, 2: herramienta, 3: cantidad cargada */
+					esc_html__( 'La investigación trae %1$d sitios y eventos (%2$s). Entran como borradores marcados de prueba: los ven sólo los profesores, en la web y en el panel, y no salen al público sin revisión. Cargados ahora: %3$d.', 'caaguazu-portal' ),
+					(int) count( $investigacion['sitios'] ),
+					esc_html( $investigacion['herramienta'] ?: '—' ),
+					(int) $de_prueba
+				);
+				?>
+			</p>
+			<div class="promotur-grid promotur-grid--2">
+				<form method="post" action="<?php echo esc_url( $accion_prueba ); ?>">
+					<?php PROMOTUR_Acciones::campos(); ?>
+					<input type="hidden" name="hacer" value="cargar">
+					<button type="submit" class="promotur-btn promotur-btn--primary"<?php disabled( ! $investigacion['sitios'] ); ?>><?php esc_html_e( 'Cargar los de prueba', 'caaguazu-portal' ); ?></button>
+				</form>
+				<?php if ( $de_prueba ) : ?>
+					<form method="post" action="<?php echo esc_url( $accion_prueba ); ?>" data-confirmar="<?php echo esc_attr__( 'Se borran todas las fichas de prueba, para siempre. Lo que cargó el equipo no se toca. ¿Seguro?', 'caaguazu-portal' ); ?>">
+						<?php PROMOTUR_Acciones::campos(); ?>
+						<input type="hidden" name="hacer" value="borrar">
+						<button type="submit" class="promotur-btn promotur-btn--ghost"><?php esc_html_e( 'Borrar los de prueba', 'caaguazu-portal' ); ?></button>
+					</form>
+				<?php endif; ?>
+			</div>
+		</div>
+	<?php endif; ?>
+
 	<div class="promotur-card promotur-mt" data-presentacion-voz
 		data-msg-vacio="<?php echo esc_attr__( 'Escribí una frase.', 'caaguazu-portal' ); ?>"
 		data-msg-enviando="<?php echo esc_attr__( 'Generando la voz…', 'caaguazu-portal' ); ?>"

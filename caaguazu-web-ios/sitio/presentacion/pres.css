@@ -8,16 +8,15 @@
  * existen —micrófono, teléfono, pantalla completa— pero se esconden hasta que
  * alguien mueve el mouse.
  *
- * Los tokens van todos acá arriba. Los tres de la esfera son los de marca de
- * la app (verde, coral y mango): cambiar el color de la esfera es cambiar
- * estas tres líneas, y la página lee los valores de acá (ver pres.js).
+ * Los tokens van todos acá arriba, también los de la esfera: pres.js los lee
+ * de acá, así que cambiar su color es cambiar esas líneas.
  */
 
 @font-face { font-family: "Inter"; font-style: normal; font-weight: 400; font-display: swap; src: url("../fuentes/inter-400.woff2") format("woff2"); }
 @font-face { font-family: "Inter"; font-style: normal; font-weight: 600; font-display: swap; src: url("../fuentes/inter-600.woff2") format("woff2"); }
 
 :root {
-	--fondo:        #060608;
+	--fondo:        #02020a;
 	--texto:        #f4f4f2;
 	--texto-2:      #a3a3ad;
 	--texto-debil:  #6b6b75;
@@ -26,12 +25,14 @@
 	--linea:        #2a2a31;
 	--error:        #ff8a80;
 
-	/* La esfera. */
-	--orbe-1:       #96c8a2;
-	--orbe-2:       #ff6f61;
-	--orbe-3:       #ffc300;
-	--orbe-4:       #7aa7ff;
-	--orbe-nucleo:  #0b0c10;
+	/* La esfera: vidrio rosa y violeta, anillo blanco, cintas y halo azules. */
+	--orbe-halo:    #2b1bff;
+	--orbe-cinta:   #b9b2ff;
+	--orbe-anillo:  #d9d6ff;
+	--orbe-luz:     #f6d2ff;
+	--orbe-rosa:    #e86bf2;
+	--orbe-violeta: #7c46f0;
+	--orbe-hondo:   #3a1fb0;
 
 	--r-2:          14px;
 	--r-full:       999px;
@@ -91,7 +92,7 @@ button { font: inherit; color: inherit; }
 
 .orbe {
 	position: relative;
-	width: min(52vmin, 460px);
+	width: min(60vmin, 540px);
 	aspect-ratio: 1;
 	border: 0;
 	padding: 0;
@@ -334,7 +335,7 @@ body.mostrar-controles .controles,
 	display: block;
 	height: 100%;
 	width: 0;
-	background: var(--orbe-1);
+	background: var(--orbe-anillo);
 	transition: width 80ms linear;
 }
 
