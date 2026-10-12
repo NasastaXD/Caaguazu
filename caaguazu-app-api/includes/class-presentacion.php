@@ -69,6 +69,40 @@ class CZUAPI_Presentacion {
 		'elevenlabs' => array( 'endpoint' => 'https://api.elevenlabs.io/v1/speech-to-text', 'modelo' => 'scribe_v1' ),
 	);
 
+	/**
+	 * Memoria propia de la presentación. No depende de la del asistente de la
+	 * app: antes lo hacía, y con esa en 0 cada pregunta llegaba sola.
+	 */
+	const MEMORIA_DEFAULT = 20;
+
+	/**
+	 * Etiquetas de expresión que ElevenLabs entiende entre corchetes (en inglés).
+	 * Sólo se dejan pasar a la voz de ElevenLabs; a cualquier otra voz, y a lo que
+	 * se muestra en pantalla, se les quitan. Lista conservadora: confirmala con
+	 * una prueba, porque cada modelo de ElevenLabs entiende un conjunto distinto.
+	 */
+	const ETIQUETAS_VOZ = array( 'pause', 'short pause', 'laughs', 'whispers', 'sighs', 'excited', 'curious', 'sarcastic' );
+
+	/**
+	 * Conocimiento de prueba, con marcadores. Son los datos de la investigación
+	 * de prueba, no texto de producto: el equipo lo reemplaza con lo suyo en el
+	 * panel. Lo que va entre ‹› todavía no se escribió.
+	 */
+	const CONOCIMIENTO_PRUEBA = "[DATOS DE PRUEBA · reemplazar]\n"
+		. "Distrito: Caaguazú, Paraguay. ‹descripción general del distrito›\n"
+		. "Fundación: 8 de mayo de 1845 ‹dato a confirmar›\n"
+		. "Lugares:\n"
+		. "- Ykua La Patria · parque fundacional · 8:00 a 17:00 · gratis · ‹descripción›\n"
+		. "- Iglesia Inmaculada Concepción · 1965 · gratis · ‹descripción›\n"
+		. "- Complejo Ecológico Techapyrã · parque jurásico y tirolesa · 8:00 a 18:00 · ‹descripción›\n"
+		. "- Camping El Chorro · arroyos y cascadas · 9:00 a 19:00 · ‹descripción›\n"
+		. "- Aqua Landia Delfines Park · parque acuático · 8:30 a 18:00 · ‹descripción›\n"
+		. "- Mercado Municipal de Abasto · compras y comida · ‹descripción›\n"
+		. "Eventos:\n"
+		. "- Aniversario de fundación · 8 de mayo · ‹descripción›\n"
+		. "- Fiesta patronal de la Inmaculada Concepción · 8 de diciembre · ‹descripción›\n"
+		. "- Festival de la Madera · fecha sin confirmar ‹vigencia›";
+
 	/** Lo que se dice en voz alta es corto: 600 tokens son varios minutos de habla. */
 	const MAX_TOKENS = 600;
 
@@ -130,7 +164,7 @@ Español de Paraguay, con voseo. Cálido, claro y seguro, como alguien que conoc
 - Frases cortas, una idea por frase. Al oído no se puede volver a leer.
 - Lo más corto que sirva: dos a cuatro frases. Si te piden que expliques algo a fondo, hasta un minuto de habla.
 - Sin presentaciones ni cierres de relleno. Sin «espero haberte ayudado».
-- Si te saludan, saludá y decí en una frase qué podés contar.
+- Si te saludan, saludá UNA vez, al principio de la charla. Si ya saludaste en esta charla, no vuelvas a presentarte ni a saludar: respondé a lo que te dicen, con lo que se habló antes.
 
 # LO QUE SABÉS
 Lo que sabés del proyecto está en el [GUION]. Si además hay [CATÁLOGO], son los lugares, eventos y artículos publicados en la app.
@@ -153,11 +187,37 @@ TXT;
 			. "- Texto corrido. Sin títulos, sin listas, sin guiones, sin asteriscos, sin emojis.\n"
 			. "- Sin direcciones web ni correos: decí dónde encontrarlos.\n"
 			. "- Números y siglas como se dicen: «dos mil veintiséis», «la app», «la A P I».\n"
-			. "- Si en los datos ves marcas entre corchetes, como [F12], no las digas.";
+			. "- Las marcas de uso interno, como [F12], no las digas.";
+	}
+
+	/** Cuántos turnos recuerda la presentación (0 = ninguno). */
+	public static function memoria_turnos() {
+		return CZUAPI_Asistente::normalizar_turnos( get_option( 'czuapi_pres_turnos', self::MEMORIA_DEFAULT ) );
+	}
+
+	/**
+	 * Modelo de la presentación. Va por la misma API y endpoint que el asistente
+	 * de la app; sólo cambia el modelo, para elegir uno más rápido.
+	 */
+	public static function modelo() {
+		$m = trim( (string) get_option( 'czuapi_pres_modelo', '' ) );
+		return '' !== $m ? $m : CZUAPI_Asistente::modelo();
+	}
+
+	/**
+	 * Lo que sabe del proyecto. Si el equipo nunca lo guardó, es el conocimiento
+	 * de prueba con sus marcadores. Vacío a propósito = no sabe nada extra.
+	 */
+	/** Las etiquetas de expresión: sólo si la voz es de ElevenLabs. */
+	protected static function instrucciones_etiquetas() {
+		return "\n\n# ETIQUETAS DE EXPRESIÓN\n"
+			. "La voz entiende etiquetas entre corchetes, en inglés, que cambian cómo suena lo que sigue. Usalas con criterio: como mucho una cada dos o tres frases, sólo donde suman. Las permitidas son: "
+			. implode( ' ', array_map( static function ( $e ) { return '[' . $e . ']'; }, self::ETIQUETAS_VOZ ) ) . ". Ninguna otra.";
 	}
 
 	public static function conocimiento() {
-		return trim( (string) get_option( 'czuapi_pres_conocimiento', '' ) );
+		$guardado = get_option( 'czuapi_pres_conocimiento', null );
+		return null === $guardado ? self::CONOCIMIENTO_PRUEBA : trim( (string) $guardado );
 	}
 
 	/** ¿Suma lo publicado en la app a lo que sabe? Por defecto no: el guion manda. */
@@ -196,6 +256,15 @@ TXT;
 			return (string) CZUAPI_VOZ_KEY;
 		}
 		return (string) get_option( 'czuapi_pres_voz_key', '' );
+	}
+
+	/**
+	 * ¿Las etiquetas de expresión van a la voz? Apagado por defecto: sólo algunos
+	 * modelos de ElevenLabs las interpretan. Con un modelo que no, las leería en
+	 * voz alta, que es peor que no tenerlas.
+	 */
+	public static function etiquetas_activas() {
+		return (bool) get_option( 'czuapi_pres_etiquetas', 0 ) && 'elevenlabs' === self::voz()['proveedor'];
 	}
 
 	/** ¿La voz sale del servidor? Si no, habla el navegador. */
@@ -256,7 +325,13 @@ TXT;
 		if ( defined( 'CZUAPI_OIDO_KEY' ) && CZUAPI_OIDO_KEY ) {
 			return (string) CZUAPI_OIDO_KEY;
 		}
-		return (string) get_option( 'czuapi_pres_oido_key', '' );
+		$key = (string) get_option( 'czuapi_pres_oido_key', '' );
+		// Con ElevenLabs para voz y para oído, la misma cuenta: no hace falta
+		// cargar la key dos veces. Si el equipo carga una propia, gana.
+		if ( '' === $key && 'elevenlabs' === get_option( 'czuapi_pres_oido_proveedor', 'openai' ) ) {
+			return self::voz_key();
+		}
+		return $key;
 	}
 
 	/** ¿Se transcribe en el servidor? Sin key, aunque se haya elegido, no se puede. */
@@ -296,6 +371,9 @@ TXT;
 		}
 		update_option( 'czuapi_pres_persona', sanitize_textarea_field( $persona ), false );
 		update_option( 'czuapi_pres_conocimiento', sanitize_textarea_field( trim( (string) ( $c['conocimiento'] ?? '' ) ) ), false );
+		update_option( 'czuapi_pres_turnos', CZUAPI_Asistente::normalizar_turnos( $c['turnos'] ?? self::MEMORIA_DEFAULT ), false );
+		update_option( 'czuapi_pres_etiquetas', empty( $c['etiquetas'] ) ? 0 : 1, false );
+		update_option( 'czuapi_pres_modelo', sanitize_text_field( (string) ( $c['modelo'] ?? '' ) ), false );
 
 		$proveedor = (string) ( $c['voz_proveedor'] ?? 'navegador' );
 		update_option( 'czuapi_pres_voz_proveedor', in_array( $proveedor, self::PROVEEDORES_VOZ, true ) ? $proveedor : 'navegador', false );
@@ -357,6 +435,9 @@ TXT;
 	 */
 	public static function armar_sistema( array $fuentes, $idioma ) {
 		$base = self::persona() . "\n\n" . self::instrucciones_voz();
+		if ( self::etiquetas_activas() ) {
+			$base .= self::instrucciones_etiquetas();
+		}
 
 		$bloques = array();
 		$guion   = self::conocimiento();
@@ -413,6 +494,23 @@ TXT;
 	/* --------------------------------------------------------------------- */
 
 	/**
+	 * Quita las etiquetas de expresión. Con `$para_voz` se dejan pasar las que
+	 * ElevenLabs entiende; sin eso, se quitan todas (la pantalla no las muestra).
+	 *
+	 * @param string $texto
+	 * @param bool   $para_voz
+	 * @return string
+	 */
+	public static function etiquetas( $texto, $para_voz = false ) {
+		$permitidas = array_map( 'strtolower', self::ETIQUETAS_VOZ );
+		$out = preg_replace_callback( '/\[([^\[\]]{1,24})\]/u', static function ( $m ) use ( $para_voz, $permitidas ) {
+			$etiqueta = strtolower( trim( $m[1] ) );
+			return $para_voz && in_array( $etiqueta, $permitidas, true ) ? '[' . $etiqueta . ']' : '';
+		}, (string) $texto );
+		return trim( (string) preg_replace( '/[ \t]{2,}/', ' ', (string) $out ) );
+	}
+
+	/**
 	 * Una pregunta, de punta a punta: guion, modelo y voz.
 	 *
 	 * @return array { ok, respuesta, conversacion, audio: array|null, error }
@@ -423,23 +521,30 @@ TXT;
 		if ( '' === $conv ) {
 			$conv = wp_generate_uuid4();
 		}
-		$historial = CZUAPI_Asistente::cargar_memoria( $conv, self::ESPACIO );
+		$turnos    = self::memoria_turnos();
+		$historial = CZUAPI_Asistente::cargar_memoria( $conv, self::ESPACIO, $turnos );
 
 		$r = CZUAPI_Asistente::preguntar( $mensaje, $historial, $idioma, null, array(
 			'sistema'     => array( __CLASS__, 'armar_sistema' ),
 			'sin_fuentes' => ! self::usa_catalogo(),
 			'max_tokens'  => self::MAX_TOKENS,
+			'modelo'      => self::modelo(),
 		) );
 
 		if ( ! $r['ok'] ) {
 			error_log( '[CzuApi][Pres] fallo del modelo: ' . self::redactar( $r['error'] ) );
 			return array( 'ok' => false, 'respuesta' => '', 'conversacion' => $conv, 'audio' => null, 'error' => (string) $r['error'] );
 		}
-		CZUAPI_Asistente::guardar_memoria( $conv, $mensaje, $r['contenido'], self::ESPACIO );
+		CZUAPI_Asistente::guardar_memoria( $conv, $mensaje, $r['contenido'], self::ESPACIO, $turnos );
+
+		// Dos versiones de lo mismo: la pantalla lee sin etiquetas, y la voz
+		// recibe las que ElevenLabs entiende.
+		$texto_pantalla = self::etiquetas( $r['respuesta'] );
+		$texto_voz      = self::etiquetas( $r['respuesta'], self::etiquetas_activas() );
 
 		$audio = null;
 		if ( $con_voz && self::voz_servidor() ) {
-			$v = self::hablar( $r['respuesta'] );
+			$v = self::hablar( $texto_voz );
 			if ( $v['ok'] ) {
 				$audio = array( 'mime' => $v['mime'], 'datos' => $v['audio'] );
 			} else {
@@ -449,7 +554,7 @@ TXT;
 			}
 		}
 
-		return array( 'ok' => true, 'respuesta' => $r['respuesta'], 'conversacion' => $conv, 'audio' => $audio, 'error' => '' );
+		return array( 'ok' => true, 'respuesta' => $texto_pantalla, 'conversacion' => $conv, 'audio' => $audio, 'error' => '' );
 	}
 
 	/* --------------------------------------------------------------------- */

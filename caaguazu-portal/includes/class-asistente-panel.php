@@ -93,6 +93,10 @@ class PROMOTUR_Asistente_Panel {
 			'hay_modelo'      => '' !== CZUAPI_Asistente::key(),
 			'persona'         => CZUAPI_Presentacion::persona(),
 			'conocimiento'    => CZUAPI_Presentacion::conocimiento(),
+			'turnos'          => CZUAPI_Presentacion::memoria_turnos(),
+			'etiquetas'       => CZUAPI_Presentacion::etiquetas_activas() || (bool) get_option( 'czuapi_pres_etiquetas', 0 ),
+			'modelo'          => (string) get_option( 'czuapi_pres_modelo', '' ),
+			'modelo_activo'   => CZUAPI_Presentacion::modelo(),
 			'catalogo'        => CZUAPI_Presentacion::usa_catalogo(),
 			'voz_proveedor'   => $voz['proveedor'],
 			'voz_endpoint'    => (string) get_option( 'czuapi_pres_voz_endpoint', '' ),
@@ -233,7 +237,7 @@ class PROMOTUR_Asistente_Panel {
 			return;
 		}
 		$campos = array(
-			'activo', 'catalogo', 'persona', 'persona_fabrica', 'conocimiento',
+			'activo', 'catalogo', 'persona', 'persona_fabrica', 'conocimiento', 'turnos', 'modelo', 'etiquetas',
 			'voz_proveedor', 'voz_endpoint', 'voz_key', 'voz_key_borrar', 'voz_modelo', 'voz_id', 'voz_velocidad',
 			'oido_modo', 'oido_proveedor', 'oido_endpoint', 'oido_key', 'oido_key_borrar', 'oido_modelo', 'oido_idioma',
 		);

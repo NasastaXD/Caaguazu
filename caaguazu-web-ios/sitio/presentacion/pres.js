@@ -40,6 +40,7 @@ const TX = {
   pantallaCompleta: "Pantalla completa",
   sala: "Sala",
   notaNavegador: "El dictado del navegador usa el micrófono del sistema: elegilo en la configuración del equipo.",
+  esperas: ["Un segundo…", "Dejame pensar…", "Buena pregunta…", "Ya te cuento…"],
   atajos: "Espacio o Enter: hablar · Esc: cortar · F: pantalla completa · N: nueva charla",
 };
 
@@ -351,8 +352,42 @@ const Estado = {
 let escuchaRemota = false;
 let escuchaPorEventos = false;
 
+/*
+ * Si la respuesta tarda, la pantalla no se queda en silencio: a los tres
+ * segundos de pensar aparece una frase corta que va rotando. Es lo único que
+ * se escribe en la pantalla mientras piensa, y se borra con la respuesta.
+ */
+let relojEspera = 0;
+let indiceEspera = 0;
+function empezarEspera() {
+  clearEspera();
+  relojEspera = setTimeout(() => {
+    mostrarEspera();
+    relojEspera = setInterval(mostrarEspera, 3500);
+  }, 3000);
+}
+function mostrarEspera() {
+  if (Estado.actual !== "pensando") return;
+  const el = $("respuesta");
+  el.classList.add("espera");
+  el.textContent = TX.esperas[indiceEspera++ % TX.esperas.length];
+}
+function clearEspera() {
+  clearTimeout(relojEspera);
+  clearInterval(relojEspera);
+  const el = $("respuesta");
+  // Sólo se borra lo que puso la espera: si ya llegó la respuesta, sus
+  // palabras no se tocan.
+  if (el.classList.contains("espera")) {
+    el.textContent = "";
+    el.classList.remove("espera");
+  }
+}
+
 function poner(estado, { mensaje = "", error = false } = {}) {
   Estado.actual = estado;
+  if (estado === "pensando") empezarEspera();
+  else clearEspera();
   if (estado !== "escuchando") {
     escuchaRemota = false;
     escuchaPorEventos = false;
@@ -429,7 +464,7 @@ function desvanecerRespuesta() {
 function prepararSubtitulo(texto) {
   clearTimeout(relojDesvanecer);
   const el = $("respuesta");
-  el.classList.remove("parcial", "desvanecida");
+  el.classList.remove("parcial", "desvanecida", "espera");
   el.textContent = "";
   el.scrollTop = 0;
   const palabras = [];

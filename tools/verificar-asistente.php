@@ -56,6 +56,13 @@ function wp_remote_retrieve_body( $r ) { return $r['body']; }
 $GLOBALS['http_enviado'] = null;
 $GLOBALS['http_respuesta'] = array( 'response' => array( 'code' => 200 ), 'body' => '{"text":"hola cómo funciona esto"}' );
 function wp_remote_post( $url, $args ) { $GLOBALS['http_enviado'] = array( $url, $args ); return $GLOBALS['http_respuesta']; }
+/* Transitorios en memoria, para probar la charla de la presentación. */
+$GLOBALS['czu_transitorios'] = array();
+function get_transient( $k ) { return $GLOBALS['czu_transitorios'][ $k ] ?? false; }
+function set_transient( $k, $v, $t = 0 ) { $GLOBALS['czu_transitorios'][ $k ] = $v; return true; }
+function delete_transient( $k ) { unset( $GLOBALS['czu_transitorios'][ $k ] ); return true; }
+function wp_generate_uuid4() { return 'uuid-prueba-1234'; }
+function wp_json_encode( $d, $f = 0 ) { return json_encode( $d, $f ); }
 
 $raiz = dirname( __DIR__ );
 require $raiz . '/caaguazu-app-api/includes/class-asistente-fuentes.php';
@@ -302,6 +309,69 @@ comprobar( 'el log dice cuántos caracteres volvieron', (bool) strpos( $lineas, 
 comprobar( 'el log NUNCA lleva la key', false !== strpos( $lineas, CZUAPI_OIDO_KEY ), false );
 comprobar( 'el log NUNCA lleva lo que se dijo', false !== strpos( $lineas, $dicho ), false );
 @unlink( $log ); @unlink( $audio );
+
+/* ------------------------------------------------------------------------- */
+echo "\n== Memoria, modelo y etiquetas de la presentación ==\n";
+
+$GLOBALS['czu_opciones'] = array( 'czuapi_ia_memoria' => 0, 'czuapi_pres_turnos' => 20, 'czuapi_pres_modelo' => 'modelo-rapido', 'czuapi_ia_activo' => 1 );
+define( 'CZUAPI_IA_KEY2_UNUSED', 1 );
+$GLOBALS['http_respuesta'] = array( 'response' => array( 'code' => 200 ), 'body' => '{"choices":[{"message":{"content":"Respuesta uno."}}]}' );
+$GLOBALS['http_enviado'] = null;
+// La memoria del asistente de la app está en 0: la de la presentación NO se entera.
+$P::contestar( 'hola', '', 'es', false );
+$P::contestar( 'y el horario?', 'uuid-prueba-1234', 'es', false );
+$enviado = $GLOBALS['http_enviado'][1]['body'] ?? '';
+$datos   = json_decode( $enviado, true );
+comprobar( 'la presentación recuerda aunque la memoria del asistente esté en 0', count( $datos['messages'] ?? array() ), 4 );
+comprobar( 'y lo que recuerda es lo que se dijo antes', $datos['messages'][1]['content'] ?? '', 'hola' );
+comprobar( 'el modelo es el de la presentación, no el del asistente', $datos['model'] ?? '', 'modelo-rapido' );
+
+$GLOBALS['czu_opciones']['czuapi_pres_turnos'] = 0;
+$GLOBALS['czu_transitorios'] = array();
+$P::contestar( 'uno', '', 'es', false );
+$P::contestar( 'dos', 'uuid-prueba-1234', 'es', false );
+$datos = json_decode( $GLOBALS['http_enviado'][1]['body'], true );
+comprobar( 'con 0 turnos en la presentación, cada pregunta se contesta sola', count( $datos['messages'] ?? array() ), 2 );
+
+/* Etiquetas: a la voz de ElevenLabs sólo las que entiende; a la pantalla, ninguna. */
+$texto = 'Hola [pause] qué tal [laughs] vamos [hacer algo raro] [pausa] y [F12] listo.';
+comprobar( 'a la voz: sólo las de la lista; las marcas internas y el resto se quitan', $P::etiquetas( $texto, true ), 'Hola [pause] qué tal [laughs] vamos y listo.' );
+comprobar( 'a la pantalla: ninguna etiqueta', $P::etiquetas( $texto, false ), 'Hola qué tal vamos y listo.' );
+comprobar( 'sin etiquetas, el texto sigue igual', $P::etiquetas( 'Abre de 8 a 17.', true ), 'Abre de 8 a 17.' );
+
+/* El prompt sólo les habla de etiquetas cuando la voz es de ElevenLabs. */
+$GLOBALS['czu_opciones']['czuapi_pres_voz_proveedor'] = 'elevenlabs';
+$GLOBALS['czu_opciones']['czuapi_pres_etiquetas'] = 1;
+$GLOBALS['czu_opciones']['czuapi_pres_voz_key'] = 'eleven-voz-1234567890';
+$GLOBALS['czu_opciones']['czuapi_pres_voz_id'] = 'voz-x';
+$prompt = $P::armar_sistema( array( 'catalogo' => '', 'detalle' => '' ), 'es' );
+comprobar( 'con ElevenLabs, el prompt explica las etiquetas', str_contains( $prompt, '# ETIQUETAS DE EXPRESIÓN' ) && str_contains( $prompt, '[pause]' ), true );
+$GLOBALS['czu_opciones']['czuapi_pres_voz_proveedor'] = 'minimax';
+$prompt = $P::armar_sistema( array( 'catalogo' => '', 'detalle' => '' ), 'es' );
+comprobar( 'con otra voz, el prompt no las menciona', str_contains( $prompt, '# ETIQUETAS DE EXPRESIÓN' ), false );
+
+/* La pantalla nunca recibe las etiquetas, aunque el modelo las ponga. */
+$GLOBALS['czu_opciones']['czuapi_pres_voz_proveedor'] = 'elevenlabs';
+$GLOBALS['czu_opciones']['czuapi_pres_etiquetas'] = 0;
+$GLOBALS['czu_transitorios'] = array();
+$GLOBALS['http_respuesta'] = array( 'response' => array( 'code' => 200 ), 'body' => '{"choices":[{"message":{"content":"Hola [laughs] buen día."}}]}' );
+$r = $P::contestar( 'hola', '', 'es', false );
+comprobar( 'la respuesta que se muestra no lleva etiquetas', $r['respuesta'], 'Hola buen día.' );
+$GLOBALS['czu_opciones']['czuapi_pres_etiquetas'] = 0;
+$prompt = $P::armar_sistema( array( 'catalogo' => '', 'detalle' => '' ), 'es' );
+comprobar( 'con el interruptor apagado, aunque sea ElevenLabs, el prompt no habla de etiquetas', str_contains( $prompt, '# ETIQUETAS DE EXPRESIÓN' ), false );
+comprobar( 'y la voz recibe las etiquetas sólo si el interruptor está prendido', $P::etiquetas( 'Hola [pause] listo', $P::etiquetas_activas() ), 'Hola listo' );
+$GLOBALS['czu_opciones']['czuapi_pres_etiquetas'] = 1;
+comprobar( 'prendido, la voz sí las recibe', $P::etiquetas( 'Hola [pause] listo', $P::etiquetas_activas() ), 'Hola [pause] listo' );
+
+/* El conocimiento: el de prueba, con marcadores, hasta que el equipo guarde el suyo. */
+unset( $GLOBALS['czu_opciones']['czuapi_pres_conocimiento'] );
+comprobar( 'sin conocimiento guardado, va el de prueba con marcadores', str_contains( $P::conocimiento(), '‹descripción' ) && str_contains( $P::conocimiento(), 'Ykua La Patria' ), true );
+$GLOBALS['czu_opciones']['czuapi_pres_conocimiento'] = '';
+comprobar( 'y si el equipo lo dejó vacío, queda vacío (no vuelve el de prueba)', $P::conocimiento(), '' );
+
+/* La persona: saludar una sola vez. */
+comprobar( 'la persona dice que saluda una sola vez', str_contains( $P::persona_de_fabrica(), 'saludá UNA vez' ), true );
 
 /* ------------------------------------------------------------------------- */
 echo "\n" . ( $fallos ? "\033[31m{$fallos} comprobación(es) fallaron.\033[0m\n" : "\033[32mTodo bien.\033[0m\n" );

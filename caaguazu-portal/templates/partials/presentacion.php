@@ -76,6 +76,21 @@ $p = PROMOTUR_Asistente_Panel::presentacion();
 				<span><?php esc_html_e( 'Lo que sabe del proyecto', 'caaguazu-portal' ); ?></span>
 				<textarea name="conocimiento" rows="16"><?php echo esc_textarea( $p['conocimiento'] ); ?></textarea>
 			</label>
+			<div class="promotur-grid promotur-grid--2">
+				<label class="promotur-field">
+					<span><?php esc_html_e( 'Preguntas anteriores que recuerda', 'caaguazu-portal' ); ?></span>
+					<select name="turnos">
+						<?php for ( $i = 0; $i <= 20; $i++ ) : ?>
+							<option value="<?php echo (int) $i; ?>"<?php selected( $p['turnos'], $i ); ?>><?php echo (int) $i; ?></option>
+						<?php endfor; ?>
+					</select>
+				</label>
+				<label class="promotur-field">
+					<span><?php esc_html_e( 'Modelo', 'caaguazu-portal' ); ?></span>
+					<input type="text" name="modelo" value="<?php echo esc_attr( $p['modelo'] ); ?>" placeholder="<?php echo esc_attr( $p['modelo_activo'] ); ?>">
+				</label>
+			</div>
+			<p class="promotur-muted"><?php esc_html_e( 'Recuerda su propia charla, sin depender de la memoria del asistente de la app. El modelo va por la misma API y endpoint; vacío = el del asistente.', 'caaguazu-portal' ); ?></p>
 			<label class="promotur-field">
 				<span><input type="checkbox" name="catalogo" value="1"<?php checked( $p['catalogo'] ); ?>> <?php esc_html_e( 'Sumar lo publicado en la app (lugares, eventos, artículos)', 'caaguazu-portal' ); ?></span>
 			</label>
@@ -122,6 +137,9 @@ $p = PROMOTUR_Asistente_Panel::presentacion();
 					<?php endif; ?>
 				</label>
 			</div>
+			<label class="promotur-field">
+				<span><input type="checkbox" name="etiquetas" value="1"<?php checked( $p['etiquetas'] ); ?>> <?php esc_html_e( 'Dejar que el asistente ponga expresiones en la voz (sólo ElevenLabs, y sólo con un modelo que las entienda)', 'caaguazu-portal' ); ?></span>
+			</label>
 			<?php if ( '' !== $p['voz_key'] && ! $p['voz_key_fija'] ) : ?>
 				<label class="promotur-field">
 					<span><input type="checkbox" name="voz_key_borrar" value="1"> <?php esc_html_e( 'Borrar la key de la voz', 'caaguazu-portal' ); ?></span>

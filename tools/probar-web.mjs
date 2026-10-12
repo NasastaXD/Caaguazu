@@ -813,6 +813,27 @@ if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
 		ok( 'sin errores de página', tel.errores.length === 0, tel.errores.join( '|' ) );
 		await tel.ctx.close();
 
+		// Si la respuesta tarda, la pantalla no se queda en silencio: aparece una frase
+		// de espera, y se borra cuando llega la respuesta.
+		const lento = await levantarPhp( { WEB_PRESENTACION: '1', WEB_PRES_LENTA: '4500', WEB_LATENCIA_MS: '0' } );
+		const esp = await abrir();
+		await esp.p.addInitScript( dictadoFalso );
+		await esp.p.goto( lento.PHP + '/turismo/presentacion/' );
+		await esp.p.waitForFunction( () => ! document.getElementById( 'empezar' ).disabled, null, { timeout: 9000 } );
+		await esp.p.click( '#empezar' );
+		await esp.p.waitForTimeout( 300 );
+		await esp.p.keyboard.press( 'Space' );
+		await esp.p.waitForFunction( () => document.body.dataset.estado === 'pensando', null, { timeout: 9000 } ).catch( () => {} );
+		await esp.p.waitForTimeout( 3600 );
+		const frases = [ 'Un segundo…', 'Dejame pensar…', 'Buena pregunta…', 'Ya te cuento…' ];
+		const enEspera = ( await esp.p.textContent( '#respuesta' ) ) || '';
+		ok( 'a los tres segundos de pensar aparece una frase de espera', frases.includes( enEspera ) && await esp.p.locator( '#respuesta.espera' ).count() === 1, JSON.stringify( enEspera ) );
+		await esp.p.waitForFunction( () => document.body.dataset.estado === 'hablando', null, { timeout: 9000 } ).catch( () => {} );
+		ok( 'cuando llega la respuesta, la frase de espera se borra y queda la respuesta', ! ( await esp.p.locator( '#respuesta.espera' ).count() ) && ( await esp.p.locator( '#respuesta .palabra' ).count() ) > 0 );
+		ok( 'sin errores de página en la espera', esp.errores.length === 0, esp.errores.join( '|' ) );
+		await esp.ctx.close();
+		lento.matar();
+
 		// ?limpio=1: el teléfono hace de pantalla, sin texto.
 		const limpio = await abrir();
 		await limpio.p.addInitScript( microfonoFalso );

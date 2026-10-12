@@ -131,6 +131,11 @@ propio, idioma elegido), y eso vive en su navegador, no acá.
 
 == Changelog ==
 
+= 2.1.3 =
+* Si la respuesta de la presentación tarda, a los tres segundos aparece una
+  frase corta que va rotando («Un segundo…», «Dejame pensar…»), en la pantalla y
+  en el teléfono. Se borra cuando llega la respuesta.
+
 = 2.1.2 =
 * **Arreglo: la presentación no funcionaba en el teléfono, ni daba señales.**
   Cuatro causas, todas mías:

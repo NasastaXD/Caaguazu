@@ -60,6 +60,15 @@ llamen los tags.
 
 == Changelog ==
 
+= 3.15.2 =
+* Presentación: el asistente recuerda la charla con su propia memoria (20 turnos
+  por defecto, elegibles), y el modelo se puede cambiar sin tocar el del
+  asistente de la app. Requiere la API 0.11.2.
+* Presentación: interruptor para que la voz de ElevenLabs reciba expresiones
+  (apagado por defecto).
+* Presentación: el conocimiento de prueba aparece en el campo si nunca se guardó
+  otro; los marcadores ‹así› indican lo que falta escribir.
+
 = 3.15.1 =
 * La pestaña «Presentación» suma el proveedor de la transcripción: OpenAI o
   compatible, o ElevenLabs (Scribe). Requiere la API de la app 0.11.1.

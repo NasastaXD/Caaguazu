@@ -571,6 +571,11 @@ TXT;
 		$endpoint = $forzado ? (string) $forzado['endpoint'] : self::endpoint();
 		$key      = $forzado ? (string) $forzado['key'] : self::key();
 		$modelo   = $forzado ? (string) $forzado['modelo'] : self::modelo();
+		// Otro asistente sobre la misma API (la presentación) puede usar otro modelo,
+		// más rápido, sin cambiar el endpoint ni la key.
+		if ( ! $forzado && ! empty( $opciones['modelo'] ) ) {
+			$modelo = (string) $opciones['modelo'];
+		}
 		if ( '' === $key ) {
 			$out['error'] = 'Falta la API key.';
 			return $out;
@@ -1090,20 +1095,20 @@ TXT;
 		return 'czuapi_ia_mem_' . md5( (int) get_option( 'czuapi_ia_mem_gen', 0 ) . '|' . (string) $espacio . '|' . (string) $conversacion );
 	}
 
-	public static function cargar_memoria( $conversacion, $espacio = '' ) {
-		if ( self::memoria_turnos() <= 0 ) {
+	public static function cargar_memoria( $conversacion, $espacio = '', $turnos = null ) {
+		if ( null === $turnos ? self::memoria_turnos() <= 0 : (int) $turnos <= 0 ) {
 			return array();
 		}
 		$m = get_transient( self::clave_memoria( $conversacion, $espacio ) );
 		return is_array( $m ) ? $m : array();
 	}
 
-	public static function guardar_memoria( $conversacion, $pregunta, $contenido, $espacio = '' ) {
-		$turnos = self::memoria_turnos();
+	public static function guardar_memoria( $conversacion, $pregunta, $contenido, $espacio = '', $turnos = null ) {
+		$turnos = null === $turnos ? self::memoria_turnos() : self::normalizar_turnos( $turnos );
 		if ( $turnos <= 0 ) {
 			return;
 		}
-		$m   = self::cargar_memoria( $conversacion, $espacio );
+		$m   = self::cargar_memoria( $conversacion, $espacio, $turnos );
 		$m[] = array( 'role' => 'user', 'content' => mb_substr( (string) $pregunta, 0, 1500 ) );
 		$m[] = array( 'role' => 'assistant', 'content' => mb_substr( (string) $contenido, 0, 2000 ) );
 		$max = $turnos * 2;

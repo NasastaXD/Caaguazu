@@ -208,6 +208,10 @@ if ( 0 === strpos( $ruta, '/wp-json/czu-app/v1/' ) ) {
 			return is_array( $s ) ? $s : array( 'turno' => 0, 'estado' => 'listo', 'parcial' => '', 'pregunta' => '', 'respuesta' => '' );
 		};
 		if ( 'presentacion' === $r ) {
+			// WEB_PRES_LENTA=ms: que la respuesta tarde, para probar la espera.
+			if ( $lenta = (int) getenv( 'WEB_PRES_LENTA' ) ) {
+				usleep( $lenta * 1000 );
+			}
 			$respuesta = '‹respuesta› a «' . ( $cuerpo['mensaje'] ?? '' ) . '»: uno dos tres cuatro cinco seis siete ocho nueve diez.';
 			if ( ! empty( $cuerpo['sala'] ) ) {
 				$s = $leer_sala( $cuerpo['sala'] );

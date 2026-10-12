@@ -168,7 +168,27 @@ depende de cómo se llame el tag.
 * Repo privado: definir `CZUAPI_GITHUB_TOKEN` (PAT de solo lectura) en
   `wp-config.php`, o cargarlo desde **Caaguazú API → Actualizaciones**.
 
-== Cambios en 0.11.1 ==
+== Cambios en 0.11.2 ==
+
+* **La presentación recuerda su propia charla.** Antes usaba la memoria del
+  asistente de la app: con esa en 0, cada pregunta llegaba sola y la respuesta
+  parecía siempre la primera. Ahora tiene su memoria, de 20 turnos por defecto
+  (`czuapi_pres_turnos`, de 0 a 20).
+* **Modelo propio para la presentación** (`czuapi_pres_modelo`): va por la misma
+  API y endpoint que el asistente, sólo cambia el modelo. Vacío = el del asistente.
+* **Etiquetas de expresión para ElevenLabs** (`[pause]`, `[laughs]`, `[whispers]`…):
+  el modelo las pone en la respuesta y la voz las interpreta. Están apagadas por
+  defecto (`czuapi_pres_etiquetas`): sólo algunos modelos de ElevenLabs las
+  entienden, y con uno que no, las leería en voz alta. La pantalla nunca las
+  muestra; la voz recibe sólo una lista permitida.
+* **Conocimiento de prueba**: si el equipo nunca guardó el suyo, la presentación
+  usa los datos de la investigación de prueba, con marcadores ‹así› donde falta
+  texto. Guardarlo vacío lo deja vacío.
+* La persona saluda una sola vez por charla.
+* **ElevenLabs para voz y para transcripción con la misma key**: si el oído es
+  ElevenLabs y no hay una key de oído cargada, usa la de la voz.
+
+== Cambios en 0.11.1 ==== Cambios en 0.11.1 ==
 
 * **ElevenLabs como proveedor de la transcripción** (Scribe, `speech-to-text`),
   además de OpenAI y los compatibles. Se elige en «Presentación» → Oído →

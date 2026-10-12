@@ -247,6 +247,9 @@ body.toque .orbe__escena { animation: toque 420ms var(--curva); }
 
 .respuesta.parcial { color: var(--texto-2); font-weight: 400; }
 
+/* La frase de espera: más suave que una respuesta, para que no se confunda con ella. */
+.respuesta.espera { color: var(--texto-2); font-weight: 400; font-style: italic; opacity: .75; }
+
 /* ---------------------------------------------------------------------------
  * Empezar: el toque que el navegador exige antes de dejar sonar nada
  * ------------------------------------------------------------------------ */
