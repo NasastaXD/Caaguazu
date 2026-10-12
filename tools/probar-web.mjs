@@ -702,6 +702,11 @@ if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
 	};
 	{
 		ok( '/turismo/presentacion sin barra redirige a la carpeta, con su sala', ( await fetch( pre.PHP + '/turismo/presentacion?sala=ABCD', { redirect: 'manual' } ) ).headers.get( 'location' ) === '/turismo/presentacion/?sala=ABCD' );
+		// El bucle que vio Safari: la dirección con barra se redirigía a sí misma.
+		const conBarra = await fetch( pre.PHP + '/turismo/presentacion/?sala=ABCD', { redirect: 'manual' } );
+		ok( '/turismo/presentacion/ (con barra) se sirve, sin redirigir de nuevo', conBarra.status === 200 && ! conBarra.headers.get( 'location' ), String( conBarra.status ) );
+		const seguido = await fetch( pre.PHP + '/turismo/presentacion', { redirect: 'follow' } );
+		ok( 'y desde la dirección sin barra se llega en una sola vuelta', seguido.status === 200 && seguido.redirected );
 
 		const pantalla = await abrir( { viewport: { width: 1280, height: 720 }, hasTouch: false, isMobile: false } );
 		await pantalla.p.addInitScript( dictadoFalso );
@@ -736,7 +741,9 @@ if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
 		await tel.p.waitForFunction( () => ! document.getElementById( 'empezar' ).disabled, null, { timeout: 9000 } );
 		await tel.p.click( '#empezar' );
 		await tel.p.waitForTimeout( 300 );
-		await tel.p.locator( '#orbe' ).tap();
+		ok( 'el teléfono tampoco rotula nada: ni «tocá para hablar» ni estado en reposo', ( await tel.p.textContent( '#estado' ) ) === '' );
+		// Tocar en cualquier parte de la pantalla (no la esfera) también habla.
+		await tel.p.touchscreen.tap( 195, 700 );
 		const vioEscuchar = await pantalla.p.waitForFunction( () => document.body.dataset.estado === 'escuchando', null, { timeout: 5000 } ).then( () => true ).catch( () => false );
 		ok( 'la pantalla ve que el teléfono está escuchando', vioEscuchar );
 		const dijo = await pantalla.p.waitForFunction( () => ( document.getElementById( 'respuesta' ).textContent || '' ).includes( 'cómo funciona esto' ), null, { timeout: 9000 } ).then( () => true ).catch( () => false );

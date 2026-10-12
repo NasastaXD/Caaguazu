@@ -288,8 +288,10 @@ $servidor = CZUWIOS_Servidor::instance();
 $servidor->reglas();
 
 // Lo que hace WordPress con las reglas de reescritura: la primera que
-// coincide con el path (sin la barra inicial) decide el destino.
-$sin_barra = ltrim( $ruta, '/' );
+// coincide con el path decide el destino, y el path llega SIN barras en los
+// extremos (WP::parse_request las recorta). Con la barra final puesta, este
+// servidor no reproducía el bucle de redirecciones de /turismo/presentacion/.
+$sin_barra = trim( $ruta, '/' );
 foreach ( $GLOBALS['czu_reglas'] as $patron => $destino ) {
 	if ( preg_match( '#' . $patron . '#', $sin_barra, $m ) ) {
 		$destino = preg_replace_callback( '/\$matches\[(\d+)\]/', function ( $x ) use ( $m ) { return $m[ (int) $x[1] ] ?? ''; }, $destino );

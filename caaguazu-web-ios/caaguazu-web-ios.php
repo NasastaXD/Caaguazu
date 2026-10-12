@@ -3,7 +3,7 @@
  * Plugin Name:       Caaguazú Web turismo
  * Plugin URI:        https://caaguazu.net
  * Description:       La web de turismo de acceso fácil (HTML/CSS/JS sin build), en /turismo/ y en /ios/: el mismo contenido que la app, sin instalar nada ni crear una cuenta. Nació como espejo para iPhone mientras no exista una app nativa.
- * Version:           2.1.0
+ * Version:           2.1.1
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Municipalidad de Caaguazú
@@ -45,7 +45,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'CZUWIOS_VERSION', '2.1.0' );
+define( 'CZUWIOS_VERSION', '2.1.1' );
 define( 'CZUWIOS_FILE', __FILE__ );
 define( 'CZUWIOS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'CZUWIOS_BASENAME', plugin_basename( __FILE__ ) );
@@ -571,7 +571,13 @@ final class CZUWIOS_Servidor {
 		 */
 		$carpeta = self::carpeta_de( $pedido );
 		if ( null !== $carpeta ) {
-			if ( '/' !== substr( $pedido, -1 ) ) {
+			// Se mira la dirección que pidió el navegador, NO la variable de
+			// consulta: WordPress le saca la barra final al path antes de aplicar
+			// las reglas, así que `czuwios_archivo` llega siempre como
+			// `presentacion`. Con eso decidiendo, la página redirigía a
+			// `presentacion/` y volvía a recibir `presentacion`, sin fin: Safari
+			// la daba por «demasiadas redirecciones».
+			if ( ! self::pide_con_barra( isset( $_SERVER['REQUEST_URI'] ) ? (string) wp_unslash( $_SERVER['REQUEST_URI'] ) : '' ) ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 				$query = isset( $_SERVER['QUERY_STRING'] ) && '' !== $_SERVER['QUERY_STRING'] ? '?' . wp_unslash( $_SERVER['QUERY_STRING'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 				$base  = wp_parse_url( czuwios_url(), PHP_URL_PATH );
 				$this->redirigir( rtrim( (string) $base, '/' ) . '/' . $carpeta . '/' . $query );
@@ -655,6 +661,18 @@ final class CZUWIOS_Servidor {
 			return null;
 		}
 		return $carpeta;
+	}
+
+	/**
+	 * ¿La dirección pedida termina en barra? Ignora la query: `…/presentacion/?sala=X`
+	 * termina en barra y `…/presentacion?sala=X/` no.
+	 *
+	 * @param string $request_uri
+	 * @return bool
+	 */
+	public static function pide_con_barra( $request_uri ) {
+		$path = (string) strtok( (string) $request_uri, '?#' );
+		return '/' === substr( $path, -1 );
 	}
 
 	/** 301 a otra dirección de la web. */

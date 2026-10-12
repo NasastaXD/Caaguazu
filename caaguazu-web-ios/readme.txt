@@ -131,6 +131,17 @@ propio, idioma elegido), y eso vive en su navegador, no acá.
 
 == Changelog ==
 
+= 2.1.1 =
+* **Arreglo: `/turismo/presentacion/` daba «demasiadas redirecciones».** El
+  plugin decidía si redirigir a la dirección con barra mirando la variable de
+  consulta, pero WordPress le saca la barra final al path antes de aplicar las
+  reglas: la variable llegaba siempre sin barra, así que la página se
+  redirigía a sí misma sin fin. Ahora mira la dirección que pidió el navegador.
+  El servidor de prueba no recortaba la barra como WordPress y por eso las
+  pruebas no lo vieron; ahora sí, y hay una prueba que lo reproduce.
+* En el teléfono ya no dice «Tocá para hablar». Se habla tocando en cualquier
+  parte de la pantalla, no sólo la esfera.
+
 = 2.1.0 =
 * **La presentación**, en `/turismo/presentacion/`: una página aparte, sólo con
   una esfera que escucha y contesta en voz alta, y abajo lo que se preguntó y lo

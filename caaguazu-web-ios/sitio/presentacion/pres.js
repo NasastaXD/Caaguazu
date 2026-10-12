@@ -22,7 +22,6 @@ const TX = {
   marca: "Caaguazú",
   apagada: "Presentación apagada",
   reintentar: "Reintentar",
-  listo: "Tocá para hablar",
   escuchando: "Escuchando",
   pensando: "Pensando",
   noEscuche: "No te escuché",
@@ -326,11 +325,11 @@ function poner(estado, { mensaje = "", error = false } = {}) {
   const el = $("estado");
   // La pantalla es sólo la esfera: lo que hace se ve en cómo se mueve, y lo
   // único que se escribe es un problema que alguien tiene que resolver. El
-  // teléfono, que es quien toca, sí dice qué está pasando.
+  // teléfono, que es quien toca, dice qué está pasando, pero no «tocá para
+  // hablar»: la esfera es el botón y se ve que lo es.
   const texto = modoControl
     ? mensaje ||
       {
-        listo: hayOidoLocal() ? TX.listo : "",
         escuchando: TX.escuchando,
         pensando: TX.pensando,
         apagada: TX.apagada,
@@ -1079,6 +1078,15 @@ async function arrancar() {
 }
 
 $("orbe").addEventListener("click", alternarEscucha);
+// En el teléfono se habla tocando en cualquier parte de la pantalla, no sólo
+// la esfera: sin ningún rótulo que lo explique, un blanco grande es lo que
+// hace que no haya que apuntar.
+if (modoControl) {
+  document.addEventListener("click", (e) => {
+    if (e.target.closest("#orbe, button, a, aside")) return;
+    alternarEscucha();
+  });
+}
 $("abrir-ajustes").addEventListener("click", () => abrirAjustes());
 $("pantalla-completa").addEventListener("click", pantallaCompleta);
 $("crear-sala").addEventListener("click", crearSala);

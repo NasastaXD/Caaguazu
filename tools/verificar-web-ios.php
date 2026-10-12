@@ -300,6 +300,12 @@ comprobar( 'una carpeta de código NO es una página', CZUWIOS_Servidor::carpeta
 comprobar( 'un archivo NO es una carpeta', CZUWIOS_Servidor::carpeta_de( 'presentacion/pres.js' ), null );
 comprobar( 'subir con .. NO sale de sitio/', CZUWIOS_Servidor::carpeta_de( '../sitio/presentacion/' ), null );
 comprobar( 'lo que no existe NO es una página', CZUWIOS_Servidor::carpeta_de( 'nada/' ), null );
+// WordPress recorta la barra final del path: la decisión de redirigir tiene
+// que salir de la dirección pedida, o la página se redirige a sí misma sin fin.
+comprobar( 'con barra final NO hay que redirigir', CZUWIOS_Servidor::pide_con_barra( '/turismo/presentacion/' ), true );
+comprobar( 'con barra y query tampoco', CZUWIOS_Servidor::pide_con_barra( '/turismo/presentacion/?sala=ABCD&modo=control' ), true );
+comprobar( 'sin barra sí', CZUWIOS_Servidor::pide_con_barra( '/turismo/presentacion' ), false );
+comprobar( 'sin barra y con query sí', CZUWIOS_Servidor::pide_con_barra( '/turismo/presentacion?sala=ABCD' ), false );
 
 $pres = CZUWIOS_Servidor::preparar_html( (string) file_get_contents( CZUWIOS_SITIO . 'presentacion/index.html' ), $v, CZUWIOS_Servidor::base_directa(), $aj_prueba );
 comprobar( 'la presentación recibe los ajustes (dónde está la API)', (bool) strpos( $pres, 'id="czu-ajustes"' ), true );
