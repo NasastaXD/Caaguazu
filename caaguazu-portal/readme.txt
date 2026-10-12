@@ -60,6 +60,13 @@ llamen los tags.
 
 == Changelog ==
 
+= 3.15.1 =
+* La pestaña «Presentación» suma el proveedor de la transcripción: OpenAI o
+  compatible, o ElevenLabs (Scribe). Requiere la API de la app 0.11.1.
+* Al cambiar de proveedor, el endpoint y el modelo que quedaron cargados del
+  anterior se descartan solos.
+* Guardar la presentación queda en «Registros» con el proveedor elegido (sin keys).
+
 = 3.15.0 =
 * **Presentación.** Una pestaña nueva en «Asistente» para preparar la esfera que
   habla en un escenario: prenderla y apagarla, su guion (personalidad y lo que

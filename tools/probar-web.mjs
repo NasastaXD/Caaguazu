@@ -686,6 +686,10 @@ if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
 	const dictadoFalso = () => {
 		class SR {
 			start() {
+				// Con cuántas pistas de micrófono abiertas arrancó el dictado: en un
+				// celular tiene que ser cero (el micrófono es de uno solo a la vez).
+				window.__pistasAlIniciar = window.__pistasActivas ? window.__pistasActivas() : 0;
+				setTimeout( () => this.onaudiostart?.(), 60 );
 				this.t1 = setTimeout( () => this.onresult?.( { resultIndex: 0, results: [ Object.assign( [ { transcript: 'hola cómo' } ], { isFinal: false } ) ] } ), 300 );
 				this.t2 = setTimeout( () => this.stop(), 1200 );
 			}
@@ -739,7 +743,7 @@ if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
 		await tel.p.addInitScript( dictadoFalso );
 		await tel.p.goto( `${ pre.PHP }/turismo/presentacion/?sala=${ codigo }&modo=control` );
 		await tel.p.waitForFunction( () => ! document.getElementById( 'empezar' ).disabled, null, { timeout: 9000 } );
-		await tel.p.click( '#empezar' );
+		await tel.p.tap( '#empezar' );
 		await tel.p.waitForTimeout( 300 );
 		ok( 'el teléfono tampoco rotula nada: ni «tocá para hablar» ni estado en reposo', ( await tel.p.textContent( '#estado' ) ) === '' );
 		// Tocar en cualquier parte de la pantalla (no la esfera) también habla.
@@ -751,6 +755,90 @@ if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
 		ok( 'sin errores de página, ni en la pantalla ni en el teléfono', pantalla.errores.length + tel.errores.length === 0, [ ...pantalla.errores, ...tel.errores ].join( '|' ) );
 		await tel.ctx.close();
 		await pantalla.ctx.close();
+	}
+
+	// --- Un teléfono que abre la página directo (sin sala) --------------------
+	//
+	// Lo que fallaba: abría el micrófono para medirlo y a la vez para el dictado
+	// (en un celular, el micrófono es de uno solo), no escribía nada, la esfera
+	// casi no cambiaba y sólo se podía tocar la esfera. Sin feedback no hay forma
+	// de saber si escucha.
+	{
+		// Micrófono falso con pistas que se pueden contar, como el de un teléfono.
+		const microfonoFalso = () => {
+			const pistas = [];
+			const gum = async () => {
+				const flujo = new AudioContext().createMediaStreamDestination().stream;
+				pistas.push( ...flujo.getAudioTracks() );
+				return flujo;
+			};
+			Object.defineProperty( navigator, 'mediaDevices', { value: { getUserMedia: gum, enumerateDevices: async () => [] }, configurable: true } );
+			window.__pistasActivas = () => pistas.filter( ( t ) => t.readyState === 'live' ).length;
+		};
+
+		const tel = await abrir();
+		await tel.p.addInitScript( microfonoFalso );
+		await tel.p.addInitScript( dictadoFalso );
+		await tel.p.goto( pre.PHP + '/turismo/presentacion/' );
+		await tel.p.waitForFunction( () => ! document.getElementById( 'empezar' ).disabled, null, { timeout: 9000 } );
+		await tel.p.tap( '#empezar' );
+		await tel.p.waitForTimeout( 400 );
+
+		const caja = await tel.p.locator( '#orbe' ).boundingBox();
+		ok( 'la esfera es grande para el dedo en un teléfono', caja.width >= 200, `${ Math.round( caja.width ) }px` );
+		ok( 'sin ningún rótulo de «tocá para hablar»', ( await tel.p.textContent( '#estado' ) ) === '' );
+
+		// El engranaje y el botón de pantalla completa viven abajo a la izquierda y
+		// están escondidos: ahí un toque tiene que pasar de largo, no perderse.
+		ok( 'los botones escondidos no se comen el toque (abajo a la izquierda no hay nada tocable)', await tel.p.evaluate( () => { const e = document.elementFromPoint( 40, 790 ); return ! e || ! e.closest( 'button, a' ); } ) );
+		await tel.p.touchscreen.tap( 40, 790 );
+		await tel.p.waitForTimeout( 150 );
+		ok( 'y tocar justo ahí también la pone a escuchar', await tel.p.evaluate( () => document.body.dataset.estado ) === 'escuchando' );
+		await tel.p.touchscreen.tap( 330, 760 ); // la corta, para empezar la prueba de abajo desde cero
+		await tel.p.waitForTimeout( 1500 );
+		// Tocar en un lugar vacío de la pantalla, lejos de la esfera.
+		await tel.p.touchscreen.tap( 330, 760 );
+		await tel.p.waitForTimeout( 200 );
+		ok( 'al tocar, la esfera responde ya (destello)', await tel.p.evaluate( () => document.body.classList.contains( 'toque' ) ) );
+		ok( 'tocar en cualquier parte de la pantalla la pone a escuchar', await tel.p.evaluate( () => document.body.dataset.estado ) === 'escuchando' );
+		ok( 'y lo dice: «Escuchando»', ( await tel.p.textContent( '#estado' ) ) === 'Escuchando' );
+		ok( 'el dictado arrancó sin que la página tuviera el micrófono abierto', await tel.p.evaluate( () => window.__pistasAlIniciar ) === 0, String( await tel.p.evaluate( () => window.__pistasAlIniciar ) ) );
+		await tel.p.waitForFunction( () => document.body.dataset.mic === 'abierto', null, { timeout: 3000 } ).catch( () => {} );
+		ok( 'cuando el micrófono confirma que se abrió, los aros se hacen fuertes', await tel.p.evaluate( () => document.body.dataset.mic ) === 'abierto' );
+		ok( 'los aros salen de la esfera mientras escucha', await tel.p.evaluate( () => getComputedStyle( document.querySelector( '.orbe__aro' ) ).animationName ) === 'aro' );
+		await tel.p.waitForFunction( () => ( document.getElementById( 'respuesta' ).textContent || '' ).includes( 'hola' ), null, { timeout: 4000 } ).catch( () => {} );
+		ok( 'y se lee lo que se va entendiendo', ( await tel.p.textContent( '#respuesta' ) ).includes( 'hola' ) );
+		await tel.p.waitForFunction( () => document.querySelectorAll( '#respuesta .palabra' ).length > 5, null, { timeout: 9000 } ).catch( () => {} );
+		ok( 'contesta, y en el teléfono también se ve lo preguntado', ( await tel.p.textContent( '#pregunta' ) ).includes( 'cómo funciona esto' ) && await tel.p.locator( '#respuesta .palabra' ).count() > 5 );
+		ok( 'sin errores de página', tel.errores.length === 0, tel.errores.join( '|' ) );
+		await tel.ctx.close();
+
+		// ?limpio=1: el teléfono hace de pantalla, sin texto.
+		const limpio = await abrir();
+		await limpio.p.addInitScript( microfonoFalso );
+		await limpio.p.addInitScript( dictadoFalso );
+		await limpio.p.goto( pre.PHP + '/turismo/presentacion/?limpio=1' );
+		await limpio.p.waitForFunction( () => ! document.getElementById( 'empezar' ).disabled, null, { timeout: 9000 } );
+		await limpio.p.tap( '#empezar' );
+		await limpio.p.waitForTimeout( 300 );
+		await limpio.p.touchscreen.tap( 330, 760 );
+		await limpio.p.waitForTimeout( 500 );
+		ok( '?limpio=1 deja el teléfono sin texto, también escuchando', await limpio.p.evaluate( () => document.body.dataset.estado ) === 'escuchando' && ( await limpio.p.textContent( '#estado' ) ) === '' && ( await limpio.p.textContent( '#respuesta' ) ) === '' );
+		await limpio.ctx.close();
+
+		// ?debug=1: el registro de lo que hace el oído, para ver por qué falla.
+		const depurar = await abrir();
+		await depurar.p.addInitScript( microfonoFalso );
+		await depurar.p.addInitScript( dictadoFalso );
+		await depurar.p.goto( pre.PHP + '/turismo/presentacion/?debug=1' );
+		await depurar.p.waitForFunction( () => ! document.getElementById( 'empezar' ).disabled, null, { timeout: 9000 } );
+		await depurar.p.tap( '#empezar' );
+		await depurar.p.waitForTimeout( 300 );
+		await depurar.p.touchscreen.tap( 330, 760 );
+		await depurar.p.waitForTimeout( 900 );
+		const registro = await depurar.p.textContent( '.rastro' );
+		ok( '?debug=1 escribe en pantalla qué hace el oído (táctil, micrófono, audiostart, resultado)', /táctil: sí/.test( registro ) && /micrófono sin abrir/.test( registro ) && /audiostart/.test( registro ) && /resultado:/.test( registro ), registro.slice( 0, 160 ) );
+		await depurar.ctx.close();
 	}
 	pre.matar();
 }

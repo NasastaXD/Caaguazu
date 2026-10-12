@@ -48,6 +48,14 @@ function sanitize_email( $s ) { return (string) $s; }
 function wp_parse_url( $u, $c = -1 ) { return parse_url( $u, $c ); }
 function __( $s, $d = '' ) { return $s; }
 function add_action( ...$a ) {}
+function wp_generate_password( $n = 12, $especiales = true ) { return str_repeat( 'a', $n ); }
+function is_wp_error( $x ) { return false; }
+function wp_remote_retrieve_response_code( $r ) { return $r['response']['code']; }
+function wp_remote_retrieve_body( $r ) { return $r['body']; }
+/* El HTTP de prueba: guarda lo que se mandó y contesta lo que se le cargó. */
+$GLOBALS['http_enviado'] = null;
+$GLOBALS['http_respuesta'] = array( 'response' => array( 'code' => 200 ), 'body' => '{"text":"hola cómo funciona esto"}' );
+function wp_remote_post( $url, $args ) { $GLOBALS['http_enviado'] = array( $url, $args ); return $GLOBALS['http_respuesta']; }
 
 $raiz = dirname( __DIR__ );
 require $raiz . '/caaguazu-app-api/includes/class-asistente-fuentes.php';
@@ -238,6 +246,62 @@ $prompt = $P::armar_sistema( array( 'catalogo' => str_repeat( 'catalogo ', 2000 
 comprobar( 'con poco presupuesto se va el catálogo y queda el guion', array( false !== strpos( $prompt, '[GUION]' ), false !== strpos( $prompt, 'catalogo catalogo catalogo catalogo catalogo catalogo catalogo catalogo catalogo catalogo catalogo' ) ), array( true, false ) );
 comprobar( 'las reglas de la voz van siempre', false !== strpos( $prompt, '# CÓMO SE ESCUCHA' ), true );
 $GLOBALS['czu_opciones'] = array();
+
+/* ------------------------------------------------------------------------- */
+echo "\n== Transcripción: OpenAI y ElevenLabs ==\n";
+
+$log = tempnam( sys_get_temp_dir(), 'oido' );
+ini_set( 'error_log', $log );
+$audio = tempnam( sys_get_temp_dir(), 'voz' );
+file_put_contents( $audio, 'AUDIO-PRUEBA' );
+$dicho = 'frase secreta de la sala';
+
+/* ElevenLabs: su endpoint, su cabecera, sus campos. */
+$GLOBALS['czu_opciones'] = array(
+	'czuapi_pres_oido_modo'      => 'servidor',
+	'czuapi_pres_oido_proveedor' => 'elevenlabs',
+	'czuapi_pres_oido_idioma'    => 'es-PY',
+	'czuapi_pres_oido_endpoint'  => 'https://api.openai.com/v1/audio/transcriptions', // quedó del proveedor anterior
+	'czuapi_pres_oido_modelo'    => 'whisper-1',                                     // ídem
+);
+$r = $P::oir( $audio, 'audio/webm;codecs=opus' );
+$cfg = $P::oido();
+comprobar( 'ElevenLabs: el endpoint de OpenAI que quedó cargado se descarta', $cfg['endpoint'], 'https://api.elevenlabs.io/v1/speech-to-text' );
+comprobar( 'ElevenLabs: el modelo de OpenAI que quedó cargado se descarta', $cfg['modelo'], 'scribe_v1' );
+comprobar( 'ElevenLabs: la key va en xi-api-key, no en Bearer', $cfg['cabecera'], 'xi-api-key' );
+$enviado = $GLOBALS['http_enviado'];
+comprobar( 'ElevenLabs: se manda al endpoint de ElevenLabs', $enviado[0], 'https://api.elevenlabs.io/v1/speech-to-text' );
+comprobar( 'ElevenLabs: la key va en la cabecera xi-api-key', $enviado[1]['headers']['xi-api-key'] ?? '', CZUAPI_OIDO_KEY );
+comprobar( 'ElevenLabs: sin cabecera Authorization', isset( $enviado[1]['headers']['Authorization'] ), false );
+comprobar( 'ElevenLabs: el modelo va en model_id', (bool) preg_match( '/name="model_id"\r\n\r\nscribe_v1\r\n/', $enviado[1]['body'] ), true );
+comprobar( 'ElevenLabs: el idioma va en language_code, en dos letras', (bool) preg_match( '/name="language_code"\r\n\r\nes\r\n/', $enviado[1]['body'] ), true );
+comprobar( 'ElevenLabs: el archivo viaja en el campo file', (bool) preg_match( '/name="file"; filename="voz\.webm"/', $enviado[1]['body'] ), true );
+comprobar( 'ElevenLabs: y NO lleva los campos de OpenAI', array( (bool) strpos( $enviado[1]['body'], 'name="model"' ), (bool) strpos( $enviado[1]['body'], 'response_format' ) ), array( false, false ) );
+comprobar( 'ElevenLabs: el texto que contesta se devuelve', array( $r['ok'], $r['texto'] ), array( true, 'hola cómo funciona esto' ) );
+
+/* Un rechazo: la causa llega, sin la key. */
+$GLOBALS['http_respuesta'] = array( 'response' => array( 'code' => 401 ), 'body' => '{"detail":{"message":"Invalid API key ' . CZUAPI_OIDO_KEY . '"}}' );
+$r = $P::oir( $audio, 'audio/webm' );
+comprobar( 'ElevenLabs: un 401 se informa con su código', array( $r['ok'], $r['code'] ), array( false, 401 ) );
+comprobar( 'ElevenLabs: y la causa NUNCA lleva la key', false !== strpos( $r['error'], CZUAPI_OIDO_KEY ), false );
+
+/* OpenAI: lo de siempre, sin tocarlo. */
+$GLOBALS['czu_opciones'] = array( 'czuapi_pres_oido_modo' => 'servidor', 'czuapi_pres_oido_proveedor' => 'openai', 'czuapi_pres_oido_idioma' => 'es-PY' );
+$GLOBALS['http_respuesta'] = array( 'response' => array( 'code' => 200 ), 'body' => '{"text":"hola"}' );
+$r = $P::oir( $audio, 'audio/webm' );
+$enviado = $GLOBALS['http_enviado'];
+comprobar( 'OpenAI: endpoint y cabecera Bearer de siempre', array( $enviado[0], $enviado[1]['headers']['Authorization'] ?? '' ), array( 'https://api.openai.com/v1/audio/transcriptions', 'Bearer ' . CZUAPI_OIDO_KEY ) );
+comprobar( 'OpenAI: campos model y response_format', array( (bool) strpos( $enviado[1]['body'], 'name="model"' ), (bool) strpos( $enviado[1]['body'], 'name="response_format"' ) ), array( true, true ) );
+
+/* Los logs: qué pasó, y nunca la key ni lo dicho. */
+$GLOBALS['http_respuesta'] = array( 'response' => array( 'code' => 200 ), 'body' => '{"text":"' . $dicho . '"}' );
+$P::oir( $audio, 'audio/webm' );
+$lineas = (string) file_get_contents( $log );
+comprobar( 'el log dice que hubo un pedido, a qué destino y con qué modelo', (bool) strpos( $lineas, '[CzuApi][Oido] pedido: proveedor=elevenlabs' ) || (bool) strpos( $lineas, 'pedido: proveedor=openai' ), true );
+comprobar( 'el log dice cuántos caracteres volvieron', (bool) strpos( $lineas, 'respuesta en' ) && (bool) strpos( $lineas, 'caracteres' ), true );
+comprobar( 'el log NUNCA lleva la key', false !== strpos( $lineas, CZUAPI_OIDO_KEY ), false );
+comprobar( 'el log NUNCA lleva lo que se dijo', false !== strpos( $lineas, $dicho ), false );
+@unlink( $log ); @unlink( $audio );
 
 /* ------------------------------------------------------------------------- */
 echo "\n" . ( $fallos ? "\033[31m{$fallos} comprobación(es) fallaron.\033[0m\n" : "\033[32mTodo bien.\033[0m\n" );

@@ -70,11 +70,14 @@ function direccionApi() {
 const API = direccionApi();
 
 class ErrorApi extends Error {
-  constructor(estado, codigo, esperaSeg = 0) {
+  constructor(estado, codigo, esperaSeg = 0, causa = "") {
     super(codigo || String(estado));
     this.estado = estado;
     this.codigo = codigo;
     this.esperaSeg = esperaSeg;
+    // Lo que contestó el servicio de transcripción (ya sin keys): sirve para
+    // saber si es la key, el modelo o la red.
+    this.causa = causa;
   }
 }
 
@@ -93,7 +96,7 @@ async function pedir(ruta, opciones = {}, ms = 30000) {
   const cuerpo = await r.json().catch(() => ({}));
   if (!r.ok) {
     const espera = Number(r.headers.get("Retry-After")) || Number(cuerpo?.error?.detalle?.espera_seg) || 0;
-    throw new ErrorApi(r.status, cuerpo?.error?.codigo, espera);
+    throw new ErrorApi(r.status, cuerpo?.error?.codigo, espera, cuerpo?.error?.detalle?.causa || "");
   }
   return cuerpo;
 }
@@ -111,6 +114,35 @@ const salaValida = (s) => (/^[A-Za-z0-9]{4,12}$/.test(String(s || "")) ? String(
 const parametros = new URLSearchParams(location.search);
 let sala = salaValida(parametros.get("sala"));
 const modoControl = Boolean(sala) && parametros.get("modo") === "control";
+
+// ¿Un teléfono o una tableta? Ahí se habla tocando en cualquier parte de la
+// pantalla, el micrófono es de uno solo a la vez y hace falta ver que la
+// esfera escucha.
+const esTactil = matchMedia("(pointer: coarse)").matches;
+// Dónde se escribe lo que pasa. La pantalla del escenario no escribe nada;
+// quien maneja desde un teléfono necesita ver que lo escuchan, y poder leer por
+// qué no. `?limpio=1` apaga el texto también en el teléfono.
+const conTexto = modoControl || (esTactil && parametros.get("limpio") !== "1");
+const depurando = parametros.get("debug") === "1";
+
+/**
+ * Con `?debug=1`, un registro en pantalla de lo que hace el oído. En un
+ * teléfono no hay consola, y «no me escucha» sin la razón (permiso, micrófono
+ * ocupado, idioma, red) no se puede arreglar.
+ */
+let panelRastro = null;
+const inicioRastro = performance.now();
+function rastro(...partes) {
+  if (!depurando) return;
+  if (!panelRastro) {
+    panelRastro = document.createElement("pre");
+    panelRastro.className = "rastro";
+    document.body.appendChild(panelRastro);
+  }
+  const linea = `${((performance.now() - inicioRastro) / 1000).toFixed(1).padStart(5)}s ${partes.join(" ")}`;
+  const previas = panelRastro.textContent ? panelRastro.textContent.split("\n") : [];
+  panelRastro.textContent = previas.concat(linea).slice(-24).join("\n");
+}
 
 /* -------------------------------------------------------------------------
  * El sonido: un solo AudioContext, creado con el primer toque
@@ -232,8 +264,8 @@ const Orbe = (() => {
   const formato = video.canPlayType('video/mp4; codecs="avc1.42E01E"') ? "mp4" : "webm";
   video.src = `${directa ? `${directa}presentacion/` : ""}esfera.${formato}`;
 
-  const VELOCIDAD = { inicio: 0.6, apagada: 0.25, listo: 0.6, escuchando: 0.95, pensando: 1.5, hablando: 0.9 };
-  const BASE = { inicio: 0.12, apagada: 0.02, listo: 0.15, escuchando: 0.3, pensando: 0.45, hablando: 0.3 };
+  const VELOCIDAD = { inicio: 0.6, apagada: 0.25, listo: 0.6, escuchando: 1.25, pensando: 1.6, hablando: 0.9 };
+  const BASE = { inicio: 0.12, apagada: 0.02, listo: 0.15, escuchando: 0.5, pensando: 0.5, hablando: 0.3 };
 
   let nivel = 0;
   let energia = 0.15;
@@ -291,9 +323,11 @@ const Orbe = (() => {
 let pulsoRemoto = 0;
 function nivelObjetivo(estado, ahora) {
   if (estado === "escuchando") {
-    // Escuchando desde el teléfono no hay micrófono acá: lo que late es el
-    // texto que va llegando.
-    if (escuchaRemota) {
+    // Sin micrófono propio abierto —escuchando desde el teléfono, o con el
+    // dictado de un celular, que no deja abrir el micrófono dos veces— lo que
+    // late es lo que va llegando: que se abrió el micrófono, que hay voz, el
+    // texto.
+    if (escuchaRemota || escuchaPorEventos) {
       pulsoRemoto *= 0.96;
       return Math.min(1, pulsoRemoto + 0.15 + 0.1 * Math.sin(ahora / 180));
     }
@@ -315,10 +349,15 @@ const Estado = {
   actual: "inicio",
 };
 let escuchaRemota = false;
+let escuchaPorEventos = false;
 
 function poner(estado, { mensaje = "", error = false } = {}) {
   Estado.actual = estado;
-  if (estado !== "escuchando") escuchaRemota = false;
+  if (estado !== "escuchando") {
+    escuchaRemota = false;
+    escuchaPorEventos = false;
+    delete document.body.dataset.mic;
+  }
   // El estado queda escrito en el body para quien lo necesite (las pruebas,
   // un lector de pantalla por aria-pressed), no en la pantalla.
   document.body.dataset.estado = estado;
@@ -327,7 +366,7 @@ function poner(estado, { mensaje = "", error = false } = {}) {
   // único que se escribe es un problema que alguien tiene que resolver. El
   // teléfono, que es quien toca, dice qué está pasando, pero no «tocá para
   // hablar»: la esfera es el botón y se ve que lo es.
-  const texto = modoControl
+  const texto = conTexto
     ? mensaje ||
       {
         escuchando: TX.escuchando,
@@ -355,7 +394,7 @@ function avisar(mensaje, { error = true } = {}) {
 
 function mostrarPregunta(texto) {
   // En la pantalla no se repite lo que se preguntó: se escuchó en la sala.
-  if (!modoControl) texto = "";
+  if (!conTexto) texto = "";
   const el = $("pregunta");
   el.textContent = texto || "";
   el.classList.toggle("visible", Boolean(texto));
@@ -364,7 +403,7 @@ function mostrarPregunta(texto) {
 /** Lo que se va entendiendo mientras se habla, en gris. */
 function mostrarEscuchado(texto) {
   // Tampoco lo que se va entendiendo: en la pantalla sólo se lee la respuesta.
-  if (!modoControl) texto = "";
+  if (!conTexto) texto = "";
   const el = $("respuesta");
   el.classList.remove("desvanecida");
   el.classList.add("parcial");
@@ -382,7 +421,7 @@ let subtitulo = null; // { palabras: [span], cortes: [índice de carácter], dic
  */
 let relojDesvanecer = 0;
 function desvanecerRespuesta() {
-  if (modoControl) return;
+  if (conTexto) return;
   clearTimeout(relojDesvanecer);
   relojDesvanecer = setTimeout(() => $("respuesta").classList.add("desvanecida"), 6000);
 }
@@ -542,8 +581,18 @@ function hayOidoLocal() {
 
 let escucha = null; // { detener(), cancelar() }
 
+/** Al tocar, la esfera responde ya, antes de saber si el micrófono anda. */
+function tocar() {
+  document.body.classList.remove("toque");
+  void document.body.offsetWidth; // reinicia la animación si se toca dos veces
+  document.body.classList.add("toque");
+  navigator.vibrate?.(12);
+}
+
 function alternarEscucha() {
   if (Estado.actual === "inicio" || Estado.actual === "apagada") return;
+  tocar();
+  rastro("toque, estaba:", Estado.actual, escucha ? "(cierra la escucha)" : "");
   if (escucha) {
     escucha.detener();
     return;
@@ -583,9 +632,17 @@ function avisarSala(estado, parcial = "") {
   else avisoPendiente = setTimeout(mandar, 500 - (ahora - ultimoAviso));
 }
 
-function escucharConNavegador(reintento = false) {
+/**
+ * Idiomas del dictado, del que pide el panel al más genérico. Un celular que no
+ * tiene `es-PY` a veces avisa (`language-not-supported`) y a veces no oye nada:
+ * se prueba con castellano de Latinoamérica y de España antes de rendirse.
+ */
+const idiomasDictado = () => [...new Set([config.idioma, "es-419", "es-ES"])];
+
+function escucharConNavegador(intento = 0) {
+  const idiomas = idiomasDictado();
   const rec = new Reconocedor();
-  rec.lang = config.idioma;
+  rec.lang = idiomas[Math.min(intento, idiomas.length - 1)];
   rec.interimResults = true;
   rec.continuous = false;
   rec.maxAlternatives = 1;
@@ -595,6 +652,30 @@ function escucharConNavegador(reintento = false) {
   let fallo = "";
   let cancelada = false;
 
+  // Sin medidor propio, la esfera late con estos avisos: el micrófono se abrió,
+  // hay un sonido, hay voz, llegó texto. Cada uno es una prueba de que algo
+  // anda, y la falta de todos es la prueba de que no.
+  escuchaPorEventos = !flujoMicrofono?.active;
+  document.body.dataset.mic = "pendiente";
+  rastro("dictado", rec.lang, escuchaPorEventos ? "(sin medidor propio)" : "(con medidor)");
+
+  rec.onstart = () => rastro("start");
+  rec.onaudiostart = () => {
+    document.body.dataset.mic = "abierto";
+    pulsoRemoto = 0.6;
+    rastro("audiostart: el micrófono se abrió");
+  };
+  rec.onsoundstart = () => {
+    pulsoRemoto = 0.75;
+    rastro("soundstart: hay sonido");
+  };
+  rec.onspeechstart = () => {
+    pulsoRemoto = 0.9;
+    rastro("speechstart: hay voz");
+  };
+  rec.onspeechend = () => rastro("speechend");
+  rec.onaudioend = () => rastro("audioend");
+  rec.onnomatch = () => rastro("nomatch");
   rec.onresult = (e) => {
     parcial = "";
     for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -603,23 +684,25 @@ function escucharConNavegador(reintento = false) {
       else parcial += r[0].transcript;
     }
     const visto = `${final} ${parcial}`.trim();
+    pulsoRemoto = 0.95;
+    rastro("resultado:", visto);
     mostrarEscuchado(visto);
     avisarSala("escuchando", visto);
   };
   rec.onerror = (e) => {
     fallo = e.error || "error";
+    rastro("ERROR:", fallo, e.message || "");
   };
   rec.onend = () => {
     escucha = null;
+    const texto = (final || parcial).trim();
+    rastro("end", fallo ? `(error ${fallo})` : "", texto ? `texto: ${texto}` : "sin texto", cancelada ? "(cancelada)" : "");
     if (cancelada) return;
-    // Un idioma que este navegador no tiene: se prueba con el castellano
-    // genérico antes de rendirse.
-    if (fallo === "language-not-supported" && !reintento) {
-      config.idioma = "es-ES";
-      escucharConNavegador(true);
+    // Un idioma que este navegador no tiene: se prueba con el siguiente.
+    if (fallo === "language-not-supported" && intento < idiomas.length - 1) {
+      escucharConNavegador(intento + 1);
       return;
     }
-    const texto = (final || parcial).trim();
     if (texto) {
       preguntar(texto);
       return;
@@ -642,11 +725,13 @@ function escucharConNavegador(reintento = false) {
   mostrarPregunta("");
   mostrarEscuchado("");
   poner("escuchando");
+  document.body.dataset.mic = "pendiente";
   avisarSala("escuchando", "");
   try {
     rec.start();
-  } catch {
+  } catch (e) {
     escucha = null;
+    rastro("ERROR al arrancar:", e?.name || e);
     avisar(TX.sinMicrofono);
   }
 }
@@ -714,9 +799,12 @@ async function escucharConServidor() {
     const ext = /mp4/.test(blob.type) ? "mp4" : /ogg/.test(blob.type) ? "ogg" : "webm";
     const datos = new FormData();
     datos.append("audio", blob, `voz.${ext}`);
+    const t0 = performance.now();
+    rastro(`grabación: ${blob.size} bytes, ${blob.type || "sin tipo"}; se manda al servidor`);
     try {
       const r = await pedir("presentacion/oir", { method: "POST", body: datos }, 30000);
       const texto = String(r.texto || "").trim();
+      rastro(`transcripción en ${((performance.now() - t0) / 1000).toFixed(1)}s: ${texto ? `«${texto}»` : "vacía (no se oyó nada)"}`);
       if (!texto) {
         avisarSala("listo");
         avisar(TX.noEscuche, { error: false });
@@ -725,6 +813,9 @@ async function escucharConServidor() {
       preguntar(texto);
     } catch (e) {
       avisarSala("listo");
+      // Lo que dijo el servidor: sin esto, un «no se pudo» no dice si fue la key,
+      // el modelo o la red.
+      rastro(`ERROR de transcripción (${e.estado ?? "sin respuesta"}, ${e.codigo || "sin código"}): ${e.causa || e.message || "sin detalle"}`);
       explicar(e);
     }
   };
@@ -742,6 +833,8 @@ async function escucharConServidor() {
   poner("escuchando");
   avisarSala("escuchando", "");
   grabador.start();
+  document.body.dataset.mic = "abierto";
+  rastro("grabando con", grabador.mimeType || tipo || "el formato del navegador");
 }
 
 /* -------------------------------------------------------------------------
@@ -963,7 +1056,9 @@ document.addEventListener("visibilitychange", () => {
 });
 
 let relojMouse = 0;
-document.addEventListener("pointermove", () => {
+document.addEventListener("pointermove", (e) => {
+  // Arrastrar un dedo no es «mover el mouse»: no hay controles que mostrar.
+  if (e.pointerType === "touch") return;
   document.body.classList.add("mostrar-controles");
   document.body.classList.remove("sin-cursor");
   clearTimeout(relojMouse);
@@ -1037,14 +1132,21 @@ async function empezar() {
   // En Safari la voz del navegador sólo arranca si la primera vez fue en un toque.
   if (window.speechSynthesis) speechSynthesis.speak(new SpeechSynthesisUtterance(""));
   // El micrófono se abre ahora para que la esfera lo escuche (y para pedir el
-  // permiso una sola vez, antes de que haya público mirando). En el
-  // teléfono con el dictado del navegador no hace falta: lo abre el dictado.
-  if (!modoControl || config.oido === "servidor") {
+  // permiso una sola vez, antes de que haya público mirando) SÓLO donde se
+  // puede compartir: con la transcripción en el servidor —que es quien lo usa—
+  // o en una computadora. En un celular el micrófono es de uno solo a la vez:
+  // abrirlo para medirlo y a la vez para el dictado deja al dictado sordo, sin
+  // ningún error. Ahí lo abre el dictado, y la esfera late con sus avisos.
+  const midePropio = config.oido === "servidor" || (!modoControl && !esTactil);
+  if (midePropio) {
     try {
       await abrirMicrofono();
-    } catch {
-      /* se avisa cuando se intente hablar */
+      rastro("micrófono abierto para medirlo");
+    } catch (e) {
+      rastro("micrófono:", e?.name || e);
     }
+  } else {
+    rastro("micrófono sin abrir (lo abre el dictado)");
   }
   mantenerDespierta();
   Orbe.reproducir();
@@ -1063,6 +1165,9 @@ async function arrancar() {
     config.disponible = false;
   }
 
+  rastro((navigator.userAgent || "").replace(/\).*/, ")"));
+  rastro("oído:", config.oido, "· voz:", config.voz, "· dictado:", Reconocedor ? "sí" : "NO", "· táctil:", esTactil ? "sí" : "no", "· sala:", modoControl ? "control" : sala ? "pantalla" : "-");
+  navigator.permissions?.query({ name: "microphone" }).then((p) => rastro("permiso del micrófono:", p.state)).catch(() => {});
   const boton = $("empezar");
   if (!config.disponible) {
     poner("apagada");
@@ -1078,10 +1183,10 @@ async function arrancar() {
 }
 
 $("orbe").addEventListener("click", alternarEscucha);
-// En el teléfono se habla tocando en cualquier parte de la pantalla, no sólo
+// En un teléfono se habla tocando en cualquier parte de la pantalla, no sólo
 // la esfera: sin ningún rótulo que lo explique, un blanco grande es lo que
 // hace que no haya que apuntar.
-if (modoControl) {
+if (modoControl || esTactil) {
   document.addEventListener("click", (e) => {
     if (e.target.closest("#orbe, button, a, aside")) return;
     alternarEscucha();

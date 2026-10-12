@@ -168,6 +168,20 @@ depende de cómo se llame el tag.
 * Repo privado: definir `CZUAPI_GITHUB_TOKEN` (PAT de solo lectura) en
   `wp-config.php`, o cargarlo desde **Caaguazú API → Actualizaciones**.
 
+== Cambios en 0.11.1 ==
+
+* **ElevenLabs como proveedor de la transcripción** (Scribe, `speech-to-text`),
+  además de OpenAI y los compatibles. Se elige en «Presentación» → Oído →
+  «Proveedor de la transcripción». Al cambiar de proveedor se descartan el
+  endpoint y el modelo que quedaron del anterior. La key de ElevenLabs va en la
+  cabecera `xi-api-key`; la constante es `CZUAPI_OIDO_KEY`, igual que con OpenAI.
+* **Registro del oído** (`[CzuApi][Oido]` en el registro de errores de PHP): cada
+  pedido anota el proveedor, el modelo, el destino (sólo el host), el tamaño, el
+  tiempo que tardó y cuántos caracteres volvieron. Los rechazos anotan el código
+  y la causa. Nunca se anota la key ni lo que se dijo.
+* Si la transcripción falla, la causa llega a la página (sin la key), y con
+  `?debug=1` se ve en pantalla.
+
 == Cambios en 0.11.0 ==
 
 * **El asistente de la presentación** (`CZUAPI_Presentacion`). Una página aparte

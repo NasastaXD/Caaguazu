@@ -56,8 +56,18 @@ class CZUAPI_Presentacion {
 		'openai'     => array( 'endpoint' => 'https://api.openai.com/v1/audio/speech', 'modelo' => 'gpt-4o-mini-tts' ),
 	);
 
-	const OIDO_ENDPOINT_DEFAULT = 'https://api.openai.com/v1/audio/transcriptions';
-	const OIDO_MODELO_DEFAULT   = 'whisper-1';
+	/** Quién transcribe cuando el oído es del servidor. */
+	const PROVEEDORES_OIDO = array( 'openai', 'elevenlabs' );
+
+	/**
+	 * Lo de fábrica de cada proveedor de transcripción. Los nombres de modelo
+	 * van de memoria de la documentación: confirmalos con una transcripción de
+	 * prueba antes del evento (ver `?debug=1` en la página).
+	 */
+	const OIDO_DEFAULTS = array(
+		'openai'     => array( 'endpoint' => 'https://api.openai.com/v1/audio/transcriptions', 'modelo' => 'whisper-1' ),
+		'elevenlabs' => array( 'endpoint' => 'https://api.elevenlabs.io/v1/speech-to-text', 'modelo' => 'scribe_v1' ),
+	);
 
 	/** Lo que se dice en voz alta es corto: 600 tokens son varios minutos de habla. */
 	const MAX_TOKENS = 600;
@@ -195,24 +205,51 @@ TXT;
 	}
 
 	/**
-	 * @return array { modo, endpoint, key, modelo, idioma }
+	 * @return array { modo, proveedor, endpoint, key, modelo, idioma, cabecera }
 	 */
 	public static function oido() {
 		$modo = (string) get_option( 'czuapi_pres_oido_modo', 'navegador' );
 		if ( ! in_array( $modo, self::MODOS_OIDO, true ) ) {
 			$modo = 'navegador';
 		}
+		$proveedor = (string) get_option( 'czuapi_pres_oido_proveedor', 'openai' );
+		if ( ! in_array( $proveedor, self::PROVEEDORES_OIDO, true ) ) {
+			$proveedor = 'openai';
+		}
+		$fabrica = self::OIDO_DEFAULTS[ $proveedor ];
+
+		// Al cambiar de proveedor, el endpoint y el modelo que quedaron cargados
+		// son los del anterior: se descartan, si no ElevenLabs recibiría la
+		// dirección de OpenAI (y al revés).
 		$endpoint = trim( (string) get_option( 'czuapi_pres_oido_endpoint', '' ) );
 		$modelo   = trim( (string) get_option( 'czuapi_pres_oido_modelo', '' ) );
-		$idioma   = trim( (string) get_option( 'czuapi_pres_oido_idioma', '' ) );
+		if ( '' === $endpoint || self::es_de_otro( 'endpoint', $endpoint, $proveedor ) ) {
+			$endpoint = $fabrica['endpoint'];
+		}
+		if ( '' === $modelo || self::es_de_otro( 'modelo', $modelo, $proveedor ) ) {
+			$modelo = $fabrica['modelo'];
+		}
 
 		return array(
-			'modo'     => $modo,
-			'endpoint' => '' !== $endpoint ? $endpoint : self::OIDO_ENDPOINT_DEFAULT,
-			'key'      => self::oido_key(),
-			'modelo'   => '' !== $modelo ? $modelo : self::OIDO_MODELO_DEFAULT,
-			'idioma'   => self::normalizar_idioma( $idioma ),
+			'modo'      => $modo,
+			'proveedor' => $proveedor,
+			'endpoint'  => $endpoint,
+			'key'       => self::oido_key(),
+			'modelo'    => $modelo,
+			'idioma'    => self::normalizar_idioma( get_option( 'czuapi_pres_oido_idioma', '' ) ),
+			// ElevenLabs usa su propia cabecera; OpenAI y los compatibles, Bearer.
+			'cabecera'  => 'elevenlabs' === $proveedor ? 'xi-api-key' : 'Authorization',
 		);
+	}
+
+	/** ¿Este valor es el de fábrica de OTRO proveedor? (Entonces no se usa.) */
+	private static function es_de_otro( $campo, $valor, $proveedor ) {
+		foreach ( self::OIDO_DEFAULTS as $otro => $f ) {
+			if ( $otro !== $proveedor && isset( $f[ $campo ] ) && $f[ $campo ] === $valor ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public static function oido_key() {
@@ -270,6 +307,8 @@ TXT;
 
 		$modo = (string) ( $c['oido_modo'] ?? 'navegador' );
 		update_option( 'czuapi_pres_oido_modo', in_array( $modo, self::MODOS_OIDO, true ) ? $modo : 'navegador', false );
+		$prov = (string) ( $c['oido_proveedor'] ?? 'openai' );
+		update_option( 'czuapi_pres_oido_proveedor', in_array( $prov, self::PROVEEDORES_OIDO, true ) ? $prov : 'openai', false );
 		update_option( 'czuapi_pres_oido_endpoint', esc_url_raw( trim( (string) ( $c['oido_endpoint'] ?? '' ) ) ), false );
 		update_option( 'czuapi_pres_oido_modelo', sanitize_text_field( (string) ( $c['oido_modelo'] ?? '' ) ), false );
 		update_option( 'czuapi_pres_oido_idioma', self::normalizar_idioma( $c['oido_idioma'] ?? '' ), false );
@@ -576,27 +615,34 @@ TXT;
 		$out = array( 'ok' => false, 'texto' => '', 'code' => 0, 'error' => '' );
 
 		if ( '' === $o['key'] ) {
-			$out['error'] = 'Falta la key del servicio de transcripción.';
+			$out['error'] = 'Falta la key del servicio de transcripción (' . $o['proveedor'] . ').';
+			self::log_oido( 'sin key: ' . $out['error'] );
 			return $out;
 		}
 		$bytes = is_readable( $ruta ) ? (string) file_get_contents( $ruta ) : '';
 		if ( '' === $bytes ) {
 			$out['error'] = 'La grabación llegó vacía.';
+			self::log_oido( 'grabación vacía' );
 			return $out;
 		}
 
-		// La extensión importa: Whisper adivina el formato por el nombre.
+		// La extensión importa: el servicio adivina el formato por el nombre.
 		$mime = strtolower( strtok( (string) $mime, ';' ) );
 		$ext  = array( 'audio/webm' => 'webm', 'audio/ogg' => 'ogg', 'audio/mp4' => 'mp4', 'audio/mpeg' => 'mp3', 'audio/wav' => 'wav', 'audio/x-wav' => 'wav', 'audio/aac' => 'm4a' );
 		$nombre = 'voz.' . ( $ext[ $mime ] ?? 'webm' );
 
+		$host = (string) wp_parse_url( $o['endpoint'], PHP_URL_HOST );
+		self::log_oido( sprintf( 'pedido: proveedor=%s modelo=%s idioma=%s destino=%s bytes=%d tipo=%s', $o['proveedor'], $o['modelo'], $o['idioma'], $host, strlen( $bytes ), '' !== $mime ? $mime : '(sin tipo)' ) );
+
+		// Los nombres de campo son los de cada servicio: OpenAI y los compatibles
+		// usan `model`, y ElevenLabs usa `model_id`. El idioma va en dos letras
+		// en los dos.
+		$campos = 'elevenlabs' === $o['proveedor']
+			? array( 'model_id' => $o['modelo'], 'language_code' => substr( $o['idioma'], 0, 2 ) )
+			: array( 'model' => $o['modelo'], 'language' => substr( $o['idioma'], 0, 2 ), 'response_format' => 'json' );
+
 		$limite = 'czu' . wp_generate_password( 24, false );
-		$campos = array(
-			'model'           => $o['modelo'],
-			'language'        => substr( $o['idioma'], 0, 2 ),
-			'response_format' => 'json',
-		);
-		$body = '';
+		$body   = '';
 		foreach ( $campos as $k => $val ) {
 			$body .= '--' . $limite . "\r\n"
 				. 'Content-Disposition: form-data; name="' . $k . '"' . "\r\n\r\n"
@@ -608,17 +654,24 @@ TXT;
 			. $bytes . "\r\n"
 			. '--' . $limite . "--\r\n";
 
+		$cabeceras = array( 'Content-Type' => 'multipart/form-data; boundary=' . $limite );
+		if ( 'xi-api-key' === $o['cabecera'] ) {
+			$cabeceras['xi-api-key'] = $o['key'];
+		} else {
+			$cabeceras['Authorization'] = 'Bearer ' . $o['key'];
+		}
+
+		$t0  = microtime( true );
 		$res = wp_remote_post( $o['endpoint'], array(
 			'timeout' => 25,
-			'headers' => array(
-				'Authorization' => 'Bearer ' . $o['key'],
-				'Content-Type'  => 'multipart/form-data; boundary=' . $limite,
-			),
+			'headers' => $cabeceras,
 			'body'    => $body,
 		) );
+		$seg = microtime( true ) - $t0;
 
 		if ( is_wp_error( $res ) ) {
 			$out['error'] = self::redactar( $res->get_error_message() );
+			self::log_oido( sprintf( 'sin respuesta tras %.1fs (red o timeout): %s', $seg, $out['error'] ) );
 			return $out;
 		}
 		$out['code'] = (int) wp_remote_retrieve_response_code( $res );
@@ -626,11 +679,25 @@ TXT;
 		$data        = json_decode( $raw, true );
 		if ( 200 !== $out['code'] || ! is_array( $data ) ) {
 			$out['error'] = self::redactar( 'HTTP ' . $out['code'] . ' — ' . mb_substr( wp_strip_all_tags( $raw ), 0, 200 ) );
+			self::log_oido( sprintf( 'rechazado en %.1fs: %s', $seg, $out['error'] ) );
 			return $out;
 		}
+
+		// La respuesta de ElevenLabs puede traer el texto en `text` como lo
+		// hace OpenAI; si viene vacío es un silencio, no un error.
 		$out['texto'] = trim( (string) ( $data['text'] ?? '' ) );
 		$out['ok']    = true;
+		self::log_oido( sprintf( 'respuesta en %.1fs: %d caracteres (idioma detectado: %s)', $seg, strlen( $out['texto'] ), (string) ( $data['language_code'] ?? $data['language'] ?? '—' ) ) );
 		return $out;
+	}
+
+	/**
+	 * Registro del oído. Va al registro de errores de PHP (wp-content/debug.log
+	 * o el de LiteSpeed/hosting). Nunca lleva la key ni el texto dicho: sólo
+	 * tamaños, tiempos, códigos y el destino.
+	 */
+	public static function log_oido( $linea ) {
+		error_log( '[CzuApi][Oido] ' . self::redactar( (string) $linea ) );
 	}
 
 	/**
@@ -839,26 +906,36 @@ TXT;
 			return self::apagada();
 		}
 		if ( ! self::oido_servidor() ) {
+			self::log_oido( 'llegó una grabación pero el oído está en «navegador» (o falta la key): se rechaza' );
 			return self::sin_cache( CZUAPI_Response::error( 'oido_navegador', __( 'La transcripción la hace el navegador.', 'caaguazu-app-api' ), 409 ) );
 		}
 		$tope = self::demasiadas();
 		if ( $tope ) {
+			self::log_oido( 'tope de pedidos alcanzado: se rechaza la grabación' );
 			return $tope;
 		}
 
 		$archivos = $request->get_file_params();
 		$f        = isset( $archivos['audio'] ) && is_array( $archivos['audio'] ) ? $archivos['audio'] : null;
 		if ( ! $f || UPLOAD_ERR_OK !== (int) ( $f['error'] ?? UPLOAD_ERR_NO_FILE ) || ! is_uploaded_file( (string) $f['tmp_name'] ) ) {
+			self::log_oido( 'el pedido no trajo el archivo (error de subida ' . (int) ( $f['error'] ?? -1 ) . ')' );
 			return self::sin_cache( CZUAPI_Response::error( 'sin_audio', __( 'No llegó la grabación.', 'caaguazu-app-api' ), 400 ) );
 		}
 		if ( (int) $f['size'] > self::MAX_AUDIO_BYTES ) {
+			self::log_oido( 'grabación demasiado grande: ' . (int) $f['size'] . ' bytes' );
 			return self::sin_cache( CZUAPI_Response::error( 'audio_grande', __( 'La grabación es demasiado larga.', 'caaguazu-app-api' ), 413 ) );
 		}
 
 		$r = self::oir( (string) $f['tmp_name'], (string) ( $f['type'] ?? '' ) );
 		if ( ! $r['ok'] ) {
-			error_log( '[CzuApi][Pres] falló la transcripción: ' . $r['error'] );
-			return self::sin_cache( CZUAPI_Response::error( 'sin_transcripcion', __( 'No se pudo entender la grabación.', 'caaguazu-app-api' ), 502 ) );
+			// La causa llega a la página: con ?debug=1 se ve en pantalla, sin
+			// tener que mirar el registro del servidor desde el teléfono.
+			return self::sin_cache( CZUAPI_Response::error(
+				'sin_transcripcion',
+				__( 'No se pudo entender la grabación.', 'caaguazu-app-api' ),
+				502,
+				array( 'causa' => mb_substr( (string) $r['error'], 0, 240 ), 'http' => (int) $r['code'] )
+			) );
 		}
 		return self::sin_cache( new WP_REST_Response( array( 'texto' => $r['texto'] ), 200 ) );
 	}

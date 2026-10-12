@@ -26,6 +26,10 @@ $p = PROMOTUR_Asistente_Panel::presentacion();
 		'elevenlabs' => 'ElevenLabs',
 		'openai'     => __( 'OpenAI o compatible', 'caaguazu-portal' ),
 	);
+	$proveedores_oido = array(
+		'openai'     => __( 'OpenAI o compatible (Whisper)', 'caaguazu-portal' ),
+		'elevenlabs' => 'ElevenLabs (Scribe)',
+	);
 	$modos = array(
 		'navegador' => __( 'El navegador (Chrome)', 'caaguazu-portal' ),
 		'servidor'  => __( 'El servidor (tipo Whisper)', 'caaguazu-portal' ),
@@ -141,16 +145,24 @@ $p = PROMOTUR_Asistente_Panel::presentacion();
 					</select>
 				</label>
 				<label class="promotur-field">
+					<span><?php esc_html_e( 'Proveedor de la transcripción', 'caaguazu-portal' ); ?></span>
+					<select name="oido_proveedor">
+						<?php foreach ( $proveedores_oido as $clave => $nombre ) : ?>
+							<option value="<?php echo esc_attr( $clave ); ?>"<?php selected( $p['oido_proveedor'], $clave ); ?>><?php echo esc_html( $nombre ); ?></option>
+						<?php endforeach; ?>
+					</select>
+				</label>
+				<label class="promotur-field">
 					<span><?php esc_html_e( 'Idioma', 'caaguazu-portal' ); ?></span>
 					<input type="text" name="oido_idioma" value="<?php echo esc_attr( $p['oido_idioma'] ); ?>" placeholder="es-PY">
 				</label>
 				<label class="promotur-field">
 					<span><?php esc_html_e( 'Endpoint', 'caaguazu-portal' ); ?></span>
-					<input type="url" name="oido_endpoint" value="<?php echo esc_attr( $p['oido_endpoint'] ); ?>" placeholder="https://api.openai.com/v1/audio/transcriptions">
+					<input type="url" name="oido_endpoint" value="<?php echo esc_attr( $p['oido_endpoint'] ); ?>" placeholder="<?php esc_attr_e( 'El del proveedor elegido', 'caaguazu-portal' ); ?>">
 				</label>
 				<label class="promotur-field">
 					<span><?php esc_html_e( 'Modelo', 'caaguazu-portal' ); ?></span>
-					<input type="text" name="oido_modelo" value="<?php echo esc_attr( $p['oido_modelo'] ); ?>" placeholder="whisper-1">
+					<input type="text" name="oido_modelo" value="<?php echo esc_attr( $p['oido_modelo'] ); ?>" placeholder="<?php esc_attr_e( 'El del proveedor elegido', 'caaguazu-portal' ); ?>">
 				</label>
 				<label class="promotur-field">
 					<span><?php esc_html_e( 'API key', 'caaguazu-portal' ); ?></span>
