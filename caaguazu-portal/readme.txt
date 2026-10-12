@@ -60,6 +60,10 @@ llamen los tags.
 
 == Changelog ==
 
+= 3.15.3 =
+* Presentación → Oído: opción «ElevenLabs en tiempo real» y segundos de pausa
+  para cortar la frase. Requiere la API 0.11.3.
+
 = 3.15.2 =
 * Presentación: el asistente recuerda la charla con su propia memoria (20 turnos
   por defecto, elegibles), y el modelo se puede cambiar sin tocar el del

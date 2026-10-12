@@ -107,6 +107,7 @@ class PROMOTUR_Asistente_Panel {
 			'voz_key_fija'    => CZUAPI_Presentacion::key_fija( 'voz' ),
 			'oido_modo'       => $oido['modo'],
 			'oido_proveedor'  => $oido['proveedor'],
+			'oido_silencio'   => $oido['silencio'],
 			'oido_endpoint'   => (string) get_option( 'czuapi_pres_oido_endpoint', '' ),
 			'oido_modelo'     => (string) get_option( 'czuapi_pres_oido_modelo', '' ),
 			'oido_idioma'     => $oido['idioma'],
@@ -239,7 +240,7 @@ class PROMOTUR_Asistente_Panel {
 		$campos = array(
 			'activo', 'catalogo', 'persona', 'persona_fabrica', 'conocimiento', 'turnos', 'modelo', 'etiquetas',
 			'voz_proveedor', 'voz_endpoint', 'voz_key', 'voz_key_borrar', 'voz_modelo', 'voz_id', 'voz_velocidad',
-			'oido_modo', 'oido_proveedor', 'oido_endpoint', 'oido_key', 'oido_key_borrar', 'oido_modelo', 'oido_idioma',
+			'oido_modo', 'oido_proveedor', 'oido_silencio', 'oido_endpoint', 'oido_key', 'oido_key_borrar', 'oido_modelo', 'oido_idioma',
 		);
 		$datos = array();
 		foreach ( $campos as $c ) {

@@ -32,7 +32,8 @@ $p = PROMOTUR_Asistente_Panel::presentacion();
 	);
 	$modos = array(
 		'navegador' => __( 'El navegador (Chrome)', 'caaguazu-portal' ),
-		'servidor'  => __( 'El servidor (tipo Whisper)', 'caaguazu-portal' ),
+		'servidor'  => __( 'El servidor (graba y transcribe)', 'caaguazu-portal' ),
+		'tiempo_real' => __( 'ElevenLabs en tiempo real (manos libres, WebSocket)', 'caaguazu-portal' ),
 	);
 	?>
 	<form class="promotur-form" method="post" action="<?php echo esc_url( $accion ); ?>" autocomplete="off">
@@ -152,7 +153,7 @@ $p = PROMOTUR_Asistente_Panel::presentacion();
 				<?php echo promotur_icon( 'chat' ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 				<span><?php esc_html_e( 'Oído', 'caaguazu-portal' ); ?></span>
 			</div>
-			<p class="promotur-muted"><?php esc_html_e( 'Quién entiende lo que se dice. El navegador es gratis e inmediato, pero usa el micrófono del equipo. El servidor permite elegir un micrófono externo en la página.', 'caaguazu-portal' ); ?></p>
+			<p class="promotur-muted"><?php esc_html_e( 'Quién entiende lo que se dice. El navegador es gratis, pero usa el micrófono del equipo. El servidor graba y transcribe por pedido. En tiempo real, ElevenLabs escucha todo el tiempo y corta solo en cada pausa: el teléfono queda siempre escuchando, sin tocar nada (usa la key de ElevenLabs).', 'caaguazu-portal' ); ?></p>
 			<div class="promotur-grid promotur-grid--2">
 				<label class="promotur-field">
 					<span><?php esc_html_e( 'Quién transcribe', 'caaguazu-portal' ); ?></span>
@@ -169,6 +170,10 @@ $p = PROMOTUR_Asistente_Panel::presentacion();
 							<option value="<?php echo esc_attr( $clave ); ?>"<?php selected( $p['oido_proveedor'], $clave ); ?>><?php echo esc_html( $nombre ); ?></option>
 						<?php endforeach; ?>
 					</select>
+				</label>
+				<label class="promotur-field">
+					<span><?php esc_html_e( 'Silencio para cortar una frase (segundos)', 'caaguazu-portal' ); ?></span>
+					<input type="number" name="oido_silencio" min="0.5" max="5" step="0.1" value="<?php echo esc_attr( $p['oido_silencio'] ); ?>">
 				</label>
 				<label class="promotur-field">
 					<span><?php esc_html_e( 'Idioma', 'caaguazu-portal' ); ?></span>

@@ -168,6 +168,17 @@ depende de cómo se llame el tag.
 * Repo privado: definir `CZUAPI_GITHUB_TOKEN` (PAT de solo lectura) en
   `wp-config.php`, o cargarlo desde **Caaguazú API → Actualizaciones**.
 
+== Cambios en 0.11.3 ==
+
+* **Oído en tiempo real por WebSocket** (ElevenLabs Scribe v2 Realtime). Nuevo
+  modo `tiempo_real` en `czuapi_pres_oido_modo`: la app pide un token de un solo
+  uso a `POST /presentacion/token` y habla directo con ElevenLabs; la key nunca
+  sale del servidor. El corte de frase lo hace su VAD, con la pausa elegible
+  (`czuapi_pres_oido_silencio`, 0,5 a 5 s).
+* La sala sabe cuándo la pantalla está hablando (`hablando`), para que el
+  teléfono no se escuche a sí mismo.
+* El log `[CzuApi][Oido]` cubre también el token.
+
 == Cambios en 0.11.2 ==
 
 * **La presentación recuerda su propia charla.** Antes usaba la memoria del

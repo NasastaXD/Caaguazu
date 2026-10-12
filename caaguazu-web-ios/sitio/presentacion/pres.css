@@ -498,3 +498,5 @@ body.modo-control .controles { display: none; }
 	z-index: 20;
 	opacity: .92;
 }
+
+body.manos-libres .orbe { pointer-events: none; cursor: default; }

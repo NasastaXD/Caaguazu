@@ -43,7 +43,21 @@ class CZUAPI_Presentacion {
 	const PROVEEDORES_VOZ = array( 'navegador', 'minimax', 'elevenlabs', 'openai' );
 
 	/** Quién convierte la voz en texto. */
-	const MODOS_OIDO = array( 'navegador', 'servidor' );
+	const MODOS_OIDO = array( 'navegador', 'servidor', 'tiempo_real' );
+
+	/**
+	 * Tiempo real: Scribe v2 Realtime de ElevenLabs, por WebSocket. El navegador
+	 * no puede mandar la key en una cabecera de WebSocket, así que el servidor
+	 * pide un token de un solo uso (vive 15 minutos y se gasta al conectar) y la
+	 * página se conecta con ese. La key no sale nunca del servidor.
+	 * Protocolo según la documentación oficial de ElevenLabs.
+	 */
+	const TIEMPO_REAL_WSS    = 'wss://api.elevenlabs.io/v1/speech-to-text/realtime';
+	const TIEMPO_REAL_TOKEN  = 'https://api.elevenlabs.io/v1/single-use-token/realtime_scribe';
+	const TIEMPO_REAL_MODELO = 'scribe_v2_realtime';
+
+	/** Segundos de silencio con los que ElevenLabs da por terminada una frase. */
+	const SILENCIO_DEFAULT = 1.5;
 
 	/**
 	 * Lo que se usa cuando el campo queda vacío. Los modelos son los rápidos de
@@ -306,6 +320,7 @@ TXT;
 			'key'       => self::oido_key(),
 			'modelo'    => $modelo,
 			'idioma'    => self::normalizar_idioma( get_option( 'czuapi_pres_oido_idioma', '' ) ),
+			'silencio'  => self::normalizar_silencio( get_option( 'czuapi_pres_oido_silencio', self::SILENCIO_DEFAULT ) ),
 			// ElevenLabs usa su propia cabecera; OpenAI y los compatibles, Bearer.
 			'cabecera'  => 'elevenlabs' === $proveedor ? 'xi-api-key' : 'Authorization',
 		);
@@ -328,10 +343,22 @@ TXT;
 		$key = (string) get_option( 'czuapi_pres_oido_key', '' );
 		// Con ElevenLabs para voz y para oído, la misma cuenta: no hace falta
 		// cargar la key dos veces. Si el equipo carga una propia, gana.
-		if ( '' === $key && 'elevenlabs' === get_option( 'czuapi_pres_oido_proveedor', 'openai' ) ) {
+		$es_eleven = 'elevenlabs' === get_option( 'czuapi_pres_oido_proveedor', 'openai' ) || 'tiempo_real' === get_option( 'czuapi_pres_oido_modo', 'navegador' );
+		if ( '' === $key && $es_eleven ) {
 			return self::voz_key();
 		}
 		return $key;
+	}
+
+	/** Segundos de silencio para cortar una frase: entre 0,5 y 5. */
+	public static function normalizar_silencio( $v ) {
+		$v = (float) str_replace( ',', '.', (string) $v );
+		return $v <= 0 ? self::SILENCIO_DEFAULT : round( max( 0.5, min( 5.0, $v ) ), 1 );
+	}
+
+	/** ¿Se escucha en tiempo real, por WebSocket? Hace falta la key de ElevenLabs. */
+	public static function oido_tiempo_real() {
+		return 'tiempo_real' === self::oido()['modo'] && '' !== self::oido_key();
 	}
 
 	/** ¿Se transcribe en el servidor? Sin key, aunque se haya elegido, no se puede. */
@@ -390,6 +417,7 @@ TXT;
 		update_option( 'czuapi_pres_oido_endpoint', esc_url_raw( trim( (string) ( $c['oido_endpoint'] ?? '' ) ) ), false );
 		update_option( 'czuapi_pres_oido_modelo', sanitize_text_field( (string) ( $c['oido_modelo'] ?? '' ) ), false );
 		update_option( 'czuapi_pres_oido_idioma', self::normalizar_idioma( $c['oido_idioma'] ?? '' ), false );
+		update_option( 'czuapi_pres_oido_silencio', self::normalizar_silencio( $c['oido_silencio'] ?? self::SILENCIO_DEFAULT ), false );
 		self::guardar_key( 'czuapi_pres_oido_key', $c['oido_key'] ?? '', ! empty( $c['oido_key_borrar'] ) );
 	}
 
@@ -806,6 +834,72 @@ TXT;
 	}
 
 	/**
+	 * La dirección a la que se conecta la página, con el token adentro. Pura: se
+	 * prueba sin red. VAD = ElevenLabs corta solo cuando hay una pausa, que es lo
+	 * que deja escuchar sin tocar nada. `keepalive` mantiene viva la conexión
+	 * mientras la página manda silencio.
+	 *
+	 * @param string $token    token de un solo uso
+	 * @param string $idioma   BCP 47 (`es-PY`); ElevenLabs recibe sólo las dos letras
+	 * @param float  $silencio segundos de silencio para cortar
+	 * @return string
+	 */
+	public static function url_tiempo_real( $token, $idioma, $silencio ) {
+		return self::TIEMPO_REAL_WSS . '?' . http_build_query( array(
+			'model_id'                   => self::TIEMPO_REAL_MODELO,
+			'token'                      => (string) $token,
+			'audio_format'               => 'pcm_16000',
+			'commit_strategy'            => 'vad',
+			'language_code'              => substr( (string) $idioma, 0, 2 ),
+			'vad_silence_threshold_secs' => (float) $silencio,
+			'keepalive_interval_ms'      => 3000,
+		), '', '&', PHP_QUERY_RFC3986 );
+	}
+
+	/**
+	 * Pide a ElevenLabs un token de un solo uso para el WebSocket. La key va en
+	 * la cabecera `xi-api-key`; la página nunca la ve, sólo el token.
+	 *
+	 * @return array { ok, token, code, error, seg }
+	 */
+	public static function crear_token_oido() {
+		$out = array( 'ok' => false, 'token' => '', 'code' => 0, 'error' => '', 'seg' => 0.0 );
+		$key = self::oido_key();
+		if ( '' === $key ) {
+			$out['error'] = 'Falta la key de ElevenLabs.';
+			self::log_oido( 'token: ' . $out['error'] );
+			return $out;
+		}
+
+		$t0  = microtime( true );
+		$res = wp_remote_post( self::TIEMPO_REAL_TOKEN, array(
+			'timeout' => 10,
+			// La documentación de este endpoint no muestra cabeceras, pero sin la
+			// key cualquiera podría pedir tokens a nuestra cuenta: va siempre.
+			'headers' => array( 'xi-api-key' => $key ),
+		) );
+		$out['seg'] = microtime( true ) - $t0;
+
+		if ( is_wp_error( $res ) ) {
+			$out['error'] = self::redactar( $res->get_error_message() );
+			self::log_oido( sprintf( 'token: sin respuesta tras %.1fs: %s', $out['seg'], $out['error'] ) );
+			return $out;
+		}
+		$out['code'] = (int) wp_remote_retrieve_response_code( $res );
+		$raw         = (string) wp_remote_retrieve_body( $res );
+		$data        = json_decode( $raw, true );
+		if ( 200 !== $out['code'] || ! is_array( $data ) || empty( $data['token'] ) ) {
+			$out['error'] = self::redactar( 'HTTP ' . $out['code'] . ' — ' . mb_substr( wp_strip_all_tags( $raw ), 0, 200 ) );
+			self::log_oido( sprintf( 'token: rechazado en %.1fs: %s', $out['seg'], $out['error'] ) );
+			return $out;
+		}
+		$out['token'] = (string) $data['token'];
+		$out['ok']    = true;
+		self::log_oido( sprintf( 'token: creado en %.1fs', $out['seg'] ) );
+		return $out;
+	}
+
+	/**
 	 * Tacha las keys de voz y de oído además de las del asistente: varios
 	 * proveedores repiten la key en el mensaje de error.
 	 */
@@ -834,7 +928,7 @@ TXT;
 	}
 
 	/** Estados que puede tener una sala, en el orden en que pasan. */
-	const ESTADOS_SALA = array( 'listo', 'escuchando', 'pensando', 'respuesta', 'error' );
+	const ESTADOS_SALA = array( 'listo', 'escuchando', 'hablando', 'pensando', 'respuesta', 'error' );
 
 	public static function sala( $codigo ) {
 		$s = get_transient( self::clave_sala( $codigo ) );
@@ -891,6 +985,12 @@ TXT;
 			'permission_callback' => '__return_true',
 		) );
 
+		register_rest_route( CZUAPI_NS, '/presentacion/token', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'token' ),
+			'permission_callback' => '__return_true',
+		) );
+
 		register_rest_route( CZUAPI_NS, '/presentacion/sala/(?P<codigo>[A-Za-z0-9]{4,12})', array(
 			array(
 				'methods'             => 'GET',
@@ -943,7 +1043,7 @@ TXT;
 		$o = self::oido();
 		return self::sin_cache( new WP_REST_Response( array(
 			'disponible' => self::activo(),
-			'oido'       => self::oido_servidor() ? 'servidor' : 'navegador',
+			'oido'       => self::oido_tiempo_real() ? 'tiempo_real' : ( self::oido_servidor() ? 'servidor' : 'navegador' ),
 			'idioma'     => $o['idioma'],
 			'voz'        => self::voz_servidor() ? 'servidor' : 'navegador',
 		), 200 ) );
@@ -1046,6 +1146,41 @@ TXT;
 	}
 
 	/**
+	 * El pedido de la página para escuchar en tiempo real: devuelve la dirección
+	 * del WebSocket con un token de un solo uso. Se pide una vez por conexión, y
+	 * tiene el mismo tope que el resto de la presentación.
+	 */
+	public function token( $request ) {
+		if ( ! self::activo() ) {
+			return self::apagada();
+		}
+		if ( ! self::oido_tiempo_real() ) {
+			self::log_oido( 'pidieron un token pero el oído no está en «tiempo real» (o falta la key)' );
+			return self::sin_cache( CZUAPI_Response::error( 'oido_no_tiempo_real', __( 'El oído en tiempo real no está prendido.', 'caaguazu-app-api' ), 409 ) );
+		}
+		$tope = self::demasiadas();
+		if ( $tope ) {
+			self::log_oido( 'tope de pedidos alcanzado: se rechaza el token' );
+			return $tope;
+		}
+
+		$t = self::crear_token_oido();
+		if ( ! $t['ok'] ) {
+			return self::sin_cache( CZUAPI_Response::error(
+				'sin_token',
+				__( 'No se pudo abrir el oído en tiempo real.', 'caaguazu-app-api' ),
+				502,
+				array( 'causa' => mb_substr( (string) $t['error'], 0, 240 ), 'http' => (int) $t['code'] )
+			) );
+		}
+		$o = self::oido();
+		return self::sin_cache( new WP_REST_Response( array(
+			'url'        => self::url_tiempo_real( $t['token'], $o['idioma'], $o['silencio'] ),
+			'expira_seg' => 900,
+		), 200 ) );
+	}
+
+	/**
 	 * La pantalla pregunta cada segundo. El audio viaja sólo en el turno nuevo:
 	 * quien ya lo reprodujo no lo vuelve a bajar en cada vuelta.
 	 */
@@ -1075,7 +1210,9 @@ TXT;
 		}
 		$codigo = self::sala_valida( $request['codigo'] );
 		$estado = (string) $request->get_param( 'estado' );
-		if ( ! in_array( $estado, array( 'listo', 'escuchando' ), true ) ) {
+		// `hablando` lo manda la pantalla: el teléfono, que hace de micrófono,
+		// tiene que saber que la pantalla está diciendo algo para no escucharla.
+		if ( ! in_array( $estado, array( 'listo', 'escuchando', 'hablando' ), true ) ) {
 			return self::sin_cache( CZUAPI_Response::error( 'estado_invalido', __( 'Estado inválido.', 'caaguazu-app-api' ), 400 ) );
 		}
 		$parcial = mb_substr( sanitize_text_field( (string) $request->get_param( 'parcial' ) ), 0, 400 );

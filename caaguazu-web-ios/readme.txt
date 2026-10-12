@@ -131,6 +131,14 @@ propio, idioma elegido), y eso vive en su navegador, no acá.
 
 == Changelog ==
 
+= 2.1.4 =
+* **El teléfono escucha siempre, sin tocar nada.** Tras «Empezar» escucha solo,
+  frase tras frase, y espera a que la pantalla termine de hablar para no
+  oírse a sí mismo. Se quitó todo lo que había que tocar.
+* Oído en tiempo real (WebSocket, ElevenLabs Scribe v2 Realtime) cuando el panel
+  lo enciende; si no, el dictado del navegador o el del servidor, como antes.
+* `?debug=1` muestra en pantalla qué hace el oído.
+
 = 2.1.3 =
 * Si la respuesta de la presentación tarda, a los tres segundos aparece una
   frase corta que va rotando («Un segundo…», «Dejame pensar…»), en la pantalla y
