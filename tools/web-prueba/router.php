@@ -208,6 +208,10 @@ if ( 0 === strpos( $ruta, '/wp-json/czu-app/v1/' ) ) {
 			return is_array( $s ) ? $s : array( 'turno' => 0, 'estado' => 'listo', 'parcial' => '', 'pregunta' => '', 'respuesta' => '' );
 		};
 		if ( 'presentacion' === $r ) {
+			// WEB_PRES_LENTA=ms: que la respuesta tarde, para probar la espera.
+			if ( $lenta = (int) getenv( 'WEB_PRES_LENTA' ) ) {
+				usleep( $lenta * 1000 );
+			}
 			$respuesta = '‹respuesta› a «' . ( $cuerpo['mensaje'] ?? '' ) . '»: uno dos tres cuatro cinco seis siete ocho nueve diez.';
 			if ( ! empty( $cuerpo['sala'] ) ) {
 				$s = $leer_sala( $cuerpo['sala'] );
@@ -288,8 +292,10 @@ $servidor = CZUWIOS_Servidor::instance();
 $servidor->reglas();
 
 // Lo que hace WordPress con las reglas de reescritura: la primera que
-// coincide con el path (sin la barra inicial) decide el destino.
-$sin_barra = ltrim( $ruta, '/' );
+// coincide con el path decide el destino, y el path llega SIN barras en los
+// extremos (WP::parse_request las recorta). Con la barra final puesta, este
+// servidor no reproducía el bucle de redirecciones de /turismo/presentacion/.
+$sin_barra = trim( $ruta, '/' );
 foreach ( $GLOBALS['czu_reglas'] as $patron => $destino ) {
 	if ( preg_match( '#' . $patron . '#', $sin_barra, $m ) ) {
 		$destino = preg_replace_callback( '/\$matches\[(\d+)\]/', function ( $x ) use ( $m ) { return $m[ (int) $x[1] ] ?? ''; }, $destino );

@@ -48,6 +48,9 @@ body { height: 100%; }
 
 body {
 	margin: 0;
+	touch-action: manipulation;
+	-webkit-user-select: none;
+	user-select: none;
 	background: var(--fondo);
 	color: var(--texto);
 	font-family: var(--letra);
@@ -123,6 +126,42 @@ button { font: inherit; color: inherit; }
 	   cortado arriba: el borde se desvanece en el negro y no se ve ninguno. */
 	-webkit-mask-image: radial-gradient(closest-side, #000 52%, transparent 100%);
 	mask-image: radial-gradient(closest-side, #000 52%, transparent 100%);
+}
+
+/*
+ * Los aros: la señal de que escucha, sin una palabra. Dos ondas salen de la
+ * esfera mientras escucha. Débiles = se tocó pero el micrófono todavía no
+ * confirmó que se abrió; fuertes = el micrófono está abierto. Si se tocó y
+ * nunca se ponen fuertes, el micrófono no está andando, y se ve.
+ */
+.orbe__aro {
+	position: absolute;
+	inset: 0;
+	border-radius: var(--r-full);
+	border: 3px solid var(--orbe-anillo);
+	box-shadow: 0 0 22px var(--orbe-halo), inset 0 0 22px var(--orbe-halo);
+	opacity: 0;
+	pointer-events: none;
+}
+
+body[data-estado="escuchando"] { --aro-fuerza: .3; }
+body[data-estado="escuchando"][data-mic="abierto"] { --aro-fuerza: 1; }
+
+body[data-estado="escuchando"] .orbe__aro { animation: aro 2.1s var(--curva) infinite; }
+body[data-estado="escuchando"] .orbe__aro--2 { animation-delay: 1.05s; }
+
+@keyframes aro {
+	0%   { transform: scale(1);    opacity: var(--aro-fuerza); }
+	55%  { opacity: calc(var(--aro-fuerza) * .6); }
+	100% { transform: scale(1.5);  opacity: 0; }
+}
+
+/* Al tocar, la esfera responde ya: un destello. Antes de saber si el micrófono anda. */
+body.toque .orbe__escena { animation: toque 420ms var(--curva); }
+
+@keyframes toque {
+	0%   { filter: brightness(1.9) saturate(1.3); }
+	100% { filter: brightness(1)   saturate(1); }
 }
 
 /* Un resplandor azul detrás, que crece con la voz. */
@@ -208,6 +247,9 @@ button { font: inherit; color: inherit; }
 
 .respuesta.parcial { color: var(--texto-2); font-weight: 400; }
 
+/* La frase de espera: más suave que una respuesta, para que no se confunda con ella. */
+.respuesta.espera { color: var(--texto-2); font-weight: 400; font-style: italic; opacity: .75; }
+
 /* ---------------------------------------------------------------------------
  * Empezar: el toque que el navegador exige antes de dejar sonar nada
  * ------------------------------------------------------------------------ */
@@ -278,11 +320,18 @@ button { font: inherit; color: inherit; }
 	gap: 8px;
 	z-index: 5;
 	opacity: 0;
+	/* Escondidos no se pueden tocar: un botón invisible que se come el toque de
+	   quien quiere hablar es peor que no tenerlo. Aparecen al mover el mouse o
+	   arrastrar el dedo, o con el teclado. */
+	pointer-events: none;
 	transition: opacity var(--lento) var(--curva);
 }
 
 body.mostrar-controles .controles,
-.controles:focus-within { opacity: 1; }
+.controles:focus-within {
+	opacity: 1;
+	pointer-events: auto;
+}
 
 .boton-icono {
 	width: 44px;
@@ -382,6 +431,16 @@ body.mostrar-controles .controles,
  * El teléfono como micrófono
  * ------------------------------------------------------------------------ */
 
+/* En un teléfono o una tableta la esfera es el botón: tiene que ser grande. */
+@media (pointer: coarse) {
+	.orbe { width: min(62vmin, 340px); }
+
+	/* El engranaje y la pantalla completa son de la computadora del escenario
+	   (se manejan con mouse o teclado). En un teléfono sólo estorbarían: cada
+	   toque en la esquina sería para ellos y no para hablar. */
+	.controles { display: none; }
+}
+
 body.modo-control .escena { grid-template-rows: 1fr auto; }
 body.modo-control .orbe { width: min(70vmin, 340px); }
 body.modo-control .respuesta { font-size: clamp(18px, 4.6vmin, 26px); font-weight: 400; }
@@ -408,4 +467,34 @@ body.modo-control .controles { display: none; }
 	*,
 	*::before,
 	*::after { transition-duration: 1ms !important; animation-duration: 1ms !important; }
+
+	/* Los aros no se mueven, pero siguen diciendo que escucha: dos quedan fijos. */
+	body[data-estado="escuchando"] .orbe__aro {
+		animation: none;
+		transform: scale(1.14);
+		opacity: var(--aro-fuerza);
+	}
+	body[data-estado="escuchando"] .orbe__aro--2 { transform: scale(1.3); opacity: calc(var(--aro-fuerza) * .5); }
+	body.toque .orbe__escena { animation: none; }
+}
+
+/* ?debug=1: lo que hace el oído, en pantalla, porque en un teléfono no hay consola. */
+.rastro {
+	position: fixed;
+	left: 8px;
+	right: 8px;
+	bottom: 8px;
+	max-height: 46vh;
+	overflow: hidden;
+	margin: 0;
+	padding: 8px 10px;
+	border-radius: var(--r-2);
+	background: var(--panel);
+	color: var(--texto);
+	font: 11px/1.45 ui-monospace, Menlo, Consolas, monospace;
+	white-space: pre-wrap;
+	word-break: break-word;
+	pointer-events: none;
+	z-index: 20;
+	opacity: .92;
 }

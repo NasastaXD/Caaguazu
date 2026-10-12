@@ -126,5 +126,17 @@ encandila y apaga la esfera. Lo que tiene que saber:
   MP4 lo reproducen Chrome, Edge y Safari; el WebM queda para los navegadores
   sin H.264. Se pide a la carpeta directa del plugin (`directa` en los ajustes),
   que es la que atiende los pedidos por partes que Safari exige.
-- Con «reducir movimiento», el video se detiene y sólo cambia la luz.
+- **El teléfono (`pointer: coarse`) es otra cosa que la pantalla.** Se habla
+  tocando en cualquier parte; el engranaje y la pantalla completa no existen; la
+  página NO abre el micrófono para medirlo cuando el dictado es del navegador
+  (en un celular el micrófono es de uno solo, y abrirlo dos veces deja sordo al
+  dictado sin error). La esfera late con los eventos del dictado, y los aros
+  alrededor son la señal de que escucha: débiles hasta `audiostart`, fuertes
+  después.
+- **Parámetros de la dirección:** `?debug=1` escribe en pantalla qué hace el
+  oído (para probar en un teléfono, donde no hay consola); `?limpio=1` apaga el
+  texto también en un teléfono; `?sala=CÓDIGO&modo=control` es el teléfono que
+  hace de micrófono de otra pantalla.
+- Con «reducir movimiento», el video se detiene y sólo cambia la luz; los aros
+  quedan fijos, que siguen diciendo que escucha.
 

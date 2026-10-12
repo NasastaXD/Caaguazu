@@ -131,6 +131,49 @@ propio, idioma elegido), y eso vive en su navegador, no acá.
 
 == Changelog ==
 
+= 2.1.3 =
+* Si la respuesta de la presentación tarda, a los tres segundos aparece una
+  frase corta que va rotando («Un segundo…», «Dejame pensar…»), en la pantalla y
+  en el teléfono. Se borra cuando llega la respuesta.
+
+= 2.1.2 =
+* **Arreglo: la presentación no funcionaba en el teléfono, ni daba señales.**
+  Cuatro causas, todas mías:
+  - La esfera medía unos 150 px en un teléfono y era lo único tocable: tocar en
+    cualquier otro lado no hacía nada. Ahora la esfera es grande y se habla
+    tocando en cualquier parte de la pantalla.
+  - Los botones de la esquina (engranaje y pantalla completa) estaban escondidos
+    pero seguían recibiendo toques, así que un toque ahí se perdía. En un
+    teléfono ya no existen: son de la computadora del escenario.
+  - La página abría el micrófono para medirlo y a la vez para el dictado. En un
+    celular el micrófono es de uno solo a la vez, y el dictado podía quedar sordo
+    sin ningún error. Ahora, en un celular, lo abre sólo el dictado.
+  - Sin texto no quedaba ninguna señal de que escuchaba.
+* **Feedback al hablar, sin una palabra:** al tocar, la esfera da un destello
+  enseguida; mientras escucha salen aros de ella —débiles hasta que el micrófono
+  confirma que se abrió, fuertes después—; y la esfera late con lo que va
+  llegando (micrófono abierto, sonido, voz, texto). Escuchando se nota más que
+  antes: gira más rápido y brilla más.
+* En un teléfono vuelve a escribir qué pasa («Escuchando», lo que va entendiendo,
+  «No te escuché»); la pantalla del escenario sigue limpia. `?limpio=1` lo apaga
+  también en el teléfono.
+* **`?debug=1`**: un registro en pantalla de lo que hace el oído (permiso,
+  micrófono, `audiostart`, voz detectada, resultados, errores con su código). En
+  un teléfono no hay consola, y «no me escucha» sin el motivo no se arregla.
+* El dictado prueba `es-PY`, luego `es-419` y `es-ES` si el celular no tiene el
+  primero.
+
+= 2.1.1 =
+* **Arreglo: `/turismo/presentacion/` daba «demasiadas redirecciones».** El
+  plugin decidía si redirigir a la dirección con barra mirando la variable de
+  consulta, pero WordPress le saca la barra final al path antes de aplicar las
+  reglas: la variable llegaba siempre sin barra, así que la página se
+  redirigía a sí misma sin fin. Ahora mira la dirección que pidió el navegador.
+  El servidor de prueba no recortaba la barra como WordPress y por eso las
+  pruebas no lo vieron; ahora sí, y hay una prueba que lo reproduce.
+* En el teléfono ya no dice «Tocá para hablar». Se habla tocando en cualquier
+  parte de la pantalla, no sólo la esfera.
+
 = 2.1.0 =
 * **La presentación**, en `/turismo/presentacion/`: una página aparte, sólo con
   una esfera que escucha y contesta en voz alta, y abajo lo que se preguntó y lo
