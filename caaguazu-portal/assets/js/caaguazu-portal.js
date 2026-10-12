@@ -76,6 +76,7 @@
 		initPapelera();
 		initReview();
 		initPruebaAsistente();
+		initVozPresentacion();
 		initGestion();
 		initCaptura();
 		initCopiar();
@@ -1032,6 +1033,43 @@
 				campo.focus();
 			});
 		}
+	}
+
+	/**
+	 * Prueba de la voz de la presentación: el servidor genera el audio con lo
+	 * guardado y acá se reproduce. Si el navegador no deja reproducir sin un
+	 * toque previo, el toque fue el propio botón, así que alcanza.
+	 */
+	function initVozPresentacion() {
+		var caja = document.querySelector('[data-presentacion-voz]');
+		if (!caja) { return; }
+		var form = caja.querySelector('[data-voz-form]');
+		var campo = form.querySelector('textarea[name="texto"]');
+		var boton = form.querySelector('button[type="submit"]');
+		var msg = caja.querySelector('[data-voz-msg]');
+		var audio = null;
+
+		form.addEventListener('submit', function (e) {
+			e.preventDefault();
+			var texto = campo.value.trim();
+			if (!texto) { decir(msg, caja.getAttribute('data-msg-vacio'), 'is-error'); return; }
+			boton.disabled = true;
+			decir(msg, caja.getAttribute('data-msg-enviando'), '');
+			ajax('presentacion_probar_voz', { texto: texto }).then(function (r) {
+				boton.disabled = false;
+				if (!r.success) {
+					decir(msg, (r.data && r.data.message) || caja.getAttribute('data-msg-error'), 'is-error');
+					return;
+				}
+				decir(msg, caja.getAttribute('data-msg-listo').replace('%s', String(r.data.seg)), 'is-success');
+				if (audio) { audio.pause(); }
+				audio = new Audio(r.data.audio);
+				audio.play().catch(function () {});
+			}).catch(function () {
+				boton.disabled = false;
+				decir(msg, caja.getAttribute('data-msg-error'), 'is-error');
+			});
+		});
 	}
 
 	/* CSS.escape con fallback (keys de meta tienen guiones bajos, seguro). */

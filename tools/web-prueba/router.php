@@ -108,7 +108,7 @@ if ( 0 === strpos( $ruta, $directa ) ) {
 	}
 	$tipos = array(
 		'js' => 'application/x-javascript', 'css' => 'text/css', 'json' => 'application/json',
-		'png' => 'image/png', 'woff2' => 'font/woff2', 'webmanifest' => 'text/plain', 'html' => 'text/html',
+		'png' => 'image/png', 'woff2' => 'font/woff2', 'mp4' => 'video/mp4', 'webm' => 'video/webm', 'webmanifest' => 'text/plain', 'html' => 'text/html',
 	);
 	header( 'Content-Type: ' . ( $tipos[ strtolower( pathinfo( $archivo, PATHINFO_EXTENSION ) ) ] ?? 'application/octet-stream' ) );
 	header( 'Cache-Control: public, max-age=604800' );
@@ -186,6 +186,83 @@ if ( 0 === strpos( $ruta, '/wp-json/czu-app/v1/' ) ) {
 		}
 		return true;
 	}
+	/*
+	 * La presentación (WEB_PRESENTACION=1): responde con un marcador, sin
+	 * audio —así se prueba el plan B de la voz del navegador— y guarda la sala
+	 * en un archivo para que el teléfono y la pantalla la compartan.
+	 */
+	if ( 0 === strpos( $r, 'presentacion' ) ) {
+		if ( '1' !== getenv( 'WEB_PRESENTACION' ) ) {
+			http_response_code( 503 );
+			echo '{"error":{"codigo":"presentacion_apagada","mensaje":"No.","detalle":{}}}';
+			return true;
+		}
+		$cuerpo = json_decode( (string) file_get_contents( 'php://input' ), true ) ?: array();
+		if ( 'presentacion' === $r && 'GET' === $_SERVER['REQUEST_METHOD'] ) {
+			echo '{"disponible":true,"oido":"navegador","idioma":"es-PY","voz":"navegador"}';
+			return true;
+		}
+		$archivo_sala = function ( $codigo ) { return sys_get_temp_dir() . '/czu-sala-' . preg_replace( '/[^A-Z0-9]/', '', strtoupper( $codigo ) ) . '.json'; };
+		$leer_sala    = function ( $codigo ) use ( $archivo_sala ) {
+			$s = is_file( $archivo_sala( $codigo ) ) ? json_decode( file_get_contents( $archivo_sala( $codigo ) ), true ) : null;
+			return is_array( $s ) ? $s : array( 'turno' => 0, 'estado' => 'listo', 'parcial' => '', 'pregunta' => '', 'respuesta' => '' );
+		};
+		if ( 'presentacion' === $r ) {
+			$respuesta = '‹respuesta› a «' . ( $cuerpo['mensaje'] ?? '' ) . '»: uno dos tres cuatro cinco seis siete ocho nueve diez.';
+			if ( ! empty( $cuerpo['sala'] ) ) {
+				$s = $leer_sala( $cuerpo['sala'] );
+				$s = array_merge( $s, array( 'turno' => $s['turno'] + 1, 'estado' => 'respuesta', 'pregunta' => $cuerpo['mensaje'] ?? '', 'respuesta' => $respuesta ) );
+				file_put_contents( $archivo_sala( $cuerpo['sala'] ), json_encode( $s ) );
+			}
+			echo json_encode( array( 'respuesta' => $respuesta, 'conversacion' => 'prueba-conversacion', 'audio' => null ) );
+			return true;
+		}
+		if ( preg_match( '#^presentacion/sala/([A-Za-z0-9]{4,12})$#', $r, $m ) ) {
+			$s = $leer_sala( $m[1] );
+			if ( 'POST' === $_SERVER['REQUEST_METHOD'] ) {
+				$s['estado']  = $cuerpo['estado'] ?? 'listo';
+				$s['parcial'] = $cuerpo['parcial'] ?? '';
+				file_put_contents( $archivo_sala( $m[1] ), json_encode( $s ) );
+				echo '{"ok":true}';
+				return true;
+			}
+			$nuevo = $s['turno'] > (int) ( $_GET['desde'] ?? 0 );
+			echo json_encode( array( 'turno' => $s['turno'], 'estado' => $s['estado'], 'parcial' => $s['parcial'], 'pregunta' => $s['pregunta'], 'respuesta' => $nuevo ? $s['respuesta'] : '', 'audio' => null ) );
+			return true;
+		}
+	}
+
+	/*
+	 * La vista previa de lo no publicado (WEB_BORRADORES=1): la cookie
+	 * `czu_revisa` hace de sesión de profesor. Sin ella, 401, que es lo que
+	 * contesta la API a quien no tiene sesión.
+	 */
+	$profe = '1' === getenv( 'WEB_BORRADORES' ) && '1' === ( $_COOKIE['czu_revisa'] ?? '' );
+	if ( 'borradores' === $r ) {
+		if ( ! $profe ) {
+			http_response_code( 401 );
+			echo '{"error":{"codigo":"no_autenticado","mensaje":"No.","detalle":{}}}';
+			return true;
+		}
+		$inv   = json_decode( file_get_contents( __DIR__ . '/api/inventario.json' ), true );
+		$arts  = json_decode( file_get_contents( __DIR__ . '/api/articulos.json' ), true );
+		$ficha = array_merge( $inv['items'][0], array( 'id' => 260, 'estado' => 'en_revision' ) );
+		$art   = array_merge( $arts['items'][0] ?? array( 'id' => 1, 'titulo' => '‹artículo›' ), array( 'estado' => 'borrador' ) );
+		echo str_replace( '__UPLOADS__\\/foto.png', str_replace( '/', '\\/', $origen ) . '\\/uploads\\/foto.png', json_encode( array( 'fichas' => array( $ficha ), 'articulos' => array( $art ) ) ) );
+		return true;
+	}
+	if ( 'inventario/260' === $r && ! empty( $_GET['borrador'] ) ) {
+		if ( ! $profe ) {
+			http_response_code( 404 );
+			echo '{"error":{"codigo":"no_encontrado","mensaje":"No existe.","detalle":{}}}';
+			return true;
+		}
+		$f = json_decode( file_get_contents( __DIR__ . '/api/inventario-260.json' ), true );
+		$f['estado'] = 'en_revision';
+		echo str_replace( '__UPLOADS__\\/foto.png', str_replace( '/', '\\/', $origen ) . '\\/uploads\\/foto.png', json_encode( $f ) );
+		return true;
+	}
+
 	if ( isset( $archivos[ $r ] ) ) {
 		echo str_replace( '__UPLOADS__\\/foto.png', str_replace( '/', '\\/', $origen ) . '\\/uploads\\/foto.png', file_get_contents( __DIR__ . '/api/' . $archivos[ $r ] . '.json' ) );
 		return true;

@@ -3,7 +3,8 @@ import { t, idiomaActual } from "../idioma.js";
 import { escapar, Icono, fechaCorta, filaArticulo, error } from "../piezas.js";
 import { compartir } from "../compartir.js";
 
-export async function render(el, { id, vigente }) {
+export async function render(el, { id, params, vigente }) {
+  const borrador = params?.get("borrador") === "1";
   el.innerHTML = `
     <div class="cabeza-pantalla"><span class="esqueleto" style="width:44px;height:44px;border-radius:999px"></span></div>
     <div class="esqueleto esqueleto--linea" style="width:40%"></div>
@@ -12,7 +13,7 @@ export async function render(el, { id, vigente }) {
 
   let a;
   try {
-    a = await Api.articulo(id);
+    a = await Api.articulo(id, { borrador });
   } catch {
     if (vigente()) el.innerHTML = `<div class="cabeza-pantalla"><button type="button" class="boton-icono" data-volver aria-label="${escapar(t("accion.volver"))}">${Icono.volver}</button></div>${error()}`;
     return;
@@ -28,7 +29,7 @@ export async function render(el, { id, vigente }) {
   el.innerHTML = `
     <div class="cabeza-pantalla" style="justify-content:space-between">
       <button type="button" class="boton-icono" data-volver aria-label="${escapar(t("accion.volver"))}">${Icono.volver}</button>
-      <button type="button" class="boton-icono" id="art-compartir" aria-label="${escapar(t("diag.compartir"))}">${Icono.compartir}</button>
+      ${a.estado ? `<span class="sello sello--borrador" style="position:static">${escapar(t("web.borrador"))}</span>` : `<button type="button" class="boton-icono" id="art-compartir" aria-label="${escapar(t("diag.compartir"))}">${Icono.compartir}</button>`}
     </div>
 
     <article class="ficha" style="margin-top:0;padding-top:0">
@@ -65,5 +66,5 @@ export async function render(el, { id, vigente }) {
     </article>
   `;
 
-  el.querySelector("#art-compartir").addEventListener("click", () => compartir({ titulo: a.titulo, ruta: `articulo/${a.id}` }));
+  el.querySelector("#art-compartir")?.addEventListener("click", () => compartir({ titulo: a.titulo, ruta: `articulo/${a.id}` }));
 }

@@ -131,6 +131,38 @@ propio, idioma elegido), y eso vive en su navegador, no acá.
 
 == Changelog ==
 
+= 2.1.0 =
+* **La presentación**, en `/turismo/presentacion/`: una página aparte, sólo con
+  una esfera que escucha y contesta en voz alta, y abajo lo que se preguntó y lo
+  que dice, palabra por palabra mientras lo dice. Se habla tocando la esfera, con
+  la barra espaciadora, Enter o el control remoto de diapositivas. Esc corta,
+  F pone pantalla completa, N empieza otra charla.
+* La esfera es una animación cedida por un amigo del proyecto, usada tal cual:
+  el GIF original pasado a video (`presentacion/esfera.mp4` y `esfera.webm`, los
+  mismos 148 cuadros), porque a un video se le puede cambiar la velocidad. Con
+  la voz acelera, crece, brilla más y se le abre un resplandor azul detrás. Se
+  sirve directo desde la carpeta del plugin, sin PHP: Safari necesita pedidos
+  por partes para reproducir un video.
+* La pantalla es sólo la esfera: sin rótulos de estado, sin repetir lo que se
+  preguntó y sin lo que se va entendiendo. Se lee únicamente la respuesta,
+  mientras se dice, y a los seis segundos de terminar se desvanece. Sólo se
+  escribe algo si hay un problema que resolver (sin micrófono, sin conexión).
+  El teléfono, que es quien toca, sí dice qué está pasando.
+* Un teléfono puede hacer de micrófono: desde los ajustes de la página
+  (el engranaje de abajo, o la tecla S) se crea una sala con un QR; el teléfono
+  la abre, se le habla a él y la pantalla contesta.
+* Si el servidor no manda audio —sin proveedor de voz, o porque falló—, habla la
+  voz del navegador. La página se configura y se prende desde el panel,
+  «Asistente» → «Presentación», y necesita la API de la app 0.11.0.
+* **Borradores en el inicio, para los profesores.** Quien puede revisar
+  contenido en el panel ve, al final del inicio, las fichas y los artículos que
+  todavía no se publicaron, con un sello «Borrador», y los abre igual que los
+  publicados. Un borrador no se comparte ni se guarda en favoritos. La web lo
+  sabe por la pista que deja el panel (`czu_revisa`): sin ella no se pide nada,
+  así que para un turista la web no hace ni un pedido de más.
+* El plugin sirve una carpeta de `sitio/` por su `index.html`, y redirige a la
+  dirección con barra final cuando falta.
+
 = 2.0.5 =
 * La barra del asistente se anima: la pestaña que se activa aparece con un
   pequeño crecimiento y su etiqueta sube, y el orbe sube desde abajo la primera

@@ -3,7 +3,7 @@
  * Plugin Name:       Caaguazú App API
  * Plugin URI:        https://caaguazu.net
  * Description:       Capa REST que consume la app Android (Turismo App Czu). Expone el contenido turístico y la identidad del ecosistema bajo /wp-json/czu-app/v1/, sin depender del theme ni del sitio público — la app sigue funcionando aunque la web se rehaga entera.
- * Version:           0.10.0
+ * Version:           0.11.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Requires Plugins:  caaguazu-cuentas, caaguazu-portal
@@ -40,7 +40,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'CZUAPI_VERSION', '0.10.0' );
+define( 'CZUAPI_VERSION', '0.11.0' );
 define( 'CZUAPI_FILE', __FILE__ );
 define( 'CZUAPI_DIR', plugin_dir_path( __FILE__ ) );
 define( 'CZUAPI_BASENAME', plugin_basename( __FILE__ ) );
@@ -70,6 +70,8 @@ require_once CZUAPI_DIR . 'includes/class-ui-content.php';
 require_once CZUAPI_DIR . 'includes/class-sync.php';
 require_once CZUAPI_DIR . 'includes/class-asistente-fuentes.php';
 require_once CZUAPI_DIR . 'includes/class-asistente.php';
+require_once CZUAPI_DIR . 'includes/class-presentacion.php';
+require_once CZUAPI_DIR . 'includes/class-borradores.php';
 require_once CZUAPI_DIR . 'includes/class-admin.php';
 require_once CZUAPI_DIR . 'includes/class-asistente-admin.php';
 
@@ -156,6 +158,8 @@ function czuapi_register_routes() {
 	CZUAPI_UI_Content::instance()->register_routes();
 	CZUAPI_Sync::instance()->register_routes();
 	CZUAPI_Asistente::instance()->register_routes();
+	CZUAPI_Presentacion::instance()->register_routes();
+	CZUAPI_Borradores::instance()->register_routes();
 }
 
 /**

@@ -24,7 +24,7 @@ class PROMOTUR_Asistente_Panel {
 	const CAP = 'promotur_manage_asistente';
 
 	/** Pestañas de la sección, en orden. */
-	const PESTANAS = array( 'conocimiento', 'personalidad', 'memoria', 'fuentes', 'probar' );
+	const PESTANAS = array( 'conocimiento', 'personalidad', 'memoria', 'fuentes', 'probar', 'presentacion' );
 
 	public static function instance() {
 		if ( null === self::$instance ) {
@@ -36,6 +36,7 @@ class PROMOTUR_Asistente_Panel {
 	private function __construct() {
 		PROMOTUR_Acciones::formulario( 'save_asistente', array( $this, 'handle_save' ) );
 		PROMOTUR_Acciones::datos( 'asistente_probar', array( $this, 'probar' ) );
+		PROMOTUR_Acciones::datos( 'presentacion_probar_voz', array( $this, 'probar_voz' ) );
 	}
 
 	/**
@@ -55,6 +56,59 @@ class PROMOTUR_Asistente_Panel {
 			}
 		}
 		return true;
+	}
+
+	/**
+	 * ¿La API trae la presentación? (0.11.0 o posterior.) Va aparte de
+	 * `disponible()`: con una API 0.10.0 las otras cinco pestañas andan igual.
+	 *
+	 * @return bool
+	 */
+	public static function presentacion_disponible() {
+		if ( ! class_exists( 'CZUAPI_Presentacion' ) ) {
+			return false;
+		}
+		foreach ( array( 'guardar', 'voz', 'oido', 'persona', 'conocimiento', 'hablar', 'encendida', 'pista_key', 'key_fija' ) as $m ) {
+			if ( ! method_exists( 'CZUAPI_Presentacion', $m ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Todo lo que la pestaña muestra, ya leído. Las keys NUNCA viajan a la
+	 * página: sólo si hay una y en qué termina.
+	 *
+	 * @return array
+	 */
+	public static function presentacion() {
+		if ( ! self::presentacion_disponible() ) {
+			return array();
+		}
+		$voz  = CZUAPI_Presentacion::voz();
+		$oido = CZUAPI_Presentacion::oido();
+		return array(
+			'activa'          => CZUAPI_Presentacion::encendida(),
+			'hay_modelo'      => '' !== CZUAPI_Asistente::key(),
+			'persona'         => CZUAPI_Presentacion::persona(),
+			'conocimiento'    => CZUAPI_Presentacion::conocimiento(),
+			'catalogo'        => CZUAPI_Presentacion::usa_catalogo(),
+			'voz_proveedor'   => $voz['proveedor'],
+			'voz_endpoint'    => (string) get_option( 'czuapi_pres_voz_endpoint', '' ),
+			'voz_modelo'      => (string) get_option( 'czuapi_pres_voz_modelo', '' ),
+			'voz_id'          => $voz['voz'],
+			'voz_velocidad'   => $voz['velocidad'],
+			'voz_key'         => CZUAPI_Presentacion::pista_key( $voz['key'] ),
+			'voz_key_fija'    => CZUAPI_Presentacion::key_fija( 'voz' ),
+			'oido_modo'       => $oido['modo'],
+			'oido_endpoint'   => (string) get_option( 'czuapi_pres_oido_endpoint', '' ),
+			'oido_modelo'     => (string) get_option( 'czuapi_pres_oido_modelo', '' ),
+			'oido_idioma'     => $oido['idioma'],
+			'oido_key'        => CZUAPI_Presentacion::pista_key( $oido['key'] ),
+			'oido_key_fija'   => CZUAPI_Presentacion::key_fija( 'oido' ),
+			'url'             => function_exists( 'czuwios_url' ) ? czuwios_url( 'presentacion/' ) : '',
+		);
 	}
 
 	/** Pestaña pedida en la URL, o la primera si no hay una válida. */
@@ -125,6 +179,10 @@ class PROMOTUR_Asistente_Panel {
 				$this->olvidar();
 				$pestana = 'memoria';
 				break;
+			case 'presentacion':
+				$this->guardar_presentacion();
+				$pestana = 'presentacion';
+				break;
 		}
 
 		wp_safe_redirect( add_query_arg( 'pestana', $pestana, promotur_url( 'panel/asistente' ) ) );
@@ -161,6 +219,39 @@ class PROMOTUR_Asistente_Panel {
 		$elegidas = isset( $_POST['fuentes'] ) ? (array) wp_unslash( $_POST['fuentes'] ) : array(); // phpcs:ignore WordPress.Security.NonceVerification
 		CZUAPI_Asistente::set_fuentes( $elegidas );
 		$this->registrar( 'asistente_fuentes', array( 'activas' => CZUAPI_Asistente::normalizar_fuentes( $elegidas ) ) );
+		promotur_flash( __( 'Guardado', 'caaguazu-portal' ), 'success' );
+	}
+
+	/**
+	 * Toda la presentación en un solo formulario: es una sola cosa que se
+	 * prepara para un día. Las keys llegan vacías salvo que se cargue una
+	 * nueva, y la API entiende vacío como «dejala como está».
+	 */
+	private function guardar_presentacion() {
+		if ( ! self::presentacion_disponible() ) {
+			return;
+		}
+		$campos = array(
+			'activo', 'catalogo', 'persona', 'persona_fabrica', 'conocimiento',
+			'voz_proveedor', 'voz_endpoint', 'voz_key', 'voz_key_borrar', 'voz_modelo', 'voz_id', 'voz_velocidad',
+			'oido_modo', 'oido_endpoint', 'oido_key', 'oido_key_borrar', 'oido_modelo', 'oido_idioma',
+		);
+		$datos = array();
+		foreach ( $campos as $c ) {
+			$datos[ $c ] = isset( $_POST[ $c ] ) ? wp_unslash( $_POST[ $c ] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput, WordPress.Security.NonceVerification
+		}
+		CZUAPI_Presentacion::guardar( $datos );
+
+		// Al registro va QUÉ cambió, nunca una key.
+		$this->registrar( 'asistente_presentacion', array(
+			'activa'      => ! empty( $datos['activo'] ),
+			'catalogo'    => ! empty( $datos['catalogo'] ),
+			'voz'         => (string) $datos['voz_proveedor'],
+			'oido'        => (string) $datos['oido_modo'],
+			'key_voz'     => '' !== trim( (string) $datos['voz_key'] ) ? 'nueva' : ( ! empty( $datos['voz_key_borrar'] ) ? 'borrada' : 'igual' ),
+			'key_oido'    => '' !== trim( (string) $datos['oido_key'] ) ? 'nueva' : ( ! empty( $datos['oido_key_borrar'] ) ? 'borrada' : 'igual' ),
+			'guion'       => mb_strlen( (string) $datos['conocimiento'] ),
+		) );
 		promotur_flash( __( 'Guardado', 'caaguazu-portal' ), 'success' );
 	}
 
@@ -206,6 +297,32 @@ class PROMOTUR_Asistente_Panel {
 			'respuesta'    => (string) $r['respuesta'],
 			'fuentes'      => $r['fuentes'],
 			'conversacion' => (string) $r['conversacion'],
+		) );
+	}
+
+	/**
+	 * Prueba de la voz: dice una frase con lo que está guardado y devuelve el
+	 * audio para escucharlo ahí mismo. Lo que se prueba es lo GUARDADO —no lo
+	 * que está escrito en el formulario—, igual que la prueba del chat.
+	 */
+	public function probar_voz() {
+		if ( ! self::presentacion_disponible() || ! caaguazu_account_can( 'promotor', self::CAP ) ) {
+			wp_send_json_error( array( 'message' => __( 'No tenés autorización para hacer esto.', 'caaguazu-portal' ) ), 403 );
+		}
+		$texto = isset( $_POST['texto'] ) ? trim( sanitize_textarea_field( (string) wp_unslash( $_POST['texto'] ) ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+		if ( '' === $texto ) {
+			wp_send_json_error( array( 'message' => __( 'Escribí una frase.', 'caaguazu-portal' ) ), 400 );
+		}
+
+		$r = CZUAPI_Presentacion::hablar( mb_substr( $texto, 0, 500 ) );
+		if ( ! $r['ok'] ) {
+			// El error ya viene sin keys (ver CZUAPI_Presentacion::redactar):
+			// a quien prueba le sirve leer qué contestó el proveedor.
+			wp_send_json_error( array( 'message' => (string) $r['error'] ), 502 );
+		}
+		wp_send_json_success( array(
+			'audio' => 'data:' . $r['mime'] . ';base64,' . base64_encode( $r['audio'] ),
+			'seg'   => round( (float) $r['seg'], 1 ),
 		) );
 	}
 }

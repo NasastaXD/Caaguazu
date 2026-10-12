@@ -2,7 +2,7 @@
 // Una sección sin contenido no se dibuja — nada de títulos con «Ver todo» y
 // un hueco abajo, que es como se veía con el inventario recién empezando.
 
-import { Api } from "../api.js";
+import { Api, hayPistaRevisor } from "../api.js";
 import { t } from "../idioma.js";
 import { urlSitio } from "../config.js";
 import {
@@ -26,11 +26,14 @@ export async function render(el, { vigente, hayAsistente }) {
     <div id="cuerpo-inicio">${esqueletoGrilla(4)}</div>
   `;
 
-  const [cats, inv, evs, arts] = await Promise.allSettled([
+  // Los borradores sólo se piden si el panel dejó la pista de que quien mira
+  // revisa contenido: ver hayPistaRevisor().
+  const [cats, inv, evs, arts, bor] = await Promise.allSettled([
     Api.categorias(),
     Api.inventario({ porPagina: 12 }),
     Api.eventos(),
     Api.articulos({ porPagina: 3 }),
+    hayPistaRevisor() ? Api.borradores() : Promise.resolve(null),
   ]);
   if (!vigente()) return;
 
@@ -92,6 +95,20 @@ export async function render(el, { vigente, hayAsistente }) {
       </section>`);
   }
 
+  // Lo que el equipo está cargando y todavía no salió. Sólo lo ve quien lo
+  // revisa en el panel, con un sello que lo distingue de lo publicado.
+  const borradores = bor.status === "fulfilled" && bor.value ? bor.value : null;
+  const fichasBorrador = borradores?.fichas ?? [];
+  const articulosBorrador = borradores?.articulos ?? [];
+  if (fichasBorrador.length || articulosBorrador.length) {
+    partes.push(`
+      <section class="seccion" id="borradores">
+        <div class="seccion__cabeza"><h2 class="subtitulo">${escapar(t("web.borradores"))}</h2></div>
+        ${fichasBorrador.length ? `<div class="grilla">${fichasBorrador.map(tarjetaLugar).join("")}</div>` : ""}
+        ${articulosBorrador.length ? `<div class="lista"${fichasBorrador.length ? ' style="margin-top:14px"' : ""}>${articulosBorrador.map(filaArticulo).join("")}</div>` : ""}
+      </section>`);
+  }
+
   if (hayAsistente) {
     partes.push(`
       <section class="seccion">
@@ -129,6 +146,6 @@ export async function render(el, { vigente, hayAsistente }) {
       </a>
     </section>`);
 
-  const hayContenido = evento || categorias.length || lugares.length || articulos.length;
+  const hayContenido = evento || categorias.length || lugares.length || articulos.length || fichasBorrador.length || articulosBorrador.length;
   cuerpo.innerHTML = (hayContenido ? "" : vacio(t("estado.vacio"))) + partes.join("");
 }

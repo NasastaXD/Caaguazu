@@ -3,7 +3,7 @@
  * Plugin Name:       Caaguazú Web turismo
  * Plugin URI:        https://caaguazu.net
  * Description:       La web de turismo de acceso fácil (HTML/CSS/JS sin build), en /turismo/ y en /ios/: el mismo contenido que la app, sin instalar nada ni crear una cuenta. Nació como espejo para iPhone mientras no exista una app nativa.
- * Version:           2.0.5
+ * Version:           2.1.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Municipalidad de Caaguazú
@@ -45,7 +45,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'CZUWIOS_VERSION', '2.0.5' );
+define( 'CZUWIOS_VERSION', '2.1.0' );
 define( 'CZUWIOS_FILE', __FILE__ );
 define( 'CZUWIOS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'CZUWIOS_BASENAME', plugin_basename( __FILE__ ) );
@@ -178,6 +178,10 @@ final class CZUWIOS_Servidor {
 		return array(
 			'version' => CZUWIOS_VERSION,
 			'api'     => rest_url( 'czu-app/v1/' ),
+			// Dónde sirve el servidor web los archivos sin pasar por PHP. Lo usa
+			// la presentación para su video: el servidor web atiende los pedidos
+			// por partes que Safari exige para reproducir uno, y PHP no.
+			'directa' => self::base_directa(),
 			'tiendas' => array(
 				'android' => self::enlace_tienda( get_option( CZUWIOS_OPT_ANDROID, '' ) ),
 				'ios'     => self::enlace_tienda( get_option( CZUWIOS_OPT_IOS, '' ) ),
@@ -227,7 +231,7 @@ final class CZUWIOS_Servidor {
 	 * @return string valor de Cache-Control
 	 */
 	public static function cache_para( $ext, $versionado = false ) {
-		if ( in_array( $ext, array( 'png', 'woff2' ), true ) ) {
+		if ( in_array( $ext, array( 'png', 'woff2', 'mp4', 'webm' ), true ) ) {
 			return 'public, max-age=604800';
 		}
 		if ( $versionado && in_array( $ext, array( 'css', 'js' ), true ) ) {
@@ -526,6 +530,8 @@ final class CZUWIOS_Servidor {
 			'json'        => 'application/json; charset=utf-8',
 			'webmanifest' => 'application/manifest+json; charset=utf-8',
 			'png'         => 'image/png',
+			'mp4'         => 'video/mp4',
+			'webm'        => 'video/webm',
 			'woff2'       => 'font/woff2',
 		);
 	}
@@ -553,6 +559,24 @@ final class CZUWIOS_Servidor {
 			header( 'Cache-Control: no-cache' );
 			echo wp_json_encode( $this->ajustes() );
 			exit;
+		}
+
+		/*
+		 * Una carpeta se sirve por su `index.html`, como cualquier servidor de
+		 * archivos: es lo que deja tener páginas aparte de la web, como
+		 * `/turismo/presentacion/`. Sin la barra final se redirige a la
+		 * dirección con barra, porque la página pide sus archivos con rutas
+		 * relativas (`pres.js`) y sin la barra se resolverían una carpeta más
+		 * arriba.
+		 */
+		$carpeta = self::carpeta_de( $pedido );
+		if ( null !== $carpeta ) {
+			if ( '/' !== substr( $pedido, -1 ) ) {
+				$query = isset( $_SERVER['QUERY_STRING'] ) && '' !== $_SERVER['QUERY_STRING'] ? '?' . wp_unslash( $_SERVER['QUERY_STRING'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+				$base  = wp_parse_url( czuwios_url(), PHP_URL_PATH );
+				$this->redirigir( rtrim( (string) $base, '/' ) . '/' . $carpeta . '/' . $query );
+			}
+			$pedido = $carpeta . '/index.html';
 		}
 
 		$ext    = strtolower( (string) pathinfo( $pedido, PATHINFO_EXTENSION ) );
@@ -609,6 +633,34 @@ final class CZUWIOS_Servidor {
 		}
 
 		readfile( $real_pedido ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_read_readfile
+		exit;
+	}
+
+	/**
+	 * ¿El pedido es una carpeta de `sitio/` con su propio `index.html`?
+	 * Devuelve la carpeta sin barras (`presentacion`), o null. Sólo cuentan las
+	 * que tienen página: una carpeta de código (`js/`) no se lista nunca.
+	 *
+	 * @param string $pedido
+	 * @return string|null
+	 */
+	public static function carpeta_de( $pedido ) {
+		$carpeta = trim( (string) $pedido, '/' );
+		if ( '' === $carpeta || false !== strpos( $carpeta, '..' ) || '' !== pathinfo( $carpeta, PATHINFO_EXTENSION ) ) {
+			return null;
+		}
+		$real_sitio = realpath( CZUWIOS_SITIO );
+		$indice     = realpath( CZUWIOS_SITIO . $carpeta . '/index.html' );
+		if ( ! $real_sitio || ! $indice || 0 !== strpos( $indice, $real_sitio . DIRECTORY_SEPARATOR ) ) {
+			return null;
+		}
+		return $carpeta;
+	}
+
+	/** 301 a otra dirección de la web. */
+	private function redirigir( $url ) {
+		status_header( 301 );
+		header( 'Location: ' . $url );
 		exit;
 	}
 

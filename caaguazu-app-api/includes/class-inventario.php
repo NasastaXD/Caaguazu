@@ -183,7 +183,7 @@ class CZUAPI_Inventario {
 	 * @param WP_Post $post
 	 * @return array
 	 */
-	private function item_lista( $post, $idioma = 'es' ) {
+	public function item_lista( $post, $idioma = 'es' ) {
 		$id = $post->ID;
 		$out = array(
 			'id'              => (int) $id,
@@ -217,7 +217,13 @@ class CZUAPI_Inventario {
 		$id   = (int) $request['id'];
 		$post = get_post( $id );
 
-		if ( ! $post || PROMOTUR_Destinos::CPT !== $post->post_type || 'publish' !== $post->post_status ) {
+		if ( ! $post || PROMOTUR_Destinos::CPT !== $post->post_type ) {
+			return CZUAPI_Response::no_encontrado();
+		}
+		// Lo no publicado sólo lo ve quien lo revisa, y sólo si lo pidió: ver
+		// CZUAPI_Borradores. Para todos los demás, sigue sin existir.
+		$borrador = 'publish' !== $post->post_status;
+		if ( $borrador && ! CZUAPI_Borradores::detalle_permitido( $post, $request ) ) {
 			return CZUAPI_Response::no_encontrado();
 		}
 
@@ -242,7 +248,7 @@ class CZUAPI_Inventario {
 		// relacionados— y cambia menos seguido: una ficha publicada se edita de
 		// vez en cuando, no todo el tiempo. Un ETag más largo que el de la lista
 		// evita que la app la vuelva a bajar entera cada vez que la abre.
-		return CZUAPI_Response::with_etag( array(
+		$datos = array(
 			'id'          => $id,
 			'tipo'        => 'destino',
 			'tipo_item'   => $this->tipo_item( $id ),
@@ -299,7 +305,14 @@ class CZUAPI_Inventario {
 			'fuentes'                => $m( '_promotur_fuentes' ),
 			'autor'                  => czuapi_autor( $id ),
 			'actualizado'            => czuapi_fecha( $post->post_modified_gmt ),
-		), $request, 180 );
+		);
+
+		if ( ! $borrador ) {
+			return CZUAPI_Response::with_etag( $datos, $request, 180 );
+		}
+		// La vista previa lleva el estado editorial, y nadie la guarda.
+		$datos['estado'] = CZUAPI_Borradores::estado( $id );
+		return CZUAPI_Borradores::privada( CZUAPI_Response::with_etag( $datos, $request, 0 ) );
 	}
 
 	/**

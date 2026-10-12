@@ -86,6 +86,9 @@ export function botonFavorito(id) {
 /** Tarjeta de un lugar del inventario (lista o detalle: misma forma). */
 export function tarjetaLugar(item, i = 0) {
   const foto = item.portada?.url ?? "";
+  // Lo no publicado (la vista previa del profesor) abre su detalle en modo
+  // borrador y lleva el sello en vez del de evento.
+  const borrador = Boolean(item.estado);
   const evento = item.tipo_item === "evento" && item.fechas;
   const ahora = evento && item.fechas.en_curso;
   const meta = [
@@ -94,11 +97,11 @@ export function tarjetaLugar(item, i = 0) {
     precioA(item.rango_precio ?? item.practicos?.rango_precio),
   ].filter(Boolean).join(" · ");
   return `
-    <a class="tarjeta aparece" style="--i:${i}" href="#/ficha/${item.id}">
+    <a class="tarjeta aparece" style="--i:${i}" href="#/ficha/${item.id}${borrador ? "?borrador=1" : ""}">
       <div class="tarjeta__foto">
         ${foto ? `<img src="${escapar(foto)}" alt="${escapar(item.portada?.alt || "")}" loading="lazy">` : ""}
-        ${evento ? `<span class="sello ${ahora ? "sello--ahora" : ""}">${escapar(ahora ? t("evento.enCurso") : t("web.evento"))}</span>` : ""}
-        ${botonFavorito(item.id)}
+        ${borrador ? `<span class="sello sello--borrador">${escapar(t("web.borrador"))}</span>` : evento ? `<span class="sello ${ahora ? "sello--ahora" : ""}">${escapar(ahora ? t("evento.enCurso") : t("web.evento"))}</span>` : ""}
+        ${borrador ? "" : botonFavorito(item.id)}
       </div>
       <div class="tarjeta__cuerpo">
         <div class="tarjeta__titulo">${escapar(item.titulo)}</div>
@@ -128,10 +131,10 @@ export function filaArticulo(a, i = 0) {
   const autores = (a.autores ?? []).map((x) => x.nombre).filter(Boolean).join(", ");
   const meta = [autores, fechaCorta(a.publicado)].filter(Boolean).join(" · ");
   return `
-    <a class="fila aparece" style="--i:${i}" href="#/articulo/${a.id}">
+    <a class="fila aparece" style="--i:${i}" href="#/articulo/${a.id}${a.estado ? "?borrador=1" : ""}">
       <div class="fila__miniatura">${foto ? `<img src="${escapar(foto)}" alt="" loading="lazy">` : ""}</div>
       <div class="fila__cuerpo">
-        ${a.antetitulo ? `<div class="eyebrow">${escapar(a.antetitulo)}</div>` : ""}
+        ${a.estado ? `<div class="eyebrow eyebrow--borrador">${escapar(t("web.borrador"))}</div>` : a.antetitulo ? `<div class="eyebrow">${escapar(a.antetitulo)}</div>` : ""}
         <div class="fila__titulo">${escapar(a.titulo)}</div>
         ${meta ? `<div class="fila__meta">${escapar(meta)}</div>` : ""}
       </div>

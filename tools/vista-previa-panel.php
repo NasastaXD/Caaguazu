@@ -484,12 +484,33 @@ class PROMOTUR_Audit {
    con el mismo contrato público que expone el plugin real. */
 class PROMOTUR_Asistente_Panel {
 	public static function disponible() { return true; }
-	public static function pestana_actual() { $p = isset( $_GET['pestana'] ) ? $_GET['pestana'] : 'conocimiento'; return in_array( $p, array( 'conocimiento', 'personalidad', 'memoria', 'fuentes', 'probar' ), true ) ? $p : 'conocimiento'; }
+	// La pestaña sale de ?pestana= o del segundo argumento de la línea de
+	// comandos: `php tools/vista-previa-panel.php sections/asistente presentacion`.
+	public static function pestana_actual() {
+		$p = isset( $_GET['pestana'] ) ? $_GET['pestana'] : ( isset( $GLOBALS['promotur_id'] ) ? (string) $GLOBALS['promotur_id'] : 'conocimiento' );
+		return in_array( $p, array( 'conocimiento', 'personalidad', 'memoria', 'fuentes', 'probar', 'presentacion' ), true ) ? $p : 'conocimiento';
+	}
+	public static function presentacion() {
+		return array(
+			'activa' => true, 'hay_modelo' => true,
+			'persona' => 'Sos la voz del proyecto de turismo de Caaguazú.', 'conocimiento' => '‹guion›', 'catalogo' => false,
+			'voz_proveedor' => 'minimax', 'voz_endpoint' => '', 'voz_modelo' => '', 'voz_id' => '‹voz›', 'voz_velocidad' => 1.0,
+			'voz_key' => '…a1b2', 'voz_key_fija' => false,
+			'oido_modo' => 'navegador', 'oido_endpoint' => '', 'oido_modelo' => '', 'oido_idioma' => 'es-PY',
+			'oido_key' => '', 'oido_key_fija' => false,
+			'url' => 'https://caaguazu.net/turismo/presentacion/',
+		);
+	}
 	public static function conocimiento() { return CZUAPI_Asistente::conocimiento(); }
 	public static function persona() { return 'Sos el asistente de la app de turismo de Caaguazú.'; }
 	public static function memoria_turnos() { return 10; }
 	public static function memoria_horas() { return 2; }
 	public static function fuentes() { return array( 'lugares' => true, 'eventos' => true, 'recorridos' => true, 'articulos' => false ); }
+}
+class PROMOTUR_Prueba {
+	const CAP = 'promotur_review_content';
+	public static function investigacion() { return array( 'herramienta' => 'Claude Research', 'generado' => '2026-10-12', 'sitios' => array_fill( 0, 16, array() ) ); }
+	public static function cargadas() { return array( 1, 2, 3 ); }
 }
 class CZUAPI_Asistente {
 	public static function conocimiento() { return 'Ykua La Patria abre todos los días de 8 a 17. Los precios son de referencia.'; }

@@ -1,0 +1,411 @@
+/**
+ * La presentación: una esfera en el centro y lo que dice, abajo.
+ * ============================================================================
+ *
+ * Es un escenario, no una pantalla de la web: va siempre en oscuro (en un
+ * proyector, un fondo claro encandila y apaga la esfera), con la letra grande
+ * para leerse desde la última fila y sin nada más a la vista. Los controles
+ * existen —micrófono, teléfono, pantalla completa— pero se esconden hasta que
+ * alguien mueve el mouse.
+ *
+ * Los tokens van todos acá arriba, también los de la esfera: pres.js los lee
+ * de acá, así que cambiar su color es cambiar esas líneas.
+ */
+
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 400; font-display: swap; src: url("../fuentes/inter-400.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 600; font-display: swap; src: url("../fuentes/inter-600.woff2") format("woff2"); }
+
+:root {
+	/* Negro puro: es el fondo del video, y así no se le ven los bordes. */
+	--fondo:        #000000;
+	--texto:        #f4f4f2;
+	--texto-2:      #a3a3ad;
+	--texto-debil:  #6b6b75;
+	--panel:        #141418;
+	--panel-2:      #1e1e24;
+	--linea:        #2a2a31;
+	--error:        #ff8a80;
+
+	/* La esfera: el brillo que se suma con la voz, y el medidor. */
+	--orbe-halo:    #2b1bff;
+	--orbe-anillo:  #d9d6ff;
+
+	--r-2:          14px;
+	--r-full:       999px;
+	--letra:        "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+	--lento:        420ms;
+	--curva:        cubic-bezier(.2, .7, .2, 1);
+
+	color-scheme: dark;
+}
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html,
+body { height: 100%; }
+
+body {
+	margin: 0;
+	background: var(--fondo);
+	color: var(--texto);
+	font-family: var(--letra);
+	-webkit-font-smoothing: antialiased;
+	overflow: hidden;
+	-webkit-tap-highlight-color: transparent;
+}
+
+body.sin-cursor,
+body.sin-cursor * { cursor: none !important; }
+
+button { font: inherit; color: inherit; }
+
+/* Un bloque con display propio le gana al atributo: esto se lo devuelve. */
+[hidden] { display: none !important; }
+
+/* ---------------------------------------------------------------------------
+ * La escena
+ * ------------------------------------------------------------------------ */
+
+.escena {
+	position: fixed;
+	inset: 0;
+	display: grid;
+	grid-template-rows: 1fr auto;
+	justify-items: center;
+	padding: max(24px, env(safe-area-inset-top)) 24px max(28px, env(safe-area-inset-bottom));
+}
+
+.escena__centro {
+	align-self: center;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 18px;
+	min-height: 0;
+}
+
+.orbe {
+	position: relative;
+	/* El botón es la esfera; el video es mucho más grande y la rodea. */
+	width: min(38vmin, 340px);
+	aspect-ratio: 1;
+	border: 0;
+	padding: 0;
+	background: none;
+	border-radius: var(--r-full);
+	cursor: pointer;
+	touch-action: manipulation;
+}
+
+.orbe__escena {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	/* En el video (800×600) la esfera ocupa unos 300 px de ancho y su centro
+	   está un poco arriba de la mitad: por eso 267% y el corrimiento. */
+	width: 267%;
+	aspect-ratio: 4 / 3;
+	transform: translate(-50%, -46%) scale(var(--escala, 1));
+	pointer-events: none;
+	will-change: transform;
+}
+
+.orbe__video {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	filter: brightness(var(--luz, 1)) saturate(var(--color, 1));
+	/* El original trae un rectángulo apenas más claro en el centro y el halo
+	   cortado arriba: el borde se desvanece en el negro y no se ve ninguno. */
+	-webkit-mask-image: radial-gradient(closest-side, #000 52%, transparent 100%);
+	mask-image: radial-gradient(closest-side, #000 52%, transparent 100%);
+}
+
+/* Un resplandor azul detrás, que crece con la voz. */
+.orbe__brillo {
+	position: absolute;
+	left: 50%;
+	top: 46%;
+	width: 60%;
+	aspect-ratio: 1;
+	border-radius: var(--r-full);
+	background: radial-gradient(closest-side, var(--orbe-halo), transparent);
+	opacity: var(--brillo, 0);
+	transform: translate(-50%, -50%) scale(var(--abre, 1));
+	mix-blend-mode: screen;
+}
+
+.orbe:focus-visible { outline: 2px solid var(--texto-2); outline-offset: 12px; }
+
+.estado {
+	/* Por encima del video, que es más grande que la esfera y la rodea de negro. */
+	position: relative;
+	z-index: 2;
+	margin: 0;
+	min-height: 1.4em;
+	font-size: clamp(14px, 1.6vmin, 18px);
+	letter-spacing: .14em;
+	text-transform: uppercase;
+	color: var(--texto-debil);
+	transition: color var(--lento) var(--curva), opacity var(--lento) var(--curva);
+}
+
+.estado.es-error { color: var(--error); }
+
+/* ---------------------------------------------------------------------------
+ * Subtítulos
+ * ------------------------------------------------------------------------ */
+
+.subtitulos {
+	position: relative;
+	z-index: 2;
+	width: min(100%, 1040px);
+	min-height: 7.5em;
+	text-align: center;
+}
+
+.pregunta {
+	margin: 0 0 14px;
+	font-size: clamp(15px, 2vmin, 22px);
+	color: var(--texto-2);
+	line-height: 1.4;
+	opacity: 0;
+	transition: opacity var(--lento) var(--curva);
+}
+
+.pregunta.visible { opacity: 1; }
+
+.respuesta {
+	margin: 0;
+	font-size: clamp(22px, 3.6vmin, 42px);
+	font-weight: 600;
+	line-height: 1.32;
+	letter-spacing: -.01em;
+	text-wrap: balance;
+	/* Un texto largo no empuja la esfera fuera de la pantalla: se ven tres
+	   renglones, y pres.js los corre para que siempre esté a la vista el que
+	   se está diciendo. */
+	max-height: calc(1.32em * 3);
+	overflow: hidden;
+}
+
+.respuesta {
+	transition: opacity 1200ms var(--curva);
+}
+
+.respuesta.desvanecida { opacity: 0; }
+
+.respuesta .palabra {
+	opacity: .16;
+	transition: opacity 260ms var(--curva);
+}
+
+.respuesta .palabra.dicha { opacity: 1; }
+
+.respuesta.parcial { color: var(--texto-2); font-weight: 400; }
+
+/* ---------------------------------------------------------------------------
+ * Empezar: el toque que el navegador exige antes de dejar sonar nada
+ * ------------------------------------------------------------------------ */
+
+.inicio {
+	position: fixed;
+	inset: 0;
+	display: grid;
+	place-items: center;
+	background: var(--fondo);
+	z-index: 10;
+	transition: opacity var(--lento) var(--curva), visibility var(--lento);
+}
+
+.inicio.oculto { opacity: 0; visibility: hidden; }
+
+.inicio__caja {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 16px;
+	text-align: center;
+	padding: 24px;
+}
+
+.inicio__titulo {
+	margin: 0;
+	font-size: clamp(22px, 3vmin, 32px);
+	font-weight: 600;
+}
+
+.inicio__nota {
+	margin: 0;
+	max-width: 30em;
+	color: var(--texto-2);
+	font-size: 15px;
+	line-height: 1.5;
+}
+
+.pildora {
+	min-height: 48px;
+	padding: 0 28px;
+	border: 0;
+	border-radius: var(--r-full);
+	background: var(--texto);
+	color: var(--fondo);
+	font-weight: 600;
+	font-size: 16px;
+	cursor: pointer;
+}
+
+.pildora--fantasma {
+	background: var(--panel-2);
+	color: var(--texto);
+}
+
+.pildora:disabled { opacity: .4; cursor: default; }
+
+/* ---------------------------------------------------------------------------
+ * Controles: aparecen al mover el mouse, y nunca tapan la esfera
+ * ------------------------------------------------------------------------ */
+
+.controles {
+	position: fixed;
+	left: 16px;
+	bottom: max(16px, env(safe-area-inset-bottom));
+	display: flex;
+	gap: 8px;
+	z-index: 5;
+	opacity: 0;
+	transition: opacity var(--lento) var(--curva);
+}
+
+body.mostrar-controles .controles,
+.controles:focus-within { opacity: 1; }
+
+.boton-icono {
+	width: 44px;
+	height: 44px;
+	display: grid;
+	place-items: center;
+	border: 0;
+	border-radius: var(--r-full);
+	background: var(--panel);
+	color: var(--texto-2);
+	cursor: pointer;
+}
+
+.boton-icono svg { width: 20px; height: 20px; }
+
+.ajustes {
+	position: fixed;
+	left: 16px;
+	bottom: calc(max(16px, env(safe-area-inset-bottom)) + 56px);
+	width: min(360px, calc(100vw - 32px));
+	max-height: calc(100vh - 110px);
+	overflow-y: auto;
+	padding: 18px;
+	border-radius: var(--r-2);
+	background: var(--panel);
+	z-index: 6;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.ajustes__grupo { display: flex; flex-direction: column; gap: 8px; }
+
+.ajustes__etiqueta {
+	font-size: 12px;
+	letter-spacing: .1em;
+	text-transform: uppercase;
+	color: var(--texto-debil);
+}
+
+.ajustes select {
+	min-height: 44px;
+	padding: 0 12px;
+	border: 1px solid var(--linea);
+	border-radius: var(--r-2);
+	background: var(--panel-2);
+	color: var(--texto);
+	font: inherit;
+	font-size: 14px;
+}
+
+.ajustes__nota { margin: 0; font-size: 13px; line-height: 1.5; color: var(--texto-2); }
+
+.ajustes__fila { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.ajustes .pildora { min-height: 44px; font-size: 14px; padding: 0 18px; }
+
+.qr {
+	width: fit-content;
+	padding: 10px;
+	border-radius: var(--r-2);
+	/* Un QR se lee oscuro sobre claro: invertido, muchas cámaras no lo ven. */
+	background: var(--texto);
+	line-height: 0;
+}
+
+.qr svg { width: 180px; height: 180px; }
+
+.codigo {
+	font-size: 28px;
+	font-weight: 600;
+	letter-spacing: .2em;
+}
+
+.enlace {
+	font-size: 12px;
+	word-break: break-all;
+	color: var(--texto-2);
+}
+
+.medidor {
+	height: 6px;
+	border-radius: var(--r-full);
+	background: var(--panel-2);
+	overflow: hidden;
+}
+
+.medidor span {
+	display: block;
+	height: 100%;
+	width: 0;
+	background: var(--orbe-anillo);
+	transition: width 80ms linear;
+}
+
+/* ---------------------------------------------------------------------------
+ * El teléfono como micrófono
+ * ------------------------------------------------------------------------ */
+
+body.modo-control .escena { grid-template-rows: 1fr auto; }
+body.modo-control .orbe { width: min(70vmin, 340px); }
+body.modo-control .respuesta { font-size: clamp(18px, 4.6vmin, 26px); font-weight: 400; }
+body.modo-control .controles { display: none; }
+
+.sala-chip {
+	position: fixed;
+	top: max(14px, env(safe-area-inset-top));
+	right: 16px;
+	padding: 6px 12px;
+	border-radius: var(--r-full);
+	background: var(--panel);
+	color: var(--texto-2);
+	font-size: 13px;
+	letter-spacing: .12em;
+}
+
+/* ---------------------------------------------------------------------------
+ * Movimiento reducido: la esfera deja de moverse (ver pres.js) y nada más
+ * se anima. Respetarlo es respetar una decisión que ya se tomó.
+ * ------------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after { transition-duration: 1ms !important; animation-duration: 1ms !important; }
+}

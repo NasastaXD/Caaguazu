@@ -45,6 +45,22 @@ async function pedir(ruta, params = {}) {
   throw ultimo;
 }
 
+/**
+ * La pista que deja el panel al abrirse (`czu_revisa`, ver
+ * promotur_pista_revisor()): dice que vale la pena preguntar por los
+ * borradores. No es un permiso —eso lo decide la API— y sin ella no se pide
+ * nada: un turista no paga un pedido de más para enterarse de que no es
+ * profesor.
+ */
+export function hayPistaRevisor() {
+  return /(?:^|;\s*)czu_revisa=1(?:;|$)/.test(document.cookie || "");
+}
+
+/** Si la API dice que no, la pista sobra: se borra para no volver a preguntar. */
+function olvidarPistaRevisor() {
+  document.cookie = "czu_revisa=; Max-Age=0; Path=/; SameSite=Lax";
+}
+
 /** Error del asistente con lo que la pantalla necesita para explicarlo. */
 export class ErrorAsistente extends Error {
   constructor(estado, codigo, esperaSeg) {
@@ -70,13 +86,32 @@ export const Api = {
       por_pagina: porPagina,
     }),
 
-  ficha: (id) => pedir(`inventario/${id}`, { idioma: idiomaActual() }),
+  // `borrador` sólo lo usa quien revisa contenido: ver borradores() abajo.
+  ficha: (id, { borrador = false } = {}) => pedir(`inventario/${id}`, { idioma: idiomaActual(), borrador: borrador ? 1 : "" }),
   marcadores: () => pedir("mapa/markers"),
   eventos: () => pedir("eventos", { idioma: idiomaActual() }),
 
   articulos: ({ pagina = 1, porPagina = 20, categoria, etiqueta, buscar } = {}) =>
     pedir("articulos", { idioma: idiomaActual(), pagina, por_pagina: porPagina, categoria, etiqueta, buscar }),
-  articulo: (id) => pedir(`articulos/${id}`, { idioma: idiomaActual() }),
+  articulo: (id, { borrador = false } = {}) => pedir(`articulos/${id}`, { idioma: idiomaActual(), borrador: borrador ? 1 : "" }),
+
+  /** Lo no publicado, para quien lo revisa (el Profesor en el panel). La API
+   * decide por la sesión del panel, que viaja en la cookie: esta web y el
+   * panel viven en el mismo dominio. Sin permiso es `null`, sin error: para
+   * la pantalla, «no sos profesor» y «no hay nada» se dibujan igual. */
+  borradores: async () => {
+    let r;
+    try {
+      r = await fetch(url("borradores", { idioma: idiomaActual() }), { credentials: "same-origin", cache: "no-store" });
+    } catch {
+      return null;
+    }
+    if (r.status === 401 || r.status === 403) {
+      olvidarPistaRevisor();
+      return null;
+    }
+    return r.ok ? r.json() : null;
+  },
 
   idiomas: () => pedir("idiomas"),
   textos: (idioma) => pedir(`strings/${idioma}`),
