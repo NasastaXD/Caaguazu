@@ -173,7 +173,12 @@ class CZUAPI_Articulos {
 
 	public function detalle( $request ) {
 		$post = get_post( (int) $request['id'] );
-		if ( ! $post || self::CPT !== $post->post_type || 'publish' !== $post->post_status ) {
+		if ( ! $post || self::CPT !== $post->post_type ) {
+			return CZUAPI_Response::no_encontrado();
+		}
+		// Igual que en el inventario: lo no publicado, sólo en la vista previa.
+		$borrador = 'publish' !== $post->post_status;
+		if ( $borrador && ! CZUAPI_Borradores::detalle_permitido( $post, $request ) ) {
 			return CZUAPI_Response::no_encontrado();
 		}
 
@@ -197,7 +202,11 @@ class CZUAPI_Articulos {
 		$out['relacionados'] = $this->relacionados( $post->ID, $idioma );
 		$out['actualizado']  = czuapi_fecha( $post->post_modified_gmt );
 
-		return CZUAPI_Response::with_etag( $out, $request, 180 );
+		if ( ! $borrador ) {
+			return CZUAPI_Response::with_etag( $out, $request, 180 );
+		}
+		$out['estado'] = CZUAPI_Borradores::estado( $post->ID );
+		return CZUAPI_Borradores::privada( CZUAPI_Response::with_etag( $out, $request, 0 ) );
 	}
 
 	/**
@@ -209,7 +218,7 @@ class CZUAPI_Articulos {
 	 * @param WP_Post $post
 	 * @return array
 	 */
-	private function resumen( $post, $idioma = 'es' ) {
+	public function resumen( $post, $idioma = 'es' ) {
 		$id  = (int) $post->ID;
 		$out = array(
 			'id'         => $id,

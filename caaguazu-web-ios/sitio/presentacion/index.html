@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Caaguazú · Presentación</title>
+<!-- Es para un escenario, no para que la encuentre un buscador. -->
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#060608">
+<link rel="icon" href="../assets/icon-192.png">
+<link rel="preload" href="../fuentes/inter-600.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="pres.css">
+</head>
+<body>
+
+<!--
+  Todo lo que se ve está acá; pres.js sólo lo mueve. La esfera es un botón:
+  tocarla (o la barra espaciadora, Enter, o el control remoto de diapositivas)
+  es lo que hace escuchar.
+-->
+<main class="escena">
+  <div class="escena__centro">
+    <button type="button" class="orbe" id="orbe" aria-label="Hablar">
+      <canvas id="lienzo" aria-hidden="true"></canvas>
+    </button>
+    <p class="estado" id="estado" role="status"></p>
+  </div>
+  <div class="subtitulos" aria-live="polite">
+    <p class="pregunta" id="pregunta"></p>
+    <p class="respuesta" id="respuesta"></p>
+  </div>
+</main>
+
+<span class="sala-chip" id="sala-chip" hidden></span>
+
+<!-- El navegador no deja sonar nada sin un primer toque: este es ese toque. -->
+<div class="inicio" id="inicio">
+  <div class="inicio__caja">
+    <p class="inicio__titulo" id="inicio-titulo"></p>
+    <p class="inicio__nota" id="inicio-nota"></p>
+    <button type="button" class="pildora" id="empezar" disabled></button>
+  </div>
+</div>
+
+<div class="controles" id="controles">
+  <button type="button" class="boton-icono" id="abrir-ajustes" aria-controls="ajustes" aria-expanded="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+  </button>
+  <button type="button" class="boton-icono" id="pantalla-completa">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+  </button>
+</div>
+
+<aside class="ajustes" id="ajustes" hidden>
+  <div class="ajustes__grupo">
+    <span class="ajustes__etiqueta" id="et-microfono"></span>
+    <select id="microfono" aria-labelledby="et-microfono"></select>
+    <div class="medidor" aria-hidden="true"><span id="medidor"></span></div>
+    <p class="ajustes__nota" id="nota-microfono"></p>
+  </div>
+  <div class="ajustes__grupo">
+    <span class="ajustes__etiqueta" id="et-telefono"></span>
+    <div id="sala-vacia" class="ajustes__fila">
+      <button type="button" class="pildora pildora--fantasma" id="crear-sala"></button>
+    </div>
+    <div id="sala-lista" hidden>
+      <div class="qr" id="qr"></div>
+      <p class="codigo" id="codigo"></p>
+      <p class="enlace" id="enlace"></p>
+      <div class="ajustes__fila">
+        <button type="button" class="pildora pildora--fantasma" id="cerrar-sala"></button>
+      </div>
+    </div>
+  </div>
+  <div class="ajustes__grupo">
+    <div class="ajustes__fila">
+      <button type="button" class="pildora pildora--fantasma" id="nueva-charla"></button>
+    </div>
+    <p class="ajustes__nota" id="atajos"></p>
+  </div>
+</aside>
+
+<!-- Acá el plugin pone los ajustes (dónde está la API): ver
+     CZUWIOS_Servidor::preparar_html(). -->
+<!--ajustes-->
+<script src="../js/vendor/qrcode.js" defer></script>
+<script type="module" src="pres.js"></script>
+</body>
+</html>

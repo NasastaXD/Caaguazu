@@ -60,6 +60,22 @@ llamen los tags.
 
 == Changelog ==
 
+= 3.15.0 =
+* **Presentación.** Una pestaña nueva en «Asistente» para preparar la esfera que
+  habla en un escenario: prenderla y apagarla, su guion (personalidad y lo que
+  sabe del proyecto, más lo publicado si se quiere), la voz (MiniMax,
+  ElevenLabs, OpenAI o compatible, o la del navegador) y el oído (el navegador
+  o el servidor). Las keys nunca se vuelven a mostrar: sólo si hay una y en qué
+  termina. «Probar la voz» dice una frase con lo guardado.
+* Guardar la presentación queda en «Registros» (`asistente_presentacion`), sin
+  las keys.
+* Abrir el panel deja la pista `czu_revisa` para la web de turismo: así la web
+  sabe que tiene que pedir la vista previa de lo no publicado. No es un permiso
+  (lo decide la API con la sesión de verdad); sólo evita que cada visita haga un
+  pedido de más. Se borra al salir.
+* Requiere la API de la app 0.11.0 o posterior para la pestaña nueva; las otras
+  cinco siguen andando con la 0.10.0.
+
 = 3.14.0 =
 * **El asistente, en el Portal.** La sección «Asistente» pasa al grupo Portal y
   tiene cinco pestañas, para el Profesor:

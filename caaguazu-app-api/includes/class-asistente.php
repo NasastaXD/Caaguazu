@@ -24,7 +24,8 @@
  * herramientas, el modo JSON de respaldo, los niveles de modelo según la
  * dificultad de la tarea (que existían para escalar CUANDO el modelo pedía una
  * acción cara) y el paso de aprobación. Tampoco hay voz ni imágenes: la app no
- * las manda.
+ * las manda. La voz existe sólo en la presentación (`CZUAPI_Presentacion`),
+ * que usa este mismo proveedor con su propio guion.
  *
  * Lo que sí es nuevo son las FUENTES (`CZUAPI_Asistente_Fuentes`): todo lo que
  * dice sobre Caaguazú sale de lo publicado en el panel, y cada dato vuelve a la
@@ -550,9 +551,15 @@ TXT;
 	 * @param array|null $forzado   { endpoint, key, modelo } para la prueba de
 	 *                              un proveedor; null usa el principal con
 	 *                              respaldo.
+	 * @param array      $opciones  Lo que cambia otro asistente montado sobre
+	 *                              éste (la presentación): `sistema` (callable
+	 *                              $fuentes, $idioma → prompt), `sin_fuentes`
+	 *                              (no arma el catálogo) y `max_tokens`. El
+	 *                              proveedor, el respaldo y los avisos son los
+	 *                              mismos: hay una sola cuenta que se paga.
 	 * @return array { ok, code, error, respuesta, fuentes, contenido }
 	 */
-	public static function preguntar( $mensaje, $historial, $idioma, $forzado = null ) {
+	public static function preguntar( $mensaje, $historial, $idioma, $forzado = null, array $opciones = array() ) {
 		$out = array( 'ok' => false, 'code' => 0, 'error' => '', 'respuesta' => '', 'fuentes' => array(), 'contenido' => '' );
 
 		$mensaje = trim( (string) $mensaje );
@@ -570,10 +577,15 @@ TXT;
 		}
 
 		$t0      = microtime( true );
-		$fuentes = CZUAPI_Asistente_Fuentes::reunir( $mensaje, $idioma, (array) $historial );
+		$fuentes = empty( $opciones['sin_fuentes'] )
+			? CZUAPI_Asistente_Fuentes::reunir( $mensaje, $idioma, (array) $historial )
+			: array( 'catalogo' => '', 'detalle' => '', 'refs' => array() );
 		$t_fuentes = microtime( true ) - $t0;
 
-		$messages = array( array( 'role' => 'system', 'content' => self::armar_sistema( $fuentes, $idioma ) ) );
+		$sistema  = isset( $opciones['sistema'] ) && is_callable( $opciones['sistema'] )
+			? (string) call_user_func( $opciones['sistema'], $fuentes, $idioma )
+			: self::armar_sistema( $fuentes, $idioma );
+		$messages = array( array( 'role' => 'system', 'content' => $sistema ) );
 		foreach ( (array) $historial as $h ) {
 			if ( isset( $h['role'], $h['content'] ) && in_array( $h['role'], array( 'user', 'assistant' ), true ) ) {
 				$messages[] = array( 'role' => $h['role'], 'content' => (string) $h['content'] );
@@ -581,7 +593,7 @@ TXT;
 		}
 		$messages[] = array( 'role' => 'user', 'content' => mb_substr( $mensaje, 0, self::MAX_MENSAJE ) );
 
-		$max_tokens = self::max_tokens();
+		$max_tokens = isset( $opciones['max_tokens'] ) ? max( 50, (int) $opciones['max_tokens'] ) : self::max_tokens();
 		$payload    = static function ( $tokens ) use ( $modelo, $messages ) {
 			$p = array(
 				'model'       => $modelo,
@@ -1067,33 +1079,38 @@ TXT;
 		return (bool) preg_match( '/^[A-Za-z0-9\-]{8,64}$/', $id ) ? $id : '';
 	}
 
-	protected static function clave_memoria( $conversacion ) {
+	/**
+	 * `$espacio` separa las charlas de otro asistente montado sobre éste (la
+	 * presentación): un mismo identificador no puede mezclar lo que se habló
+	 * en la app con lo que se habló en el escenario.
+	 */
+	protected static function clave_memoria( $conversacion, $espacio = '' ) {
 		// La generación cambia con «olvidar todas»: las charlas anteriores quedan
 		// sin llave y se van solas al vencer su transient.
-		return 'czuapi_ia_mem_' . md5( (int) get_option( 'czuapi_ia_mem_gen', 0 ) . '|' . (string) $conversacion );
+		return 'czuapi_ia_mem_' . md5( (int) get_option( 'czuapi_ia_mem_gen', 0 ) . '|' . (string) $espacio . '|' . (string) $conversacion );
 	}
 
-	protected static function cargar_memoria( $conversacion ) {
+	public static function cargar_memoria( $conversacion, $espacio = '' ) {
 		if ( self::memoria_turnos() <= 0 ) {
 			return array();
 		}
-		$m = get_transient( self::clave_memoria( $conversacion ) );
+		$m = get_transient( self::clave_memoria( $conversacion, $espacio ) );
 		return is_array( $m ) ? $m : array();
 	}
 
-	protected static function guardar_memoria( $conversacion, $pregunta, $contenido ) {
+	public static function guardar_memoria( $conversacion, $pregunta, $contenido, $espacio = '' ) {
 		$turnos = self::memoria_turnos();
 		if ( $turnos <= 0 ) {
 			return;
 		}
-		$m   = self::cargar_memoria( $conversacion );
+		$m   = self::cargar_memoria( $conversacion, $espacio );
 		$m[] = array( 'role' => 'user', 'content' => mb_substr( (string) $pregunta, 0, 1500 ) );
 		$m[] = array( 'role' => 'assistant', 'content' => mb_substr( (string) $contenido, 0, 2000 ) );
 		$max = $turnos * 2;
 		if ( count( $m ) > $max ) {
 			$m = array_slice( $m, -$max );
 		}
-		set_transient( self::clave_memoria( $conversacion ), $m, self::memoria_ttl() );
+		set_transient( self::clave_memoria( $conversacion, $espacio ), $m, self::memoria_ttl() );
 	}
 
 	/* --------------------------------------------------------------------- */
@@ -1112,23 +1129,30 @@ TXT;
 	 * Se mira `REMOTE_ADDR` y nada más: las cabeceras de proxy las escribe el
 	 * cliente, y confiar en ellas deja saltar el tope cambiando un texto.
 	 *
+	 * La presentación pasa su propio prefijo y sus propios topes: en el salón
+	 * todos salen por la misma IP, y no puede quedarse muda porque alguien
+	 * del público estuvo probando el asistente de la web en el wifi del lugar.
+	 *
 	 * @return int 0 si puede; si no, cuántos segundos esperar
 	 */
-	protected static function espera_por_tope() {
+	public static function espera_por_tope( $prefijo = 'czuapi_ia', $por_minuto = null, $por_dia = null ) {
+		$por_minuto = null === $por_minuto ? self::tope_minuto() : max( 0, (int) $por_minuto );
+		$por_dia    = null === $por_dia ? self::tope_dia() : max( 0, (int) $por_dia );
+
 		$ip  = isset( $_SERVER['REMOTE_ADDR'] ) ? (string) $_SERVER['REMOTE_ADDR'] : 'sin-ip'; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
 		$ip  = md5( $ip );
 		$now = time();
 
-		$minuto = 'czuapi_ia_min_' . $ip . '_' . (int) floor( $now / MINUTE_IN_SECONDS );
-		$dia    = 'czuapi_ia_dia_' . $ip . '_' . gmdate( 'Ymd', $now );
+		$minuto = $prefijo . '_min_' . $ip . '_' . (int) floor( $now / MINUTE_IN_SECONDS );
+		$dia    = $prefijo . '_dia_' . $ip . '_' . gmdate( 'Ymd', $now );
 
 		$n_min = (int) get_transient( $minuto );
 		$n_dia = (int) get_transient( $dia );
 
-		if ( self::tope_dia() > 0 && $n_dia >= self::tope_dia() ) {
+		if ( $por_dia > 0 && $n_dia >= $por_dia ) {
 			return max( 60, DAY_IN_SECONDS - ( $now % DAY_IN_SECONDS ) );
 		}
-		if ( self::tope_minuto() > 0 && $n_min >= self::tope_minuto() ) {
+		if ( $por_minuto > 0 && $n_min >= $por_minuto ) {
 			return max( 1, MINUTE_IN_SECONDS - ( $now % MINUTE_IN_SECONDS ) );
 		}
 

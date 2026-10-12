@@ -67,7 +67,7 @@ class PROMOTUR_Audit {
 			'cuenta_editada', 'clave_cambiada',
 			'media_borrada', 'estructura_creada', 'estructura_borrada',
 			'asistente_conocimiento', 'asistente_personalidad', 'asistente_memoria',
-			'asistente_fuentes', 'asistente_olvidar',
+			'asistente_fuentes', 'asistente_olvidar', 'asistente_presentacion',
 			'update_settings',
 			'traduccion_guardada', 'traduccion_importada', 'traduccion_rechazada',
 		);

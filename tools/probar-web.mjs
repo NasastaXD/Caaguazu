@@ -648,6 +648,97 @@ if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
 		await ctx.close();
 		lim.matar();
 	}
+
+	// --- La vista previa de lo no publicado (2.1.0) ---------------------------
+	//
+	// La cookie `czu_revisa` es la pista que deja el panel; el servidor de
+	// prueba la toma además como la sesión del profesor (WEB_BORRADORES=1).
+	const pre = await levantarPhp( { WEB_PRESENTACION: '1', WEB_BORRADORES: '1', WEB_LATENCIA_MS: '0' } );
+	{
+		const { ctx, p, errores } = await abrir();
+		let pidio = false;
+		p.on( 'request', ( r ) => { if ( r.url().includes( '/borradores' ) ) { pidio = true; } } );
+		await p.goto( pre.PHP + '/turismo/#/inicio' );
+		await p.waitForSelector( '.grilla', { timeout: 9000 } );
+		ok( 'un turista no ve borradores', await p.locator( '#borradores' ).count() === 0 );
+		ok( 'y su visita no le pide nada de más a la API', ! pidio );
+		ok( 'sin errores de página', errores.length === 0, errores.join( '|' ) );
+		await ctx.close();
+	}
+	{
+		const { ctx, p, errores } = await abrir();
+		await ctx.addCookies( [ { name: 'czu_revisa', value: '1', url: pre.PHP } ] );
+		await p.goto( pre.PHP + '/turismo/#/inicio' );
+		await p.waitForSelector( '#borradores', { timeout: 9000 } ).catch( () => {} );
+		ok( 'el profesor ve sus borradores en el inicio, con sello', await p.locator( '#borradores .sello--borrador' ).count() > 0 );
+		await p.locator( '#borradores a[href="#/ficha/260?borrador=1"]' ).click();
+		await p.waitForSelector( '.ficha__titulo', { timeout: 9000 } );
+		ok( 'la ficha en borrador se abre, con sello y sin compartir', await p.locator( '.portada .sello--borrador' ).count() === 1 && await p.locator( '#ficha-compartir' ).count() === 0 );
+		ok( 'sin errores de página', errores.length === 0, errores.join( '|' ) );
+		await ctx.close();
+	}
+
+	// --- La presentación: la esfera y el teléfono como micrófono -------------
+	//
+	// Chromium sin red no transcribe: un dictado falso devuelve una frase fija,
+	// con un parcial antes, como el de verdad. La API de prueba contesta sin
+	// audio, así que también se ejercita el plan B de la voz del navegador.
+	const dictadoFalso = () => {
+		class SR {
+			start() {
+				this.t1 = setTimeout( () => this.onresult?.( { resultIndex: 0, results: [ Object.assign( [ { transcript: 'hola cómo' } ], { isFinal: false } ) ] } ), 300 );
+				this.t2 = setTimeout( () => this.stop(), 1200 );
+			}
+			stop() {
+				if ( this.fin ) { return; }
+				this.fin = true; clearTimeout( this.t1 ); clearTimeout( this.t2 );
+				this.onresult?.( { resultIndex: 0, results: [ Object.assign( [ { transcript: 'cómo funciona esto' } ], { isFinal: true } ) ] } );
+				setTimeout( () => this.onend?.(), 50 );
+			}
+			abort() { this.fin = true; setTimeout( () => this.onend?.(), 10 ); }
+		}
+		window.SpeechRecognition = SR;
+		window.webkitSpeechRecognition = SR;
+	};
+	{
+		ok( '/turismo/presentacion sin barra redirige a la carpeta, con su sala', ( await fetch( pre.PHP + '/turismo/presentacion?sala=ABCD', { redirect: 'manual' } ) ).headers.get( 'location' ) === '/turismo/presentacion/?sala=ABCD' );
+
+		const pantalla = await abrir( { viewport: { width: 1280, height: 720 }, hasTouch: false, isMobile: false } );
+		await pantalla.p.addInitScript( dictadoFalso );
+		await pantalla.p.goto( pre.PHP + '/turismo/presentacion/' );
+		await pantalla.p.waitForFunction( () => ! document.getElementById( 'empezar' ).disabled, null, { timeout: 9000 } );
+		await pantalla.p.click( '#empezar' );
+		await pantalla.p.waitForTimeout( 400 );
+		await pantalla.p.keyboard.press( 'Space' );
+		await pantalla.p.waitForTimeout( 200 );
+		ok( 'la barra espaciadora (o el control de diapositivas) la pone a escuchar', ( await pantalla.p.textContent( '#estado' ) ) === 'Escuchando' );
+		await pantalla.p.waitForFunction( () => document.querySelectorAll( '#respuesta .palabra' ).length > 5, null, { timeout: 9000 } ).catch( () => {} );
+		ok( 'contesta, con lo preguntado arriba', ( await pantalla.p.textContent( '#pregunta' ) ).includes( 'cómo funciona esto' ) && await pantalla.p.locator( '#respuesta .palabra' ).count() > 5 );
+
+		// La sala: el teléfono habla, la pantalla muestra y dice.
+		await pantalla.p.keyboard.press( 'Escape' );
+		await pantalla.p.keyboard.press( 's' );
+		await pantalla.p.click( '#crear-sala' );
+		const codigo = ( await pantalla.p.textContent( '#codigo' ) ).trim();
+		ok( 'crea una sala con código y QR', /^[A-Z0-9]{6}$/.test( codigo ) && await pantalla.p.locator( '#qr svg' ).count() === 1 && await pantalla.p.locator( '#crear-sala' ).isHidden() );
+		await pantalla.p.keyboard.press( 'Escape' );
+
+		const tel = await abrir();
+		await tel.p.addInitScript( dictadoFalso );
+		await tel.p.goto( `${ pre.PHP }/turismo/presentacion/?sala=${ codigo }&modo=control` );
+		await tel.p.waitForFunction( () => ! document.getElementById( 'empezar' ).disabled, null, { timeout: 9000 } );
+		await tel.p.click( '#empezar' );
+		await tel.p.waitForTimeout( 300 );
+		await tel.p.locator( '#orbe' ).tap();
+		const vioEscuchar = await pantalla.p.waitForFunction( () => document.getElementById( 'estado' ).textContent === 'Escuchando', null, { timeout: 5000 } ).then( () => true ).catch( () => false );
+		ok( 'la pantalla ve que el teléfono está escuchando', vioEscuchar );
+		const dijo = await pantalla.p.waitForFunction( () => ( document.getElementById( 'respuesta' ).textContent || '' ).includes( 'cómo funciona esto' ), null, { timeout: 9000 } ).then( () => true ).catch( () => false );
+		ok( 'y dice la respuesta a lo que se habló en el teléfono', dijo );
+		ok( 'sin errores de página, ni en la pantalla ni en el teléfono', pantalla.errores.length + tel.errores.length === 0, [ ...pantalla.errores, ...tel.errores ].join( '|' ) );
+		await tel.ctx.close();
+		await pantalla.ctx.close();
+	}
+	pre.matar();
 }
 
 await navegador.close();

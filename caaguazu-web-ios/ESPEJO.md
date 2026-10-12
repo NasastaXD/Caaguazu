@@ -46,6 +46,10 @@ js/vendor/qrcode.js      qrcode-generator de Kazuhiko Arase (MIT), sin tocar
 textos/{es,en,pt}.json   respaldo embebido de los textos de la interfaz
 manifest.webmanifest     para «agregar a inicio» en iOS y Android
 assets/icon-*.png        isotipo oficial, copiado de caaguazu-theme
+presentacion/            página aparte: la esfera que habla, para un escenario
+  index.html             (el plugin sirve una carpeta por su index.html)
+  pres.css               siempre oscura; los colores de la esfera, arriba
+  pres.js                esfera, oído, voz, subtítulos y la sala del teléfono
 ```
 
 ## Decisiones que vale la pena explicar
@@ -94,3 +98,26 @@ cambiar de tema, preguntarle al asistente, el error de «demasiadas
 preguntas», las direcciones de 1.x—. `tools/verificar-web-ios.php` cubre el
 plugin: las dos direcciones, que `/turismo/` no toque `/turismo-panel/`, los
 enlaces de tienda y la caché.
+
+## La presentación
+
+`presentacion/` es otra página, no una pantalla de la web: no carga `app.js`
+ni la barra, y va siempre en oscuro, porque en un proyector un fondo claro
+encandila y apaga la esfera. Lo que tiene que saber:
+
+- **El primer toque es obligatorio.** Ningún navegador deja sonar nada sin que
+  alguien haya tocado la página; por eso abre con «Empezar». Ese toque también
+  pide el micrófono, antes de que haya público mirando.
+- **Oído**: el dictado del navegador (Chrome lo hace gratis y al instante, con
+  el micrófono del sistema) o, si en el panel se eligió el servidor, se graba
+  con el micrófono elegido en los ajustes de la página y se transcribe allá.
+  Corta solo tras un segundo de silencio después de haber oído voz.
+- **Voz**: el audio viene con la respuesta; si no viene o no suena, habla la voz
+  del navegador. Los subtítulos siguen al audio por su duración, o a la voz del
+  navegador por sus avisos de palabra.
+- **Sala**: la pantalla pregunta por su sala cada segundo (más seguido mientras
+  alguien habla) y la primera vez sólo aprende el turno, para no repetir lo que
+  se dijo antes de abrirla. El teléfono avisa que escucha y manda lo que va
+  entendiendo, como mucho dos veces por segundo.
+- Con «reducir movimiento», la esfera deja de moverse y sólo cambia de color.
+

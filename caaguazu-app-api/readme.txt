@@ -71,6 +71,17 @@ Namespace: `/wp-json/czu-app/v1/`
 * `GET /asistente` — `{ disponible }`: si la app tiene que mostrar el botón
 * `POST /asistente` — `{ mensaje, conversacion?, idioma? }` → `{ respuesta, fuentes[], conversacion, idioma }`
 
+= Presentación =
+* `GET /presentacion` — `{ disponible, oido, idioma, voz }`: si está prendida, quién transcribe (`navegador` o `servidor`) y quién habla
+* `POST /presentacion` — `{ mensaje, conversacion?, sala?, audio? }` → `{ respuesta, conversacion, audio }`; `audio` es un `data:` con el MP3, o `null` (entonces habla el navegador)
+* `POST /presentacion/oir` — multipart con `audio` → `{ texto }`. Sólo si la transcripción está en el servidor
+* `GET /presentacion/sala/{codigo}?desde={turno}` — lo que mira la pantalla cada segundo; el audio viaja sólo en el turno nuevo
+* `POST /presentacion/sala/{codigo}` — `{ estado: listo|escuchando, parcial? }`: el teléfono avisa que está escuchando
+
+= Vista previa =
+* `GET /borradores` — fichas y artículos que todavía no se publicaron, con su `estado`. Sólo para cuentas con `promotur_review_content` (el Profesor), por la cookie del panel o el token de la app
+* `GET /inventario/{id}?borrador=1` y `GET /articulos/{id}?borrador=1` — el detalle de lo no publicado, para esas mismas cuentas. Sin el parámetro, o sin permiso, sigue siendo un 404
+
 == Decisiones que conviene conocer ==
 
 **El autor no es `post_author`.** WordPress exige un autor válido en cada
@@ -156,6 +167,31 @@ depende de cómo se llame el tag.
   no está funcionando.
 * Repo privado: definir `CZUAPI_GITHUB_TOKEN` (PAT de solo lectura) en
   `wp-config.php`, o cargarlo desde **Caaguazú API → Actualizaciones**.
+
+== Cambios en 0.11.0 ==
+
+* **El asistente de la presentación** (`CZUAPI_Presentacion`). Una página aparte
+  de la web —una esfera que escucha y contesta en voz alta— para mostrar el
+  proyecto en un escenario. Usa el mismo proveedor de IA que el asistente de la
+  app, con su propio guion (personalidad y conocimiento) y, si se quiere, lo
+  publicado. Se configura en el panel, «Asistente» → «Presentación».
+* Voz generada en el servidor con MiniMax, ElevenLabs o un servicio compatible
+  con OpenAI. La key no sale del servidor; se puede fijar en wp-config.php con
+  `CZUAPI_VOZ_KEY`. Sin proveedor, o si falla, la página habla con la voz del
+  navegador.
+* Oído: lo hace el navegador, o se graba y se transcribe en el servidor con un
+  servicio tipo Whisper (`CZUAPI_OIDO_KEY`). Lo segundo permite elegir un
+  micrófono externo.
+* Sala: un teléfono puede hacer de micrófono de la pantalla. La sala vive 15
+  minutos sin uso; el audio se guarda aparte del estado para que la consulta de
+  cada segundo no lo arrastre.
+* Tope propio para la presentación: 30 preguntas por minuto y 600 por día por
+  IP, separado del asistente de la app.
+* **Vista previa de lo no publicado** (`CZUAPI_Borradores`): `GET /borradores`
+  y el detalle con `?borrador=1`, para quien puede revisar en el panel. Toda
+  respuesta sale `private, no-store`. La API pública no cambia.
+* `CZUAPI_Asistente::preguntar()` acepta un prompt, un tope de tokens y una
+  memoria propios: es como la presentación usa el mismo proveedor sin copiarlo.
 
 == Cambios en 0.10.0 ==
 

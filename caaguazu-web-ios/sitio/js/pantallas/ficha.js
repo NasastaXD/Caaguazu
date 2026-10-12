@@ -7,7 +7,8 @@ import { escapar, Icono, precioA, fechaLarga, filaArticulo, botonFavorito, error
 import { enlacePunto } from "../mapas.js";
 import { compartir } from "../compartir.js";
 
-export async function render(el, { id, vigente }) {
+export async function render(el, { id, params, vigente }) {
+  const borrador = params?.get("borrador") === "1";
   el.innerHTML = `
     <div class="portada esqueleto" style="border-radius:0"></div>
     <div class="ficha">
@@ -18,7 +19,7 @@ export async function render(el, { id, vigente }) {
 
   let f;
   try {
-    f = await Api.ficha(id);
+    f = await Api.ficha(id, { borrador });
   } catch {
     if (vigente()) el.innerHTML = cabeceraError() + error();
     return;
@@ -49,10 +50,11 @@ export async function render(el, { id, vigente }) {
       ${f.portada?.credito ? `<span class="portada__credito">${escapar(f.portada.credito)}</span>` : ""}
       <div class="flotantes">
         <button type="button" class="boton-icono" data-volver aria-label="${escapar(t("accion.volver"))}">${Icono.volver}</button>
+        ${f.estado ? `<span class="sello sello--borrador" style="position:static">${escapar(t("web.borrador"))}</span>` : `
         <div class="flotantes__der">
           <button type="button" class="boton-icono" id="ficha-compartir" aria-label="${escapar(t("diag.compartir"))}">${Icono.compartir}</button>
           ${botonFavorito(f.id)}
-        </div>
+        </div>`}
       </div>
     </div>
 
@@ -107,7 +109,8 @@ export async function render(el, { id, vigente }) {
     </article>
   `;
 
-  el.querySelector("#ficha-compartir").addEventListener("click", () => compartir({ titulo: f.titulo, ruta: `ficha/${f.id}` }));
+  // Un borrador no se comparte ni se guarda: su enlace no le abre a nadie más.
+  el.querySelector("#ficha-compartir")?.addEventListener("click", () => compartir({ titulo: f.titulo, ruta: `ficha/${f.id}` }));
   el.querySelector("#ficha-agendar")?.addEventListener("click", () => abrirCalendario(f));
 }
 

@@ -267,6 +267,7 @@ class PROMOTUR_Router {
 				}
 
 				$this->guard_panel();
+				promotur_pista_revisor( caaguazu_account_can( 'promotor', 'promotur_review_content' ) );
 				status_header( 200 );
 				$section = ! empty( $parts[0] ) ? sanitize_key( $parts[0] ) : 'home';
 				$id      = isset( $parts[1] ) ? sanitize_text_field( $parts[1] ) : null;

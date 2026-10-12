@@ -356,6 +356,7 @@ class PROMOTUR_Auth {
 	/* ----- Salir ----- */
 	public function logout() {
 		caaguazu_account_logout();
+		promotur_pista_revisor( false );
 		wp_safe_redirect( promotur_url( 'login' ) );
 		exit;
 	}

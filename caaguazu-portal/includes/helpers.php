@@ -801,6 +801,36 @@ function promotur_route_activa( $route ) {
  * Se llama en el despacho, así que cubre todas las rutas del panel: las
  * secciones, las de acceso y las dos puertas de datos.
  */
+/**
+ * La pista que lee la web de turismo para saber si vale la pena pedir la vista
+ * previa de lo no publicado.
+ *
+ * NO es un permiso: la cookie es legible desde JavaScript y cualquiera la
+ * puede escribir. El permiso lo decide la API en cada pedido con la sesión de
+ * verdad (ver CZUAPI_Borradores). Lo que la pista evita es que TODA visita a
+ * la web —turistas incluidos— haga un pedido de más a un hosting que ya anda
+ * al límite, sólo para enterarse de que no es profesor.
+ *
+ * Se escribe al abrir el panel, que es justo cuando se sabe quién es, y se
+ * borra al salir.
+ *
+ * @param bool $puede ¿la cuenta puede revisar contenido?
+ */
+function promotur_pista_revisor( $puede ) {
+	$nombre = 'czu_revisa';
+	if ( headers_sent() || ( $puede && ! empty( $_COOKIE[ $nombre ] ) ) || ( ! $puede && empty( $_COOKIE[ $nombre ] ) ) ) {
+		return;
+	}
+	setcookie( $nombre, $puede ? '1' : '', array(
+		'expires'  => $puede ? time() + 30 * DAY_IN_SECONDS : time() - HOUR_IN_SECONDS,
+		'path'     => defined( 'COOKIEPATH' ) && COOKIEPATH ? COOKIEPATH : '/',
+		'domain'   => defined( 'COOKIE_DOMAIN' ) && COOKIE_DOMAIN ? COOKIE_DOMAIN : '',
+		'secure'   => is_ssl(),
+		'httponly' => false,
+		'samesite' => 'Lax',
+	) );
+}
+
 function promotur_no_cachear() {
 	nocache_headers();
 

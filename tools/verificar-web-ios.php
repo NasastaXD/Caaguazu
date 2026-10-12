@@ -292,6 +292,19 @@ comprobar( 'el comodín', CZUWIOS_Servidor::etag_coincide( '*', $et ), true );
 comprobar( 'uno distinto NO coincide', CZUWIOS_Servidor::etag_coincide( '"abc124"', $et ), false );
 comprobar( 'vacío NO coincide', CZUWIOS_Servidor::etag_coincide( '', $et ), false );
 
+echo "\n" . $gris . '== Páginas aparte: una carpeta con su index.html (2.1.0) ==' . $fin . "\n";
+
+comprobar( 'presentacion/ es una página', CZUWIOS_Servidor::carpeta_de( 'presentacion/' ), 'presentacion' );
+comprobar( 'presentacion sin barra también (se redirige con barra)', CZUWIOS_Servidor::carpeta_de( 'presentacion' ), 'presentacion' );
+comprobar( 'una carpeta de código NO es una página', CZUWIOS_Servidor::carpeta_de( 'js/' ), null );
+comprobar( 'un archivo NO es una carpeta', CZUWIOS_Servidor::carpeta_de( 'presentacion/pres.js' ), null );
+comprobar( 'subir con .. NO sale de sitio/', CZUWIOS_Servidor::carpeta_de( '../sitio/presentacion/' ), null );
+comprobar( 'lo que no existe NO es una página', CZUWIOS_Servidor::carpeta_de( 'nada/' ), null );
+
+$pres = CZUWIOS_Servidor::preparar_html( (string) file_get_contents( CZUWIOS_SITIO . 'presentacion/index.html' ), $v, CZUWIOS_Servidor::base_directa(), $aj_prueba );
+comprobar( 'la presentación recibe los ajustes (dónde está la API)', (bool) strpos( $pres, 'id="czu-ajustes"' ), true );
+comprobar( 'y sus archivos siguen relativos a su carpeta', (bool) strpos( $pres, 'src="pres.js"' ) && (bool) strpos( $pres, 'href="pres.css"' ), true );
+
 echo "\n";
 if ( $fallos ) {
 	echo $rojo . "  $fallos comprobación/es fallaron." . $fin . "\n\n";

@@ -36,6 +36,9 @@ define( 'WEEK_IN_SECONDS', 604800 );
 
 // La key de mentira con la que se prueba que el aviso la tacha.
 define( 'CZUAPI_IA_KEY', 'sk-prueba-1234567890abcdef' );
+// Y las de la voz y el oído de la presentación, que tampoco pueden salir.
+define( 'CZUAPI_VOZ_KEY', 'voz9f8e7d6c5b4a3210' );
+define( 'CZUAPI_OIDO_KEY', 'oido0a1b2c3d4e5f6789' );
 
 $GLOBALS['czu_opciones'] = array();
 function get_option( $k, $d = false ) { return array_key_exists( $k, $GLOBALS['czu_opciones'] ) ? $GLOBALS['czu_opciones'][ $k ] : $d; }
@@ -49,6 +52,7 @@ function add_action( ...$a ) {}
 $raiz = dirname( __DIR__ );
 require $raiz . '/caaguazu-app-api/includes/class-asistente-fuentes.php';
 require $raiz . '/caaguazu-app-api/includes/class-asistente.php';
+require $raiz . '/caaguazu-app-api/includes/class-presentacion.php';
 
 $fallos = 0;
 function comprobar( $etiqueta, $obtenido, $esperado ) {
@@ -197,6 +201,43 @@ comprobar( 'memoria: horas entre 1 y 24', array( $A::normalizar_horas( 0 ), $A::
 comprobar( 'fuentes: sólo valores conocidos, en orden fijo', $A::normalizar_fuentes( array( 'articulos', 'basura', 'lugares', '<script>' ) ), array( 'lugares', 'articulos' ) );
 comprobar( 'fuentes: lo que no es lista no prende nada', $A::normalizar_fuentes( 'lugares' ), array() );
 comprobar( 'personalidad: los saltos de Windows no hacen diferencia para saber si es la de fábrica', $A::normalizar_texto( "a\r\nb" ), "a\nb" );
+
+/* ------------------------------------------------------------------------- */
+echo "\n== Presentación ==\n";
+
+$P = 'CZUAPI_Presentacion';
+
+/*
+ * Lo que se manda a convertir en voz: el sintetizador lee todo tal cual, así
+ * que un guion de lista se oiría como «guion» y una dirección web, letra por
+ * letra.
+ */
+comprobar( 'la voz no lee guiones de lista: cada renglón es una frase', $P::para_voz( "Tres cosas:\n- la app\n- la web\n- el panel" ), 'Tres cosas: la app. la web. el panel.' );
+comprobar( 'ni números de lista', $P::para_voz( "1. Primero\n2) Después" ), 'Primero. Después.' );
+comprobar( 'ni direcciones web', $P::para_voz( 'Entrá a https://caaguazu.net/turismo para verlo.' ), 'Entrá a para verlo.' );
+comprobar( 'no le agrega punto a lo que ya termina', $P::para_voz( '¿Qué tal?' ), '¿Qué tal?' );
+comprobar( 'vacío es vacío', $P::para_voz( "  \n " ), '' );
+
+comprobar( 'velocidad entre 0,5 y 2, con coma o con punto', array( $P::normalizar_velocidad( '0,2' ), $P::normalizar_velocidad( 9 ), $P::normalizar_velocidad( '1.25' ), $P::normalizar_velocidad( '' ) ), array( 0.5, 2.0, 1.25, 1.0 ) );
+comprobar( 'idioma del dictado: una etiqueta BCP 47 o es-PY', array( $P::normalizar_idioma( 'es-AR' ), $P::normalizar_idioma( 'gn' ), $P::normalizar_idioma( 'es PY; drop' ), $P::normalizar_idioma( '' ) ), array( 'es-AR', 'gn', 'es-PY', 'es-PY' ) );
+comprobar( 'código de sala: letras y números, en mayúsculas', array( $P::sala_valida( 'ab12cd' ), $P::sala_valida( 'ab' ), $P::sala_valida( '../x' ), $P::sala_valida( 'ABCDEFGHIJKLM' ) ), array( 'AB12CD', '', '', '' ) );
+
+comprobar( 'el panel muestra sólo el final de una key', $P::pista_key( 'sk-abcdefgh1234' ), '…1234' );
+comprobar( 'y nada si no hay', $P::pista_key( '' ), '' );
+$error = $P::redactar( 'HTTP 401 — invalid key voz9f8e7d6c5b4a3210 / oido0a1b2c3d4e5f6789 / sk-prueba-1234567890abcdef' );
+comprobar( 'un error del proveedor NUNCA lleva la key de la voz', false !== strpos( $error, 'voz9f8e7d6c5b4a3210' ), false );
+comprobar( 'ni la del oído', false !== strpos( $error, 'oido0a1b2c3d4e5f6789' ), false );
+comprobar( 'ni la del asistente', false !== strpos( $error, 'sk-prueba-1234567890abcdef' ), false );
+
+/*
+ * El recorte del prompt: con poco presupuesto, el guion —lo único que se
+ * escribió para esta charla— es lo último que se cae.
+ */
+$GLOBALS['czu_opciones'] = array( 'czuapi_pres_conocimiento' => str_repeat( 'guion ', 400 ), 'czuapi_ia_presupuesto' => 4000 );
+$prompt = $P::armar_sistema( array( 'catalogo' => str_repeat( 'catalogo ', 2000 ), 'detalle' => '' ), 'es' );
+comprobar( 'con poco presupuesto se va el catálogo y queda el guion', array( false !== strpos( $prompt, '[GUION]' ), false !== strpos( $prompt, 'catalogo catalogo catalogo catalogo catalogo catalogo catalogo catalogo catalogo catalogo catalogo' ) ), array( true, false ) );
+comprobar( 'las reglas de la voz van siempre', false !== strpos( $prompt, '# CÓMO SE ESCUCHA' ), true );
+$GLOBALS['czu_opciones'] = array();
 
 /* ------------------------------------------------------------------------- */
 echo "\n" . ( $fallos ? "\033[31m{$fallos} comprobación(es) fallaron.\033[0m\n" : "\033[32mTodo bien.\033[0m\n" );

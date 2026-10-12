@@ -307,6 +307,9 @@ a.eyebrow { display: inline-flex; align-items: center; min-height: 44px; margin:
 /* Etiqueta sobre la foto: evento, en curso. */
 .sello { position: absolute; left: 10px; top: 10px; padding: .25em .7em; border-radius: var(--r-full); background: var(--papel); color: var(--texto); font-size: .72rem; font-weight: 600; box-shadow: var(--sombra); }
 .sello--ahora { background: var(--tinte-alza); color: var(--alza); }
+/* Lo no publicado, en la vista previa del profesor: el color de «en espera». */
+.sello--borrador { background: var(--tinte-espera); color: var(--espera); }
+.eyebrow--borrador { color: var(--espera); }
 
 /* El corazón: vidrio sobre la foto, para leerse con cualquier imagen debajo. */
 .corazon {

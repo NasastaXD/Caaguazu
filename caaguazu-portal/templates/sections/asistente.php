@@ -14,6 +14,7 @@ $etiquetas = array(
 	'memoria'      => __( 'Memoria', 'caaguazu-portal' ),
 	'fuentes'      => __( 'Fuentes', 'caaguazu-portal' ),
 	'probar'       => __( 'Probar', 'caaguazu-portal' ),
+	'presentacion' => __( 'Presentación', 'caaguazu-portal' ),
 );
 $nombres_fuentes = array(
 	'lugares'    => __( 'Lugares', 'caaguazu-portal' ),
@@ -171,6 +172,9 @@ $body = function () use ( $disponible, $pestana, $etiquetas, $nombres_fuentes ) 
 					</div>
 				</form>
 			</div>
+
+		<?php elseif ( 'presentacion' === $pestana ) : ?>
+			<?php include PROMOTUR_DIR . 'templates/partials/presentacion.php'; ?>
 
 		<?php else : ?>
 			<div class="promotur-card" data-asistente-prueba
