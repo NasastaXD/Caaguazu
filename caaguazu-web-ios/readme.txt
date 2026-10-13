@@ -131,6 +131,19 @@ propio, idioma elegido), y eso vive en su navegador, no acá.
 
 == Changelog ==
 
+= 2.4.1 =
+* La página de la propuesta pasa a `/turismo/propuesta/` (antes `/turismo/proyecto/`).
+
+= 2.4.0 =
+* **El proyecto, contado en una página**, en `/turismo/proyecto/`, para
+  compartir con un enlace (por ejemplo, con la asociación de turismo): qué es,
+  de dónde sale la información (investigación, redacción, revisión docente,
+  publicación y traducción), los tres idiomas, que es gratis para el visitante
+  y en qué punto está.
+* Demo en vivo con tres pestañas: la guía real, el asistente de chat y el panel
+  (maqueta con datos de ejemplo). En pantalla ancha va dentro de un teléfono
+  dibujado; en un celular se abre a pantalla completa, y «atrás» la cierra.
+
 = 2.3.0 =
 * Vitrina: **modo proyección** (tecla P, o `?proyectar=1`): sin pestañas ni QR,
   sólo los aparatos, a pantalla completa, y el cursor se esconde quieto. Se

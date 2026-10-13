@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Caaguazú Go · Propuesta</title>
+<!-- Se comparte por enlace; no es para que la encuentre un buscador. -->
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#f4f4f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e0e10" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="../assets/icon-192.png">
+<link rel="preload" href="../fuentes/inter-600.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="propuesta.css">
+</head>
+<body>
+
+<!--
+  Presentación del proyecto en la web, para compartir con un enlace: qué es,
+  una demo en vivo (la guía de verdad, el asistente de chat y el panel con
+  datos de ejemplo) y de dónde sale la información.
+
+  La demo: en una pantalla ancha va dentro de un teléfono dibujado; en un
+  celular, cada demo se abre a pantalla completa con un botón para cerrar.
+-->
+
+<header class="portada">
+  <img class="portada__icono" src="../assets/icon-192.png" alt="" width="64" height="64">
+  <p class="antetitulo">CEAD Félix de Guarania · En desarrollo</p>
+  <h1>Caaguazú Go</h1>
+  <p class="bajada">Una guía turística digital y gratuita de Caaguazú, hecha por los alumnos del Bachillerato Técnico en Servicios Turísticos.</p>
+  <a class="boton boton--primario" href="#demo">Probala en vivo</a>
+</header>
+
+<main>
+  <section class="bloque bloque--demo" id="demo">
+    <div class="bloque__texto">
+      <h2>Probala en vivo</h2>
+      <p>Es la guía real, con la información cargada hasta hoy.</p>
+
+      <div class="pestanas" role="tablist">
+        <button type="button" class="pestana" role="tab" data-demo="guia" aria-selected="true">Guía</button>
+        <button type="button" class="pestana" role="tab" data-demo="asistente" aria-selected="false">Asistente</button>
+        <button type="button" class="pestana" role="tab" data-demo="panel" aria-selected="false">Panel</button>
+      </div>
+
+      <div class="explicacion" data-para="guia">
+        <p>Lo que ve el visitante: lugares, eventos, artículos y recorridos, con su foto, horario, precio y cómo llegar.</p>
+      </div>
+      <div class="explicacion" data-para="asistente" hidden>
+        <p>Un asistente de chat que responde preguntas sobre qué visitar, horarios o cómo llegar, con la información publicada en la guía.</p>
+      </div>
+      <div class="explicacion" data-para="panel" hidden>
+        <p>Donde los alumnos cargan lo que escriben y los docentes lo revisan antes de publicarlo.</p>
+        <p class="nota">Vista previa con datos de ejemplo.</p>
+      </div>
+
+      <!-- En un celular la demo no entra al costado: se abre entera. -->
+      <button type="button" class="boton boton--primario solo-celular" id="abrir-demo">Abrir</button>
+    </div>
+
+    <div class="telefono solo-ancho" aria-hidden="false">
+      <div class="telefono__pantalla">
+        <span class="telefono__estado" aria-hidden="true"><span class="telefono__isla"></span></span>
+        <iframe id="marco-demo" title="Demo" loading="lazy"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <section class="bloque">
+    <h2>¿De dónde sale la información?</h2>
+    <p>Todo lo que muestra la guía lo hacen los alumnos, y pasa por los docentes antes de publicarse.</p>
+    <ol class="pasos">
+      <li><span class="pasos__n">1</span><div><h3>Investigación</h3><p>Los alumnos investigan y verifican la información de cada sitio.</p></div></li>
+      <li><span class="pasos__n">2</span><div><h3>Redacción</h3><p>Escriben las fichas de cada lugar y los artículos.</p></div></li>
+      <li><span class="pasos__n">3</span><div><h3>Revisión</h3><p>Los docentes revisan cada pieza y la aprueban.</p></div></li>
+      <li><span class="pasos__n">4</span><div><h3>Publicación</h3><p>Lo aprobado se sube a la plataforma.</p></div></li>
+      <li><span class="pasos__n">5</span><div><h3>Traducción</h3><p>Alumnos o docentes lo traducen al inglés y al portugués.</p></div></li>
+    </ol>
+  </section>
+
+  <section class="bloque bloque--doble">
+    <div class="tarjeta">
+      <h2>Tres idiomas</h2>
+      <p>Español, inglés y portugués. El visitante elige el idioma y la guía cambia. Los textos de cada lugar se traducen después de aprobarse.</p>
+    </div>
+    <div class="tarjeta">
+      <h2>Gratis para el visitante</h2>
+      <p>Se usa desde el celular o la computadora, sin registrarse y sin pagar.</p>
+    </div>
+  </section>
+
+  <section class="bloque">
+    <h2>¿En qué punto estamos?</h2>
+    <p>Caaguazú Go está en desarrollo. Estamos cargando los contenidos y preparando la app para Android y iPhone.</p>
+  </section>
+</main>
+
+<footer class="pie">
+  <p>Centro Educativo de Alto Desempeño Félix de Guarania · Caaguazú, 2026</p>
+</footer>
+
+<!-- La demo a pantalla completa, para celulares. -->
+<div class="capa" id="capa" hidden>
+  <div class="capa__barra">
+    <span class="capa__titulo" id="capa-titulo"></span>
+    <button type="button" class="capa__cerrar" id="cerrar-capa" aria-label="Cerrar">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <iframe id="marco-capa" title="Demo"></iframe>
+</div>
+
+<script src="propuesta.js" defer></script>
+</body>
+</html>
