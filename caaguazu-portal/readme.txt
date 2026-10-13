@@ -60,6 +60,11 @@ llamen los tags.
 
 == Changelog ==
 
+= 3.15.4 =
+* Datos de prueba: «Cargar y publicar (demo)» deja las fichas de la
+  investigación publicadas, para mostrar la app en vivo. Pide confirmación, y
+  «Borrar los de prueba» las quita. El botón de borradores no cambia.
+
 = 3.15.3 =
 * Presentación → Oído: opción «ElevenLabs en tiempo real» y segundos de pausa
   para cortar la frase. Requiere la API 0.11.3.

@@ -12,7 +12,7 @@
  *
  * LO QUE NO HACE, A PROPÓSITO
  *
- * No publica nada. Todo entra como BORRADOR y con la marca `_promotur_prueba`:
+ * Por defecto no publica nada. Todo entra como BORRADOR y con la marca `_promotur_prueba`:
  * en la web lo ven sólo los profesores (la vista previa de borradores), la app
  * no lo recibe, y para que algo salga al público tiene que pasar por el mismo
  * flujo de revisión que cualquier ficha. Los textos los escribió una
@@ -22,6 +22,13 @@
  * para nadie más, y en la papelera quedarían mezclados con lo que el equipo
  * borró sin querer. Se va también lo que se creó para ellos —las categorías y
  * etiquetas nuevas que quedaron vacías, la foto bajada— y nada más.
+ *
+ * LA DEMO
+ *
+ * Para mostrar la app en vivo hace falta que las fichas salgan publicadas. El
+ * botón «Cargar y publicar (demo)» lo hace, con confirmación, y «Borrar los de
+ * prueba» las quita después. Mientras estén publicadas son públicas y llegan a
+ * la app: por eso se borran al terminar la demo.
  *
  * @package Caaguazu
  */
@@ -95,11 +102,17 @@ class PROMOTUR_Prueba {
 		}
 		$hacer = isset( $_POST['hacer'] ) ? sanitize_key( wp_unslash( $_POST['hacer'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
 
-		if ( 'cargar' === $hacer ) {
-			$r = self::cargar( caaguazu_account_id() );
-			PROMOTUR_Audit::log( 'prueba_cargada', array( 'payload' => $r ) );
-			/* translators: %d: cantidad de fichas */
-			promotur_flash( sprintf( __( 'Listo: %d fichas de prueba cargadas como borrador.', 'caaguazu-portal' ), $r['nuevas'] ), 'success' );
+		if ( 'cargar' === $hacer || 'publicar' === $hacer ) {
+			$publicar = 'publicar' === $hacer;
+			$r = self::cargar( caaguazu_account_id(), $publicar );
+			PROMOTUR_Audit::log( $publicar ? 'prueba_publicada' : 'prueba_cargada', array( 'payload' => $r ) );
+			if ( $publicar ) {
+				/* translators: %d: cantidad de fichas */
+				promotur_flash( sprintf( __( 'Listo: %d fichas de prueba publicadas. Borralas al terminar la demo.', 'caaguazu-portal' ), $r['nuevas'] ), 'success' );
+			} else {
+				/* translators: %d: cantidad de fichas */
+				promotur_flash( sprintf( __( 'Listo: %d fichas de prueba cargadas como borrador.', 'caaguazu-portal' ), $r['nuevas'] ), 'success' );
+			}
 		} elseif ( 'borrar' === $hacer ) {
 			$r = self::borrar();
 			PROMOTUR_Audit::log( 'prueba_borrada', array( 'payload' => $r ) );
@@ -119,10 +132,11 @@ class PROMOTUR_Prueba {
 	 * Carga lo que falte. Correrlo dos veces no duplica: cada entrada lleva su
 	 * clave, y la que ya está se saltea.
 	 *
-	 * @param int $cuenta dueña de las fichas
+	 * @param int  $cuenta   dueña de las fichas
+	 * @param bool $publicar true: salen publicadas (sólo para la demo; se borran después)
 	 * @return array { nuevas, ya_estaban, fotos, sin_foto }
 	 */
-	public static function cargar( $cuenta ) {
+	public static function cargar( $cuenta, $publicar = false ) {
 		$inv = self::investigacion();
 		$out = array( 'nuevas' => 0, 'ya_estaban' => 0, 'fotos' => 0, 'sin_foto' => 0 );
 
@@ -140,7 +154,7 @@ class PROMOTUR_Prueba {
 				$out['ya_estaban']++;
 				continue;
 			}
-			$id = self::crear( $s, $clave, (int) $cuenta, $inv );
+			$id = self::crear( $s, $clave, (int) $cuenta, $inv, $publicar );
 			if ( ! $id ) {
 				continue;
 			}
@@ -163,10 +177,10 @@ class PROMOTUR_Prueba {
 	}
 
 	/** Una ficha de la investigación, como borrador del panel. */
-	private static function crear( array $s, $clave, $cuenta, array $inv ) {
+	private static function crear( array $s, $clave, $cuenta, array $inv, $publicar = false ) {
 		$id = wp_insert_post( array(
 			'post_type'    => PROMOTUR_Destinos::CPT,
-			'post_status'  => 'draft',
+			'post_status'  => $publicar ? 'publish' : 'draft',
 			'post_title'   => sanitize_text_field( (string) $s['titulo'] ),
 			'post_content' => wp_kses_post( (string) ( $s['descripcion'] ?? '' ) ),
 			'post_author'  => function_exists( 'caaguazu_service_user_id' ) ? caaguazu_service_user_id() : get_current_user_id(),
@@ -177,7 +191,10 @@ class PROMOTUR_Prueba {
 
 		update_post_meta( $id, self::META, '1' );
 		update_post_meta( $id, self::META_CLAVE, $clave );
-		update_post_meta( $id, '_promotur_estado', 'borrador' );
+		update_post_meta( $id, '_promotur_estado', $publicar ? 'publicado' : 'borrador' );
+		if ( $publicar ) {
+			update_post_meta( $id, '_promotur_verificado_en', current_time( 'mysql' ) );
+		}
 		PROMOTUR_Destinos::set_owner( $id, $cuenta );
 
 		$evento = 'evento' === ( $s['tipo'] ?? '' );
