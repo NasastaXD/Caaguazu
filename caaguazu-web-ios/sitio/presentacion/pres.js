@@ -795,6 +795,21 @@ function escucharConNavegador(intento = 0) {
   let fallo = "";
   let cancelada = false;
 
+  // Perro guardián: con ruido de fondo el reconocedor puede no cerrar nunca la
+  // frase y la página se queda «escuchando» para siempre. Si lo entendido lleva
+  // un rato sin cambiar se corta (el texto que haya se contesta), y ninguna
+  // escucha dura más de un tope.
+  let relojQuieto = 0;
+  const cortar = (motivo) => {
+    rastro("se corta la escucha:", motivo);
+    try {
+      rec.stop();
+    } catch {
+      /* ya estaba parada */
+    }
+  };
+  const relojTope = setTimeout(() => cortar("tope de tiempo"), 25000);
+
   // Sin medidor propio, la esfera late con estos avisos: el micrófono se abrió,
   // hay un sonido, hay voz, llegó texto. Cada uno es una prueba de que algo
   // anda, y la falta de todos es la prueba de que no.
@@ -827,6 +842,8 @@ function escucharConNavegador(intento = 0) {
       else parcial += r[0].transcript;
     }
     const visto = `${final} ${parcial}`.trim();
+    clearTimeout(relojQuieto);
+    if (visto) relojQuieto = setTimeout(() => cortar("la frase no cambia hace 2,5 s"), 2500);
     pulsoRemoto = 0.95;
     rastro("resultado:", visto);
     mostrarEscuchado(visto);
@@ -837,8 +854,10 @@ function escucharConNavegador(intento = 0) {
     rastro("ERROR:", fallo, e.message || "");
   };
   rec.onend = () => {
+    clearTimeout(relojQuieto);
+    clearTimeout(relojTope);
     escucha = null;
-    const texto = (final || parcial).trim();
+    const texto = `${final} ${parcial}`.trim();
     rastro("end", fallo ? `(error ${fallo})` : "", texto ? `texto: ${texto}` : "sin texto", cancelada ? "(cancelada)" : "");
     if (cancelada) return;
     // Un idioma que este navegador no tiene: se prueba con el siguiente.
@@ -1217,11 +1236,13 @@ function mensajeTiempoReal(ev) {
       // Es lo que va entendiendo; un parcial vacío es sólo la señal de que la
       // conexión sigue viva.
       if (rt.pausado || !m.text) break;
+      vigilarFrase(m.text);
       pulsoRemoto = 0.9;
       mostrarEscuchado(m.text);
       avisarSala("escuchando", m.text);
       break;
     case "committed_transcript":
+      soltarVigilancia();
       frasePorTiempoReal(m.text);
       break;
     case "warning":
@@ -1243,6 +1264,35 @@ function mensajeTiempoReal(ev) {
   }
 }
 
+/**
+ * Perro guardián del corte de frase. El VAD de ElevenLabs corta por silencio;
+ * con ruido de fondo (una sala, una calle) puede no cortar nunca y la página
+ * se queda escuchando sin contestar. Si lo entendido lleva un rato sin cambiar
+ * —o la frase ya dura demasiado—, se da por terminada con lo que haya.
+ */
+function vigilarFrase(texto) {
+  // El mismo texto repetido no es avance: no reinicia la cuenta.
+  if (texto === rt.parcial && rt.relojFrase) return;
+  rt.parcial = texto;
+  rt.inicioFrase ||= Date.now();
+  clearTimeout(rt.relojFrase);
+  const quieto = Math.max(2000, ((config.silencio || 1.5) + 1) * 1000);
+  const resto = Math.max(0, 20000 - (Date.now() - rt.inicioFrase));
+  rt.relojFrase = setTimeout(() => {
+    const t = rt.parcial;
+    rastro("la frase no se cortó sola; se da por terminada:", t);
+    soltarVigilancia();
+    if (t) frasePorTiempoReal(t);
+  }, Math.min(quieto, resto));
+}
+
+function soltarVigilancia() {
+  clearTimeout(rt.relojFrase);
+  rt.relojFrase = 0;
+  rt.parcial = "";
+  rt.inicioFrase = 0;
+}
+
 /** Una frase terminada: lo que se dijo hasta la pausa. */
 function frasePorTiempoReal(texto) {
   texto = String(texto || "").trim();
@@ -1257,6 +1307,7 @@ function frasePorTiempoReal(texto) {
   }
   rastro("frase:", texto);
   rt.pausado = true;
+  soltarVigilancia();
   if (!rt.continuo) {
     escucha = null;
     cerrarTiempoReal();
@@ -1291,6 +1342,7 @@ function reconectarTiempoReal() {
 }
 
 function cerrarTiempoReal() {
+  soltarVigilancia();
   rt.activo = false;
   rt.listo = false;
   rt.pausado = false;

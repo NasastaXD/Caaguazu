@@ -131,6 +131,13 @@ propio, idioma elegido), y eso vive en su navegador, no acá.
 
 == Changelog ==
 
+= 2.1.5 =
+* **Arreglo: en el teléfono se quedaba escuchando para siempre.** Con ruido de
+  fondo el corte de frase (el del navegador o el de ElevenLabs) puede no llegar
+  nunca. Ahora, si lo entendido lleva unos segundos sin cambiar —o la frase
+  pasa de 20 s (tiempo real) o 25 s (dictado)—, se da por terminada y contesta
+  con lo que haya.
+
 = 2.1.4 =
 * **El teléfono escucha siempre, sin tocar nada.** Tras «Empezar» escucha solo,
   frase tras frase, y espera a que la pantalla termine de hablar para no

@@ -808,7 +808,7 @@ if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
 					if ( ++this.conSonido === 4 ) {
 						this.conSonido = 0;
 						this.emitir( { message_type: 'partial_transcript', text: 'hola cómo' } );
-						setTimeout( () => this.emitir( { message_type: 'committed_transcript', text: 'hola cómo funciona esto' } ), 250 );
+						if ( ! window.__sinCommit ) { setTimeout( () => this.emitir( { message_type: 'committed_transcript', text: 'hola cómo funciona esto' } ), 250 ); }
 					}
 				}
 				close() { this.readyState = 3; this.onclose && this.onclose( { code: 1000, reason: '' } ); }
@@ -938,7 +938,7 @@ if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
 					if ( ++this.conSonido === 4 ) {
 						this.conSonido = 0;
 						this.emitir( { message_type: 'partial_transcript', text: 'hola cómo' } );
-						setTimeout( () => this.emitir( { message_type: 'committed_transcript', text: 'hola cómo funciona esto' } ), 250 );
+						if ( ! window.__sinCommit ) { setTimeout( () => this.emitir( { message_type: 'committed_transcript', text: 'hola cómo funciona esto' } ), 250 ); }
 					}
 				}
 				close() { this.readyState = 3; this.onclose && this.onclose( { code: 1000, reason: '' } ); }
@@ -993,6 +993,21 @@ if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
 			await tel.p.waitForTimeout( 3500 );
 			ok( 'quota_exceeded: no se reintenta y el mensaje queda en pantalla', ( await tel.p.evaluate( () => window.__ws.creados.length ) ) === 2 && ( await tel.p.textContent( '#estado' ) ) !== '' );
 			ok( 'sin errores de página', tel.errores.length === 0, tel.errores.join( '|' ) );
+			await tel.ctx.close();
+		}
+
+		// --- Con ruido de fondo el VAD no corta: no se queda escuchando para siempre ---
+		{
+			const tel = await abrir();
+			await tel.p.addInitScript( microfonoFalso );
+			await tel.p.addInitScript( websocketFalso );
+			await tel.p.addInitScript( () => { window.__sinCommit = true; } );
+			await tel.p.goto( rtSrv.PHP + '/turismo/presentacion/?debug=1' );
+			await tel.p.waitForFunction( () => ! document.getElementById( 'empezar' ).disabled, null, { timeout: 9000 } );
+			await tel.p.tap( '#empezar' );
+			ok( 'si el servidor nunca corta la frase, la página la da por terminada y contesta', await esperar( tel.p, () => document.body.dataset.estado === 'pensando' || document.querySelectorAll( '#respuesta .palabra' ).length > 0, 12000 ) );
+			if ( process.env.DBG ) { console.log( 'CH', JSON.stringify( await tel.p.evaluate( () => [ window.__ws.chunks.length, window.__ws.chunks.filter( ( c ) => ! c.cero ).length, window.__sinCommit ] ) ), 'RASTRO', await tel.p.evaluate( () => ( document.querySelector( '.rastro' ) || {} ).innerText ), await tel.p.evaluate( () => document.body.dataset.estado ) ); }
+			ok( 'y lo que preguntó es lo que alcanzó a entender', ( await esperar( tel.p, () => ( document.getElementById( 'pregunta' ).textContent || '' ).includes( 'hola' ), 4000 ) ) );
 			await tel.ctx.close();
 		}
 
