@@ -199,7 +199,18 @@ if ( 0 === strpos( $ruta, '/wp-json/czu-app/v1/' ) ) {
 		}
 		$cuerpo = json_decode( (string) file_get_contents( 'php://input' ), true ) ?: array();
 		if ( 'presentacion' === $r && 'GET' === $_SERVER['REQUEST_METHOD'] ) {
-			echo '{"disponible":true,"oido":"navegador","idioma":"es-PY","voz":"navegador"}';
+			// WEB_OIDO: navegador | servidor | tiempo_real
+			echo json_encode( array( 'disponible' => true, 'oido' => getenv( 'WEB_OIDO' ) ?: 'navegador', 'idioma' => 'es-PY', 'voz' => 'navegador' ) );
+			return true;
+		}
+		// El token del oído en tiempo real: la dirección ya armada, como la da la API.
+		if ( 'presentacion/token' === $r && 'POST' === $_SERVER['REQUEST_METHOD'] ) {
+			if ( 'tiempo_real' !== getenv( 'WEB_OIDO' ) ) {
+				http_response_code( 409 );
+				echo '{"error":{"codigo":"oido_no_tiempo_real","mensaje":"No.","detalle":{}}}';
+				return true;
+			}
+			echo '{"url":"wss://fake.test/stt?token=sutkn_prueba","expira_seg":900}';
 			return true;
 		}
 		$archivo_sala = function ( $codigo ) { return sys_get_temp_dir() . '/czu-sala-' . preg_replace( '/[^A-Z0-9]/', '', strtoupper( $codigo ) ) . '.json'; };
@@ -213,6 +224,11 @@ if ( 0 === strpos( $ruta, '/wp-json/czu-app/v1/' ) ) {
 				usleep( $lenta * 1000 );
 			}
 			$respuesta = '‹respuesta› a «' . ( $cuerpo['mensaje'] ?? '' ) . '»: uno dos tres cuatro cinco seis siete ocho nueve diez.';
+			// WEB_PRES_CORTA=1: una respuesta de tres palabras, para que las pruebas
+			// de escucha continua (que esperan a que termine de hablar) no tarden.
+			if ( '1' === getenv( 'WEB_PRES_CORTA' ) ) {
+				$respuesta = 'Respuesta de prueba.';
+			}
 			if ( ! empty( $cuerpo['sala'] ) ) {
 				$s = $leer_sala( $cuerpo['sala'] );
 				$s = array_merge( $s, array( 'turno' => $s['turno'] + 1, 'estado' => 'respuesta', 'pregunta' => $cuerpo['mensaje'] ?? '', 'respuesta' => $respuesta ) );

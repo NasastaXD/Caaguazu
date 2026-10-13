@@ -496,7 +496,7 @@ class PROMOTUR_Asistente_Panel {
 			'persona' => 'Sos la voz del proyecto de turismo de Caaguazú.', 'conocimiento' => '‹guion›', 'catalogo' => false,
 			'voz_proveedor' => 'minimax', 'voz_endpoint' => '', 'voz_modelo' => '', 'voz_id' => '‹voz›', 'voz_velocidad' => 1.0,
 			'voz_key' => '…a1b2', 'voz_key_fija' => false,
-			'oido_modo' => 'navegador', 'oido_endpoint' => '', 'oido_modelo' => '', 'oido_idioma' => 'es-PY',
+			'oido_modo' => 'navegador', 'oido_proveedor' => 'openai', 'oido_silencio' => 1.5, 'turnos' => 20, 'modelo' => '', 'modelo_activo' => '', 'etiquetas' => false, 'oido_endpoint' => '', 'oido_modelo' => '', 'oido_idioma' => 'es-PY',
 			'oido_key' => '', 'oido_key_fija' => false,
 			'url' => 'https://caaguazu.net/turismo/presentacion/',
 		);

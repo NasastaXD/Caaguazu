@@ -292,6 +292,23 @@ $r = $P::oir( $audio, 'audio/webm' );
 comprobar( 'ElevenLabs: un 401 se informa con su código', array( $r['ok'], $r['code'] ), array( false, 401 ) );
 comprobar( 'ElevenLabs: y la causa NUNCA lleva la key', false !== strpos( $r['error'], CZUAPI_OIDO_KEY ), false );
 
+/* Tiempo real (WebSocket): el token, la URL y el silencio. */
+$GLOBALS['czu_opciones'] = array( 'czuapi_pres_oido_modo' => 'tiempo_real', 'czuapi_pres_oido_proveedor' => 'elevenlabs', 'czuapi_pres_oido_idioma' => 'es-PY', 'czuapi_pres_oido_silencio' => 1.2 );
+$GLOBALS['http_respuesta'] = array( 'response' => array( 'code' => 200 ), 'body' => '{"token":"sutkn_abc123"}' );
+$t = $P::crear_token_oido();
+comprobar( 'tiempo real: crea el token contra el endpoint de ElevenLabs', array( $t['ok'], $t['token'], $GLOBALS['http_enviado'][0] ), array( true, 'sutkn_abc123', 'https://api.elevenlabs.io/v1/single-use-token/realtime_scribe' ) );
+comprobar( 'tiempo real: la key viaja en la cabecera xi-api-key', $GLOBALS['http_enviado'][1]['headers']['xi-api-key'] ?? '', CZUAPI_OIDO_KEY );
+$url = $P::url_tiempo_real( 'sutkn_abc123', 'es-PY', 1.2 );
+parse_str( (string) parse_url( $url, PHP_URL_QUERY ), $q );
+comprobar( 'tiempo real: la URL es wss con el modelo, el VAD y PCM 16 kHz', array( str_starts_with( $url, 'wss://' ), $q['model_id'], $q['commit_strategy'], $q['audio_format'], $q['language_code'], $q['token'] ), array( true, 'scribe_v2_realtime', 'vad', 'pcm_16000', 'es', 'sutkn_abc123' ) );
+comprobar( 'tiempo real: la pausa que corta la frase llega a la URL', (float) $q['vad_silence_threshold_secs'], 1.2 );
+comprobar( 'tiempo real: la URL no lleva la key (sólo el token de un uso)', false !== strpos( $url, CZUAPI_OIDO_KEY ), false );
+$GLOBALS['http_respuesta'] = array( 'response' => array( 'code' => 401 ), 'body' => '{"detail":"Invalid API key ' . CZUAPI_OIDO_KEY . '"}' );
+$t = $P::crear_token_oido();
+comprobar( 'tiempo real: un rechazo informa el código y NUNCA la key', array( $t['ok'], $t['code'], false !== strpos( $t['error'], CZUAPI_OIDO_KEY ) ), array( false, 401, false ) );
+comprobar( 'tiempo real: el silencio se acota a un rango sensato', array( $P::normalizar_silencio( 0 ), $P::normalizar_silencio( 99 ), $P::normalizar_silencio( 'x' ) ), array( $P::SILENCIO_DEFAULT, 5.0, $P::SILENCIO_DEFAULT ) );
+comprobar( 'tiempo real: 0,1 sube al piso de 0,5 y «1,2» con coma se entiende', array( $P::normalizar_silencio( 0.1 ), $P::normalizar_silencio( '1,2' ) ), array( 0.5, 1.2 ) );
+
 /* OpenAI: lo de siempre, sin tocarlo. */
 $GLOBALS['czu_opciones'] = array( 'czuapi_pres_oido_modo' => 'servidor', 'czuapi_pres_oido_proveedor' => 'openai', 'czuapi_pres_oido_idioma' => 'es-PY' );
 $GLOBALS['http_respuesta'] = array( 'response' => array( 'code' => 200 ), 'body' => '{"text":"hola"}' );
