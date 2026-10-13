@@ -1068,33 +1068,47 @@ if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
 		}
 		rtSrv.matar();
 	}
-	// --- La vitrina: la app en un teléfono, el panel y el asistente ---------
+	// --- La vitrina: la app en un teléfono, el panel en iPad y teléfono -------
 	{
 		const v = await abrir( { viewport: { width: 1280, height: 720 }, hasTouch: false, isMobile: false } );
 		await v.p.goto( pre.PHP + '/turismo/vitrina/' );
-		await v.p.waitForTimeout( 600 );
-		const marco = ( parte ) => v.p.frames().find( ( f ) => f.url().includes( parte ) );
+		await v.p.waitForTimeout( 800 );
+		const dentro = ( caja ) => caja && caja.x >= 0 && caja.y >= 0 && caja.x + caja.width <= 1280 && caja.y + caja.height <= 720;
 		ok( 'la vitrina abre en la app, con la web de turismo dentro del teléfono', ( await v.p.getAttribute( '#marco-app', 'src' ) ) === '../' && await v.p.locator( '#vista-app' ).isVisible() );
-		const tel = await v.p.locator( '#telefono' ).boundingBox();
-		ok( 'el teléfono entra entero en una pantalla de 1280×720', tel && tel.y >= 0 && tel.y + tel.height <= 720, JSON.stringify( tel ) );
-		ok( 'los marcos que no se ven no se cargan todavía', ( await v.p.getAttribute( '#marco-panel', 'src' ) ) === null && ( await v.p.getAttribute( '#marco-asistente', 'src' ) ) === null );
+		ok( 'ya no hay vista del asistente (va aparte, en la presentación)', ( await v.p.locator( '[data-vista="asistente"]' ).count() ) === 0 );
+		ok( 'el teléfono entra entero en una pantalla de 1280×720', dentro( await v.p.locator( '#vista-app .telefono' ).boundingBox() ) );
+		ok( 'los marcos del panel no se cargan hasta mostrarse', ( await v.p.getAttribute( '#marco-panel', 'src' ) ) === null );
 		await v.p.keyboard.press( '2' );
-		await v.p.waitForTimeout( 1200 );
+		await v.p.waitForTimeout( 1500 );
 		ok( 'con «2» pasa al panel, y la dirección lo dice', v.p.url().endsWith( '#panel' ) && await v.p.locator( '#vista-panel' ).isVisible() );
-		const ven = await v.p.locator( '#ventana' ).boundingBox();
-		ok( 'la ventana del panel entra entera', ven && ven.x >= 0 && ven.x + ven.width <= 1280 && ven.y + ven.height <= 720, JSON.stringify( ven ) );
-		await marco( 'panel/' ).click( 'text=Inventario turístico' );
+		ok( 'el panel se ve en un iPad y en un teléfono, los dos enteros', dentro( await v.p.locator( '.tableta' ).boundingBox() ) && dentro( await v.p.locator( '#vista-panel .telefono' ).boundingBox() ) );
+		ok( 'el panel del iPad muestra el menú lateral (pantalla ancha)', await v.p.frameLocator( '#marco-panel' ).locator( 'text=Inventario turístico' ).first().isVisible() );
+		await v.p.frameLocator( '#marco-panel' ).locator( 'text=Inventario turístico' ).first().click();
 		await v.p.waitForTimeout( 900 );
-		ok( 'el menú del panel lleva de una pantalla a otra, sin salir de la vitrina', marco( 'panel/' ).url().endsWith( 'panel/inventario.html' ) && v.p.url().endsWith( '#panel' ) );
-		ok( 'el panel no muestra nombres de la maqueta que parezcan reales', ! /Achmad/.test( await marco( 'panel/' ).content() ) );
-		await marco( 'panel/' ).click( 'text=Salir' ).catch( () => {} );
-		await v.p.waitForTimeout( 400 );
-		ok( 'un botón que no lleva a una pantalla de la maqueta no hace nada', marco( 'panel/' ).url().endsWith( 'panel/inventario.html' ) );
-		await marco( 'panel/' ).locator( 'body' ).press( '3' );
+		ok( 'el menú del panel lleva de una pantalla a otra, sin salir de la vitrina', ( await v.p.evaluate( () => document.getElementById( 'marco-panel' ).contentWindow.location.pathname ) ).endsWith( 'panel/inventario.html' ) && v.p.url().endsWith( '#panel' ) );
+		ok( 'el panel no muestra nombres de la maqueta que parezcan reales', ! /Achmad/.test( await v.p.evaluate( () => document.getElementById( 'marco-panel' ).contentDocument.body.innerHTML ) ) );
+		// Las teclas llegan aunque el foco esté dentro de un aparato, y una sola vez.
+		await v.p.frameLocator( '#marco-panel' ).locator( 'body' ).press( 'ArrowLeft' );
+		await v.p.waitForTimeout( 700 );
+		ok( 'las flechas llegan aunque el foco esté dentro del panel', v.p.url().endsWith( '#app' ) );
+		// Modo proyección: sin pestañas ni QR.
+		await v.p.keyboard.press( 'p' );
+		await v.p.waitForTimeout( 500 );
+		ok( 'con «P», modo proyección: sin pestañas ni QR, sólo el aparato', ( await v.p.locator( '.pestanas' ).isHidden() ) && ( await v.p.locator( '#qr' ).isHidden() ) && dentro( await v.p.locator( '#vista-app .telefono' ).boundingBox() ) );
+		await v.p.keyboard.press( 'ArrowRight' );
 		await v.p.waitForTimeout( 900 );
-		ok( 'las teclas llegan aunque el foco esté dentro del panel', v.p.url().endsWith( '#asistente' ) && ( await v.p.getAttribute( '#marco-asistente', 'src' ) ) === '../presentacion/' );
+		ok( 'y se sigue manejando con el teclado', v.p.url().endsWith( '#panel' ) && await v.p.locator( '.pestanas' ).isHidden() );
+		await v.p.keyboard.press( 'p' );
+		await v.p.waitForTimeout( 300 );
+		ok( '«P» otra vez vuelve a mostrar las pestañas', await v.p.locator( '.pestanas' ).isVisible() );
 		ok( 'sin errores de página en la vitrina', v.errores.length === 0, v.errores.join( '|' ) );
 		await v.ctx.close();
+
+		const proy = await abrir( { viewport: { width: 1280, height: 720 }, hasTouch: false, isMobile: false } );
+		await proy.p.goto( pre.PHP + '/turismo/vitrina/?proyectar=1#panel' );
+		await proy.p.waitForTimeout( 800 );
+		ok( '?proyectar=1 abre directo en modo proyección, en la vista pedida', ( await proy.p.locator( '.pestanas' ).isHidden() ) && await proy.p.locator( '#vista-panel' ).isVisible() );
+		await proy.ctx.close();
 	}
 
 	pre.matar();

@@ -1,39 +1,39 @@
-// La vitrina: cambia de vista y escala los aparatos para que entren enteros.
+// La vitrina: cambia de vista, escala los aparatos para que entren enteros y
+// tiene un modo proyección sin nada más que los aparatos.
 // JavaScript plano, sin imports ni build, como la presentación.
 
 (function () {
   "use strict";
 
-  var VISTAS = ["app", "panel", "asistente"];
+  var VISTAS = ["app", "panel"];
   var $ = function (id) { return document.getElementById(id); };
+  var raiz = document.documentElement;
 
-  /** Escala un aparato (de tamaño fijo) para que entre en su vista. */
-  function encajar(aparato, vista) {
-    if (!aparato || vista.hidden) return;
+  /** Escala el grupo de aparatos (de tamaño fijo) para que entre en su vista. */
+  function encajar(grupo) {
+    var vista = grupo.closest(".vista");
+    if (vista.hidden) return;
+    grupo.style.transform = "none";
+    grupo.style.margin = "0";
     var hueco = vista.getBoundingClientRect();
-    var otros = 0;
-    // Lo que comparte la fila (el QR) se descuenta del ancho.
-    Array.prototype.forEach.call(vista.children, function (h) {
-      if (h !== aparato && h.offsetWidth) otros += h.offsetWidth + 56;
-    });
-    var escala = Math.min(1, hueco.height / aparato.offsetHeight, (hueco.width - otros) / aparato.offsetWidth);
-    aparato.style.transform = "scale(" + escala + ")";
-    // Escalado con transform el aparato sigue ocupando su tamaño original en
-    // la fila: el margen negativo devuelve lo que sobra.
-    var sobraX = (aparato.offsetWidth * (1 - escala)) / 2;
-    var sobraY = (aparato.offsetHeight * (1 - escala)) / 2;
-    aparato.style.margin = -sobraY + "px " + -sobraX + "px";
+    var escala = Math.min(1, hueco.height / grupo.offsetHeight, hueco.width / grupo.offsetWidth);
+    grupo.style.transform = "scale(" + escala + ")";
+    // Escalado con transform, el grupo sigue ocupando su tamaño original: el
+    // margen negativo devuelve lo que sobra para que quede centrado.
+    var sobraX = (grupo.offsetWidth * (1 - escala)) / 2;
+    var sobraY = (grupo.offsetHeight * (1 - escala)) / 2;
+    grupo.style.margin = -sobraY + "px " + -sobraX + "px";
   }
 
   function encajarTodo() {
-    encajar($("telefono"), $("vista-app"));
-    encajar($("ventana"), $("vista-panel"));
+    document.querySelectorAll(".grupo").forEach(encajar);
   }
 
   /** Los marcos se cargan la primera vez que se muestran, no antes. */
   function cargar(vista) {
-    var marco = vista.querySelector("iframe[data-src]");
-    if (marco && !marco.getAttribute("src")) marco.setAttribute("src", marco.getAttribute("data-src"));
+    vista.querySelectorAll("iframe[data-src]").forEach(function (marco) {
+      if (!marco.getAttribute("src")) marco.setAttribute("src", marco.getAttribute("data-src"));
+    });
   }
 
   function mostrar(nombre) {
@@ -45,13 +45,56 @@
     document.querySelectorAll(".pestana").forEach(function (p) {
       p.setAttribute("aria-selected", String(p.getAttribute("data-vista") === nombre));
     });
-    if (location.hash !== "#" + nombre) history.replaceState(null, "", "#" + nombre);
+    if (location.hash !== "#" + nombre) history.replaceState(null, "", location.search + "#" + nombre);
     encajarTodo();
   }
 
   function actual() {
     return (location.hash || "").replace("#", "") || VISTAS[0];
   }
+
+  /* --- Modo proyección ---------------------------------------------------- */
+
+  var relojQuieto = 0;
+  function proyectar(si) {
+    raiz.classList.toggle("proyectando", si);
+    if (si && document.documentElement.requestFullscreen && !document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    encajarTodo();
+  }
+  // Proyectando, el cursor se esconde si no se mueve.
+  function movio() {
+    raiz.classList.remove("quieto");
+    clearTimeout(relojQuieto);
+    relojQuieto = setTimeout(function () { raiz.classList.add("quieto"); }, 2000);
+  }
+
+  /* --- Teclado: 1/2, flechas (control de diapositivas) y P ---------------- */
+
+  function tecla(e) {
+    var i = VISTAS.indexOf(actual());
+    if (e.key >= "1" && e.key <= String(VISTAS.length)) mostrar(VISTAS[Number(e.key) - 1]);
+    else if (e.key === "ArrowRight" || e.key === "PageDown") mostrar(VISTAS[Math.min(VISTAS.length - 1, i + 1)]);
+    else if (e.key === "ArrowLeft" || e.key === "PageUp") mostrar(VISTAS[Math.max(0, i - 1)]);
+    else if (e.key === "p" || e.key === "P") proyectar(!raiz.classList.contains("proyectando"));
+  }
+  document.addEventListener("keydown", tecla);
+
+  // Con el foco adentro de un aparato, las teclas igual tienen que llegar: los
+  // marcos son del mismo sitio, así que se escuchan desde acá.
+  document.querySelectorAll("iframe").forEach(function (marco) {
+    marco.addEventListener("load", function () {
+      try {
+        marco.contentWindow.addEventListener("keydown", function (e) {
+          if (/^[12pP]$|^Arrow(Left|Right)$|^Page(Up|Down)$/.test(e.key)) tecla(e);
+        });
+        marco.contentWindow.addEventListener("mousemove", movio);
+      } catch (_) {
+        /* otro origen: sin teclas desde adentro */
+      }
+    });
+  });
 
   document.querySelectorAll(".pestana").forEach(function (p) {
     p.addEventListener("click", function (e) {
@@ -60,16 +103,10 @@
     });
   });
 
-  // 1/2/3 o las flechas (un control de diapositivas manda flechas o RePág).
-  document.addEventListener("keydown", function (e) {
-    var i = VISTAS.indexOf(actual());
-    if (e.key >= "1" && e.key <= "3") mostrar(VISTAS[Number(e.key) - 1]);
-    else if (e.key === "ArrowRight" || e.key === "PageDown") mostrar(VISTAS[Math.min(VISTAS.length - 1, i + 1)]);
-    else if (e.key === "ArrowLeft" || e.key === "PageUp") mostrar(VISTAS[Math.max(0, i - 1)]);
-  });
-
+  document.addEventListener("mousemove", movio);
   window.addEventListener("hashchange", function () { mostrar(actual()); });
   window.addEventListener("resize", encajarTodo);
+  document.addEventListener("fullscreenchange", encajarTodo);
 
   // El QR lleva a la web de turismo: la misma app, en el teléfono de cada uno.
   window.addEventListener("load", function () {
@@ -81,5 +118,6 @@
     encajarTodo();
   });
 
+  if (/[?&]proyectar=1\b/.test(location.search)) proyectar(true);
   mostrar(actual());
 })();

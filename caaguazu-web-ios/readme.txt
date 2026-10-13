@@ -131,6 +131,16 @@ propio, idioma elegido), y eso vive en su navegador, no acá.
 
 == Changelog ==
 
+= 2.3.0 =
+* Vitrina: **modo proyección** (tecla P, o `?proyectar=1`): sin pestañas ni QR,
+  sólo los aparatos, a pantalla completa, y el cursor se esconde quieto. Se
+  sigue manejando con el teclado (1/2, flechas), aunque el foco esté dentro
+  de un aparato.
+* El panel se muestra en un **iPad horizontal y un teléfono**, en vez de la
+  ventana de computadora.
+* Fondo claro, como las diapositivas.
+* El asistente sale de la vitrina: se abre aparte, desde la presentación.
+
 = 2.2.0 =
 * **Vitrina para presentar el proyecto** en `/turismo/vitrina/`: la app dentro
   de un teléfono dibujado (es la web de turismo de verdad, con sus datos), el
