@@ -168,6 +168,16 @@ depende de cómo se llame el tag.
 * Repo privado: definir `CZUAPI_GITHUB_TOKEN` (PAT de solo lectura) en
   `wp-config.php`, o cargarlo desde **Caaguazú API → Actualizaciones**.
 
+== Cambios en 0.11.4 ==
+
+* **El conocimiento de prueba de la presentación sale de la investigación**
+  (13 lugares y 3 eventos: horarios, precios, direcciones, fechas), en vez del
+  esqueleto de seis renglones. Vive en `datos/conocimiento-prueba.txt`, que se
+  genera con `php tools/generar-conocimiento-prueba.php --escribir` desde
+  `caaguazu-portal/datos-prueba/sitios-caaguazu.json`. Lo que la investigación
+  no trae queda marcado ‹así›, y lo dudoso lleva ‹dato a confirmar›. Sigue
+  siendo placeholder: en cuanto el equipo guarda el suyo en el panel, manda ese.
+
 == Cambios en 0.11.3 ==
 
 * **Oído en tiempo real por WebSocket** (ElevenLabs Scribe v2 Realtime). Nuevo

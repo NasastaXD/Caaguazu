@@ -384,6 +384,10 @@ comprobar( 'prendido, la voz sí las recibe', $P::etiquetas( 'Hola [pause] listo
 /* El conocimiento: el de prueba, con marcadores, hasta que el equipo guarde el suyo. */
 unset( $GLOBALS['czu_opciones']['czuapi_pres_conocimiento'] );
 comprobar( 'sin conocimiento guardado, va el de prueba con marcadores', str_contains( $P::conocimiento(), '‹descripción' ) && str_contains( $P::conocimiento(), 'Ykua La Patria' ), true );
+comprobar( 'el de prueba trae los trece lugares y los tres eventos de la investigación', array( substr_count( $P::conocimiento(), "\n- " ) ), array( 16 ) );
+comprobar( 'trae datos de la investigación (precio, horario) y marca lo dudoso y lo que falta', str_contains( $P::conocimiento(), 'G. 35.000' ) && str_contains( $P::conocimiento(), '8:00 a 18:00' ) && str_contains( $P::conocimiento(), '‹dato a confirmar›' ) && str_contains( $P::conocimiento(), '‹contacto›' ), true );
+require_once __DIR__ . '/generar-conocimiento-prueba.php';
+comprobar( 'el archivo del plugin está al día con el JSON de la investigación (php tools/generar-conocimiento-prueba.php --escribir)', trim( file_get_contents( CZU_TXT_PRUEBA ) ), trim( czu_conocimiento_de_prueba() ) );
 $GLOBALS['czu_opciones']['czuapi_pres_conocimiento'] = '';
 comprobar( 'y si el equipo lo dejó vacío, queda vacío (no vuelve el de prueba)', $P::conocimiento(), '' );
 

@@ -1,0 +1,219 @@
+/*
+ * La vitrina: fondo negro como la presentación, y los aparatos flotando en el
+ * medio. Los tamaños de los aparatos son los de verdad (un teléfono de 390×844
+ * y una pantalla de 1280×800) y se escalan enteros para entrar: así lo que se
+ * ve adentro se dibuja igual que en el aparato, sólo más chico.
+ */
+
+@font-face {
+  font-family: "Inter";
+  src: url("../fuentes/inter-600.woff2") format("woff2");
+  font-weight: 600;
+  font-display: swap;
+}
+
+:root {
+  --fondo: #000;
+  --tinta: #f2f2f2;
+  --tinta-suave: #9a9aa0;
+  --campo: #1b1b1d;
+  --contraste: #f2f2f2;
+  --sobre-contraste: #1f1f21;
+  --marco: #1a1a1c;
+  --borde-marco: #3a3a3e;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--fondo);
+  color: var(--tinta);
+  font-family: "Inter", system-ui, sans-serif;
+  font-weight: 600;
+  overflow: hidden;
+}
+
+/* --- Pestañas: una píldora arriba, al medio --------------------------- */
+
+.pestanas {
+  position: fixed;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--campo);
+}
+
+.pestana {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  border-radius: 999px;
+  color: var(--tinta-suave);
+  text-decoration: none;
+  font-size: 15px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.pestana[aria-selected="true"] {
+  background: var(--contraste);
+  color: var(--sobre-contraste);
+}
+
+/* --- El escenario ------------------------------------------------------ */
+
+.escenario {
+  position: fixed;
+  inset: 0;
+}
+
+.vista {
+  position: absolute;
+  inset: 82px 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 56px;
+  animation: entrar 0.5s ease both;
+}
+
+.vista[hidden] { display: none; }
+
+.vista--plena { inset: 0; }
+.vista--plena iframe { width: 100%; height: 100%; border: 0; display: block; }
+
+@keyframes entrar {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vista { animation: none; }
+  .pestana { transition: none; }
+}
+
+/* --- El teléfono --------------------------------------------------------- */
+
+.telefono {
+  /* El aparato mide 418×872 (390×844 de pantalla y 14 de borde); la escala
+     la pone vitrina.js para que entre en el alto disponible. */
+  position: relative;
+  flex: none;
+  width: 418px;
+  height: 872px;
+  padding: 14px;
+  border-radius: 64px;
+  background: var(--marco);
+  box-shadow: 0 0 0 2px var(--borde-marco), 0 40px 120px rgba(150, 200, 162, 0.18);
+  transform-origin: center;
+}
+
+.telefono__pantalla {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  border-radius: 50px;
+  overflow: hidden;
+  background: #f7f7f5;
+}
+
+.telefono__pantalla iframe {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  border: 0;
+  display: block;
+}
+
+.ventana__pantalla iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+.telefono__estado {
+  flex: none;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: inherit;
+}
+
+.telefono__isla {
+  width: 120px;
+  height: 34px;
+  border-radius: 999px;
+  background: #000;
+}
+
+/* El QR al lado: el público puede abrir la misma app en su teléfono. */
+.qr {
+  flex: none;
+  margin: 0;
+  width: 200px;
+  padding: 0;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.qr svg { display: block; width: 100%; height: auto; }
+
+.qr:empty { display: none; }
+
+@media (max-width: 900px), (max-height: 520px) {
+  .qr { display: none; }
+}
+
+/* --- La ventana del panel --------------------------------------------- */
+
+.ventana {
+  position: relative;
+  flex: none;
+  width: 1280px;
+  height: 844px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--marco);
+  box-shadow: 0 0 0 1px var(--borde-marco), 0 40px 120px rgba(0, 0, 0, 0.6);
+  transform-origin: center;
+}
+
+.ventana__barra {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+}
+
+.ventana__punto {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: #3a3a3e;
+}
+
+.ventana__direccion {
+  margin: 0 auto;
+  padding: 6px 18px;
+  border-radius: 999px;
+  background: #0f0f10;
+  color: var(--tinta-suave);
+  font-size: 13px;
+}
+
+.ventana__pantalla {
+  height: 800px;
+  background: #f4f4f2;
+}

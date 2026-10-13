@@ -808,7 +808,7 @@ if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
 					if ( ++this.conSonido === 4 ) {
 						this.conSonido = 0;
 						this.emitir( { message_type: 'partial_transcript', text: 'hola cómo' } );
-						setTimeout( () => this.emitir( { message_type: 'committed_transcript', text: 'hola cómo funciona esto' } ), 250 );
+						if ( ! window.__sinCommit ) { setTimeout( () => this.emitir( { message_type: 'committed_transcript', text: 'hola cómo funciona esto' } ), 250 ); }
 					}
 				}
 				close() { this.readyState = 3; this.onclose && this.onclose( { code: 1000, reason: '' } ); }
@@ -938,7 +938,7 @@ if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
 					if ( ++this.conSonido === 4 ) {
 						this.conSonido = 0;
 						this.emitir( { message_type: 'partial_transcript', text: 'hola cómo' } );
-						setTimeout( () => this.emitir( { message_type: 'committed_transcript', text: 'hola cómo funciona esto' } ), 250 );
+						if ( ! window.__sinCommit ) { setTimeout( () => this.emitir( { message_type: 'committed_transcript', text: 'hola cómo funciona esto' } ), 250 ); }
 					}
 				}
 				close() { this.readyState = 3; this.onclose && this.onclose( { code: 1000, reason: '' } ); }
@@ -993,6 +993,21 @@ if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
 			await tel.p.waitForTimeout( 3500 );
 			ok( 'quota_exceeded: no se reintenta y el mensaje queda en pantalla', ( await tel.p.evaluate( () => window.__ws.creados.length ) ) === 2 && ( await tel.p.textContent( '#estado' ) ) !== '' );
 			ok( 'sin errores de página', tel.errores.length === 0, tel.errores.join( '|' ) );
+			await tel.ctx.close();
+		}
+
+		// --- Con ruido de fondo el VAD no corta: no se queda escuchando para siempre ---
+		{
+			const tel = await abrir();
+			await tel.p.addInitScript( microfonoFalso );
+			await tel.p.addInitScript( websocketFalso );
+			await tel.p.addInitScript( () => { window.__sinCommit = true; } );
+			await tel.p.goto( rtSrv.PHP + '/turismo/presentacion/?debug=1' );
+			await tel.p.waitForFunction( () => ! document.getElementById( 'empezar' ).disabled, null, { timeout: 9000 } );
+			await tel.p.tap( '#empezar' );
+			ok( 'si el servidor nunca corta la frase, la página la da por terminada y contesta', await esperar( tel.p, () => document.body.dataset.estado === 'pensando' || document.querySelectorAll( '#respuesta .palabra' ).length > 0, 12000 ) );
+			if ( process.env.DBG ) { console.log( 'CH', JSON.stringify( await tel.p.evaluate( () => [ window.__ws.chunks.length, window.__ws.chunks.filter( ( c ) => ! c.cero ).length, window.__sinCommit ] ) ), 'RASTRO', await tel.p.evaluate( () => ( document.querySelector( '.rastro' ) || {} ).innerText ), await tel.p.evaluate( () => document.body.dataset.estado ) ); }
+			ok( 'y lo que preguntó es lo que alcanzó a entender', ( await esperar( tel.p, () => ( document.getElementById( 'pregunta' ).textContent || '' ).includes( 'hola' ), 4000 ) ) );
 			await tel.ctx.close();
 		}
 
@@ -1053,6 +1068,35 @@ if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
 		}
 		rtSrv.matar();
 	}
+	// --- La vitrina: la app en un teléfono, el panel y el asistente ---------
+	{
+		const v = await abrir( { viewport: { width: 1280, height: 720 }, hasTouch: false, isMobile: false } );
+		await v.p.goto( pre.PHP + '/turismo/vitrina/' );
+		await v.p.waitForTimeout( 600 );
+		const marco = ( parte ) => v.p.frames().find( ( f ) => f.url().includes( parte ) );
+		ok( 'la vitrina abre en la app, con la web de turismo dentro del teléfono', ( await v.p.getAttribute( '#marco-app', 'src' ) ) === '../' && await v.p.locator( '#vista-app' ).isVisible() );
+		const tel = await v.p.locator( '#telefono' ).boundingBox();
+		ok( 'el teléfono entra entero en una pantalla de 1280×720', tel && tel.y >= 0 && tel.y + tel.height <= 720, JSON.stringify( tel ) );
+		ok( 'los marcos que no se ven no se cargan todavía', ( await v.p.getAttribute( '#marco-panel', 'src' ) ) === null && ( await v.p.getAttribute( '#marco-asistente', 'src' ) ) === null );
+		await v.p.keyboard.press( '2' );
+		await v.p.waitForTimeout( 1200 );
+		ok( 'con «2» pasa al panel, y la dirección lo dice', v.p.url().endsWith( '#panel' ) && await v.p.locator( '#vista-panel' ).isVisible() );
+		const ven = await v.p.locator( '#ventana' ).boundingBox();
+		ok( 'la ventana del panel entra entera', ven && ven.x >= 0 && ven.x + ven.width <= 1280 && ven.y + ven.height <= 720, JSON.stringify( ven ) );
+		await marco( 'panel/' ).click( 'text=Inventario turístico' );
+		await v.p.waitForTimeout( 900 );
+		ok( 'el menú del panel lleva de una pantalla a otra, sin salir de la vitrina', marco( 'panel/' ).url().endsWith( 'panel/inventario.html' ) && v.p.url().endsWith( '#panel' ) );
+		ok( 'el panel no muestra nombres de la maqueta que parezcan reales', ! /Achmad/.test( await marco( 'panel/' ).content() ) );
+		await marco( 'panel/' ).click( 'text=Salir' ).catch( () => {} );
+		await v.p.waitForTimeout( 400 );
+		ok( 'un botón que no lleva a una pantalla de la maqueta no hace nada', marco( 'panel/' ).url().endsWith( 'panel/inventario.html' ) );
+		await marco( 'panel/' ).locator( 'body' ).press( '3' );
+		await v.p.waitForTimeout( 900 );
+		ok( 'las teclas llegan aunque el foco esté dentro del panel', v.p.url().endsWith( '#asistente' ) && ( await v.p.getAttribute( '#marco-asistente', 'src' ) ) === '../presentacion/' );
+		ok( 'sin errores de página en la vitrina', v.errores.length === 0, v.errores.join( '|' ) );
+		await v.ctx.close();
+	}
+
 	pre.matar();
 }
 

@@ -231,7 +231,18 @@ TXT;
 
 	public static function conocimiento() {
 		$guardado = get_option( 'czuapi_pres_conocimiento', null );
-		return null === $guardado ? self::CONOCIMIENTO_PRUEBA : trim( (string) $guardado );
+		return null === $guardado ? self::conocimiento_de_prueba() : trim( (string) $guardado );
+	}
+
+	/**
+	 * El de prueba: lo que dice la investigación (`datos/conocimiento-prueba.txt`,
+	 * generado por `tools/generar-conocimiento-prueba.php`). Si el archivo falta,
+	 * el esqueleto mínimo de la constante.
+	 */
+	public static function conocimiento_de_prueba() {
+		$ruta  = dirname( __DIR__ ) . '/datos/conocimiento-prueba.txt';
+		$texto = is_readable( $ruta ) ? trim( (string) file_get_contents( $ruta ) ) : '';
+		return '' !== $texto ? $texto : self::CONOCIMIENTO_PRUEBA;
 	}
 
 	/** ¿Suma lo publicado en la app a lo que sabe? Por defecto no: el guion manda. */
