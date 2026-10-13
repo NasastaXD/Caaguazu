@@ -46,11 +46,6 @@ $navegacion = '<script>'
 	. 'if(hay.indexOf(s)!==-1)location.href=s+".html";'
 	. '},true);'
 	. 'document.addEventListener("submit",function(e){e.preventDefault();},true);'
-	// Con el foco adentro del panel, las teclas de la vitrina (1/2/3, flechas
-	// del control de diapositivas) igual tienen que llegar afuera.
-	. 'document.addEventListener("keydown",function(e){'
-	. 'if(/^[1-3]$|^Arrow(Left|Right)$|^Page(Up|Down)$/.test(e.key)&&parent!==window)parent.document.dispatchEvent(new KeyboardEvent("keydown",{key:e.key}));'
-	. '});'
 	. '})();'
 	. '</script>';
 

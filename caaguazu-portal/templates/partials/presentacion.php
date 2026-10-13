@@ -224,7 +224,7 @@ $p = PROMOTUR_Asistente_Panel::presentacion();
 				<?php
 				printf(
 					/* translators: 1: cantidad de sitios en el archivo, 2: herramienta, 3: cantidad cargada */
-					esc_html__( 'La investigación trae %1$d sitios y eventos (%2$s). Entran como borradores marcados de prueba: los ven sólo los profesores, en la web y en el panel, y no salen al público sin revisión. Cargados ahora: %3$d.', 'caaguazu-portal' ),
+					esc_html__( 'La investigación trae %1$d sitios y eventos (%2$s). Entran como borradores marcados de prueba: los ven sólo los profesores, en la web y en el panel, y no salen al público sin revisión. Para la demo, «Cargar y publicar» las deja públicas hasta que se borren. Cargados ahora: %3$d.', 'caaguazu-portal' ),
 					(int) count( $investigacion['sitios'] ),
 					esc_html( $investigacion['herramienta'] ?: '—' ),
 					(int) $de_prueba
@@ -236,6 +236,11 @@ $p = PROMOTUR_Asistente_Panel::presentacion();
 					<?php PROMOTUR_Acciones::campos(); ?>
 					<input type="hidden" name="hacer" value="cargar">
 					<button type="submit" class="promotur-btn promotur-btn--primary"<?php disabled( ! $investigacion['sitios'] ); ?>><?php esc_html_e( 'Cargar los de prueba', 'caaguazu-portal' ); ?></button>
+				</form>
+				<form method="post" action="<?php echo esc_url( $accion_prueba ); ?>" data-confirmar="<?php echo esc_attr__( 'Las fichas de prueba van a quedar PUBLICADAS: el público y la app las ven hasta que las borres. ¿Seguro?', 'caaguazu-portal' ); ?>">
+					<?php PROMOTUR_Acciones::campos(); ?>
+					<input type="hidden" name="hacer" value="publicar">
+					<button type="submit" class="promotur-btn promotur-btn--ghost"<?php disabled( ! $investigacion['sitios'] ); ?>><?php esc_html_e( 'Cargar y publicar (demo)', 'caaguazu-portal' ); ?></button>
 				</form>
 				<?php if ( $de_prueba ) : ?>
 					<form method="post" action="<?php echo esc_url( $accion_prueba ); ?>" data-confirmar="<?php echo esc_attr__( 'Se borran todas las fichas de prueba, para siempre. Lo que cargó el equipo no se toca. ¿Seguro?', 'caaguazu-portal' ); ?>">
