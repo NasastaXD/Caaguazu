@@ -1111,12 +1111,12 @@ if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
 		await proy.ctx.close();
 	}
 
-	// --- El proyecto, contado en una página (/turismo/proyecto/) --------------
+	// --- La propuesta, contada en una página (/turismo/propuesta/) --------------
 	{
 		const pc = await abrir( { viewport: { width: 1440, height: 900 }, hasTouch: false, isMobile: false } );
-		await pc.p.goto( pre.PHP + '/turismo/proyecto/' );
+		await pc.p.goto( pre.PHP + '/turismo/propuesta/' );
 		await pc.p.waitForTimeout( 500 );
-		ok( 'la página del proyecto abre, con su título', ( await pc.p.textContent( 'h1' ) ).trim() === 'Caaguazú Go' );
+		ok( 'la página de la propuesta abre, con su título', ( await pc.p.textContent( 'h1' ) ).trim() === 'Caaguazú Go' );
 		await pc.p.click( 'a[href="#demo"]' );
 		await pc.p.waitForTimeout( 1200 );
 		ok( 'en pantalla ancha, la guía real se ve dentro del teléfono', ( await pc.p.getAttribute( '#marco-demo', 'src' ) ) === '../' && await pc.p.locator( '.telefono' ).isVisible() );
@@ -1129,7 +1129,7 @@ if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
 		await pc.ctx.close();
 
 		const cel = await abrir();
-		await cel.p.goto( pre.PHP + '/turismo/proyecto/' );
+		await cel.p.goto( pre.PHP + '/turismo/propuesta/' );
 		await cel.p.waitForTimeout( 500 );
 		ok( 'en un celular no se dibuja el teléfono (no entra): hay un botón para abrir', ( await cel.p.locator( '.telefono' ).isHidden() ) && await cel.p.locator( '#abrir-demo' ).isVisible() );
 		ok( 'nada se sale de la pantalla del celular', await cel.p.evaluate( () => document.documentElement.scrollWidth <= window.innerWidth ) );
@@ -1139,7 +1139,7 @@ if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
 		ok( '«Abrir» muestra la demo elegida a pantalla completa', await cel.p.locator( '#capa' ).isVisible() && ( await cel.p.getAttribute( '#marco-capa', 'src' ) ) === '../vitrina/panel/home.html' && ( await cel.p.textContent( '#capa-titulo' ) ) === 'Panel' );
 		await cel.p.goBack();
 		await cel.p.waitForTimeout( 400 );
-		ok( '«atrás» del teléfono cierra la demo y se queda en la página', ( await cel.p.locator( '#capa' ).isHidden() ) && cel.p.url().includes( '/turismo/proyecto/' ) );
+		ok( '«atrás» del teléfono cierra la demo y se queda en la página', ( await cel.p.locator( '#capa' ).isHidden() ) && cel.p.url().includes( '/turismo/propuesta/' ) );
 		await cel.p.tap( '#abrir-demo' );
 		await cel.p.waitForTimeout( 300 );
 		await cel.p.tap( '#cerrar-capa' );

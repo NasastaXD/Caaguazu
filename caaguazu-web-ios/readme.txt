@@ -131,6 +131,9 @@ propio, idioma elegido), y eso vive en su navegador, no acá.
 
 == Changelog ==
 
+= 2.4.1 =
+* La página de la propuesta pasa a `/turismo/propuesta/` (antes `/turismo/proyecto/`).
+
 = 2.4.0 =
 * **El proyecto, contado en una página**, en `/turismo/proyecto/`, para
   compartir con un enlace (por ejemplo, con la asociación de turismo): qué es,
