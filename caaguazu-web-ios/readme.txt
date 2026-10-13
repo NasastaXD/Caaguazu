@@ -131,6 +131,17 @@ propio, idioma elegido), y eso vive en su navegador, no acá.
 
 == Changelog ==
 
+= 2.2.0 =
+* **Vitrina para presentar el proyecto** en `/turismo/vitrina/`: la app dentro
+  de un teléfono dibujado (es la web de turismo de verdad, con sus datos), el
+  panel de carga dentro de una ventana (maqueta con datos de mentira, se
+  navega por su menú) y el asistente de la presentación. Se cambia con las
+  pestañas, con 1/2/3 o con las flechas del control de diapositivas, y
+  `#app`, `#panel` o `#asistente` en la dirección abre una directa. Un QR al
+  lado del teléfono abre la web en el teléfono de cada uno.
+* Las pantallas del panel se vuelven a armar con
+  `php tools/generar-vitrina-panel.php`.
+
 = 2.1.5 =
 * **Arreglo: en el teléfono se quedaba escuchando para siempre.** Con ruido de
   fondo el corte de frase (el del navegador o el de ElevenLabs) puede no llegar

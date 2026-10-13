@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Caaguazú · Vitrina</title>
+<!-- Para mostrar en una presentación, no para que la encuentre un buscador. -->
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="../assets/icon-192.png">
+<link rel="preload" href="../fuentes/inter-600.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="vitrina.css">
+</head>
+<body>
+
+<!--
+  Tres vistas de lo mismo: la app en un teléfono (es la web de turismo de
+  verdad, con sus datos de verdad), el panel donde se carga (maqueta con
+  datos de mentira) y el asistente. Se cambia con las pestañas, con 1/2/3 o
+  con las flechas; la dirección (#app, #panel, #asistente) abre una directa.
+-->
+<nav class="pestanas" role="tablist">
+  <a class="pestana" role="tab" href="#app" data-vista="app">App</a>
+  <a class="pestana" role="tab" href="#panel" data-vista="panel">Panel</a>
+  <a class="pestana" role="tab" href="#asistente" data-vista="asistente">Asistente</a>
+</nav>
+
+<main class="escenario">
+  <section class="vista" id="vista-app" data-vista="app">
+    <div class="telefono" id="telefono">
+      <div class="telefono__pantalla">
+        <!-- La franja de arriba es la del sistema: la app empieza debajo, como
+             en un teléfono de verdad, y la isla no le tapa la cabecera. -->
+        <span class="telefono__estado" aria-hidden="true"><span class="telefono__isla"></span></span>
+        <iframe id="marco-app" title="App" data-src="../" loading="lazy"></iframe>
+      </div>
+    </div>
+    <figure class="qr" id="qr" aria-hidden="true"></figure>
+  </section>
+
+  <section class="vista" id="vista-panel" data-vista="panel" hidden>
+    <div class="ventana" id="ventana">
+      <div class="ventana__barra" aria-hidden="true">
+        <span class="ventana__punto"></span><span class="ventana__punto"></span><span class="ventana__punto"></span>
+        <span class="ventana__direccion">caaguazu.net/turismo-panel</span>
+      </div>
+      <div class="ventana__pantalla">
+        <iframe id="marco-panel" title="Panel" data-src="panel/home.html" loading="lazy"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <section class="vista vista--plena" id="vista-asistente" data-vista="asistente" hidden>
+    <iframe id="marco-asistente" title="Asistente" data-src="../presentacion/" allow="microphone; autoplay; fullscreen"></iframe>
+  </section>
+</main>
+
+<script src="../js/vendor/qrcode.js" defer></script>
+<script src="vitrina.js" defer></script>
+</body>
+</html>

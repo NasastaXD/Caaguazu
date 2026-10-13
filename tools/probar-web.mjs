@@ -1068,6 +1068,35 @@ if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
 		}
 		rtSrv.matar();
 	}
+	// --- La vitrina: la app en un teléfono, el panel y el asistente ---------
+	{
+		const v = await abrir( { viewport: { width: 1280, height: 720 }, hasTouch: false, isMobile: false } );
+		await v.p.goto( pre.PHP + '/turismo/vitrina/' );
+		await v.p.waitForTimeout( 600 );
+		const marco = ( parte ) => v.p.frames().find( ( f ) => f.url().includes( parte ) );
+		ok( 'la vitrina abre en la app, con la web de turismo dentro del teléfono', ( await v.p.getAttribute( '#marco-app', 'src' ) ) === '../' && await v.p.locator( '#vista-app' ).isVisible() );
+		const tel = await v.p.locator( '#telefono' ).boundingBox();
+		ok( 'el teléfono entra entero en una pantalla de 1280×720', tel && tel.y >= 0 && tel.y + tel.height <= 720, JSON.stringify( tel ) );
+		ok( 'los marcos que no se ven no se cargan todavía', ( await v.p.getAttribute( '#marco-panel', 'src' ) ) === null && ( await v.p.getAttribute( '#marco-asistente', 'src' ) ) === null );
+		await v.p.keyboard.press( '2' );
+		await v.p.waitForTimeout( 1200 );
+		ok( 'con «2» pasa al panel, y la dirección lo dice', v.p.url().endsWith( '#panel' ) && await v.p.locator( '#vista-panel' ).isVisible() );
+		const ven = await v.p.locator( '#ventana' ).boundingBox();
+		ok( 'la ventana del panel entra entera', ven && ven.x >= 0 && ven.x + ven.width <= 1280 && ven.y + ven.height <= 720, JSON.stringify( ven ) );
+		await marco( 'panel/' ).click( 'text=Inventario turístico' );
+		await v.p.waitForTimeout( 900 );
+		ok( 'el menú del panel lleva de una pantalla a otra, sin salir de la vitrina', marco( 'panel/' ).url().endsWith( 'panel/inventario.html' ) && v.p.url().endsWith( '#panel' ) );
+		ok( 'el panel no muestra nombres de la maqueta que parezcan reales', ! /Achmad/.test( await marco( 'panel/' ).content() ) );
+		await marco( 'panel/' ).click( 'text=Salir' ).catch( () => {} );
+		await v.p.waitForTimeout( 400 );
+		ok( 'un botón que no lleva a una pantalla de la maqueta no hace nada', marco( 'panel/' ).url().endsWith( 'panel/inventario.html' ) );
+		await marco( 'panel/' ).locator( 'body' ).press( '3' );
+		await v.p.waitForTimeout( 900 );
+		ok( 'las teclas llegan aunque el foco esté dentro del panel', v.p.url().endsWith( '#asistente' ) && ( await v.p.getAttribute( '#marco-asistente', 'src' ) ) === '../presentacion/' );
+		ok( 'sin errores de página en la vitrina', v.errores.length === 0, v.errores.join( '|' ) );
+		await v.ctx.close();
+	}
+
 	pre.matar();
 }
 
