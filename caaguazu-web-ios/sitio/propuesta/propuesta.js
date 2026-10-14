@@ -32,7 +32,7 @@
   }
 
   function abrirCapa() {
-    $("capa-titulo").textContent = DEMOS[actual].titulo;
+    $("capa-titulo").textContent = DEMOS[actual].titulo + " · Vista previa";
     cargar($("marco-capa"), DEMOS[actual].url);
     $("capa").hidden = false;
     document.body.style.overflow = "hidden";

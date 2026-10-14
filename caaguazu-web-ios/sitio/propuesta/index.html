@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Caaguazú Go · Propuesta</title>
+<title>Caaguazú Go · Vista previa</title>
 <!-- Se comparte por enlace; no es para que la encuentre un buscador. -->
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#f4f4f2" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0e0e10" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="../assets/icon-192.png">
 <link rel="preload" href="../fuentes/inter-600.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="propuesta.css">
+<link rel="stylesheet" href="../propuesta/propuesta.css">
 </head>
 <body>
 
@@ -21,21 +21,30 @@
 
   La demo: en una pantalla ancha va dentro de un teléfono dibujado; en un
   celular, cada demo se abre a pantalla completa con un botón para cerrar.
+
+  La misma página se sirve en /turismo/propuesta/ y en /turismo/vitrina/: los
+  dos index.html son idénticos y por eso piden el CSS y el JS con la ruta de
+  propuesta/ (probar-web.mjs falla si se separan).
+
+  Es una vista previa de un trabajo en proceso, y la página lo dice arriba de
+  todo, en la demo y en la capa del celular.
 -->
+
+<p class="aviso" role="note"><strong>Trabajo en proceso</strong> · Esto es una vista previa</p>
 
 <header class="portada">
   <img class="portada__icono" src="../assets/icon-192.png" alt="" width="64" height="64">
-  <p class="antetitulo">CEAD Félix de Guarania · En desarrollo</p>
+  <p class="antetitulo">CEAD Félix de Guarania · Trabajo en proceso</p>
   <h1>Caaguazú Go</h1>
   <p class="bajada">Una guía turística digital y gratuita de Caaguazú, hecha por los alumnos del Bachillerato Técnico en Servicios Turísticos.</p>
-  <a class="boton boton--primario" href="#demo">Probala en vivo</a>
+  <a class="boton boton--primario" href="#demo">Ver la vista previa</a>
 </header>
 
 <main>
   <section class="bloque bloque--demo" id="demo">
     <div class="bloque__texto">
-      <h2>Probala en vivo</h2>
-      <p>Es la guía real, con la información cargada hasta hoy.</p>
+      <h2>Vista previa</h2>
+      <p>Es la guía real, con la información cargada hasta hoy. Todavía está en proceso: faltan contenidos y puede haber datos sin revisar.</p>
 
       <div class="pestanas" role="tablist">
         <button type="button" class="pestana" role="tab" data-demo="guia" aria-selected="true">Guía</button>
@@ -91,7 +100,7 @@
 
   <section class="bloque">
     <h2>¿En qué punto estamos?</h2>
-    <p>Caaguazú Go está en desarrollo. Estamos cargando los contenidos y preparando la app para Android y iPhone.</p>
+    <p>Caaguazú Go es un trabajo en proceso y lo que se ve acá es una vista previa. Estamos cargando los contenidos y preparando la app para Android y iPhone.</p>
   </section>
 </main>
 
@@ -110,6 +119,6 @@
   <iframe id="marco-capa" title="Demo"></iframe>
 </div>
 
-<script src="propuesta.js" defer></script>
+<script src="../propuesta/propuesta.js" defer></script>
 </body>
 </html>

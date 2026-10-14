@@ -39,7 +39,7 @@
 
 * { box-sizing: border-box; }
 
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; scroll-padding-top: 64px; } /* que la franja del aviso no tape el destino */
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 
 body {
@@ -58,12 +58,27 @@ h2 { font-size: clamp(26px, 5.5vw, 34px); font-weight: 700; }
 h3 { font-size: 18px; font-weight: 600; }
 p { margin: 12px 0 0; }
 
+/* --- Aviso: trabajo en proceso, vista previa ----------------------------- */
+
+.aviso {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  margin: 0;
+  padding: calc(10px + env(safe-area-inset-top)) var(--margen) 10px;
+  background: var(--tinta);
+  color: var(--sobre-tinta);
+  font-size: 15px;
+  text-align: center;
+}
+.aviso strong { font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+
 /* --- Portada -------------------------------------------------------------- */
 
 .portada {
   max-width: 760px;
   margin: 0 auto;
-  padding: calc(56px + env(safe-area-inset-top)) var(--margen) 40px;
+  padding: 48px var(--margen) 40px;
 }
 
 .portada__icono { display: block; width: 64px; height: 64px; border-radius: 16px; margin-bottom: 24px; }
@@ -212,7 +227,7 @@ main { max-width: 760px; margin: 0 auto; padding: 0 var(--margen); }
 .capa {
   position: fixed;
   inset: 0;
-  z-index: 10;
+  z-index: 20;
   display: flex;
   flex-direction: column;
   background: var(--lienzo);
