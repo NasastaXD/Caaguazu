@@ -159,11 +159,6 @@ class PROMOTUR_Asistente_Panel {
 		return self::disponible() && method_exists( 'CZUAPI_Asistente', 'web_activa' ) && CZUAPI_Asistente::web_activa();
 	}
 
-	/** ¿El proveedor configurado puede buscar? Hace falta la Responses API (OpenAI). */
-	public static function web_posible() {
-		return self::disponible() && method_exists( 'CZUAPI_Asistente', 'endpoint_respuestas' ) && '' !== CZUAPI_Asistente::endpoint_respuestas( CZUAPI_Asistente::endpoint() ) && false !== strpos( CZUAPI_Asistente::endpoint(), 'openai.com' );
-	}
-
 	/** ¿El asistente lee también los borradores? (Necesita la API 0.11.5.) */
 	public static function borradores() {
 		return self::disponible() && method_exists( 'CZUAPI_Asistente', 'borradores_activos' ) && CZUAPI_Asistente::borradores_activos();

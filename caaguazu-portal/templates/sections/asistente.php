@@ -175,9 +175,6 @@ $body = function () use ( $disponible, $pestana, $etiquetas, $nombres_fuentes ) 
 						<span><input type="checkbox" name="web" value="1"<?php checked( PROMOTUR_Asistente_Panel::web() ); ?>> <?php esc_html_e( 'Buscar en internet lo que no esté publicado', 'caaguazu-portal' ); ?></span>
 					</label>
 					<p class="promotur-muted"><?php esc_html_e( 'Sólo cuando el dato no está en la guía. La respuesta avisa que es de internet y trae los enlaces. Cada búsqueda tiene costo en el proveedor.', 'caaguazu-portal' ); ?></p>
-					<?php if ( ! PROMOTUR_Asistente_Panel::web_posible() ) : ?>
-						<p class="promotur-form-msg is-error"><?php esc_html_e( 'El proveedor configurado no puede buscar en internet: hace falta OpenAI.', 'caaguazu-portal' ); ?></p>
-					<?php endif; ?>
 					<div>
 						<button type="submit" class="promotur-btn promotur-btn--primary"><?php esc_html_e( 'Guardar fuentes', 'caaguazu-portal' ); ?></button>
 					</div>

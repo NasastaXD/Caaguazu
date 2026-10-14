@@ -60,6 +60,11 @@ llamen los tags.
 
 == Changelog ==
 
+= 3.15.8 =
+* Asistente → Fuentes: se quita el aviso «el proveedor no puede buscar en
+  internet: hace falta OpenAI». El endpoint propio que redirige a OpenAI
+  busca igual; el panel ya no juzga el proveedor.
+
 = 3.15.7 =
 * Datos de prueba: la investigación consolidada (3 rondas, 40 lugares:
   historia, religioso, madera y artesanía, naturaleza, compras, gastronomía,
