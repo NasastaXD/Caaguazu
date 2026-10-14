@@ -55,7 +55,13 @@ function wp_remote_retrieve_body( $r ) { return $r['body']; }
 /* El HTTP de prueba: guarda lo que se mandó y contesta lo que se le cargó. */
 $GLOBALS['http_enviado'] = null;
 $GLOBALS['http_respuesta'] = array( 'response' => array( 'code' => 200 ), 'body' => '{"text":"hola cómo funciona esto"}' );
-function wp_remote_post( $url, $args ) { $GLOBALS['http_enviado'] = array( $url, $args ); return $GLOBALS['http_respuesta']; }
+function wp_remote_post( $url, $args ) {
+	$GLOBALS['http_enviado']    = array( $url, $args );
+	$GLOBALS['http_llamadas'][] = array( $url, $args );
+	// Con cola, cada llamada contesta lo siguiente; sin cola, siempre lo mismo.
+	return ! empty( $GLOBALS['http_cola'] ) ? array_shift( $GLOBALS['http_cola'] ) : $GLOBALS['http_respuesta'];
+}
+function esc_url_raw( $u ) { return (string) $u; }
 /* Transitorios en memoria, para probar la charla de la presentación. */
 $GLOBALS['czu_transitorios'] = array();
 function get_transient( $k ) { return $GLOBALS['czu_transitorios'][ $k ] ?? false; }
@@ -125,6 +131,14 @@ comprobar( 'las marcas salen del texto, y el espacio con ellas', $c['texto'], "A
 comprobar( 'una marca que no existe no se convierte en enlace', count( $c['fuentes'] ), 2 );
 comprobar( 'la fuente lleva tipo, id y título', $c['fuentes'][0], array( 'tipo' => 'ficha', 'id' => 12, 'titulo' => 'Salto Cascada', 'tipo_item' => 'sitio' ) );
 comprobar( 'un artículo no lleva tipo_item', array_key_exists( 'tipo_item', $c['fuentes'][1] ), false );
+
+$con_borrador = array(
+	'F12' => array( 'tipo' => 'ficha', 'id' => 12, 'titulo' => 'Salto Cascada', 'tipo_item' => 'sitio', 'borrador' => false ),
+	'F40' => array( 'tipo' => 'ficha', 'id' => 40, 'titulo' => 'En camino', 'tipo_item' => 'sitio', 'borrador' => true ),
+);
+$c = $F::citas( 'Abre a las 8 [F12]. Y hay otro lugar [F40].', $con_borrador );
+comprobar( 'un borrador se usa pero no se ofrece como enlace (la app no lo puede abrir)', array_column( $c['fuentes'], 'id' ), array( 12 ) );
+comprobar( 'y su marca también sale del texto', $c['texto'], 'Abre a las 8. Y hay otro lugar.' );
 
 $muchas = array();
 for ( $i = 1; $i <= 9; $i++ ) { $muchas[ 'F' . $i ] = array( 'tipo' => 'ficha', 'id' => $i, 'titulo' => 'L' . $i, 'tipo_item' => 'sitio' ); }
@@ -384,12 +398,63 @@ comprobar( 'prendido, la voz sí las recibe', $P::etiquetas( 'Hola [pause] listo
 /* El conocimiento: el de prueba, con marcadores, hasta que el equipo guarde el suyo. */
 unset( $GLOBALS['czu_opciones']['czuapi_pres_conocimiento'] );
 comprobar( 'sin conocimiento guardado, va el de prueba con marcadores', str_contains( $P::conocimiento(), '‹descripción' ) && str_contains( $P::conocimiento(), 'Ykua La Patria' ), true );
-comprobar( 'el de prueba trae los trece lugares y los tres eventos de la investigación', array( substr_count( $P::conocimiento(), "\n- " ) ), array( 16 ) );
+comprobar( 'el de prueba trae los 40 lugares de la investigación y ningún evento', array( substr_count( $P::conocimiento(), "\n- " ), false !== strpos( $P::conocimiento(), 'EVENTOS' ) ), array( 40, false ) );
 comprobar( 'trae datos de la investigación (precio, horario) y marca lo dudoso y lo que falta', str_contains( $P::conocimiento(), 'G. 35.000' ) && str_contains( $P::conocimiento(), '8:00 a 18:00' ) && str_contains( $P::conocimiento(), '‹dato a confirmar›' ) && str_contains( $P::conocimiento(), '‹contacto›' ), true );
 require_once __DIR__ . '/generar-conocimiento-prueba.php';
 comprobar( 'el archivo del plugin está al día con el JSON de la investigación (php tools/generar-conocimiento-prueba.php --escribir)', trim( file_get_contents( CZU_TXT_PRUEBA ) ), trim( czu_conocimiento_de_prueba() ) );
 $GLOBALS['czu_opciones']['czuapi_pres_conocimiento'] = '';
 comprobar( 'y si el equipo lo dejó vacío, queda vacío (no vuelve el de prueba)', $P::conocimiento(), '' );
+
+/* Búsqueda en internet: sólo cuando el modelo avisa que el dato no está. */
+$GLOBALS['czu_opciones'] = array( 'czuapi_ia_activo' => 1, 'czuapi_pres_web' => 1, 'czuapi_ia_endpoint' => 'https://api.openai.com/v1/chat/completions', 'czuapi_ia_modelo' => 'gpt-6-luna' );
+comprobar( 'la dirección de la Responses API sale de la de chat', CZUAPI_Asistente::endpoint_respuestas( 'https://api.openai.com/v1/chat/completions' ), 'https://api.openai.com/v1/responses' );
+comprobar( 'sin /chat/completions no hay de dónde sacarla', CZUAPI_Asistente::endpoint_respuestas( 'https://otro.test/api' ), '' );
+$GLOBALS['http_llamadas'] = array();
+$GLOBALS['http_cola']     = array(
+	array( 'response' => array( 'code' => 200 ), 'body' => '{"choices":[{"message":{"content":"No tengo el horario del museo. [WEB]"}}]}' ),
+	array( 'response' => array( 'code' => 200 ), 'body' => json_encode( array( 'output' => array(
+		array( 'type' => 'web_search_call', 'status' => 'completed' ),
+		array( 'type' => 'message', 'content' => array( array(
+			'type' => 'output_text',
+			'text' => 'El museo abre de 8 a 12 ([diario.com.py](https://diario.com.py/museo)).',
+			'annotations' => array(
+				array( 'type' => 'url_citation', 'url' => 'https://diario.com.py/museo', 'title' => 'Museo de la Madera' ),
+				array( 'type' => 'url_citation', 'url' => 'https://diario.com.py/museo', 'title' => 'Repetido' ),
+				array( 'type' => 'url_citation', 'url' => 'javascript:alert(1)', 'title' => 'Malo' ),
+			),
+		) ) ),
+	) ) ) ),
+);
+$r = CZUAPI_Asistente::preguntar( '¿a qué hora abre el museo?', array(), 'es', null, array( 'sin_fuentes' => true, 'web' => true ) );
+comprobar( 'primero pregunta por chat y, con la marca, busca por la Responses API', array_map( static function ( $l ) { return $l[0]; }, $GLOBALS['http_llamadas'] ), array( 'https://api.openai.com/v1/chat/completions', 'https://api.openai.com/v1/responses' ) );
+$pedido = json_decode( $GLOBALS['http_llamadas'][1][1]['body'], true );
+comprobar( 'la búsqueda usa web_search, ubicada en Caaguazú, con el mismo modelo', array( $pedido['tools'][0]['type'], $pedido['tools'][0]['user_location']['city'], $pedido['model'] ), array( 'web_search', 'Caaguazú', 'gpt-6-luna' ) );
+comprobar( 'el chat recibió la instrucción de la marca', false !== strpos( json_decode( $GLOBALS['http_llamadas'][0][1]['body'], true )['messages'][0]['content'], '[WEB]' ), true );
+comprobar( 'la respuesta sale de internet, sin los enlaces en el texto, y con el aviso', $r['respuesta'], "El museo abre de 8 a 12.\n\n" . CZUAPI_Asistente::nota_web( 'es' ) );
+comprobar( 'los enlaces van aparte, sin repetir y sólo http(s)', $r['enlaces'], array( array( 'titulo' => 'Museo de la Madera', 'url' => 'https://diario.com.py/museo' ) ) );
+comprobar( 'lo de internet no se mezcla con las fuentes de la guía', $r['fuentes'], array() );
+
+$GLOBALS['http_llamadas'] = array();
+$GLOBALS['http_cola']     = array(
+	array( 'response' => array( 'code' => 200 ), 'body' => '{"choices":[{"message":{"content":"No tengo ese dato. [WEB]"}}]}' ),
+	array( 'response' => array( 'code' => 500 ), 'body' => '{"error":"caído"}' ),
+);
+$r = CZUAPI_Asistente::preguntar( '¿y el teléfono?', array(), 'es', null, array( 'sin_fuentes' => true, 'web' => true ) );
+comprobar( 'si la búsqueda falla, queda la respuesta de siempre, sin la marca', array( $r['ok'], $r['respuesta'], $r['enlaces'] ), array( true, 'No tengo ese dato.', array() ) );
+
+$GLOBALS['http_llamadas'] = array();
+$GLOBALS['http_cola']     = array( array( 'response' => array( 'code' => 200 ), 'body' => '{"choices":[{"message":{"content":"No tengo ese dato. [WEB]"}}]}' ) );
+$r = CZUAPI_Asistente::preguntar( '¿y el teléfono?', array(), 'es', null, array( 'sin_fuentes' => true, 'web' => false ) );
+comprobar( 'con la búsqueda apagada no se busca, y la marca no llega a la persona', array( count( $GLOBALS['http_llamadas'] ), $r['respuesta'] ), array( 1, 'No tengo ese dato.' ) );
+comprobar( 'apagado, el chat ni siquiera recibe la instrucción de la marca', false !== strpos( json_decode( $GLOBALS['http_llamadas'][0][1]['body'], true )['messages'][0]['content'], '[WEB]' ), false );
+$GLOBALS['http_cola'] = array();
+
+/* Borradores: apagados por defecto, y cada IA con su interruptor. */
+unset( $GLOBALS['czu_opciones']['czuapi_pres_borradores'], $GLOBALS['czu_opciones']['czuapi_ia_borradores'] );
+comprobar( 'los borradores arrancan apagados en las dos IA', array( $P::usa_borradores(), CZUAPI_Asistente::borradores_activos() ), array( false, false ) );
+$GLOBALS['czu_opciones']['czuapi_pres_borradores'] = 1;
+comprobar( 'el de la presentación no prende el del asistente', array( $P::usa_borradores(), CZUAPI_Asistente::borradores_activos() ), array( true, false ) );
+unset( $GLOBALS['czu_opciones']['czuapi_pres_borradores'] );
 
 /* La persona: saludar una sola vez. */
 comprobar( 'la persona dice que saluda una sola vez', str_contains( $P::persona_de_fabrica(), 'saludá UNA vez' ), true );

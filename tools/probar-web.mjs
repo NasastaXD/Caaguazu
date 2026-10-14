@@ -313,7 +313,7 @@ seccion( 'Asistente' );
 		if ( route.request().method() === 'GET' ) { return route.fulfill( json( { disponible: true } ) ); }
 		n++;
 		if ( n === 1 ) {
-			return route.fulfill( json( { respuesta: 'Podés visitar Ykua La Patria.', fuentes: [ { tipo: 'ficha', id: 260, titulo: 'Ykua La Patria', tipo_item: 'sitio' }, { tipo: 'recorrido', id: 9, titulo: 'Ruta fundacional' } ], conversacion: 'abc12345', idioma: 'es' } ) );
+			return route.fulfill( json( { respuesta: 'Podés visitar Ykua La Patria.', fuentes: [ { tipo: 'ficha', id: 260, titulo: 'Ykua La Patria', tipo_item: 'sitio' }, { tipo: 'recorrido', id: 9, titulo: 'Ruta fundacional' } ], enlaces: [ { titulo: 'Diario', url: 'https://diario.com.py/museo' }, { titulo: 'Malo', url: 'javascript:alert(1)' } ], conversacion: 'abc12345', idioma: 'es' } ) );
 		}
 		segundo = JSON.parse( route.request().postData() );
 		return route.fulfill( json( { error: { codigo: 'muchos_pedidos', mensaje: 'x', detalle: { espera_seg: 30 } } }, 429, { 'Retry-After': '30' } ) );
@@ -323,14 +323,16 @@ seccion( 'Asistente' );
 	await p.locator( '[data-ejemplo]' ).first().click();
 	await p.waitForSelector( '.globo--ia:not(.escribiendo)', { timeout: 5000 } );
 	ok( 'muestra la respuesta', ( await p.locator( '.globo--ia' ).first().textContent() ).includes( 'Ykua La Patria' ) );
-	const fuentes = await p.locator( '.globo__fuentes a' ).evaluateAll( ( as ) => as.map( ( a ) => a.getAttribute( 'href' ) ) );
+	const fuentes = await p.locator( '.globo__fuentes a:not([target])' ).evaluateAll( ( as ) => as.map( ( a ) => a.getAttribute( 'href' ) ) );
 	ok( 'las fuentes llevan a la ficha y, un recorrido, a la app', JSON.stringify( fuentes ) === '["#/ficha/260","#/app"]', JSON.stringify( fuentes ) );
+	const externos = await p.locator( '.globo__fuentes a[target="_blank"]' ).evaluateAll( ( as ) => as.map( ( a ) => a.getAttribute( 'href' ) + '|' + a.getAttribute( 'rel' ) ) );
+	ok( 'los enlaces de internet abren aparte, y uno que no es http(s) no se muestra', JSON.stringify( externos ) === '["https://diario.com.py/museo|noopener noreferrer"]', JSON.stringify( externos ) );
 	await p.locator( '#pregunta' ).fill( '¿y cómo llego?' );
 	await p.locator( '#redactar button[type=submit]' ).click();
 	await p.waitForSelector( '.globo--error', { timeout: 5000 } );
 	ok( 'la segunda pregunta manda el id de la conversación', segundo?.conversacion === 'abc12345', JSON.stringify( segundo ) );
 	ok( 'el 429 dice cuánto esperar', ( await p.locator( '.globo--error' ).textContent() ).includes( '30 segundos' ) );
-	await p.locator( '.globo__fuentes a' ).first().click();
+	await p.locator( '.globo__fuentes a:not([target])' ).first().click();
 	await p.waitForTimeout( 600 );
 	await p.goBack();
 	await p.waitForTimeout( 800 );

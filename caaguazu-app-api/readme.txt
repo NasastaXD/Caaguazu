@@ -168,6 +168,37 @@ depende de cómo se llame el tag.
 * Repo privado: definir `CZUAPI_GITHUB_TOKEN` (PAT de solo lectura) en
   `wp-config.php`, o cargarlo desde **Caaguazú API → Actualizaciones**.
 
+== Cambios en 0.11.7 ==
+
+* Conocimiento de prueba de la presentación: ahora sale de la investigación
+  consolidada en tres rondas (40 lugares, sin eventos).
+
+== Cambios en 0.11.6 ==
+
+* **Búsqueda en internet para lo que no está publicado**, con un interruptor
+  por IA (`czuapi_ia_web`, `czuapi_pres_web`), apagado por defecto. Si el dato
+  de Caaguazú no está en las fuentes, el modelo lo dice y agrega la marca
+  `[WEB]`; con eso se pregunta otra vez por la Responses API (`/responses`,
+  herramienta `web_search`, ubicada en Caaguazú). Funciona con OpenAI
+  (por ejemplo gpt-6-luna); con un proveedor sin Responses API no busca.
+* La respuesta de internet avisa que el equipo no la verificó, y sus enlaces
+  van en un campo nuevo, `enlaces` ({ titulo, url }), aparte de `fuentes`.
+  La app ya publicada lo ignora sin romperse.
+* Si la búsqueda falla, queda la respuesta de siempre («no tengo ese dato»).
+  La marca nunca llega a la persona.
+
+== Cambios en 0.11.5 ==
+
+* **Las dos IA pueden leer borradores**, cada una con su interruptor
+  (`czuapi_ia_borradores` para el asistente, `czuapi_pres_borradores` para la
+  presentación). Apagados por defecto. Prendidos, el catálogo suma las fichas y
+  los artículos en camino de publicarse (los mismos que muestra la vista previa
+  de borradores) y el detalle se lee con el mismo endpoint, como revisor.
+* Un borrador se usa para contestar pero **no se devuelve como fuente**: desde
+  la app o la web pública no se puede abrir.
+* La caché del catálogo es aparte con y sin borradores, y con borradores en uso
+  se invalida también al guardar un borrador.
+
 == Cambios en 0.11.4 ==
 
 * **El conocimiento de prueba de la presentación sale de la investigación**

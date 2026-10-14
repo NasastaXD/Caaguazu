@@ -292,6 +292,32 @@ class CZUAPI_Asistente {
 		return $out;
 	}
 
+	/**
+	 * ¿El asistente lee también lo que está en camino de publicarse? Apagado
+	 * por defecto: lo publicado pasó por revisión, un borrador todavía no.
+	 */
+	public static function borradores_activos() {
+		return (bool) get_option( 'czuapi_ia_borradores', 0 );
+	}
+
+	public static function set_borradores( $si ) {
+		update_option( 'czuapi_ia_borradores', $si ? 1 : 0, false );
+		CZUAPI_Asistente_Fuentes::invalidar();
+	}
+
+	/**
+	 * ¿Busca en internet lo que no está publicado? Apagado por defecto: lo de
+	 * internet nadie del equipo lo revisó. Sólo funciona con un proveedor que
+	 * tenga la Responses API con `web_search` (OpenAI).
+	 */
+	public static function web_activa() {
+		return (bool) get_option( 'czuapi_ia_web', 0 );
+	}
+
+	public static function set_web( $si ) {
+		update_option( 'czuapi_ia_web', $si ? 1 : 0, false );
+	}
+
 	/** Guarda las fuentes prendidas y tira el catálogo para que se rearme. */
 	public static function set_fuentes( $valores ) {
 		update_option( 'czuapi_ia_fuentes', self::normalizar_fuentes( $valores ), false );
@@ -554,13 +580,15 @@ TXT;
 	 * @param array      $opciones  Lo que cambia otro asistente montado sobre
 	 *                              éste (la presentación): `sistema` (callable
 	 *                              $fuentes, $idioma → prompt), `sin_fuentes`
-	 *                              (no arma el catálogo) y `max_tokens`. El
+	 *                              (no arma el catálogo), `borradores` (suma
+	 *                              lo que está en camino) y `max_tokens`. El
 	 *                              proveedor, el respaldo y los avisos son los
 	 *                              mismos: hay una sola cuenta que se paga.
 	 * @return array { ok, code, error, respuesta, fuentes, contenido }
 	 */
 	public static function preguntar( $mensaje, $historial, $idioma, $forzado = null, array $opciones = array() ) {
-		$out = array( 'ok' => false, 'code' => 0, 'error' => '', 'respuesta' => '', 'fuentes' => array(), 'contenido' => '' );
+		$out = array( 'ok' => false, 'code' => 0, 'error' => '', 'respuesta' => '', 'fuentes' => array(), 'enlaces' => array(), 'contenido' => '' );
+		$web = array_key_exists( 'web', $opciones ) ? (bool) $opciones['web'] : self::web_activa();
 
 		$mensaje = trim( (string) $mensaje );
 		if ( '' === $mensaje ) {
@@ -583,13 +611,16 @@ TXT;
 
 		$t0      = microtime( true );
 		$fuentes = empty( $opciones['sin_fuentes'] )
-			? CZUAPI_Asistente_Fuentes::reunir( $mensaje, $idioma, (array) $historial )
+			? CZUAPI_Asistente_Fuentes::reunir( $mensaje, $idioma, (array) $historial, array_key_exists( 'borradores', $opciones ) ? (bool) $opciones['borradores'] : self::borradores_activos() )
 			: array( 'catalogo' => '', 'detalle' => '', 'refs' => array() );
 		$t_fuentes = microtime( true ) - $t0;
 
 		$sistema  = isset( $opciones['sistema'] ) && is_callable( $opciones['sistema'] )
 			? (string) call_user_func( $opciones['sistema'], $fuentes, $idioma )
 			: self::armar_sistema( $fuentes, $idioma );
+		if ( $web ) {
+			$sistema .= self::instrucciones_web();
+		}
 		$messages = array( array( 'role' => 'system', 'content' => $sistema ) );
 		foreach ( (array) $historial as $h ) {
 			if ( isset( $h['role'], $h['content'] ) && in_array( $h['role'], array( 'user', 'assistant' ), true ) ) {
@@ -653,6 +684,21 @@ TXT;
 			return $out;
 		}
 
+		// El modelo avisó que el dato no está en lo publicado: se busca en internet.
+		$pide_web = false !== strpos( $contenido, self::MARCA_WEB );
+		$contenido = trim( str_replace( self::MARCA_WEB, '', $contenido ) );
+		if ( $web && $pide_web ) {
+			$w = self::buscar_web( $mensaje, (array) $historial, $idioma, $endpoint, $key, $modelo );
+			if ( $w['ok'] ) {
+				$out['ok']        = true;
+				$out['respuesta'] = $w['texto'] . "\n\n" . self::nota_web( $idioma );
+				$out['enlaces']   = $w['enlaces'];
+				$out['contenido'] = $w['texto'];
+				return $out;
+			}
+			// Si la búsqueda falla, queda la respuesta de siempre: «eso no lo tengo».
+		}
+
 		$citas = CZUAPI_Asistente_Fuentes::citas( $contenido, $fuentes['refs'] );
 		if ( '' === $citas['texto'] ) {
 			$out['error'] = 'Respuesta vacía del modelo.';
@@ -667,6 +713,129 @@ TXT;
 		// hablando, a él y a la búsqueda.
 		$out['contenido'] = $contenido;
 		return $out;
+	}
+
+	/* --------------------------------------------------------------------- */
+	/*  Búsqueda en internet                                                  */
+	/* --------------------------------------------------------------------- */
+
+	/** La marca con la que el modelo pide buscar afuera. Nunca llega a la persona. */
+	const MARCA_WEB = '[WEB]';
+
+	/** Cuántos enlaces de internet, como mucho, acompañan una respuesta. */
+	const MAX_ENLACES = 4;
+
+	protected static function instrucciones_web() {
+		return "\n\n## Lo que no está en los bloques\n"
+			. "Si la pregunta es sobre Caaguazú y el dato no está en los bloques, decí en una frase que no lo tenés y terminá la respuesta con la marca " . self::MARCA_WEB . ", sola, al final. Con esa marca se busca en internet.\n"
+			. "No la uses para lo general que ya sabés contestar, ni cuando el dato sí está en los bloques.";
+	}
+
+	/** Lo que acompaña a una respuesta sacada de internet, en el idioma de la charla. */
+	public static function nota_web( $idioma ) {
+		$notas = array(
+			'es' => 'Dato de internet: el equipo de la guía no lo verificó.',
+			'en' => 'From the internet: not verified by the guide team.',
+			'pt' => 'Informação da internet: não verificada pela equipe do guia.',
+		);
+		$i = substr( (string) $idioma, 0, 2 );
+		return isset( $notas[ $i ] ) ? $notas[ $i ] : $notas['es'];
+	}
+
+	/** La dirección de la Responses API a partir de la de chat; '' si no se puede. */
+	public static function endpoint_respuestas( $endpoint ) {
+		$e = preg_replace( '#/chat/completions/?$#', '/responses', (string) $endpoint );
+		return ( $e !== (string) $endpoint ) ? $e : '';
+	}
+
+	/**
+	 * Pregunta otra vez, ahora con búsqueda en internet (Responses API +
+	 * `web_search`). Es una sola llamada, sin reintento ni respaldo: si falla,
+	 * se contesta con lo de siempre.
+	 *
+	 * @return array { ok, texto, enlaces[] { titulo, url } }
+	 */
+	public static function buscar_web( $mensaje, array $historial, $idioma, $endpoint, $key, $modelo ) {
+		$out = array( 'ok' => false, 'texto' => '', 'enlaces' => array() );
+		$url = self::endpoint_respuestas( $endpoint );
+		if ( '' === $url ) {
+			error_log( '[CzuApi][IA] búsqueda web: el endpoint no es de chat/completions, no hay Responses API' );
+			return $out;
+		}
+
+		$entrada = array();
+		foreach ( array_slice( $historial, -4 ) as $h ) {
+			if ( isset( $h['role'], $h['content'] ) && in_array( $h['role'], array( 'user', 'assistant' ), true ) ) {
+				$entrada[] = array( 'role' => $h['role'], 'content' => CZUAPI_Asistente_Fuentes::limpiar( preg_replace( CZUAPI_Asistente_Fuentes::PATRON_CITA, '', (string) $h['content'] ) ) );
+			}
+		}
+		$entrada[] = array( 'role' => 'user', 'content' => mb_substr( (string) $mensaje, 0, self::MAX_MENSAJE ) );
+
+		$payload = array(
+			'model'             => $modelo,
+			'instructions'      => 'Sos el asistente de una guía turística de Caaguazú, Paraguay. Buscá en internet y contestá la última pregunta en dos o tres frases, en el idioma «' . $idioma . '». Texto plano, sin Markdown. Sólo lo que encuentres; si no encontrás nada confiable, decilo.',
+			'input'             => $entrada,
+			'tools'             => array( array(
+				'type'                => 'web_search',
+				'search_context_size' => 'low',
+				'user_location'       => array( 'type' => 'approximate', 'country' => 'PY', 'city' => 'Caaguazú' ),
+			) ),
+			'max_output_tokens' => max( 800, self::max_tokens() ),
+		);
+		$razona = self::razonamiento();
+		if ( '' !== $razona ) {
+			$payload['reasoning'] = array( 'effort' => $razona );
+		}
+
+		$t0 = microtime( true );
+		$r  = self::http_una( $url, $key, $payload, 35, false );
+		$seg = microtime( true ) - $t0;
+		if ( 200 !== $r['code'] || ! is_array( $r['data'] ) ) {
+			error_log( sprintf( '[CzuApi][IA] búsqueda web: falló en %.1fs (HTTP %d) %s', $seg, (int) $r['code'], self::redactar( mb_substr( (string) ( '' !== $r['error'] ? $r['error'] : wp_strip_all_tags( (string) $r['bodyraw'] ) ), 0, 200 ) ) ) );
+			return $out;
+		}
+
+		$texto   = '';
+		$enlaces = array();
+		foreach ( (array) ( $r['data']['output'] ?? array() ) as $item ) {
+			if ( 'message' !== ( $item['type'] ?? '' ) ) {
+				continue;
+			}
+			foreach ( (array) ( $item['content'] ?? array() ) as $parte ) {
+				if ( 'output_text' !== ( $parte['type'] ?? '' ) ) {
+					continue;
+				}
+				$texto .= (string) ( $parte['text'] ?? '' );
+				foreach ( (array) ( $parte['annotations'] ?? array() ) as $a ) {
+					$u = (string) ( $a['url'] ?? '' );
+					if ( 'url_citation' !== ( $a['type'] ?? '' ) || ! preg_match( '#^https?://#i', $u ) ) {
+						continue;
+					}
+					$clave = strtolower( (string) wp_parse_url( $u, PHP_URL_HOST ) . (string) wp_parse_url( $u, PHP_URL_PATH ) );
+					if ( isset( $enlaces[ $clave ] ) || count( $enlaces ) >= self::MAX_ENLACES ) {
+						continue;
+					}
+					$titulo            = trim( (string) ( $a['title'] ?? '' ) );
+					$enlaces[ $clave ] = array(
+						'titulo' => '' !== $titulo ? mb_substr( $titulo, 0, 80 ) : (string) wp_parse_url( $u, PHP_URL_HOST ),
+						'url'    => esc_url_raw( $u ),
+					);
+				}
+			}
+		}
+
+		// Las citas vienen también dentro del texto, como enlaces de Markdown:
+		// se sacan, porque van aparte y el texto se muestra tal cual.
+		$texto = preg_replace( '/\s*\(\[[^\]]*\]\([^)]*\)\)/u', '', $texto );
+		$texto = preg_replace( '/\[([^\]]+)\]\((https?:[^)]*)\)/u', '$1', $texto );
+		$texto = CZUAPI_Asistente_Fuentes::limpiar( $texto );
+		if ( '' === $texto ) {
+			error_log( '[CzuApi][IA] búsqueda web: respuesta sin texto' );
+			return $out;
+		}
+
+		error_log( sprintf( '[CzuApi][IA] búsqueda web: %.1fs, %d enlace(s)', $seg, count( $enlaces ) ) );
+		return array( 'ok' => true, 'texto' => $texto, 'enlaces' => array_values( $enlaces ) );
 	}
 
 	/* --------------------------------------------------------------------- */
@@ -1221,7 +1390,7 @@ TXT;
 		if ( ! $r['ok'] ) {
 			self::guardar_error( $r );
 			error_log( '[CzuApi][IA] fallo: ' . $r['error'] );
-			return array( 'ok' => false, 'respuesta' => '', 'fuentes' => array(), 'conversacion' => $conv, 'idioma' => $idioma, 'error' => (string) $r['error'] );
+			return array( 'ok' => false, 'respuesta' => '', 'fuentes' => array(), 'enlaces' => array(), 'conversacion' => $conv, 'idioma' => $idioma, 'error' => (string) $r['error'] );
 		}
 		delete_transient( 'czuapi_ia_ultimo_error' );
 
@@ -1242,7 +1411,7 @@ TXT;
 
 		self::guardar_memoria( $conv, $mensaje, $r['contenido'] );
 
-		return array( 'ok' => true, 'respuesta' => $r['respuesta'], 'fuentes' => $r['fuentes'], 'conversacion' => $conv, 'idioma' => $idioma, 'error' => '' );
+		return array( 'ok' => true, 'respuesta' => $r['respuesta'], 'fuentes' => $r['fuentes'], 'enlaces' => $r['enlaces'], 'conversacion' => $conv, 'idioma' => $idioma, 'error' => '' );
 	}
 
 	public function responder( $request ) {
@@ -1278,6 +1447,8 @@ TXT;
 		$res = new WP_REST_Response( array(
 			'respuesta'    => $r['respuesta'],
 			'fuentes'      => $r['fuentes'],
+			// De internet, sin revisar: van aparte para no mezclarse con las fuentes del equipo.
+			'enlaces'      => $r['enlaces'],
 			'conversacion' => $r['conversacion'],
 			'idioma'       => $idioma,
 		), 200 );

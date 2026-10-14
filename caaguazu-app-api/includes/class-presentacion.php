@@ -251,6 +251,19 @@ TXT;
 	}
 
 	/**
+	 * ¿Suma también lo que está en camino de publicarse? Prendido, el catálogo
+	 * entra aunque el de lo publicado esté apagado: los borradores llegan por él.
+	 */
+	public static function usa_borradores() {
+		return (bool) get_option( 'czuapi_pres_borradores', 0 );
+	}
+
+	/** ¿Busca en internet lo que no está en el guion ni en el catálogo? */
+	public static function usa_web() {
+		return (bool) get_option( 'czuapi_pres_web', 0 );
+	}
+
+	/**
 	 * La voz, ya resuelta: lo que falta se completa con lo de fábrica del
 	 * proveedor elegido.
 	 *
@@ -402,6 +415,12 @@ TXT;
 	public static function guardar( array $c ) {
 		update_option( 'czuapi_pres_activo', empty( $c['activo'] ) ? 0 : 1, false );
 		update_option( 'czuapi_pres_catalogo', empty( $c['catalogo'] ) ? 0 : 1, false );
+		$borradores_antes = self::usa_borradores();
+		update_option( 'czuapi_pres_borradores', empty( $c['borradores'] ) ? 0 : 1, false );
+		update_option( 'czuapi_pres_web', empty( $c['web'] ) ? 0 : 1, false );
+		if ( $borradores_antes !== self::usa_borradores() ) {
+			CZUAPI_Asistente_Fuentes::invalidar();
+		}
 
 		$persona = CZUAPI_Asistente::normalizar_texto( $c['persona'] ?? '' );
 		if ( ! empty( $c['persona_fabrica'] ) || $persona === CZUAPI_Asistente::normalizar_texto( self::persona_de_fabrica() ) ) {
@@ -565,7 +584,9 @@ TXT;
 
 		$r = CZUAPI_Asistente::preguntar( $mensaje, $historial, $idioma, null, array(
 			'sistema'     => array( __CLASS__, 'armar_sistema' ),
-			'sin_fuentes' => ! self::usa_catalogo(),
+			'sin_fuentes' => ! ( self::usa_catalogo() || self::usa_borradores() ),
+			'borradores'  => self::usa_borradores(),
+			'web'         => self::usa_web(),
 			'max_tokens'  => self::MAX_TOKENS,
 			'modelo'      => self::modelo(),
 		) );

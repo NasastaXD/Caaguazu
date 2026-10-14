@@ -60,6 +60,21 @@ llamen los tags.
 
 == Changelog ==
 
+= 3.15.7 =
+* Datos de prueba: la investigación consolidada (3 rondas, 40 lugares:
+  historia, religioso, madera y artesanía, naturaleza, compras, gastronomía,
+  servicios y alojamiento). Sin eventos: son lugares y sitios.
+
+= 3.15.6 =
+* Asistente → Fuentes y Presentación: interruptor «Buscar en internet lo que no
+  esté publicado». Avisa si el proveedor configurado no puede (hace falta
+  OpenAI). Requiere la API 0.11.6.
+
+= 3.15.5 =
+* Asistente → Fuentes y Asistente → Presentación: interruptor «Incluir
+  borradores», para que la IA use también lo que todavía no se publicó.
+  Apagado por defecto. Requiere la API 0.11.5.
+
 = 3.15.4 =
 * Datos de prueba: «Cargar y publicar (demo)» deja las fichas de la
   investigación publicadas, para mostrar la app en vivo. Pide confirmación, y

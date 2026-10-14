@@ -95,6 +95,12 @@ $p = PROMOTUR_Asistente_Panel::presentacion();
 			<label class="promotur-field">
 				<span><input type="checkbox" name="catalogo" value="1"<?php checked( $p['catalogo'] ); ?>> <?php esc_html_e( 'Sumar lo publicado en la app (lugares, eventos, artículos)', 'caaguazu-portal' ); ?></span>
 			</label>
+			<label class="promotur-field">
+				<span><input type="checkbox" name="borradores" value="1"<?php checked( ! empty( $p['borradores'] ) ); ?>> <?php esc_html_e( 'Incluir borradores (lo que todavía no se publicó)', 'caaguazu-portal' ); ?></span>
+			</label>
+			<label class="promotur-field">
+				<span><input type="checkbox" name="web" value="1"<?php checked( ! empty( $p['web'] ) ); ?>> <?php esc_html_e( 'Buscar en internet lo que no sepa (sólo OpenAI)', 'caaguazu-portal' ); ?></span>
+			</label>
 		</div>
 
 		<div class="promotur-card">
