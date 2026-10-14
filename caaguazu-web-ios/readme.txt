@@ -131,6 +131,13 @@ propio, idioma elegido), y eso vive en su navegador, no acá.
 
 == Changelog ==
 
+= 2.5.0 =
+* `/turismo/vitrina/` ahora muestra la misma página que `/turismo/propuesta/`
+  (las dos direcciones siguen andando). La vitrina anterior, con modo
+  proyección, se retira; la maqueta del panel queda en `vitrina/panel/`.
+* La página avisa que es un **trabajo en proceso** y una **vista previa**: una
+  franja fija arriba de todo, en la demo y en la capa del celular.
+
 = 2.4.2 =
 * Asistente: muestra los enlaces de internet que trae una respuesta (cuando la
   búsqueda en internet está prendida en el panel), aparte de las fuentes de la

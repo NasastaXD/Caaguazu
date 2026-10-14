@@ -3,63 +3,122 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Caaguazú · Vitrina</title>
-<!-- Para mostrar en una presentación, no para que la encuentre un buscador. -->
+<title>Caaguazú Go · Vista previa</title>
+<!-- Se comparte por enlace; no es para que la encuentre un buscador. -->
 <meta name="robots" content="noindex, nofollow">
-<meta name="theme-color" content="#efefef">
+<meta name="theme-color" content="#f4f4f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e0e10" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="../assets/icon-192.png">
 <link rel="preload" href="../fuentes/inter-600.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="vitrina.css">
+<link rel="stylesheet" href="../propuesta/propuesta.css">
 </head>
 <body>
 
 <!--
-  Dos vistas: la app en un teléfono (es la web de turismo de verdad, con sus
-  datos) y el panel donde se carga, en un iPad y en un teléfono (maqueta con
-  datos de mentira). Se cambia con las pestañas, con 1/2 o con las flechas; la
-  dirección (#app, #panel) abre una directa.
+  Presentación del proyecto en la web, para compartir con un enlace: qué es,
+  una demo en vivo (la guía de verdad, el asistente de chat y el panel con
+  datos de ejemplo) y de dónde sale la información.
 
-  Modo proyección (tecla P, o ?proyectar=1): sin pestañas ni QR, sólo los
-  aparatos. Se sigue manejando con el teclado desde la computadora.
+  La demo: en una pantalla ancha va dentro de un teléfono dibujado; en un
+  celular, cada demo se abre a pantalla completa con un botón para cerrar.
+
+  La misma página se sirve en /turismo/propuesta/ y en /turismo/vitrina/: los
+  dos index.html son idénticos y por eso piden el CSS y el JS con la ruta de
+  propuesta/ (probar-web.mjs falla si se separan).
+
+  Es una vista previa de un trabajo en proceso, y la página lo dice arriba de
+  todo, en la demo y en la capa del celular.
 -->
-<nav class="pestanas" role="tablist">
-  <a class="pestana" role="tab" href="#app" data-vista="app">App</a>
-  <a class="pestana" role="tab" href="#panel" data-vista="panel">Panel</a>
-</nav>
 
-<main class="escenario">
-  <section class="vista" id="vista-app" data-vista="app">
-    <div class="grupo" id="grupo-app">
-      <div class="telefono">
-        <div class="telefono__pantalla">
-          <!-- La franja de arriba es la del sistema: la app empieza debajo,
-               como en un teléfono de verdad, y la isla no le tapa la cabecera. -->
-          <span class="telefono__estado" aria-hidden="true"><span class="telefono__isla"></span></span>
-          <iframe id="marco-app" title="App" data-src="../"></iframe>
-        </div>
+<p class="aviso" role="note"><strong>Trabajo en proceso</strong> · Esto es una vista previa</p>
+
+<header class="portada">
+  <img class="portada__icono" src="../assets/icon-192.png" alt="" width="64" height="64">
+  <p class="antetitulo">CEAD Félix de Guarania · Trabajo en proceso</p>
+  <h1>Caaguazú Go</h1>
+  <p class="bajada">Una guía turística digital y gratuita de Caaguazú, hecha por los alumnos del Bachillerato Técnico en Servicios Turísticos.</p>
+  <a class="boton boton--primario" href="#demo">Ver la vista previa</a>
+</header>
+
+<main>
+  <section class="bloque bloque--demo" id="demo">
+    <div class="bloque__texto">
+      <h2>Vista previa</h2>
+      <p>Es la guía real, con la información cargada hasta hoy. Todavía está en proceso: faltan contenidos y puede haber datos sin revisar.</p>
+
+      <div class="pestanas" role="tablist">
+        <button type="button" class="pestana" role="tab" data-demo="guia" aria-selected="true">Guía</button>
+        <button type="button" class="pestana" role="tab" data-demo="asistente" aria-selected="false">Asistente</button>
+        <button type="button" class="pestana" role="tab" data-demo="panel" aria-selected="false">Panel</button>
       </div>
-      <figure class="qr" id="qr" aria-hidden="true"></figure>
+
+      <div class="explicacion" data-para="guia">
+        <p>Lo que ve el visitante: lugares, eventos, artículos y recorridos, con su foto, horario, precio y cómo llegar.</p>
+      </div>
+      <div class="explicacion" data-para="asistente" hidden>
+        <p>Un asistente de chat que responde preguntas sobre qué visitar, horarios o cómo llegar, con la información publicada en la guía.</p>
+      </div>
+      <div class="explicacion" data-para="panel" hidden>
+        <p>Donde los alumnos cargan lo que escriben y los docentes lo revisan antes de publicarlo.</p>
+        <p class="nota">Vista previa con datos de ejemplo.</p>
+      </div>
+
+      <!-- En un celular la demo no entra al costado: se abre entera. -->
+      <button type="button" class="boton boton--primario solo-celular" id="abrir-demo">Abrir</button>
+    </div>
+
+    <div class="telefono solo-ancho" aria-hidden="false">
+      <div class="telefono__pantalla">
+        <span class="telefono__estado" aria-hidden="true"><span class="telefono__isla"></span></span>
+        <iframe id="marco-demo" title="Demo" loading="lazy"></iframe>
+      </div>
     </div>
   </section>
 
-  <section class="vista" id="vista-panel" data-vista="panel" hidden>
-    <div class="grupo" id="grupo-panel">
-      <div class="tableta">
-        <div class="tableta__pantalla">
-          <iframe id="marco-panel" title="Panel en tableta" data-src="panel/home.html"></iframe>
-        </div>
-      </div>
-      <div class="telefono">
-        <div class="telefono__pantalla">
-          <span class="telefono__estado" aria-hidden="true"><span class="telefono__isla"></span></span>
-          <iframe id="marco-panel-tel" title="Panel en teléfono" data-src="panel/home.html"></iframe>
-        </div>
-      </div>
+  <section class="bloque">
+    <h2>¿De dónde sale la información?</h2>
+    <p>Todo lo que muestra la guía lo hacen los alumnos, y pasa por los docentes antes de publicarse.</p>
+    <ol class="pasos">
+      <li><span class="pasos__n">1</span><div><h3>Investigación</h3><p>Los alumnos investigan y verifican la información de cada sitio.</p></div></li>
+      <li><span class="pasos__n">2</span><div><h3>Redacción</h3><p>Escriben las fichas de cada lugar y los artículos.</p></div></li>
+      <li><span class="pasos__n">3</span><div><h3>Revisión</h3><p>Los docentes revisan cada pieza y la aprueban.</p></div></li>
+      <li><span class="pasos__n">4</span><div><h3>Publicación</h3><p>Lo aprobado se sube a la plataforma.</p></div></li>
+      <li><span class="pasos__n">5</span><div><h3>Traducción</h3><p>Alumnos o docentes lo traducen al inglés y al portugués.</p></div></li>
+    </ol>
+  </section>
+
+  <section class="bloque bloque--doble">
+    <div class="tarjeta">
+      <h2>Tres idiomas</h2>
+      <p>Español, inglés y portugués. El visitante elige el idioma y la guía cambia. Los textos de cada lugar se traducen después de aprobarse.</p>
     </div>
+    <div class="tarjeta">
+      <h2>Gratis para el visitante</h2>
+      <p>Se usa desde el celular o la computadora, sin registrarse y sin pagar.</p>
+    </div>
+  </section>
+
+  <section class="bloque">
+    <h2>¿En qué punto estamos?</h2>
+    <p>Caaguazú Go es un trabajo en proceso y lo que se ve acá es una vista previa. Estamos cargando los contenidos y preparando la app para Android y iPhone.</p>
   </section>
 </main>
 
-<script src="../js/vendor/qrcode.js" defer></script>
-<script src="vitrina.js" defer></script>
+<footer class="pie">
+  <p>Centro Educativo de Alto Desempeño Félix de Guarania · Caaguazú, 2026</p>
+</footer>
+
+<!-- La demo a pantalla completa, para celulares. -->
+<div class="capa" id="capa" hidden>
+  <div class="capa__barra">
+    <span class="capa__titulo" id="capa-titulo"></span>
+    <button type="button" class="capa__cerrar" id="cerrar-capa" aria-label="Cerrar">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <iframe id="marco-capa" title="Demo"></iframe>
+</div>
+
+<script src="../propuesta/propuesta.js" defer></script>
 </body>
 </html>

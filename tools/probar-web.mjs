@@ -1070,47 +1070,21 @@ if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
 		}
 		rtSrv.matar();
 	}
-	// --- La vitrina: la app en un teléfono, el panel en iPad y teléfono -------
+	// --- La vitrina es la propuesta, en otra dirección ---------------------------
 	{
-		const v = await abrir( { viewport: { width: 1280, height: 720 }, hasTouch: false, isMobile: false } );
+		const iguales = readFileSync( join( aqui, '../caaguazu-web-ios/sitio/vitrina/index.html' ), 'utf8' ) === readFileSync( join( aqui, '../caaguazu-web-ios/sitio/propuesta/index.html' ), 'utf8' );
+		ok( '/vitrina/ y /propuesta/ sirven la misma página (los dos index.html son idénticos)', iguales );
+		const v = await abrir( { viewport: { width: 1440, height: 900 }, hasTouch: false, isMobile: false } );
 		await v.p.goto( pre.PHP + '/turismo/vitrina/' );
-		await v.p.waitForTimeout( 800 );
-		const dentro = ( caja ) => caja && caja.x >= 0 && caja.y >= 0 && caja.x + caja.width <= 1280 && caja.y + caja.height <= 720;
-		ok( 'la vitrina abre en la app, con la web de turismo dentro del teléfono', ( await v.p.getAttribute( '#marco-app', 'src' ) ) === '../' && await v.p.locator( '#vista-app' ).isVisible() );
-		ok( 'ya no hay vista del asistente (va aparte, en la presentación)', ( await v.p.locator( '[data-vista="asistente"]' ).count() ) === 0 );
-		ok( 'el teléfono entra entero en una pantalla de 1280×720', dentro( await v.p.locator( '#vista-app .telefono' ).boundingBox() ) );
-		ok( 'los marcos del panel no se cargan hasta mostrarse', ( await v.p.getAttribute( '#marco-panel', 'src' ) ) === null );
-		await v.p.keyboard.press( '2' );
-		await v.p.waitForTimeout( 1500 );
-		ok( 'con «2» pasa al panel, y la dirección lo dice', v.p.url().endsWith( '#panel' ) && await v.p.locator( '#vista-panel' ).isVisible() );
-		ok( 'el panel se ve en un iPad y en un teléfono, los dos enteros', dentro( await v.p.locator( '.tableta' ).boundingBox() ) && dentro( await v.p.locator( '#vista-panel .telefono' ).boundingBox() ) );
-		ok( 'el panel del iPad muestra el menú lateral (pantalla ancha)', await v.p.frameLocator( '#marco-panel' ).locator( 'text=Inventario turístico' ).first().isVisible() );
-		await v.p.frameLocator( '#marco-panel' ).locator( 'text=Inventario turístico' ).first().click();
-		await v.p.waitForTimeout( 900 );
-		ok( 'el menú del panel lleva de una pantalla a otra, sin salir de la vitrina', ( await v.p.evaluate( () => document.getElementById( 'marco-panel' ).contentWindow.location.pathname ) ).endsWith( 'panel/inventario.html' ) && v.p.url().endsWith( '#panel' ) );
-		ok( 'el panel no muestra nombres de la maqueta que parezcan reales', ! /Achmad/.test( await v.p.evaluate( () => document.getElementById( 'marco-panel' ).contentDocument.body.innerHTML ) ) );
-		// Las teclas llegan aunque el foco esté dentro de un aparato, y una sola vez.
-		await v.p.frameLocator( '#marco-panel' ).locator( 'body' ).press( 'ArrowLeft' );
-		await v.p.waitForTimeout( 700 );
-		ok( 'las flechas llegan aunque el foco esté dentro del panel', v.p.url().endsWith( '#app' ) );
-		// Modo proyección: sin pestañas ni QR.
-		await v.p.keyboard.press( 'p' );
 		await v.p.waitForTimeout( 500 );
-		ok( 'con «P», modo proyección: sin pestañas ni QR, sólo el aparato', ( await v.p.locator( '.pestanas' ).isHidden() ) && ( await v.p.locator( '#qr' ).isHidden() ) && dentro( await v.p.locator( '#vista-app .telefono' ).boundingBox() ) );
-		await v.p.keyboard.press( 'ArrowRight' );
+		ok( 'la vitrina abre la propuesta, con el aviso de trabajo en proceso', ( await v.p.textContent( 'h1' ) ).trim() === 'Caaguazú Go' && /Trabajo en proceso/i.test( await v.p.textContent( '.aviso' ) ) );
+		await v.p.click( 'a[href="#demo"]' );
+		await v.p.waitForTimeout( 1200 );
+		await v.p.click( '[data-demo="panel"]' );
 		await v.p.waitForTimeout( 900 );
-		ok( 'y se sigue manejando con el teclado', v.p.url().endsWith( '#panel' ) && await v.p.locator( '.pestanas' ).isHidden() );
-		await v.p.keyboard.press( 'p' );
-		await v.p.waitForTimeout( 300 );
-		ok( '«P» otra vez vuelve a mostrar las pestañas', await v.p.locator( '.pestanas' ).isVisible() );
+		ok( 'desde /vitrina/ la maqueta del panel también carga', ( await v.p.evaluate( () => document.getElementById( 'marco-demo' ).contentWindow.location.pathname ) ).endsWith( '/turismo/vitrina/panel/home.html' ) && await v.p.frameLocator( '#marco-demo' ).locator( 'body' ).isVisible() );
 		ok( 'sin errores de página en la vitrina', v.errores.length === 0, v.errores.join( '|' ) );
 		await v.ctx.close();
-
-		const proy = await abrir( { viewport: { width: 1280, height: 720 }, hasTouch: false, isMobile: false } );
-		await proy.p.goto( pre.PHP + '/turismo/vitrina/?proyectar=1#panel' );
-		await proy.p.waitForTimeout( 800 );
-		ok( '?proyectar=1 abre directo en modo proyección, en la vista pedida', ( await proy.p.locator( '.pestanas' ).isHidden() ) && await proy.p.locator( '#vista-panel' ).isVisible() );
-		await proy.ctx.close();
 	}
 
 	// --- La propuesta, contada en una página (/turismo/propuesta/) --------------
@@ -1119,6 +1093,7 @@ if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
 		await pc.p.goto( pre.PHP + '/turismo/propuesta/' );
 		await pc.p.waitForTimeout( 500 );
 		ok( 'la página de la propuesta abre, con su título', ( await pc.p.textContent( 'h1' ) ).trim() === 'Caaguazú Go' );
+		ok( 'arriba de todo dice que es un trabajo en proceso y una vista previa', await pc.p.locator( '.aviso' ).isVisible() && /Trabajo en proceso/i.test( await pc.p.textContent( '.aviso' ) ) && /vista previa/i.test( await pc.p.textContent( '.aviso' ) ) );
 		await pc.p.click( 'a[href="#demo"]' );
 		await pc.p.waitForTimeout( 1200 );
 		ok( 'en pantalla ancha, la guía real se ve dentro del teléfono', ( await pc.p.getAttribute( '#marco-demo', 'src' ) ) === '../' && await pc.p.locator( '.telefono' ).isVisible() );
@@ -1138,7 +1113,7 @@ if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
 		await cel.p.tap( '[data-demo="panel"]' );
 		await cel.p.tap( '#abrir-demo' );
 		await cel.p.waitForTimeout( 800 );
-		ok( '«Abrir» muestra la demo elegida a pantalla completa', await cel.p.locator( '#capa' ).isVisible() && ( await cel.p.getAttribute( '#marco-capa', 'src' ) ) === '../vitrina/panel/home.html' && ( await cel.p.textContent( '#capa-titulo' ) ) === 'Panel' );
+		ok( '«Abrir» muestra la demo elegida a pantalla completa', await cel.p.locator( '#capa' ).isVisible() && ( await cel.p.getAttribute( '#marco-capa', 'src' ) ) === '../vitrina/panel/home.html' && ( await cel.p.textContent( '#capa-titulo' ) ) === 'Panel · Vista previa' );
 		await cel.p.goBack();
 		await cel.p.waitForTimeout( 400 );
 		ok( '«atrás» del teléfono cierra la demo y se queda en la página', ( await cel.p.locator( '#capa' ).isHidden() ) && cel.p.url().includes( '/turismo/propuesta/' ) );
