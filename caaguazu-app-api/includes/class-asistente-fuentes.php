@@ -90,9 +90,15 @@ class CZUAPI_Asistente_Fuentes {
 
 	/** Se editó algo ya publicado. */
 	public static function al_guardar( $post_id, $post ) {
-		if ( $post && 'publish' === $post->post_status && self::es_fuente( $post ) ) {
+		// Con los borradores en uso, también un borrador guardado cambia lo que sabe.
+		if ( $post && self::es_fuente( $post ) && ( 'publish' === $post->post_status || self::borradores_en_uso() ) ) {
 			self::invalidar();
 		}
+	}
+
+	/** ¿Alguna de las dos IA lee borradores? */
+	private static function borradores_en_uso() {
+		return (bool) get_option( 'czuapi_ia_borradores', 0 ) || (bool) get_option( 'czuapi_pres_borradores', 0 );
 	}
 
 	private static function es_fuente( $post ) {
@@ -122,10 +128,11 @@ class CZUAPI_Asistente_Fuentes {
 	 * @param string $mensaje   lo que se pregunta ahora
 	 * @param string $idioma    código ya resuelto contra los soportados
 	 * @param array  $historial turnos previos { role, content }
+	 * @param bool   $borradores sumar lo que está en camino de publicarse
 	 * @return array { catalogo: string, detalle: string, refs: array }
 	 */
-	public static function reunir( $mensaje, $idioma, $historial = array() ) {
-		$cat = self::catalogo( $idioma );
+	public static function reunir( $mensaje, $idioma, $historial = array(), $borradores = false ) {
+		$cat = self::catalogo( $idioma, $borradores );
 
 		/*
 		 * La pregunta anterior entra en la búsqueda: «¿y cuánto sale?» no dice
@@ -161,7 +168,7 @@ class CZUAPI_Asistente_Fuentes {
 
 		$detalle = array();
 		foreach ( array_keys( $elegidos ) as $ref ) {
-			$texto = self::detalle( $ref, $idioma );
+			$texto = self::detalle( $ref, $idioma, ! empty( $cat['items'][ $ref ]['borrador'] ) );
 			if ( '' !== $texto ) {
 				$detalle[] = $texto;
 			}
@@ -174,6 +181,7 @@ class CZUAPI_Asistente_Fuentes {
 				'id'        => $item['id'],
 				'titulo'    => $item['titulo'],
 				'tipo_item' => $item['tipo_item'],
+				'borrador'  => ! empty( $item['borrador'] ),
 			);
 		}
 
@@ -206,32 +214,37 @@ class CZUAPI_Asistente_Fuentes {
 	/*  El catálogo                                                           */
 	/* --------------------------------------------------------------------- */
 
-	private static function clave( $idioma ) {
-		return 'czuapi_ia_cat_' . sanitize_key( $idioma ) . '_' . (int) get_option( self::OPT_GENERACION, 0 );
+	private static function clave( $idioma, $borradores = false ) {
+		return 'czuapi_ia_cat_' . sanitize_key( $idioma ) . ( $borradores ? '_b' : '' ) . '_' . (int) get_option( self::OPT_GENERACION, 0 );
 	}
 
 	/**
 	 * @return array { texto: string, items: array ref => item }
 	 */
-	public static function catalogo( $idioma ) {
-		$clave    = self::clave( $idioma );
+	public static function catalogo( $idioma, $borradores = false ) {
+		$clave    = self::clave( $idioma, $borradores );
 		$guardado = get_transient( $clave );
 		if ( is_array( $guardado ) && isset( $guardado['texto'], $guardado['items'] ) ) {
 			return $guardado;
 		}
 
-		$armado = self::armar( $idioma );
+		$armado = self::armar( $idioma, $borradores );
 		set_transient( $clave, $armado, self::TTL );
 		return $armado;
 	}
 
-	private static function armar( $idioma ) {
+	private static function armar( $idioma, $borradores = false ) {
 		$eventos = array();
 		$lugares = array();
 		$items   = array();
 		$on      = CZUAPI_Asistente::fuentes_activas();
 
-		foreach ( self::todas( '/inventario', $idioma, self::MAX_FICHAS ) as $f ) {
+		$fichas = self::todas( '/inventario', $idioma, self::MAX_FICHAS );
+		if ( $borradores ) {
+			$fichas = array_merge( $fichas, self::en_camino( 'fichas', $idioma ) );
+		}
+
+		foreach ( $fichas as $f ) {
 			$id     = (int) $f['id'];
 			$evento = 'evento' === ( $f['tipo_item'] ?? '' );
 			$fechas = isset( $f['fechas'] ) && is_array( $f['fechas'] ) ? $f['fechas'] : null;
@@ -265,6 +278,7 @@ class CZUAPI_Asistente_Fuentes {
 				array( $f['categoria']['nombre'] ?? '', self::nombres( $f['etiquetas'] ?? array() ), $evento ? 'evento' : '' ),
 				$desc . ' ' . self::cuerpo_indice( $id )
 			);
+			$items[ $ref ]['borrador'] = ! empty( $f['_borrador'] );
 		}
 		ksort( $eventos );
 
@@ -283,8 +297,13 @@ class CZUAPI_Asistente_Fuentes {
 			);
 		}
 
+		$lista_articulos = empty( $on['articulos'] ) ? array() : self::todas( '/articulos', $idioma, self::MAX_ARTICULOS );
+		if ( $borradores && ! empty( $on['articulos'] ) ) {
+			$lista_articulos = array_merge( $lista_articulos, self::en_camino( 'articulos', $idioma ) );
+		}
+
 		$articulos = array();
-		foreach ( empty( $on['articulos'] ) ? array() : self::todas( '/articulos', $idioma, self::MAX_ARTICULOS ) as $a ) {
+		foreach ( $lista_articulos as $a ) {
 			$id          = (int) $a['id'];
 			$ref         = 'A' . $id;
 			$articulos[] = self::linea_articulo( $ref, $a );
@@ -296,6 +315,7 @@ class CZUAPI_Asistente_Fuentes {
 				array( $a['antetitulo'] ?? '', self::nombres( $a['etiquetas'] ?? array() ), 'articulo' ),
 				( $a['subtitulo'] ?? '' ) . ' ' . ( $a['entradilla'] ?? '' )
 			);
+			$items[ $ref ]['borrador'] = ! empty( $a['_borrador'] );
 		}
 
 		/*
@@ -318,6 +338,31 @@ class CZUAPI_Asistente_Fuentes {
 		}
 
 		return array( 'texto' => $texto, 'items' => $items );
+	}
+
+	/**
+	 * Lo que está en camino de publicarse, con la misma forma que su lista
+	 * pública (la arman las mismas clases) y la marca `_borrador`. Los
+	 * recorridos no: la vista previa de borradores tampoco los tiene.
+	 *
+	 * @param string $que 'fichas' o 'articulos'
+	 * @return array[]
+	 */
+	private static function en_camino( $que, $idioma ) {
+		if ( ! class_exists( 'CZUAPI_Borradores' ) ) {
+			return array();
+		}
+		$out = array();
+		if ( 'fichas' === $que && class_exists( 'PROMOTUR_Destinos' ) ) {
+			foreach ( CZUAPI_Borradores::en_camino_de( PROMOTUR_Destinos::CPT ) as $post ) {
+				$out[] = array_merge( CZUAPI_Inventario::instance()->item_lista( $post, $idioma ), array( '_borrador' => true ) );
+			}
+		} elseif ( 'articulos' === $que ) {
+			foreach ( CZUAPI_Borradores::en_camino_de( CZUAPI_Articulos::CPT ) as $post ) {
+				$out[] = array_merge( CZUAPI_Articulos::instance()->resumen( $post, $idioma ), array( '_borrador' => true ) );
+			}
+		}
+		return $out;
 	}
 
 	/**
@@ -470,14 +515,22 @@ class CZUAPI_Asistente_Fuentes {
 	/**
 	 * Una pieza completa, en texto, lista para el prompt.
 	 */
-	private static function detalle( $ref, $idioma ) {
+	private static function detalle( $ref, $idioma, $borrador = false ) {
 		$letra = substr( $ref, 0, 1 );
 		$id    = (int) substr( $ref, 1 );
 		$rutas = array( 'F' => '/inventario/', 'A' => '/articulos/', 'R' => '/recorridos/' );
 		if ( ! isset( $rutas[ $letra ] ) || $id <= 0 ) {
 			return '';
 		}
-		$d = self::pedir( $rutas[ $letra ] . $id, array( 'idioma' => $idioma ) );
+		if ( $borrador ) {
+			// El mismo endpoint que usa la vista previa de la web, leído como revisor.
+			$ruta = $rutas[ $letra ] . $id;
+			$d    = CZUAPI_Borradores::como_revisor( static function () use ( $ruta, $idioma ) {
+				return self::pedir( $ruta, array( 'idioma' => $idioma, 'borrador' => 1 ) );
+			} );
+		} else {
+			$d = self::pedir( $rutas[ $letra ] . $id, array( 'idioma' => $idioma ) );
+		}
 		if ( ! $d ) {
 			return '';
 		}
@@ -773,6 +826,11 @@ class CZUAPI_Asistente_Fuentes {
 		$fuentes = array();
 		foreach ( self::refs_en( $contenido ) as $ref ) {
 			if ( ! isset( $refs[ $ref ] ) || count( $fuentes ) >= self::MAX_CITAS ) {
+				continue;
+			}
+			// Un borrador no se puede abrir desde la app ni la web pública: se
+			// usa para contestar, pero no se ofrece como enlace.
+			if ( ! empty( $refs[ $ref ]['borrador'] ) ) {
 				continue;
 			}
 			$r      = $refs[ $ref ];

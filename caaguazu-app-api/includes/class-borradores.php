@@ -44,6 +44,14 @@ class CZUAPI_Borradores {
 	/** Cuántas piezas de cada tipo, como mucho. Es una vista previa, no un listado. */
 	const TOPE = 40;
 
+	/**
+	 * Mientras es mayor que cero, quien pide puede ver: lo usan las IA cuando
+	 * su interruptor de borradores está prendido, para leer el detalle de una
+	 * pieza en camino con el mismo endpoint que la web. Es un contador del
+	 * proceso, no de la sesión: ningún pedido de afuera lo puede prender.
+	 */
+	private static $como_revisor = 0;
+
 	public static function instance() {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -63,6 +71,9 @@ class CZUAPI_Borradores {
 	}
 
 	public static function puede_ver() {
+		if ( self::$como_revisor > 0 ) {
+			return true;
+		}
 		$id = self::cuenta_id();
 		return $id > 0 && function_exists( 'caaguazu_account_can' ) && caaguazu_account_can( 'promotor', self::CAP, $id );
 	}
@@ -93,6 +104,33 @@ class CZUAPI_Borradores {
 		// LiteSpeed decide su caché por su propia cabecera, no por la de arriba.
 		$res->header( 'X-LiteSpeed-Cache-Control', 'no-cache' );
 		return $res;
+	}
+
+	/**
+	 * Corre algo como si quien pide pudiera ver borradores. Sólo para lecturas
+	 * internas (`rest_do_request` dentro del mismo proceso): la respuesta no
+	 * sale a nadie tal cual, la usa la IA para contestar.
+	 *
+	 * @param callable $fn
+	 * @return mixed lo que devuelva $fn
+	 */
+	public static function como_revisor( callable $fn ) {
+		self::$como_revisor++;
+		try {
+			return $fn();
+		} finally {
+			self::$como_revisor--;
+		}
+	}
+
+	/**
+	 * Las piezas en camino de un tipo, lo último que se tocó primero.
+	 *
+	 * @param string $cpt
+	 * @return WP_Post[]
+	 */
+	public static function en_camino_de( $cpt ) {
+		return self::consultar( $cpt );
 	}
 
 	/* --------------------------------------------------------------------- */

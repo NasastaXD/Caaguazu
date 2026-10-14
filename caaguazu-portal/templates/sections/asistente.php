@@ -167,6 +167,10 @@ $body = function () use ( $disponible, $pestana, $etiquetas, $nombres_fuentes ) 
 					<?php if ( ! array_filter( $activas ) ) : ?>
 						<p class="promotur-form-msg is-error"><?php esc_html_e( 'Sin ninguna fuente, el asistente no puede contestar con datos.', 'caaguazu-portal' ); ?></p>
 					<?php endif; ?>
+					<label class="promotur-field">
+						<span><input type="checkbox" name="borradores" value="1"<?php checked( PROMOTUR_Asistente_Panel::borradores() ); ?>> <?php esc_html_e( 'Incluir borradores', 'caaguazu-portal' ); ?></span>
+					</label>
+					<p class="promotur-muted"><?php esc_html_e( 'También usa las fichas y los artículos que todavía no se publicaron. Contesta con ellos, pero no los ofrece como enlace: desde la app no se pueden abrir. Lo que no pasó por revisión puede tener errores.', 'caaguazu-portal' ); ?></p>
 					<div>
 						<button type="submit" class="promotur-btn promotur-btn--primary"><?php esc_html_e( 'Guardar fuentes', 'caaguazu-portal' ); ?></button>
 					</div>

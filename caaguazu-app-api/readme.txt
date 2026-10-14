@@ -168,6 +168,18 @@ depende de cómo se llame el tag.
 * Repo privado: definir `CZUAPI_GITHUB_TOKEN` (PAT de solo lectura) en
   `wp-config.php`, o cargarlo desde **Caaguazú API → Actualizaciones**.
 
+== Cambios en 0.11.5 ==
+
+* **Las dos IA pueden leer borradores**, cada una con su interruptor
+  (`czuapi_ia_borradores` para el asistente, `czuapi_pres_borradores` para la
+  presentación). Apagados por defecto. Prendidos, el catálogo suma las fichas y
+  los artículos en camino de publicarse (los mismos que muestra la vista previa
+  de borradores) y el detalle se lee con el mismo endpoint, como revisor.
+* Un borrador se usa para contestar pero **no se devuelve como fuente**: desde
+  la app o la web pública no se puede abrir.
+* La caché del catálogo es aparte con y sin borradores, y con borradores en uso
+  se invalida también al guardar un borrador.
+
 == Cambios en 0.11.4 ==
 
 * **El conocimiento de prueba de la presentación sale de la investigación**

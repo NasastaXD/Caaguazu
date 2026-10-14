@@ -126,6 +126,14 @@ comprobar( 'una marca que no existe no se convierte en enlace', count( $c['fuent
 comprobar( 'la fuente lleva tipo, id y título', $c['fuentes'][0], array( 'tipo' => 'ficha', 'id' => 12, 'titulo' => 'Salto Cascada', 'tipo_item' => 'sitio' ) );
 comprobar( 'un artículo no lleva tipo_item', array_key_exists( 'tipo_item', $c['fuentes'][1] ), false );
 
+$con_borrador = array(
+	'F12' => array( 'tipo' => 'ficha', 'id' => 12, 'titulo' => 'Salto Cascada', 'tipo_item' => 'sitio', 'borrador' => false ),
+	'F40' => array( 'tipo' => 'ficha', 'id' => 40, 'titulo' => 'En camino', 'tipo_item' => 'sitio', 'borrador' => true ),
+);
+$c = $F::citas( 'Abre a las 8 [F12]. Y hay otro lugar [F40].', $con_borrador );
+comprobar( 'un borrador se usa pero no se ofrece como enlace (la app no lo puede abrir)', array_column( $c['fuentes'], 'id' ), array( 12 ) );
+comprobar( 'y su marca también sale del texto', $c['texto'], 'Abre a las 8. Y hay otro lugar.' );
+
 $muchas = array();
 for ( $i = 1; $i <= 9; $i++ ) { $muchas[ 'F' . $i ] = array( 'tipo' => 'ficha', 'id' => $i, 'titulo' => 'L' . $i, 'tipo_item' => 'sitio' ); }
 comprobar( 'nunca más de seis fuentes', count( $F::citas( '[F1][F2][F3][F4][F5][F6][F7][F8][F9]', $muchas )['fuentes'] ), 6 );
@@ -390,6 +398,13 @@ require_once __DIR__ . '/generar-conocimiento-prueba.php';
 comprobar( 'el archivo del plugin está al día con el JSON de la investigación (php tools/generar-conocimiento-prueba.php --escribir)', trim( file_get_contents( CZU_TXT_PRUEBA ) ), trim( czu_conocimiento_de_prueba() ) );
 $GLOBALS['czu_opciones']['czuapi_pres_conocimiento'] = '';
 comprobar( 'y si el equipo lo dejó vacío, queda vacío (no vuelve el de prueba)', $P::conocimiento(), '' );
+
+/* Borradores: apagados por defecto, y cada IA con su interruptor. */
+unset( $GLOBALS['czu_opciones']['czuapi_pres_borradores'], $GLOBALS['czu_opciones']['czuapi_ia_borradores'] );
+comprobar( 'los borradores arrancan apagados en las dos IA', array( $P::usa_borradores(), CZUAPI_Asistente::borradores_activos() ), array( false, false ) );
+$GLOBALS['czu_opciones']['czuapi_pres_borradores'] = 1;
+comprobar( 'el de la presentación no prende el del asistente', array( $P::usa_borradores(), CZUAPI_Asistente::borradores_activos() ), array( true, false ) );
+unset( $GLOBALS['czu_opciones']['czuapi_pres_borradores'] );
 
 /* La persona: saludar una sola vez. */
 comprobar( 'la persona dice que saluda una sola vez', str_contains( $P::persona_de_fabrica(), 'saludá UNA vez' ), true );

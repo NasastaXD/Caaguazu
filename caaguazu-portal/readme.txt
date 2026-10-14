@@ -60,6 +60,11 @@ llamen los tags.
 
 == Changelog ==
 
+= 3.15.5 =
+* Asistente → Fuentes y Asistente → Presentación: interruptor «Incluir
+  borradores», para que la IA use también lo que todavía no se publicó.
+  Apagado por defecto. Requiere la API 0.11.5.
+
 = 3.15.4 =
 * Datos de prueba: «Cargar y publicar (demo)» deja las fichas de la
   investigación publicadas, para mostrar la app en vivo. Pide confirmación, y

@@ -292,6 +292,19 @@ class CZUAPI_Asistente {
 		return $out;
 	}
 
+	/**
+	 * ¿El asistente lee también lo que está en camino de publicarse? Apagado
+	 * por defecto: lo publicado pasó por revisión, un borrador todavía no.
+	 */
+	public static function borradores_activos() {
+		return (bool) get_option( 'czuapi_ia_borradores', 0 );
+	}
+
+	public static function set_borradores( $si ) {
+		update_option( 'czuapi_ia_borradores', $si ? 1 : 0, false );
+		CZUAPI_Asistente_Fuentes::invalidar();
+	}
+
 	/** Guarda las fuentes prendidas y tira el catálogo para que se rearme. */
 	public static function set_fuentes( $valores ) {
 		update_option( 'czuapi_ia_fuentes', self::normalizar_fuentes( $valores ), false );
@@ -554,7 +567,8 @@ TXT;
 	 * @param array      $opciones  Lo que cambia otro asistente montado sobre
 	 *                              éste (la presentación): `sistema` (callable
 	 *                              $fuentes, $idioma → prompt), `sin_fuentes`
-	 *                              (no arma el catálogo) y `max_tokens`. El
+	 *                              (no arma el catálogo), `borradores` (suma
+	 *                              lo que está en camino) y `max_tokens`. El
 	 *                              proveedor, el respaldo y los avisos son los
 	 *                              mismos: hay una sola cuenta que se paga.
 	 * @return array { ok, code, error, respuesta, fuentes, contenido }
@@ -583,7 +597,7 @@ TXT;
 
 		$t0      = microtime( true );
 		$fuentes = empty( $opciones['sin_fuentes'] )
-			? CZUAPI_Asistente_Fuentes::reunir( $mensaje, $idioma, (array) $historial )
+			? CZUAPI_Asistente_Fuentes::reunir( $mensaje, $idioma, (array) $historial, array_key_exists( 'borradores', $opciones ) ? (bool) $opciones['borradores'] : self::borradores_activos() )
 			: array( 'catalogo' => '', 'detalle' => '', 'refs' => array() );
 		$t_fuentes = microtime( true ) - $t0;
 

@@ -98,6 +98,7 @@ class PROMOTUR_Asistente_Panel {
 			'modelo'          => (string) get_option( 'czuapi_pres_modelo', '' ),
 			'modelo_activo'   => CZUAPI_Presentacion::modelo(),
 			'catalogo'        => CZUAPI_Presentacion::usa_catalogo(),
+			'borradores'      => method_exists( 'CZUAPI_Presentacion', 'usa_borradores' ) && CZUAPI_Presentacion::usa_borradores(),
 			'voz_proveedor'   => $voz['proveedor'],
 			'voz_endpoint'    => (string) get_option( 'czuapi_pres_voz_endpoint', '' ),
 			'voz_modelo'      => (string) get_option( 'czuapi_pres_voz_modelo', '' ),
@@ -150,6 +151,11 @@ class PROMOTUR_Asistente_Panel {
 	/** @return array<string,bool> Qué fuentes están prendidas. */
 	public static function fuentes() {
 		return self::disponible() ? CZUAPI_Asistente::fuentes_activas() : array();
+	}
+
+	/** ¿El asistente lee también los borradores? (Necesita la API 0.11.5.) */
+	public static function borradores() {
+		return self::disponible() && method_exists( 'CZUAPI_Asistente', 'borradores_activos' ) && CZUAPI_Asistente::borradores_activos();
 	}
 
 	/* ---------------------------------------------------------------------
@@ -224,7 +230,11 @@ class PROMOTUR_Asistente_Panel {
 	private function guardar_fuentes() {
 		$elegidas = isset( $_POST['fuentes'] ) ? (array) wp_unslash( $_POST['fuentes'] ) : array(); // phpcs:ignore WordPress.Security.NonceVerification
 		CZUAPI_Asistente::set_fuentes( $elegidas );
-		$this->registrar( 'asistente_fuentes', array( 'activas' => CZUAPI_Asistente::normalizar_fuentes( $elegidas ) ) );
+		$borradores = ! empty( $_POST['borradores'] ); // phpcs:ignore WordPress.Security.NonceVerification
+		if ( method_exists( 'CZUAPI_Asistente', 'set_borradores' ) ) {
+			CZUAPI_Asistente::set_borradores( $borradores );
+		}
+		$this->registrar( 'asistente_fuentes', array( 'activas' => CZUAPI_Asistente::normalizar_fuentes( $elegidas ), 'borradores' => $borradores ) );
 		promotur_flash( __( 'Guardado', 'caaguazu-portal' ), 'success' );
 	}
 
@@ -238,7 +248,7 @@ class PROMOTUR_Asistente_Panel {
 			return;
 		}
 		$campos = array(
-			'activo', 'catalogo', 'persona', 'persona_fabrica', 'conocimiento', 'turnos', 'modelo', 'etiquetas',
+			'activo', 'catalogo', 'borradores', 'persona', 'persona_fabrica', 'conocimiento', 'turnos', 'modelo', 'etiquetas',
 			'voz_proveedor', 'voz_endpoint', 'voz_key', 'voz_key_borrar', 'voz_modelo', 'voz_id', 'voz_velocidad',
 			'oido_modo', 'oido_proveedor', 'oido_silencio', 'oido_endpoint', 'oido_key', 'oido_key_borrar', 'oido_modelo', 'oido_idioma',
 		);
@@ -252,6 +262,7 @@ class PROMOTUR_Asistente_Panel {
 		$this->registrar( 'asistente_presentacion', array(
 			'activa'      => ! empty( $datos['activo'] ),
 			'catalogo'    => ! empty( $datos['catalogo'] ),
+			'borradores'  => ! empty( $datos['borradores'] ),
 			'voz'         => (string) $datos['voz_proveedor'],
 			'oido'        => (string) $datos['oido_modo'] . '/' . (string) $datos['oido_proveedor'],
 			'key_voz'     => '' !== trim( (string) $datos['voz_key'] ) ? 'nueva' : ( ! empty( $datos['voz_key_borrar'] ) ? 'borrada' : 'igual' ),

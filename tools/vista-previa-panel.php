@@ -493,7 +493,7 @@ class PROMOTUR_Asistente_Panel {
 	public static function presentacion() {
 		return array(
 			'activa' => true, 'hay_modelo' => true,
-			'persona' => 'Sos la voz del proyecto de turismo de Caaguazú.', 'conocimiento' => '‹guion›', 'catalogo' => false,
+			'persona' => 'Sos la voz del proyecto de turismo de Caaguazú.', 'conocimiento' => '‹guion›', 'catalogo' => false, 'borradores' => false,
 			'voz_proveedor' => 'minimax', 'voz_endpoint' => '', 'voz_modelo' => '', 'voz_id' => '‹voz›', 'voz_velocidad' => 1.0,
 			'voz_key' => '…a1b2', 'voz_key_fija' => false,
 			'oido_modo' => 'navegador', 'oido_proveedor' => 'openai', 'oido_silencio' => 1.5, 'turnos' => 20, 'modelo' => '', 'modelo_activo' => '', 'etiquetas' => false, 'oido_endpoint' => '', 'oido_modelo' => '', 'oido_idioma' => 'es-PY',
@@ -506,6 +506,7 @@ class PROMOTUR_Asistente_Panel {
 	public static function memoria_turnos() { return 10; }
 	public static function memoria_horas() { return 2; }
 	public static function fuentes() { return array( 'lugares' => true, 'eventos' => true, 'recorridos' => true, 'articulos' => false ); }
+	public static function borradores() { return false; }
 }
 class PROMOTUR_Prueba {
 	const CAP = 'promotur_review_content';
