@@ -168,6 +168,11 @@ depende de cómo se llame el tag.
 * Repo privado: definir `CZUAPI_GITHUB_TOKEN` (PAT de solo lectura) en
   `wp-config.php`, o cargarlo desde **Caaguazú API → Actualizaciones**.
 
+== Cambios en 0.11.8 ==
+
+* Los títulos salen como texto, sin entidades HTML: un apóstrofo o un guion
+  llegaban a la app y a la web como `&#8217;` o `&#8211;` (wptexturize).
+
 == Cambios en 0.11.7 ==
 
 * Conocimiento de prueba de la presentación: ahora sale de la investigación

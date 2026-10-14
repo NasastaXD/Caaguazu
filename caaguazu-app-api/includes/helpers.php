@@ -155,3 +155,16 @@ function czuapi_args_publicado() {
 		'no_found_rows'       => false,
 	);
 }
+
+/**
+ * El título tal como se escribió. `get_the_title()` pasa por wptexturize y
+ * devuelve entidades HTML (`Rustico&#8217;s`, `Café &#8211; Bar`): en una
+ * página se ven bien, pero la app y la web los muestran como texto y se leían
+ * los códigos. La API devuelve texto plano, no HTML.
+ *
+ * @param int|WP_Post $post
+ * @return string
+ */
+function czuapi_titulo( $post ) {
+	return html_entity_decode( get_the_title( $post ), ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+}

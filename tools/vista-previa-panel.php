@@ -508,7 +508,6 @@ class PROMOTUR_Asistente_Panel {
 	public static function fuentes() { return array( 'lugares' => true, 'eventos' => true, 'recorridos' => true, 'articulos' => false ); }
 	public static function borradores() { return false; }
 	public static function web() { return false; }
-	public static function web_posible() { return true; }
 }
 class PROMOTUR_Prueba {
 	const CAP = 'promotur_review_content';

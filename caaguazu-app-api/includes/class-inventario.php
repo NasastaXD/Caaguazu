@@ -194,7 +194,7 @@ class CZUAPI_Inventario {
 			// por `tipo` no cambia de comportamiento al aparecer los eventos.
 			'tipo_item'       => $this->tipo_item( $id ),
 			'fechas'          => $this->fechas( $id ),
-			'titulo'          => get_the_title( $post ),
+			'titulo'          => czuapi_titulo( $post ),
 			'categoria'       => czuapi_primer_termino( $id, CZUAPI_Taxonomias::TAX_CATEGORIA, $idioma ),
 			// Se suma acá —antes sólo la traía el detalle— para que un chip de
 			// tag en la tarjeta de lista no obligue a pedir el detalle antes
@@ -253,7 +253,7 @@ class CZUAPI_Inventario {
 			'tipo'        => 'destino',
 			'tipo_item'   => $this->tipo_item( $id ),
 			'fechas'      => $this->fechas( $id ),
-			'titulo'      => $t( 'titulo', get_the_title( $post ) ),
+			'titulo'      => $t( 'titulo', czuapi_titulo( $post ) ),
 			// En qué idioma salieron los textos de arriba, y si TODOS los
 			// campos traducibles de esta ficha estaban traducidos. Con
 			// `traducido: false` alguno cayó al castellano.
@@ -523,7 +523,7 @@ class CZUAPI_Inventario {
 			$t = CZUAPI_Idiomas::textos( (int) $p->ID, $idioma );
 			$out[] = array(
 				'id'      => (int) $p->ID,
-				'titulo'  => isset( $t['textos']['titulo'] ) ? $t['textos']['titulo'] : get_the_title( $p ),
+				'titulo'  => isset( $t['textos']['titulo'] ) ? $t['textos']['titulo'] : czuapi_titulo( $p ),
 				'portada' => czuapi_imagen( (int) get_post_thumbnail_id( $p->ID ), '', 'medium' ),
 			);
 		}
