@@ -57,13 +57,15 @@ function czu_conocimiento_de_prueba( $ruta_json = CZU_JSON_PRUEBA ) {
 	foreach ( $sitios as $s ) {
 		$out[] = $linea( $s );
 	}
-	$out[] = '';
-	$out[] = 'EVENTOS';
-	foreach ( $eventos as $s ) {
-		$out[] = $linea( $s );
+	if ( $eventos ) {
+		$out[] = '';
+		$out[] = 'EVENTOS';
+		foreach ( $eventos as $s ) {
+			$out[] = $linea( $s );
+		}
 	}
 	$out[] = '';
-	$out[] = 'LO QUE FALTA: ‹gastronomía›, ‹alojamiento urbano›, ‹colonias y comunidades que reciben visitas›.';
+	$out[] = 'LO QUE FALTA: ‹colonias y comunidades que reciben visitas›.';
 	return implode( "\n", $out ) . "\n";
 }
 

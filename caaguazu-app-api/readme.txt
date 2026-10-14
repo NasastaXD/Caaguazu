@@ -168,6 +168,11 @@ depende de cómo se llame el tag.
 * Repo privado: definir `CZUAPI_GITHUB_TOKEN` (PAT de solo lectura) en
   `wp-config.php`, o cargarlo desde **Caaguazú API → Actualizaciones**.
 
+== Cambios en 0.11.7 ==
+
+* Conocimiento de prueba de la presentación: ahora sale de la investigación
+  consolidada en tres rondas (40 lugares, sin eventos).
+
 == Cambios en 0.11.6 ==
 
 * **Búsqueda en internet para lo que no está publicado**, con un interruptor
