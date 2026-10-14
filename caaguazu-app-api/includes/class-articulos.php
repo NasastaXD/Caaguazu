@@ -223,7 +223,7 @@ class CZUAPI_Articulos {
 		$out = array(
 			'id'         => $id,
 			'antetitulo' => (string) get_post_meta( $id, self::META_ANTETITULO, true ),
-			'titulo'     => get_the_title( $post ),
+			'titulo'     => czuapi_titulo( $post ),
 			'subtitulo'  => (string) get_post_meta( $id, self::META_SUBTITULO, true ),
 			// Se movió acá desde el detalle: al ser la misma forma en lista y
 			// detalle (ver docblock arriba), no había motivo para que sólo el
@@ -353,7 +353,7 @@ class CZUAPI_Articulos {
 			$t = CZUAPI_Idiomas::textos( (int) $p->ID, $idioma );
 			$out[] = array(
 				'id'      => (int) $p->ID,
-				'titulo'  => isset( $t['textos']['titulo'] ) ? $t['textos']['titulo'] : get_the_title( $p ),
+				'titulo'  => isset( $t['textos']['titulo'] ) ? $t['textos']['titulo'] : czuapi_titulo( $p ),
 				'portada' => czuapi_imagen( (int) get_post_thumbnail_id( $p->ID ), '', 'medium' ),
 			);
 		}

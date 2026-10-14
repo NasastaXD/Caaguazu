@@ -60,6 +60,12 @@ llamen los tags.
 
 == Changelog ==
 
+= 3.15.9 =
+* Datos de prueba: títulos con el nombre del lugar, sin el rubro pegado
+  («Rustico’s», no «Rustico's Café - Restaurant»), y horarios en un mismo
+  formato («Todos los días, de 8:00 a 17:00»). La fuente de cada horario pasa
+  a las notas.
+
 = 3.15.8 =
 * Asistente → Fuentes: se quita el aviso «el proveedor no puede buscar en
   internet: hace falta OpenAI». El endpoint propio que redirige a OpenAI

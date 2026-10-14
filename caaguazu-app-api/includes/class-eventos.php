@@ -279,13 +279,13 @@ class CZUAPI_Eventos {
 			'ficha_id'  => (int) $id,
 			'idioma'    => $i18n['idioma'],
 			'traducido' => $i18n['traducido'],
-			'titulo'    => $t( 'titulo', get_the_title( $post ) ),
+			'titulo'    => $t( 'titulo', czuapi_titulo( $post ) ),
 			'inicio'    => czuapi_fecha( (string) get_post_meta( $id, PROMOTUR_Destinos::META_INICIO, true ) ),
 			'fin'       => czuapi_fecha( (string) get_post_meta( $id, PROMOTUR_Destinos::META_FIN, true ) ),
 			'lugar'     => ( '' === $lat || '' === $lng ) ? null : array(
 				'ref_tipo' => 'destino',
 				'ref_id'   => (int) $id,
-				'nombre'   => $t( 'titulo', get_the_title( $post ) ),
+				'nombre'   => $t( 'titulo', czuapi_titulo( $post ) ),
 				'lat'      => (float) $lat,
 				'lng'      => (float) $lng,
 			),
@@ -326,7 +326,7 @@ class CZUAPI_Eventos {
 			'tipo'      => 'evento',
 			'origen'    => 'evento_legado',
 			'ficha_id'  => null,
-			'titulo'    => get_the_title( $post ),
+			'titulo'    => czuapi_titulo( $post ),
 			'inicio'    => czuapi_fecha( (string) get_post_meta( $id, self::META_INICIO, true ) ),
 			'fin'       => czuapi_fecha( (string) get_post_meta( $id, self::META_FIN, true ) ),
 			'lugar'     => $this->lugar( $id ),
@@ -365,7 +365,7 @@ class CZUAPI_Eventos {
 			return array(
 				'ref_tipo' => 'destino',
 				'ref_id'   => $ref,
-				'nombre'   => get_the_title( $ref ),
+				'nombre'   => czuapi_titulo( $ref ),
 				'lat'      => (float) get_post_meta( $ref, '_promotur_lat', true ),
 				'lng'      => (float) get_post_meta( $ref, '_promotur_lng', true ),
 			);

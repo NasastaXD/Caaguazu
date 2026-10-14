@@ -459,6 +459,13 @@ unset( $GLOBALS['czu_opciones']['czuapi_pres_borradores'] );
 /* La persona: saludar una sola vez. */
 comprobar( 'la persona dice que saluda una sola vez', str_contains( $P::persona_de_fabrica(), 'saludá UNA vez' ), true );
 
+/* El título viaja como texto: sin las entidades que agrega wptexturize. */
+if ( ! function_exists( 'get_the_title' ) ) {
+	function get_the_title( $p = null ) { return 'Rustico&#8217;s Café &#8211; Restaurant &amp; Bar'; }
+}
+require_once $raiz . '/caaguazu-app-api/includes/helpers.php';
+comprobar( 'el título sale sin entidades HTML', czuapi_titulo( 1 ), 'Rustico’s Café – Restaurant & Bar' );
+
 /* ------------------------------------------------------------------------- */
 echo "\n" . ( $fallos ? "\033[31m{$fallos} comprobación(es) fallaron.\033[0m\n" : "\033[32mTodo bien.\033[0m\n" );
 exit( $fallos ? 1 : 0 );

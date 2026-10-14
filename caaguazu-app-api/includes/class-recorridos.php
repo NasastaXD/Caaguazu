@@ -334,7 +334,7 @@ class CZUAPI_Recorridos {
 		$out = array(
 			'id'                => (int) $id,
 			'tipo'              => $tipo ? $tipo : 'prehecho',
-			'titulo'            => $t( 'titulo', get_the_title( $post ) ),
+			'titulo'            => $t( 'titulo', czuapi_titulo( $post ) ),
 			'resumen'           => $t( 'resumen', get_the_excerpt( $post ) ),
 			'portada'           => czuapi_imagen( $portada ),
 			'duracion_estimada' => $t( 'duracion_estimada', (string) get_post_meta( $id, self::META_DURACION, true ) ),
@@ -423,7 +423,7 @@ class CZUAPI_Recorridos {
 			$t = CZUAPI_Idiomas::textos( (int) $p->ID, $idioma );
 			$out[] = array(
 				'id'      => (int) $p->ID,
-				'titulo'  => isset( $t['textos']['titulo'] ) ? $t['textos']['titulo'] : get_the_title( $p ),
+				'titulo'  => isset( $t['textos']['titulo'] ) ? $t['textos']['titulo'] : czuapi_titulo( $p ),
 				'portada' => czuapi_imagen( $att, '', 'medium' ),
 			);
 		}
@@ -446,7 +446,7 @@ class CZUAPI_Recorridos {
 		$t = CZUAPI_Idiomas::textos( (int) $ref_id, $idioma );
 		return isset( $t['textos']['titulo'] ) && '' !== $t['textos']['titulo']
 			? $t['textos']['titulo']
-			: get_the_title( $post );
+			: czuapi_titulo( $post );
 	}
 
 	/**

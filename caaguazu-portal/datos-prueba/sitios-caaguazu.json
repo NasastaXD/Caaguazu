@@ -16,7 +16,7 @@
       "direccion": "Mauricio José Troche esq. Silvio Pettirossi (plus code GXGH+RJC)",
       "compania_o_barrio": "Centro",
       "estado_camino": "asfalto",
-      "horario": "8:00 a 17:00",
+      "horario": "Todos los días, de 8:00 a 17:00",
       "costo": "Gratis",
       "rango_precio": 0,
       "contacto": null,
@@ -74,7 +74,7 @@
       "notas": "La foto es de diciembre de 2011. La URL usa Special:FilePath de Commons, que redirige al archivo original. Los horarios de misa no están publicados en las fuentes consultadas: hay que pedirlos a la parroquia."
     },
     {
-      "titulo": "Ruta de la Madera (exposición permanente de carpinteros)",
+      "titulo": "Ruta de la Madera",
       "tipo": "sitio",
       "categoria": "Madera y artesanía",
       "etiquetas": ["gratis", "compras", "al aire libre"],
@@ -176,7 +176,7 @@
       "direccion": "Ruta PY02 km 173",
       "compania_o_barrio": "Compañía Walter Insfrán",
       "estado_camino": null,
-      "horario": "9:00 a 19:00",
+      "horario": "Todos los días, de 9:00 a 19:00",
       "costo": "Lunes a viernes: G. 15.000 (5 a 12 años), G. 20.000 (13 años en adelante). Fines de semana: G. 20.000 y G. 30.000",
       "rango_precio": 1,
       "contacto": "+595 974 469735 / campingelchorro2021@gmail.com",
@@ -205,7 +205,7 @@
       "direccion": "Ruta PY13, a 1 km de la rotonda del km 185 (Toro Blanco) (plus code HX3R+VF8)",
       "compania_o_barrio": "Toro Blanco",
       "estado_camino": "asfalto",
-      "horario": "8:30 a 18:00",
+      "horario": "Todos los días, de 8:30 a 18:00",
       "costo": "Niños G. 25.000 entre semana y G. 30.000 fines de semana y feriados; adultos G. 35.000 y G. 40.000. Cabaña para 5 personas G. 800.000",
       "rango_precio": 2,
       "contacto": "0971 444-980",
@@ -251,7 +251,7 @@
       "notas": "Las coordenadas se calcularon a partir del plus code publicado en un directorio; no aparecen escritas en ninguna fuente. Hay que confirmar el punto y el horario."
     },
     {
-      "titulo": "Polideportivo municipal Tajy Poty",
+      "titulo": "Polideportivo Municipal Tajy Poty",
       "tipo": "sitio",
       "categoria": "Eventos y fiestas",
       "etiquetas": ["eventos", "techado", "de noche"],
@@ -281,7 +281,7 @@
       "notas": "Las coordenadas vienen de un agregador de baja calidad. Trip.com lo llama 'Estadio Generación de la Paz'; hay que confirmar si es el mismo edificio. El organizador del festival de 2018 calculaba la capacidad en 6.000 personas."
     },
     {
-      "titulo": "Comedor Buena Suerte (Pichón II)",
+      "titulo": "Comedor Buena Suerte",
       "tipo": "sitio",
       "categoria": "Gastronomía",
       "etiquetas": ["barato", "comida típica", "parada en ruta"],
@@ -319,7 +319,7 @@
       "direccion": "Av. Dr. Juan Manuel Frutos",
       "compania_o_barrio": null,
       "estado_camino": "asfalto",
-      "horario": "Lunes a domingo, 24 horas",
+      "horario": "Todos los días, las 24 horas",
       "costo": null,
       "rango_precio": null,
       "contacto": null,
@@ -348,7 +348,7 @@
       "direccion": "Mauricio José Troche e/ Tte. Rojas Silva y Carlos Antonio López, barrio Centenario",
       "compania_o_barrio": "Centenario",
       "estado_camino": "asfalto",
-      "horario": "Urgencias: 24 horas (a confirmar); Servicio de Atención al Usuario: lunes a viernes, 7:00 a 11:00",
+      "horario": "Urgencias: todos los días, las 24 horas. Atención al usuario: lunes a viernes, de 7:00 a 11:00",
       "costo": null,
       "rango_precio": null,
       "contacto": null,
@@ -363,7 +363,7 @@
       ],
       "fecha_dato": "2024",
       "vigencia": "confirmada",
-      "notas": "La dirección sale de directorios (HospiVista), no del MSPBS. La dirección 'Avda. Pettirossi esq. Brasil' que aparece en las páginas del MSPBS es la sede del Ministerio en Asunción. No encontré el teléfono del hospital."
+      "notas": "La dirección sale de directorios (HospiVista), no del MSPBS. La dirección 'Avda. Pettirossi esq. Brasil' que aparece en las páginas del MSPBS es la sede del Ministerio en Asunción. No encontré el teléfono del hospital. Las 24 horas de urgencias están sin confirmar."
     },
     {
       "titulo": "Cuerpo de Bomberos Voluntarios de Caaguazú",
@@ -378,7 +378,7 @@
       "direccion": null,
       "compania_o_barrio": null,
       "estado_camino": null,
-      "horario": "24 horas",
+      "horario": "Todos los días, las 24 horas",
       "costo": null,
       "rango_precio": null,
       "contacto": "+595 522 42933",
@@ -440,7 +440,7 @@
       "direccion": "Ruta PY02 km 180-182, calle Ex Algodonera Guaraní",
       "compania_o_barrio": "Barrio Virgen de la Gracia",
       "estado_camino": null,
-      "horario": "Check-in desde las 13, check-out hasta las 11",
+      "horario": "Entrada desde las 13:00; salida hasta las 11:00",
       "costo": "Desde USD 29,70 la noche, 2 adultos (Booking)",
       "rango_precio": 1,
       "contacto": "+595 971 447278",
@@ -580,7 +580,7 @@
       "notas": "La referencia 'cerca de la terminal' viene de la página de Facebook; sin publicaciones fechadas verificadas."
     },
     {
-      "titulo": "Restaurant La Revancha",
+      "titulo": "La Revancha",
       "tipo": "sitio",
       "categoria": "Gastronomía",
       "etiquetas": ["sobre la ruta", "buffet", "delivery"],
@@ -592,7 +592,7 @@
       "direccion": "Ruta PY02 (ex Ruta Intern. N° 7) c/ cruce Yhú, frente a la rotonda de Caaguazú (km 178)",
       "compania_o_barrio": "Rotonda de la PY02",
       "estado_camino": "asfalto",
-      "horario": "Lunes 7-16:30; martes 7-18:30; miércoles a viernes 7-23; sábado 7-23:45; domingo 10-15:30 (directorio sin fecha)",
+      "horario": "Lunes, de 7:00 a 16:30; martes, de 7:00 a 18:30; miércoles a viernes, de 7:00 a 23:00; sábado, de 7:00 a 23:45; domingo, de 10:00 a 15:30",
       "costo": null,
       "rango_precio": 2,
       "contacto": "(0522) 42701",
@@ -614,10 +614,10 @@
       ],
       "fecha_dato": "2025-09",
       "vigencia": "confirmada",
-      "notas": "Coordenadas de WorldPlaces. Los horarios varían según la fuente: menuweb.menu (actualizado en 09/2025) indica lunes a jueves 7:30-15:30, viernes y sábado 19-00, domingo 10-15:30. Llamar antes. Su página de Facebook (4.960 'me gusta', 2.316 check-ins) anuncia 'Servicio de delivery: #PedidosYa', y Banco GNB lo incluye en las bases de sus promociones del rubro restaurantes. También figura en un listado de comercios de Banco Continental de 2026."
+      "notas": "Coordenadas de WorldPlaces. Los horarios varían según la fuente: menuweb.menu (actualizado en 09/2025) indica lunes a jueves 7:30-15:30, viernes y sábado 19-00, domingo 10-15:30. Llamar antes. Su página de Facebook (4.960 'me gusta', 2.316 check-ins) anuncia 'Servicio de delivery: #PedidosYa', y Banco GNB lo incluye en las bases de sus promociones del rubro restaurantes. También figura en un listado de comercios de Banco Continental de 2026. El horario sale de un directorio sin fecha."
     },
     {
-      "titulo": "Panadería y Confitería La Guaireña",
+      "titulo": "La Guaireña",
       "tipo": "sitio",
       "categoria": "Gastronomía",
       "etiquetas": ["confitería", "desayuno", "barato"],
@@ -648,7 +648,7 @@
       "notas": "Evendo indica horario diario de 7 a 22, pero es un agregador de baja confiabilidad. Tiene además un salón de eventos (tel. según Evendo: +595 981 346420). Una guía de la Gobernación lo lista como 'Patio de Comidas La Guaireña (0522) 40701'."
     },
     {
-      "titulo": "LULU Pizzería y Lomitería",
+      "titulo": "Lulu Pizzería y Lomitería",
       "tipo": "sitio",
       "categoria": "Gastronomía",
       "etiquetas": ["pizza", "lomitos", "de noche"],
@@ -706,7 +706,7 @@
       "notas": "Coordenadas convertidas del plus code. Existe además una página de Facebook 'A Punto Food Park' (Caaguazú District, unos 164 'me gusta'); no se pudo confirmar si es el mismo lugar."
     },
     {
-      "titulo": "Bar Chopería Manguruyú",
+      "titulo": "Chopería Manguruyú",
       "tipo": "sitio",
       "categoria": "Gastronomía",
       "etiquetas": ["chopería", "de noche", "pasar el rato"],
@@ -732,7 +732,7 @@
       "notas": "Solo una fuente de directorio, sin fecha."
     },
     {
-      "titulo": "Carku's Empanadas",
+      "titulo": "Carku’s Empanadas",
       "tipo": "sitio",
       "categoria": "Gastronomía",
       "etiquetas": ["empanadas", "barato"],
@@ -836,7 +836,7 @@
       "notas": "Solo una fuente sin fecha."
     },
     {
-      "titulo": "Panadería y Confitería Santa María",
+      "titulo": "Panadería Santa María",
       "tipo": "sitio",
       "categoria": "Gastronomía",
       "etiquetas": ["panadería", "confitería"],
@@ -904,7 +904,7 @@
       "direccion": "15 de Agosto esq. Roberto L. Pettit",
       "compania_o_barrio": "Centro",
       "estado_camino": "asfalto",
-      "horario": "Lunes a domingo, de 7 a 21 (InfoNegocios); la web indica de 7 a 20",
+      "horario": "Todos los días, de 7:00 a 21:00",
       "costo": null,
       "rango_precio": 2,
       "contacto": null,
@@ -918,7 +918,7 @@
       ],
       "fecha_dato": null,
       "vigencia": "dudosa",
-      "notas": "La nota de InfoNegocios corresponde a la apertura en plena pandemia (alrededor de 2020); la web oficial tiene mensajes de COVID y no muestra actualización reciente."
+      "notas": "La nota de InfoNegocios corresponde a la apertura en plena pandemia (alrededor de 2020); la web oficial tiene mensajes de COVID y no muestra actualización reciente. El horario sale de InfoNegocios; la web oficial dice de 7:00 a 20:00."
     },
     {
       "titulo": "Supermercado Caaguazú",
@@ -947,7 +947,7 @@
       "notas": "Solo una fuente de directorio, sin fecha."
     },
     {
-      "titulo": "La Chefería | Café Bistró",
+      "titulo": "La Chefería",
       "tipo": "sitio",
       "categoria": "Gastronomía",
       "etiquetas": ["café", "pastelería", "pasar el rato"],
@@ -982,7 +982,7 @@
       "notas": "Precio 'caro' (rango 3) según la opinión de un conocedor local; no hay precios publicados. Tres direcciones distintas según la fuente: Linktree (dic. 2025) dice Coronel Manuel A. Godoy y [esquina]; la página de Facebook dice Mauricio José Troche esq. Gral. Bernardino Caballero; un directorio viejo (~2021) dice 3ra Proyectada esquina, con otro teléfono (+595 971 495905). Puede haberse mudado: confirmar. El nombre de Instagram del local principal no figura en las fuentes (solo el de eventos). El Linktree tiene menú y catálogo en Google Drive. Aparece como 'Lc La Cheferia' en un listado de comercios de Banco Continental de 2026."
     },
     {
-      "titulo": "Brebaje Bar - Parrilla",
+      "titulo": "Brebaje",
       "tipo": "sitio",
       "categoria": "Gastronomía",
       "etiquetas": ["bar", "parrilla", "de noche", "pizzas"],
@@ -1015,7 +1015,7 @@
       "notas": "Coordenadas convertidas del plus code de Evendo (precisión de unos 14 m sobre ese punto). Evendo da además otra dirección (María Luisa Rivaldi, Sebastián Gaboto): confirmar cuál es. Aparece como 'Brebaje' en un listado de comercios de Banco Continental de 2026 (no verifiqué la fecha de vigencia de la promoción) y en uno de Banco GNB de ~2022. Sin horario publicado."
     },
     {
-      "titulo": "Kulini's Burger",
+      "titulo": "Kulini’s Burger",
       "tipo": "sitio",
       "categoria": "Gastronomía",
       "etiquetas": ["hamburguesas", "lomitos", "pizzas", "bar"],
@@ -1047,7 +1047,7 @@
       "notas": "En la entrega anterior figuraba sin dirección. Aparece como 'Kulinis' en un listado de comercios de Banco Continental de 2026 (sin verificar la fecha de vigencia de la promoción). No encontré teléfono, horario ni Instagram. La reseña de 4,6 viene de un agregador sin fecha de corte."
     },
     {
-      "titulo": "Grido Caaguazú",
+      "titulo": "Grido",
       "tipo": "sitio",
       "categoria": "Gastronomía",
       "etiquetas": ["helados", "con chicos", "cadena"],
@@ -1059,7 +1059,7 @@
       "direccion": "Cap. Pedro J. Caballero, Caaguazú",
       "compania_o_barrio": "Centro",
       "estado_camino": "asfalto",
-      "horario": "10:00 a 22:00 (directorio sin fecha precisa; lunes a miércoles confirmados en la ficha)",
+      "horario": "Todos los días, de 10:00 a 22:00",
       "costo": null,
       "rango_precio": 1,
       "contacto": null,
@@ -1074,10 +1074,10 @@
       ],
       "fecha_dato": "2022",
       "vigencia": "dudosa",
-      "notas": "El único respaldo es un directorio de reseñas de ~2022 (oopinoo). El sitio oficial de Grido Paraguay (activo en 2026, con novedades y reporte de sustentabilidad de junio de 2026) no tiene localizador de sucursales accesible, así que no pude confirmar este local ni su dirección exacta. Los datos de contacto de Facebook/web son de la marca en Paraguay, no del local."
+      "notas": "El único respaldo es un directorio de reseñas de ~2022 (oopinoo). El sitio oficial de Grido Paraguay (activo en 2026, con novedades y reporte de sustentabilidad de junio de 2026) no tiene localizador de sucursales accesible, así que no pude confirmar este local ni su dirección exacta. Los datos de contacto de Facebook/web son de la marca en Paraguay, no del local. El horario sale de un directorio sin fecha precisa; en la ficha solo están confirmados lunes a miércoles."
     },
     {
-      "titulo": "Amandau Caaguazú - Ruta 7 km 178",
+      "titulo": "Amandau (Ruta 7)",
       "tipo": "sitio",
       "categoria": "Gastronomía",
       "etiquetas": ["helados", "con chicos", "sobre la ruta"],
@@ -1106,7 +1106,7 @@
       "notas": "La página oficial de locales (aprox. diciembre de 2024) lista dos en Caaguazú: este y el del Centro. No pude abrir la página directamente (error 404 al consultarla), solo vi el resultado de búsqueda. Una página de Facebook de nombre 'Heladeria Amandau' (URL AmandauRuta7Caaguazu) indica la dirección Bienvenido Gallardo Goiris casi Delfín Chamorro, Barrio Centenario, cerca del polideportivo, tel. +595 993 287208 y correo amandauheladeriaypizzeria@gmail.com: puede ser una tercera sucursal o la misma que alguna de las dos oficiales. Confirmar."
     },
     {
-      "titulo": "Amandau Caaguazú - Centro",
+      "titulo": "Amandau (Centro)",
       "tipo": "sitio",
       "categoria": "Gastronomía",
       "etiquetas": ["helados", "con chicos", "céntrico"],
@@ -1135,7 +1135,7 @@
       "notas": "Misma fuente y mismas dudas que la sucursal de la Ruta 7. Dino Helados (heladería local inaugurada el 11 de noviembre de 2023 en Juan E. O'Leary e/ Bernardino Caballero y Mcal. Francisco Solano López, horario de apertura 13 a 21) queda en la misma cuadra: no está incluida en este JSON."
     },
     {
-      "titulo": "Cavas RestoBar",
+      "titulo": "Cavas Resto Bar",
       "tipo": "sitio",
       "categoria": "Gastronomía",
       "etiquetas": ["de noche", "pasar el rato", "al aire libre", "pizzas"],
@@ -1147,7 +1147,7 @@
       "direccion": "Av. Delfín Chamorro e/ Av. Bernardino Caballero y Manuel A. Godoy",
       "compania_o_barrio": "Centro",
       "estado_camino": "asfalto",
-      "horario": "Mediodía y noche; viernes hasta la 1, sábado de 20 a 1 (Foursquare, sin fecha)",
+      "horario": "Mediodía y noche; viernes, hasta la 1:00; sábado, de 20:00 a 1:00",
       "costo": null,
       "rango_precio": null,
       "contacto": "0971 498457 (BuscoInfo) / 0974 500608 (Gobernación)",
@@ -1164,10 +1164,10 @@
       ],
       "fecha_dato": "2026-05",
       "vigencia": "dudosa",
-      "notas": "Hay dos teléfonos distintos según la fuente. Aparece como 'Cavas Resto Bar' en un listado de comercios de Banco Continental de 2026 (sin verificar la fecha de vigencia de la promoción)."
+      "notas": "Hay dos teléfonos distintos según la fuente. Aparece como 'Cavas Resto Bar' en un listado de comercios de Banco Continental de 2026 (sin verificar la fecha de vigencia de la promoción). El horario sale de Foursquare, sin fecha."
     },
     {
-      "titulo": "Rustico's Café - Restaurant",
+      "titulo": "Rustico’s",
       "tipo": "sitio",
       "categoria": "Gastronomía",
       "etiquetas": ["café", "pasar el rato", "con chicos"],
@@ -1179,7 +1179,7 @@
       "direccion": "Coronel Manuel A. Godoy, Caaguazú 050208",
       "compania_o_barrio": "Centro",
       "estado_camino": "asfalto",
-      "horario": "Todos los días, de 7:00 a 24:00 (agregador, ~2023)",
+      "horario": "Todos los días, de 7:00 a 24:00",
       "costo": null,
       "rango_precio": null,
       "contacto": "+595 982 942927",
