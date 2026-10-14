@@ -60,6 +60,11 @@ llamen los tags.
 
 == Changelog ==
 
+= 3.15.6 =
+* Asistente → Fuentes y Presentación: interruptor «Buscar en internet lo que no
+  esté publicado». Avisa si el proveedor configurado no puede (hace falta
+  OpenAI). Requiere la API 0.11.6.
+
 = 3.15.5 =
 * Asistente → Fuentes y Asistente → Presentación: interruptor «Incluir
   borradores», para que la IA use también lo que todavía no se publicó.

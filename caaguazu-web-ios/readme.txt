@@ -131,6 +131,11 @@ propio, idioma elegido), y eso vive en su navegador, no acá.
 
 == Changelog ==
 
+= 2.4.2 =
+* Asistente: muestra los enlaces de internet que trae una respuesta (cuando la
+  búsqueda en internet está prendida en el panel), aparte de las fuentes de la
+  guía y abriendo en otra pestaña.
+
 = 2.4.1 =
 * La página de la propuesta pasa a `/turismo/propuesta/` (antes `/turismo/proyecto/`).
 

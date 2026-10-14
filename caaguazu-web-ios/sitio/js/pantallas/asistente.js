@@ -42,12 +42,14 @@ function globo(m) {
   if (m.rol === "yo") return `<div class="globo globo--yo">${escapar(m.texto)}</div>`;
   if (m.rol === "error") return `<div class="globo globo--error" role="alert">${escapar(m.texto)}</div>`;
   const fuentes = (m.fuentes ?? []).filter((f) => f && f.id);
+  // Lo que salió de internet: enlaces de afuera, aparte de las fuentes de la guía.
+  const enlaces = (m.enlaces ?? []).filter((e) => e && /^https?:\/\//i.test(e.url || ""));
+  const chips = [
+    ...fuentes.map((f) => `<a class="chip" href="${enlaceFuente(f)}">${escapar(f.titulo || t("ficha.fuentes"))}</a>`),
+    ...enlaces.map((e) => `<a class="chip" href="${escapar(e.url)}" target="_blank" rel="noopener noreferrer">${escapar(e.titulo || e.url)} ↗</a>`),
+  ];
   return `<div class="globo globo--ia">${escapar(m.texto)}${
-    fuentes.length
-      ? `<div class="globo__fuentes" aria-label="${escapar(t("ficha.fuentes"))}">${fuentes
-          .map((f) => `<a class="chip" href="${enlaceFuente(f)}">${escapar(f.titulo || t("ficha.fuentes"))}</a>`)
-          .join("")}</div>`
-      : ""
+    chips.length ? `<div class="globo__fuentes" aria-label="${escapar(t("ficha.fuentes"))}">${chips.join("")}</div>` : ""
   }</div>`;
 }
 
@@ -131,7 +133,7 @@ export async function render(el, { hayAsistente }) {
     try {
       const r = await Api.preguntar({ mensaje: texto.slice(0, MAX), conversacion: charla.conversacion });
       charla.conversacion = r.conversacion || charla.conversacion;
-      respuesta = { rol: "ia", texto: r.respuesta || "", fuentes: r.fuentes || [] };
+      respuesta = { rol: "ia", texto: r.respuesta || "", fuentes: r.fuentes || [], enlaces: r.enlaces || [] };
     } catch (e) {
       respuesta = { rol: "error", texto: explicar(e) };
     }

@@ -99,6 +99,7 @@ class PROMOTUR_Asistente_Panel {
 			'modelo_activo'   => CZUAPI_Presentacion::modelo(),
 			'catalogo'        => CZUAPI_Presentacion::usa_catalogo(),
 			'borradores'      => method_exists( 'CZUAPI_Presentacion', 'usa_borradores' ) && CZUAPI_Presentacion::usa_borradores(),
+			'web'             => method_exists( 'CZUAPI_Presentacion', 'usa_web' ) && CZUAPI_Presentacion::usa_web(),
 			'voz_proveedor'   => $voz['proveedor'],
 			'voz_endpoint'    => (string) get_option( 'czuapi_pres_voz_endpoint', '' ),
 			'voz_modelo'      => (string) get_option( 'czuapi_pres_voz_modelo', '' ),
@@ -151,6 +152,16 @@ class PROMOTUR_Asistente_Panel {
 	/** @return array<string,bool> Qué fuentes están prendidas. */
 	public static function fuentes() {
 		return self::disponible() ? CZUAPI_Asistente::fuentes_activas() : array();
+	}
+
+	/** ¿El asistente busca en internet lo que no está publicado? (API 0.11.6.) */
+	public static function web() {
+		return self::disponible() && method_exists( 'CZUAPI_Asistente', 'web_activa' ) && CZUAPI_Asistente::web_activa();
+	}
+
+	/** ¿El proveedor configurado puede buscar? Hace falta la Responses API (OpenAI). */
+	public static function web_posible() {
+		return self::disponible() && method_exists( 'CZUAPI_Asistente', 'endpoint_respuestas' ) && '' !== CZUAPI_Asistente::endpoint_respuestas( CZUAPI_Asistente::endpoint() ) && false !== strpos( CZUAPI_Asistente::endpoint(), 'openai.com' );
 	}
 
 	/** ¿El asistente lee también los borradores? (Necesita la API 0.11.5.) */
@@ -234,7 +245,11 @@ class PROMOTUR_Asistente_Panel {
 		if ( method_exists( 'CZUAPI_Asistente', 'set_borradores' ) ) {
 			CZUAPI_Asistente::set_borradores( $borradores );
 		}
-		$this->registrar( 'asistente_fuentes', array( 'activas' => CZUAPI_Asistente::normalizar_fuentes( $elegidas ), 'borradores' => $borradores ) );
+		$web = ! empty( $_POST['web'] ); // phpcs:ignore WordPress.Security.NonceVerification
+		if ( method_exists( 'CZUAPI_Asistente', 'set_web' ) ) {
+			CZUAPI_Asistente::set_web( $web );
+		}
+		$this->registrar( 'asistente_fuentes', array( 'activas' => CZUAPI_Asistente::normalizar_fuentes( $elegidas ), 'borradores' => $borradores, 'web' => $web ) );
 		promotur_flash( __( 'Guardado', 'caaguazu-portal' ), 'success' );
 	}
 
@@ -248,7 +263,7 @@ class PROMOTUR_Asistente_Panel {
 			return;
 		}
 		$campos = array(
-			'activo', 'catalogo', 'borradores', 'persona', 'persona_fabrica', 'conocimiento', 'turnos', 'modelo', 'etiquetas',
+			'activo', 'catalogo', 'borradores', 'web', 'persona', 'persona_fabrica', 'conocimiento', 'turnos', 'modelo', 'etiquetas',
 			'voz_proveedor', 'voz_endpoint', 'voz_key', 'voz_key_borrar', 'voz_modelo', 'voz_id', 'voz_velocidad',
 			'oido_modo', 'oido_proveedor', 'oido_silencio', 'oido_endpoint', 'oido_key', 'oido_key_borrar', 'oido_modelo', 'oido_idioma',
 		);
@@ -263,6 +278,7 @@ class PROMOTUR_Asistente_Panel {
 			'activa'      => ! empty( $datos['activo'] ),
 			'catalogo'    => ! empty( $datos['catalogo'] ),
 			'borradores'  => ! empty( $datos['borradores'] ),
+			'web'         => ! empty( $datos['web'] ),
 			'voz'         => (string) $datos['voz_proveedor'],
 			'oido'        => (string) $datos['oido_modo'] . '/' . (string) $datos['oido_proveedor'],
 			'key_voz'     => '' !== trim( (string) $datos['voz_key'] ) ? 'nueva' : ( ! empty( $datos['voz_key_borrar'] ) ? 'borrada' : 'igual' ),

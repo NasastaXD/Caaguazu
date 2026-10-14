@@ -258,6 +258,11 @@ TXT;
 		return (bool) get_option( 'czuapi_pres_borradores', 0 );
 	}
 
+	/** ¿Busca en internet lo que no está en el guion ni en el catálogo? */
+	public static function usa_web() {
+		return (bool) get_option( 'czuapi_pres_web', 0 );
+	}
+
 	/**
 	 * La voz, ya resuelta: lo que falta se completa con lo de fábrica del
 	 * proveedor elegido.
@@ -412,6 +417,7 @@ TXT;
 		update_option( 'czuapi_pres_catalogo', empty( $c['catalogo'] ) ? 0 : 1, false );
 		$borradores_antes = self::usa_borradores();
 		update_option( 'czuapi_pres_borradores', empty( $c['borradores'] ) ? 0 : 1, false );
+		update_option( 'czuapi_pres_web', empty( $c['web'] ) ? 0 : 1, false );
 		if ( $borradores_antes !== self::usa_borradores() ) {
 			CZUAPI_Asistente_Fuentes::invalidar();
 		}
@@ -580,6 +586,7 @@ TXT;
 			'sistema'     => array( __CLASS__, 'armar_sistema' ),
 			'sin_fuentes' => ! ( self::usa_catalogo() || self::usa_borradores() ),
 			'borradores'  => self::usa_borradores(),
+			'web'         => self::usa_web(),
 			'max_tokens'  => self::MAX_TOKENS,
 			'modelo'      => self::modelo(),
 		) );

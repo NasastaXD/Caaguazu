@@ -168,6 +168,20 @@ depende de cómo se llame el tag.
 * Repo privado: definir `CZUAPI_GITHUB_TOKEN` (PAT de solo lectura) en
   `wp-config.php`, o cargarlo desde **Caaguazú API → Actualizaciones**.
 
+== Cambios en 0.11.6 ==
+
+* **Búsqueda en internet para lo que no está publicado**, con un interruptor
+  por IA (`czuapi_ia_web`, `czuapi_pres_web`), apagado por defecto. Si el dato
+  de Caaguazú no está en las fuentes, el modelo lo dice y agrega la marca
+  `[WEB]`; con eso se pregunta otra vez por la Responses API (`/responses`,
+  herramienta `web_search`, ubicada en Caaguazú). Funciona con OpenAI
+  (por ejemplo gpt-6-luna); con un proveedor sin Responses API no busca.
+* La respuesta de internet avisa que el equipo no la verificó, y sus enlaces
+  van en un campo nuevo, `enlaces` ({ titulo, url }), aparte de `fuentes`.
+  La app ya publicada lo ignora sin romperse.
+* Si la búsqueda falla, queda la respuesta de siempre («no tengo ese dato»).
+  La marca nunca llega a la persona.
+
 == Cambios en 0.11.5 ==
 
 * **Las dos IA pueden leer borradores**, cada una con su interruptor
