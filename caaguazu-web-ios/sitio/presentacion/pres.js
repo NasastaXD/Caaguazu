@@ -47,6 +47,7 @@ const TX = {
   esperas: ["Un segundo…", "Dejame pensar…", "Buena pregunta…", "Ya te cuento…"],
   atajos: "Espacio o Enter: hablar · Esc: cortar · F: pantalla completa · N: nueva charla",
   mantener: "Mantené apretado para hablar",
+  dictadoBloqueado: "Este teléfono no deja dictar a la página",
 };
 
 const $ = (id) => document.getElementById(id);
@@ -688,8 +689,12 @@ function soltar(e) {
     avisar(TX.mantener, { error: false });
     return;
   }
+  if (!escucha) {
+    rastro(`soltado a los ${(duro / 1000).toFixed(1)} s, pero no había nada escuchando`);
+    return;
+  }
   rastro(`soltado a los ${(duro / 1000).toFixed(1)} s: se pregunta`);
-  escucha?.detener();
+  escucha.detener();
 }
 
 function escucharSegunOido() {
@@ -906,8 +911,15 @@ function escucharConNavegador(intento = 0, previo = "") {
     }
     avisarSala("listo");
     $("respuesta").textContent = "";
-    if (fallo === "not-allowed" || fallo === "service-not-allowed") {
-      // Sin permiso no hay nada que reintentar: se queda dicho.
+    if (fallo === "service-not-allowed") {
+      // Safari en iPhone: el dictado sólo arranca con un toque terminado (un
+      // clic), no con el dedo apoyado. Con «mantener apretado» no hay forma:
+      // hace falta el oído en tiempo real (ElevenLabs), que usa el micrófono
+      // abierto en «Empezar». Se queda dicho, para quien maneja el panel.
+      rastro("el navegador no deja dictar al apoyar el dedo: usar el oído «ElevenLabs en tiempo real» en el panel");
+      avisar(TX.dictadoBloqueado, { fijo: true });
+    } else if (fallo === "not-allowed") {
+      // Sin permiso del micrófono no hay nada que reintentar: se queda dicho.
       avisar(TX.sinMicrofono, { fijo: true });
     } else if (fallo === "audio-capture") {
       avisar(TX.sinMicrofono);

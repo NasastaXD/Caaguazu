@@ -931,6 +931,26 @@ if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
 			const registro = await depurar.p.textContent( '.rastro' );
 			ok( '?debug=1 escribe en pantalla qué hace el oído (táctil, micrófono, apretado, audiostart, resultado)', /táctil: sí/.test( registro ) && /micrófono sin abrir/.test( registro ) && /apretado/.test( registro ) && /audiostart/.test( registro ) && /resultado:/.test( registro ), registro.slice( 0, 300 ) );
 			await depurar.ctx.close();
+
+			// Safari en iPhone no deja dictar al apoyar el dedo (service-not-allowed):
+			// lo dice y no queda en silencio.
+			const iphone = await abrir();
+			await iphone.p.addInitScript( () => {
+				class SR {
+					start() { setTimeout( () => { this.onerror?.( { error: 'service-not-allowed', message: 'Speech recognition service permission check has failed' } ); this.onend?.(); }, 20 ); }
+					stop() {}
+					abort() {}
+				}
+				window.SpeechRecognition = SR;
+				window.webkitSpeechRecognition = SR;
+			} );
+			await iphone.p.goto( pre.PHP + '/turismo/presentacion/' );
+			await iphone.p.waitForFunction( () => ! document.getElementById( 'empezar' ).disabled, null, { timeout: 9000 } );
+			await iphone.p.tap( '#empezar' );
+			await mantenerApretado( iphone.p, 800 );
+			await iphone.p.waitForTimeout( 300 );
+			ok( 'si el teléfono no deja dictar, lo dice (y queda dicho al soltar)', ( await iphone.p.textContent( '#estado' ) ) === 'Este teléfono no deja dictar a la página' );
+			await iphone.ctx.close();
 		}
 	}
 

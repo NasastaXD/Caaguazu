@@ -131,6 +131,12 @@ propio, idioma elegido), y eso vive en su navegador, no acá.
 
 == Changelog ==
 
+= 2.5.2 =
+* Presentación: si el teléfono no deja dictar a la página (Safari en iPhone,
+  «service-not-allowed»), lo dice en pantalla en vez de quedar en silencio. En
+  iPhone, el dictado del navegador no arranca con el dedo apoyado: hay que usar
+  el oído «ElevenLabs en tiempo real».
+
 = 2.5.1 =
 * Presentación en el teléfono: se habla **manteniendo apretada la pantalla**,
   como un walkie-talkie, y pregunta al soltar. Ya no escucha todo el tiempo:
