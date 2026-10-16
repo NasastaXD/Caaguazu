@@ -654,6 +654,11 @@ function apretar(e) {
   if (!mantener || apretado || e.button > 0) return;
   if (Estado.actual === "inicio" || Estado.actual === "apagada") return;
   e.preventDefault();
+  // Con los ajustes abiertos, tocar afuera los cierra: no es hablar.
+  if (!$("ajustes").hidden) {
+    abrirAjustes(false);
+    return;
+  }
   if (Estado.actual === "pensando") return;
   if (esperandoPantalla) {
     avisar(TX.espera, { error: false });
@@ -1790,6 +1795,8 @@ async function arrancar() {
   boton.addEventListener("click", empezar, { once: true });
   boton.focus();
 }
+
+document.body.classList.toggle("sin-pantalla-completa", !document.fullscreenEnabled);
 
 // En la computadora, la esfera se toca (o se aprieta una tecla). En un
 // teléfono se mantiene apretada la pantalla entera: ver «Mantener apretado».

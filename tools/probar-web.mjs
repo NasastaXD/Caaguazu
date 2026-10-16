@@ -855,9 +855,16 @@ if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
 
 			const caja = await tel.p.locator( '#orbe' ).boundingBox();
 			ok( 'la esfera es grande en un teléfono', caja.width >= 200, `${ Math.round( caja.width ) }px` );
-			ok( 'el engranaje y la pantalla completa no existen en un teléfono (no se comen toques)', await tel.p.evaluate( () => { const e = document.elementFromPoint( 40, 790 ); return ! e || ! e.closest( 'button, a' ); } ) );
+			ok( 'el engranaje está a la vista en el teléfono, en su esquina', await tel.p.locator( '#abrir-ajustes' ).isVisible() );
 			await tel.p.waitForTimeout( 1500 );
 			ok( 'NO escucha solo: quieto, espera el dedo', await estadoDe( tel.p ) === 'listo' );
+			// Los ajustes: tocar el engranaje no es hablar, y tocar afuera los cierra.
+			await tel.p.tap( '#abrir-ajustes' );
+			await tel.p.waitForTimeout( 200 );
+			ok( 'tocar el engranaje abre los ajustes, sin ponerse a escuchar', await tel.p.locator( '#ajustes' ).isVisible() && await estadoDe( tel.p ) === 'listo' );
+			await mantenerApretado( tel.p, 600, { x: 195, y: 150 } );
+			await tel.p.waitForTimeout( 200 );
+			ok( 'con los ajustes abiertos, tocar la pantalla los cierra (no habla)', await tel.p.locator( '#ajustes' ).isHidden() && await estadoDe( tel.p ) === 'listo' );
 			ok( 'y dice cómo se habla', ( await tel.p.textContent( '#estado' ) ) === 'Mantené apretado para hablar' );
 
 			// Un roce no es hablar.

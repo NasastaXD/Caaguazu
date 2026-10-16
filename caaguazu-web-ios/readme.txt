@@ -131,6 +131,12 @@ propio, idioma elegido), y eso vive en su navegador, no acá.
 
 == Changelog ==
 
+= 2.5.3 =
+* Presentación en el teléfono: vuelven el engranaje (ajustes) y la pantalla
+  completa, a la vista en su esquina. Tocarlos no hace hablar, y con los
+  ajustes abiertos tocar la pantalla los cierra. En iPhone, donde la pantalla
+  completa no existe, ese botón no se dibuja.
+
 = 2.5.2 =
 * Presentación: si el teléfono no deja dictar a la página (Safari en iPhone,
   «service-not-allowed»), lo dice en pantalla en vez de quedar en silencio. En
