@@ -176,6 +176,11 @@ function iniciarAudio() {
   const Ctx = window.AudioContext || window.webkitAudioContext;
   if (!Ctx) return;
   audio = new Ctx();
+  // En un teléfono la voz sale directo del reproductor, sin pasar por el
+  // AudioContext: ahí lo comparte con el micrófono, y Safari lo suspende o lo
+  // deja mudo al abrirlo o cerrarlo. Una voz que no suena es peor que una
+  // esfera que no la sigue (se imita, ver nivelObjetivo).
+  if (mantener) return;
   try {
     // La voz pasa por un analizador para que la esfera se mueva con ella.
     const fuente = audio.createMediaElementSource(reproductor);
@@ -186,6 +191,52 @@ function iniciarAudio() {
   } catch {
     analizadorSalida = null; // suena igual, sin mover la esfera con la voz
   }
+}
+
+/**
+ * Safari (sobre todo en iPhone) sólo deja sonar un reproductor que ya sonó
+ * dentro de un toque. Se lo hace sonar en silencio en cada toque —«Empezar»,
+ * soltar el dedo— y así la respuesta, que llega segundos después, puede sonar.
+ */
+let silencio = "";
+function destrabarVoz() {
+  if (!reproductor.paused) return;
+  if (!silencio) {
+    // Un WAV de 0,1 s en silencio, armado acá: 800 muestras de 8 bits a 8 kHz.
+    const n = 800;
+    const b = new DataView(new ArrayBuffer(44 + n));
+    const txt = (o, t) => [...t].forEach((c, i) => b.setUint8(o + i, c.charCodeAt(0)));
+    txt(0, "RIFF");
+    b.setUint32(4, 36 + n, true);
+    txt(8, "WAVEfmt ");
+    b.setUint32(16, 16, true);
+    b.setUint16(20, 1, true);
+    b.setUint16(22, 1, true);
+    b.setUint32(24, 8000, true);
+    b.setUint32(28, 8000, true);
+    b.setUint16(32, 1, true);
+    b.setUint16(34, 8, true);
+    txt(36, "data");
+    b.setUint32(40, n, true);
+    for (let i = 0; i < n; i++) b.setUint8(44 + i, 128);
+    silencio = URL.createObjectURL(new Blob([b.buffer], { type: "audio/wav" }));
+  }
+  reproductor.onended = null;
+  reproductor.onerror = null;
+  reproductor.src = silencio;
+  reproductor.play().then(
+    () => rastro("voz destrabada"),
+    (e) => rastro("no se pudo destrabar la voz:", e?.name || e),
+  );
+  audio?.resume?.().catch(() => {});
+}
+
+/** Cierra el micrófono: en un teléfono, mientras está abierto, Safari baja o
+ * apaga lo que suena. Se vuelve a abrir al apretar. */
+function cerrarMicrofono() {
+  flujoMicrofono?.getTracks().forEach((t) => t.stop());
+  flujoMicrofono = null;
+  analizadorEntrada = null;
 }
 
 /** Volumen de 0 a 1 de lo que pasa por un analizador. */
@@ -567,10 +618,18 @@ function decir(texto, audioUrl) {
         vozDelNavegador(texto, terminar);
       };
       reproductor.onended = terminar;
-      reproductor.onerror = planB;
+      reproductor.onerror = () => {
+        rastro("voz: el audio no se pudo reproducir");
+        planB();
+      };
       reproductor.src = audioUrl;
-      reproductor.play().catch(planB);
+      rastro("voz: suena el audio del servidor", audio ? `(sonido ${audio.state})` : "");
+      reproductor.play().catch((e) => {
+        rastro("voz: el navegador no dejó sonar el audio:", e?.name || e, "— va la voz del navegador");
+        planB();
+      });
     } else {
+      rastro("voz: no vino audio del servidor — va la voz del navegador");
       vozDelNavegador(texto, terminar);
     }
   });
@@ -699,6 +758,8 @@ function soltar(e) {
     return;
   }
   rastro(`soltado a los ${(duro / 1000).toFixed(1)} s: se pregunta`);
+  // Soltar es un toque terminado: el momento de dejar lista la voz.
+  destrabarVoz();
   escucha.detener();
 }
 
@@ -743,6 +804,7 @@ function cancelarEscucha() {
   escucha?.cancelar();
   escucha = null;
   cerrarTiempoReal();
+  if (mantener) cerrarMicrofono();
 }
 
 /* --- Avisos al otro lado de la sala ------------------------------------- */
@@ -1015,6 +1077,7 @@ async function escucharConServidor() {
   grabador.onstop = async () => {
     escucha = null;
     clearInterval(vigilar);
+    if (mantener) cerrarMicrofono();
     if (cancelada) return;
     const blob = new Blob(partes, { type: grabador.mimeType || tipo || "audio/webm" });
     if (blob.size < 1500) {
@@ -1389,6 +1452,7 @@ function cerrarFraseTiempoReal() {
   const texto = `${rt.dicho} ${rt.ultimoParcial}`.trim();
   escucha = null;
   cerrarTiempoReal();
+  if (mantener) cerrarMicrofono();
   if (texto.replace(/[\s.,;:¿?¡!…-]/g, "").length < 3) {
     rastro("no se entendió nada:", texto || "(vacío)");
     avisarSala("listo");
@@ -1445,6 +1509,7 @@ function cerrarTiempoReal() {
  */
 function fallaTiempoReal(mensaje, { fatal = false } = {}) {
   cerrarTiempoReal();
+  if (mantener) cerrarMicrofono();
   escucha = null;
   avisarSala("listo");
   avisar(mensaje, { fijo: fatal });
@@ -1745,6 +1810,7 @@ async function empezar() {
   await audio?.resume?.().catch(() => {});
   // En Safari la voz del navegador sólo arranca si la primera vez fue en un toque.
   if (window.speechSynthesis) speechSynthesis.speak(new SpeechSynthesisUtterance(""));
+  destrabarVoz();
   // El micrófono se abre ahora para que la esfera lo escuche (y para pedir el
   // permiso una sola vez, antes de que haya público mirando) SÓLO donde se
   // puede compartir: con la transcripción en el servidor —que es quien lo usa—
@@ -1756,6 +1822,9 @@ async function empezar() {
     try {
       await abrirMicrofono();
       rastro("micrófono abierto para medirlo");
+      // En un teléfono se abre sólo para pedir el permiso ahora, una vez: si
+      // queda abierto, Safari baja o apaga la voz. Se abre de nuevo al apretar.
+      if (mantener) cerrarMicrofono();
     } catch (e) {
       rastro("micrófono:", e?.name || e);
     }

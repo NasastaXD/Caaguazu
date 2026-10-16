@@ -972,6 +972,7 @@ if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
 				const destino = ctx.createMediaStreamDestination();
 				osc.connect( destino );
 				osc.start();
+				( window.__pistas ||= [] ).push( ...destino.stream.getAudioTracks() );
 				return destino.stream;
 			};
 			Object.defineProperty( navigator, 'mediaDevices', { value: { getUserMedia: gum, enumerateDevices: async () => [] }, configurable: true } );
@@ -1049,6 +1050,7 @@ if ( spawnSync( 'php', [ '-v' ] ).status !== 0 ) {
 			const nCerrada = await tel.p.evaluate( () => window.__ws.chunks.length );
 			await esperar( tel.p, () => document.body.dataset.estado === 'listo', 14000 );
 			await tel.p.waitForTimeout( 1200 );
+			ok( 'y el micrófono queda cerrado (abierto, Safari baja o apaga la voz)', await tel.p.evaluate( () => ( window.__pistas || [] ).length > 0 && window.__pistas.every( ( x ) => x.readyState === 'ended' ) ) );
 			ok( 'terminada la pregunta, la conexión se cerró: no manda nada más ni vuelve a escuchar solo', await estadoDe( tel.p ) === 'listo' && ( await tel.p.evaluate( () => window.__ws.chunks.length ) ) === nCerrada && ( await tel.p.evaluate( () => window.__ws.creados.length ) ) === 1 );
 
 			// Ruido sin palabras: al soltar no inventa una pregunta.

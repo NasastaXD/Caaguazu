@@ -131,6 +131,15 @@ propio, idioma elegido), y eso vive en su navegador, no acá.
 
 == Changelog ==
 
+= 2.5.4 =
+* Presentación en el teléfono: la voz vuelve a sonar. En el teléfono la voz
+  sale directo del reproductor (no por el AudioContext, que Safari comparte con
+  el micrófono y suspende), el reproductor se «destraba» en cada toque
+  (Empezar, soltar el dedo) y el micrófono se cierra al terminar cada pregunta
+  (abierto, Safari baja o apaga lo que suena).
+* `?debug=1` dice qué pasa con la voz: si sonó el audio del servidor, si el
+  navegador no lo dejó sonar, o si fue la voz del navegador.
+
 = 2.5.3 =
 * Presentación en el teléfono: vuelven el engranaje (ajustes) y la pantalla
   completa, a la vista en su esquina. Tocarlos no hace hablar, y con los
