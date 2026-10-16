@@ -168,6 +168,12 @@ depende de cómo se llame el tag.
 * Repo privado: definir `CZUAPI_GITHUB_TOKEN` (PAT de solo lectura) en
   `wp-config.php`, o cargarlo desde **Caaguazú API → Actualizaciones**.
 
+== Cambios en 0.11.9 ==
+
+* La presentación tiene su propia temperatura (`czuapi_pres_temperatura`, 0,9
+  por defecto; antes usaba la del asistente de la app, 0,5) y una regla fija:
+  los datos tal cual, la forma libre, sin repetir arranques ni chistes.
+
 == Cambios en 0.11.8 ==
 
 * Los títulos salen como texto, sin entidades HTML: un apóstrofo o un guion

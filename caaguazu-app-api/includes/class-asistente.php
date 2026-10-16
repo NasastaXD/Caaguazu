@@ -630,10 +630,12 @@ TXT;
 		$messages[] = array( 'role' => 'user', 'content' => mb_substr( $mensaje, 0, self::MAX_MENSAJE ) );
 
 		$max_tokens = isset( $opciones['max_tokens'] ) ? max( 50, (int) $opciones['max_tokens'] ) : self::max_tokens();
-		$payload    = static function ( $tokens ) use ( $modelo, $messages ) {
+		// La presentación tiene la suya (más alta); el resto, la del asistente.
+		$temperatura = isset( $opciones['temperatura'] ) ? (float) $opciones['temperatura'] : self::temperatura();
+		$payload     = static function ( $tokens ) use ( $modelo, $messages, $temperatura ) {
 			$p = array(
 				'model'       => $modelo,
-				'temperature' => self::temperatura(),
+				'temperature' => $temperatura,
 				'max_tokens'  => $tokens,
 				'messages'    => $messages,
 			);

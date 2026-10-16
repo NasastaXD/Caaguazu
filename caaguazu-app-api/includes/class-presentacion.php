@@ -120,6 +120,14 @@ class CZUAPI_Presentacion {
 	/** Lo que se dice en voz alta es corto: 600 tokens son varios minutos de habla. */
 	const MAX_TOKENS = 600;
 
+	/**
+	 * Temperatura de la presentación, aparte de la del asistente de la app
+	 * (0,5): en un escenario, una personalidad que repite siempre lo mismo se
+	 * nota enseguida. La precisión no la cuida la temperatura sino el prompt:
+	 * los datos van tal cual, la libertad es en cómo se cuentan.
+	 */
+	const TEMPERATURA_DEFAULT = 0.9;
+
 	/** Tope del texto que se manda a convertir en voz. */
 	const MAX_VOZ = 3000;
 
@@ -201,10 +209,28 @@ TXT;
 			. "- Texto corrido. Sin títulos, sin listas, sin guiones, sin asteriscos, sin emojis.\n"
 			. "- Sin direcciones web ni correos: decí dónde encontrarlos.\n"
 			. "- Números y siglas como se dicen: «dos mil veintiséis», «la app», «la A P I».\n"
-			. "- Las marcas de uso interno, como [F12], no las digas.";
+			. "- Las marcas de uso interno, como [F12], no las digas.\n\n"
+			. "# DATOS EXACTOS, FORMA LIBRE\n"
+			. "- Nombres, números, precios, horarios, fechas y lugares salen tal cual de lo que sabés: ni redondeados ni adornados. Lo que no sabés, no lo completes.\n"
+			. "- Todo lo demás es tuyo: cómo arrancás, el orden, la comparación, el chiste. No copies frases del guion: contalo con tus palabras.\n"
+			. "- No repitas arranques, frases ni chistes que ya usaste en esta charla. Si te preguntan algo parecido dos veces, contalo distinto.";
 	}
 
 	/** Cuántos turnos recuerda la presentación (0 = ninguno). */
+	public static function temperatura() {
+		$t = get_option( 'czuapi_pres_temperatura', '' );
+		return '' === $t || null === $t ? self::TEMPERATURA_DEFAULT : self::normalizar_temperatura( $t );
+	}
+
+	/** Entre 0 y 1,5. Más arriba, cualquier modelo empieza a decir cosas sin sentido. */
+	public static function normalizar_temperatura( $v ) {
+		if ( '' === trim( (string) $v ) ) {
+			return self::TEMPERATURA_DEFAULT;
+		}
+		$v = (float) str_replace( ',', '.', (string) $v );
+		return round( max( 0.0, min( 1.5, $v ) ), 2 );
+	}
+
 	public static function memoria_turnos() {
 		return CZUAPI_Asistente::normalizar_turnos( get_option( 'czuapi_pres_turnos', self::MEMORIA_DEFAULT ) );
 	}
@@ -431,6 +457,7 @@ TXT;
 		update_option( 'czuapi_pres_turnos', CZUAPI_Asistente::normalizar_turnos( $c['turnos'] ?? self::MEMORIA_DEFAULT ), false );
 		update_option( 'czuapi_pres_etiquetas', empty( $c['etiquetas'] ) ? 0 : 1, false );
 		update_option( 'czuapi_pres_modelo', sanitize_text_field( (string) ( $c['modelo'] ?? '' ) ), false );
+		update_option( 'czuapi_pres_temperatura', self::normalizar_temperatura( $c['temperatura'] ?? '' ), false );
 
 		$proveedor = (string) ( $c['voz_proveedor'] ?? 'navegador' );
 		update_option( 'czuapi_pres_voz_proveedor', in_array( $proveedor, self::PROVEEDORES_VOZ, true ) ? $proveedor : 'navegador', false );
@@ -589,6 +616,7 @@ TXT;
 			'web'         => self::usa_web(),
 			'max_tokens'  => self::MAX_TOKENS,
 			'modelo'      => self::modelo(),
+			'temperatura' => self::temperatura(),
 		) );
 
 		if ( ! $r['ok'] ) {

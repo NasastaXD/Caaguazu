@@ -92,6 +92,13 @@ $p = PROMOTUR_Asistente_Panel::presentacion();
 				</label>
 			</div>
 			<p class="promotur-muted"><?php esc_html_e( 'Recuerda su propia charla, sin depender de la memoria del asistente de la app. El modelo va por la misma API y endpoint; vacío = el del asistente.', 'caaguazu-portal' ); ?></p>
+			<?php if ( null !== $p['temperatura'] ) : ?>
+				<label class="promotur-field">
+					<span><?php esc_html_e( 'Creatividad (temperatura)', 'caaguazu-portal' ); ?></span>
+					<input type="number" name="temperatura" min="0" max="1.5" step="0.05" value="<?php echo esc_attr( $p['temperatura'] ); ?>">
+				</label>
+				<p class="promotur-muted"><?php esc_html_e( 'Cuánto varía cómo dice las cosas: 0 repite siempre lo mismo; 0,9 tiene personalidad; más de 1,2 empieza a divagar. Los datos no cambian: el prompt le pide decirlos tal cual. La del asistente de la app es aparte.', 'caaguazu-portal' ); ?></p>
+			<?php endif; ?>
 			<label class="promotur-field">
 				<span><input type="checkbox" name="catalogo" value="1"<?php checked( $p['catalogo'] ); ?>> <?php esc_html_e( 'Sumar lo publicado en la app (lugares, eventos, artículos)', 'caaguazu-portal' ); ?></span>
 			</label>

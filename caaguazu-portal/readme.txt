@@ -60,6 +60,10 @@ llamen los tags.
 
 == Changelog ==
 
+= 3.15.11 =
+* Presentación: campo «Creatividad (temperatura)», aparte de la del asistente
+  de la app. Necesita la API 0.11.9.
+
 = 3.15.10 =
 * Presentación → Oído: los nombres y la ayuda dicen cuál anda en un teléfono
   (ElevenLabs en tiempo real) y cuál sólo en computadora (el navegador). Avisa
