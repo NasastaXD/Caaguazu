@@ -264,7 +264,9 @@ body.toque .orbe__escena { animation: toque 420ms var(--curva); }
 	transition: opacity var(--lento) var(--curva), visibility var(--lento);
 }
 
-.inicio.oculto { opacity: 0; visibility: hidden; }
+/* Mientras se desvanece ya no tapa: el primer «mantener apretado» puede llegar
+   enseguida después de «Empezar». */
+.inicio.oculto { opacity: 0; visibility: hidden; pointer-events: none; }
 
 .inicio__caja {
 	display: flex;
@@ -431,7 +433,7 @@ body.mostrar-controles .controles,
  * El teléfono como micrófono
  * ------------------------------------------------------------------------ */
 
-/* En un teléfono o una tableta la esfera es el botón: tiene que ser grande. */
+/* En un teléfono o una tableta la esfera es lo que se mira mientras se habla: grande. */
 @media (pointer: coarse) {
 	.orbe { width: min(62vmin, 340px); }
 
@@ -499,4 +501,13 @@ body.modo-control .controles { display: none; }
 	opacity: .92;
 }
 
-body.manos-libres .orbe { pointer-events: none; cursor: default; }
+/* En un teléfono se mantiene apretada la pantalla entera (ver pres.js): la
+   esfera no es un botón aparte, y un dedo apoyado no selecciona texto, ni abre
+   la lupa o el menú de copiar, ni desplaza la página. */
+body.mantener .orbe { pointer-events: none; cursor: default; }
+body.mantener .escena {
+	touch-action: none;
+	user-select: none;
+	-webkit-user-select: none;
+	-webkit-touch-callout: none;
+}

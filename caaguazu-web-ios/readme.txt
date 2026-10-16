@@ -131,6 +131,17 @@ propio, idioma elegido), y eso vive en su navegador, no acá.
 
 == Changelog ==
 
+= 2.5.1 =
+* Presentación en el teléfono: se habla **manteniendo apretada la pantalla**,
+  como un walkie-talkie, y pregunta al soltar. Ya no escucha todo el tiempo:
+  tomaba el ruido de la sala (contestaba solo) y con ruido no cerraba la frase
+  (no contestaba). Un toque corto no pregunta nada y recuerda cómo se habla.
+* Tiempo real (ElevenLabs): una conexión por pregunta, sólo mientras se habla.
+  Lo dicho mientras conecta se guarda y sale apenas conecta; al soltar se manda
+  silencio y se pide cerrar el tramo para no perder la última palabra.
+* La capa de «Empezar» ya no se come el primer toque mientras se desvanece.
+* La computadora del escenario sigue igual (tecla o clic).
+
 = 2.5.0 =
 * `/turismo/vitrina/` ahora muestra la misma página que `/turismo/propuesta/`
   (las dos direcciones siguen andando). La vitrina anterior, con modo
