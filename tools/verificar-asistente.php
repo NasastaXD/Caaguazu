@@ -456,6 +456,17 @@ $GLOBALS['czu_opciones']['czuapi_pres_borradores'] = 1;
 comprobar( 'el de la presentación no prende el del asistente', array( $P::usa_borradores(), CZUAPI_Asistente::borradores_activos() ), array( true, false ) );
 unset( $GLOBALS['czu_opciones']['czuapi_pres_borradores'] );
 
+/* La temperatura: la presentación tiene la suya, más alta que la del asistente. */
+unset( $GLOBALS['czu_opciones']['czuapi_pres_temperatura'] );
+comprobar( 'la presentación arranca con temperatura 0,9', $P::temperatura(), 0.9 );
+comprobar( 'la temperatura se normaliza (coma, topes, vacío)', array( $P::normalizar_temperatura( '1,1' ), $P::normalizar_temperatura( 5 ), $P::normalizar_temperatura( -1 ), $P::normalizar_temperatura( '' ) ), array( 1.1, 1.5, 0.0, 0.9 ) );
+$GLOBALS['czu_opciones'] = array( 'czuapi_ia_activo' => 1, 'czuapi_ia_endpoint' => 'https://api.openai.com/v1/chat/completions', 'czuapi_ia_modelo' => 'gpt-6-luna', 'czuapi_ia_temperatura' => 0.5 );
+$GLOBALS['http_llamadas'] = array();
+$GLOBALS['http_cola']     = array( array( 'response' => array( 'code' => 200 ), 'body' => '{"choices":[{"message":{"content":"Hola."}}]}' ), array( 'response' => array( 'code' => 200 ), 'body' => '{"choices":[{"message":{"content":"Hola."}}]}' ) );
+CZUAPI_Asistente::preguntar( 'hola', array(), 'es', null, array( 'sin_fuentes' => true, 'temperatura' => 0.9 ) );
+CZUAPI_Asistente::preguntar( 'hola', array(), 'es', null, array( 'sin_fuentes' => true ) );
+comprobar( 'la temperatura pedida llega al modelo, y sin pedirla va la del asistente', array( json_decode( $GLOBALS['http_llamadas'][0][1]['body'], true )['temperature'], json_decode( $GLOBALS['http_llamadas'][1][1]['body'], true )['temperature'] ), array( 0.9, 0.5 ) );
+
 /* La persona: saludar una sola vez. */
 comprobar( 'la persona dice que saluda una sola vez', str_contains( $P::persona_de_fabrica(), 'saludá UNA vez' ), true );
 

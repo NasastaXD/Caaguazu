@@ -60,6 +60,15 @@ llamen los tags.
 
 == Changelog ==
 
+= 3.15.11 =
+* Presentación: campo «Creatividad (temperatura)», aparte de la del asistente
+  de la app. Necesita la API 0.11.9.
+
+= 3.15.10 =
+* Presentación → Oído: los nombres y la ayuda dicen cuál anda en un teléfono
+  (ElevenLabs en tiempo real) y cuál sólo en computadora (el navegador). Avisa
+  si el oído es el navegador, y si falta la key de ElevenLabs para el tiempo real.
+
 = 3.15.9 =
 * Datos de prueba: títulos con el nombre del lugar, sin el rubro pegado
   («Rustico’s», no «Rustico's Café - Restaurant»), y horarios en un mismo

@@ -11,6 +11,10 @@
 //    servidor y la pantalla —que pregunta cada segundo por su sala— la muestra
 //    y la dice.
 //
+// En un teléfono (como micrófono de la pantalla o solo) se habla MANTENIENDO
+// APRETADA la pantalla, como un walkie-talkie: escucha mientras el dedo está
+// apoyado y pregunta al soltar.
+//
 // Nada de lo que se dice queda guardado acá: la charla vive en el servidor
 // (la memoria del asistente) y en esta pestaña mientras está abierta.
 //
@@ -42,6 +46,8 @@ const TX = {
   notaNavegador: "El dictado del navegador usa el micrófono del sistema: elegilo en la configuración del equipo.",
   esperas: ["Un segundo…", "Dejame pensar…", "Buena pregunta…", "Ya te cuento…"],
   atajos: "Espacio o Enter: hablar · Esc: cortar · F: pantalla completa · N: nueva charla",
+  mantener: "Mantené apretado para hablar",
+  dictadoBloqueado: "Este teléfono no deja dictar a la página",
 };
 
 const $ = (id) => document.getElementById(id);
@@ -126,12 +132,14 @@ const esTactil = matchMedia("(pointer: coarse)").matches;
 const conTexto = modoControl || (esTactil && parametros.get("limpio") !== "1");
 const depurando = parametros.get("debug") === "1";
 
-// El teléfono escucha SOLO, todo el tiempo: no hay nada que tocar. Tocar en un
-// teléfono daba muchos errores (activar, desactivar, tocar sin querer, tocar
-// mientras piensa), y quien habla a un micrófono en un escenario no puede estar
-// tocando una pantalla. La pantalla del escenario se maneja con teclado o mouse.
-const manosLibres = modoControl || esTactil;
-document.body.classList.toggle("manos-libres", manosLibres);
+// En un teléfono se habla manteniendo apretado, y sólo así. Escuchar todo el
+// tiempo tomaba el ruido de la sala (contestaba sin que nadie le hablara) y,
+// con ruido, no sabía dónde terminaba la frase (no contestaba nunca). Tocar
+// para prender y apagar daba otros errores: quedaba prendido sin querer. Con
+// el dedo apoyado no hay duda de cuándo se habla. La pantalla del escenario se
+// maneja con teclado o mouse.
+const mantener = modoControl || esTactil;
+document.body.classList.toggle("mantener", mantener);
 
 /**
  * Con `?debug=1`, un registro en pantalla de lo que hace el oído. En un
@@ -168,6 +176,11 @@ function iniciarAudio() {
   const Ctx = window.AudioContext || window.webkitAudioContext;
   if (!Ctx) return;
   audio = new Ctx();
+  // En un teléfono la voz sale directo del reproductor, sin pasar por el
+  // AudioContext: ahí lo comparte con el micrófono, y Safari lo suspende o lo
+  // deja mudo al abrirlo o cerrarlo. Una voz que no suena es peor que una
+  // esfera que no la sigue (se imita, ver nivelObjetivo).
+  if (mantener) return;
   try {
     // La voz pasa por un analizador para que la esfera se mueva con ella.
     const fuente = audio.createMediaElementSource(reproductor);
@@ -178,6 +191,52 @@ function iniciarAudio() {
   } catch {
     analizadorSalida = null; // suena igual, sin mover la esfera con la voz
   }
+}
+
+/**
+ * Safari (sobre todo en iPhone) sólo deja sonar un reproductor que ya sonó
+ * dentro de un toque. Se lo hace sonar en silencio en cada toque —«Empezar»,
+ * soltar el dedo— y así la respuesta, que llega segundos después, puede sonar.
+ */
+let silencio = "";
+function destrabarVoz() {
+  if (!reproductor.paused) return;
+  if (!silencio) {
+    // Un WAV de 0,1 s en silencio, armado acá: 800 muestras de 8 bits a 8 kHz.
+    const n = 800;
+    const b = new DataView(new ArrayBuffer(44 + n));
+    const txt = (o, t) => [...t].forEach((c, i) => b.setUint8(o + i, c.charCodeAt(0)));
+    txt(0, "RIFF");
+    b.setUint32(4, 36 + n, true);
+    txt(8, "WAVEfmt ");
+    b.setUint32(16, 16, true);
+    b.setUint16(20, 1, true);
+    b.setUint16(22, 1, true);
+    b.setUint32(24, 8000, true);
+    b.setUint32(28, 8000, true);
+    b.setUint16(32, 1, true);
+    b.setUint16(34, 8, true);
+    txt(36, "data");
+    b.setUint32(40, n, true);
+    for (let i = 0; i < n; i++) b.setUint8(44 + i, 128);
+    silencio = URL.createObjectURL(new Blob([b.buffer], { type: "audio/wav" }));
+  }
+  reproductor.onended = null;
+  reproductor.onerror = null;
+  reproductor.src = silencio;
+  reproductor.play().then(
+    () => rastro("voz destrabada"),
+    (e) => rastro("no se pudo destrabar la voz:", e?.name || e),
+  );
+  audio?.resume?.().catch(() => {});
+}
+
+/** Cierra el micrófono: en un teléfono, mientras está abierto, Safari baja o
+ * apaga lo que suena. Se vuelve a abrir al apretar. */
+function cerrarMicrofono() {
+  flujoMicrofono?.getTracks().forEach((t) => t.stop());
+  flujoMicrofono = null;
+  analizadorEntrada = null;
 }
 
 /** Volumen de 0 a 1 de lo que pasa por un analizador. */
@@ -406,14 +465,15 @@ function poner(estado, { mensaje = "", error = false } = {}) {
   const el = $("estado");
   // La pantalla es sólo la esfera: lo que hace se ve en cómo se mueve, y lo
   // único que se escribe es un problema que alguien tiene que resolver. El
-  // teléfono, que es quien toca, dice qué está pasando, pero no «tocá para
-  // hablar»: la esfera es el botón y se ve que lo es.
+  // teléfono, que es quien habla, dice qué está pasando y, quieto, cómo se
+  // habla: mantener apretado no se adivina mirando.
   const texto = conTexto
     ? mensaje ||
       {
         escuchando: TX.escuchando,
         pensando: TX.pensando,
         apagada: TX.apagada,
+        listo: mantener ? TX.mantener : "",
       }[estado] ||
       ""
     : error || estado === "apagada"
@@ -422,10 +482,6 @@ function poner(estado, { mensaje = "", error = false } = {}) {
   el.textContent = texto;
   el.classList.toggle("es-error", error);
   $("orbe").setAttribute("aria-pressed", String(estado === "escuchando"));
-  // Si algo salió bien se olvidan los fallos, y al quedar libre se vuelve a
-  // escuchar sin que nadie toque nada.
-  if (estado === "hablando") fallosSeguidos = 0;
-  if (estado === "listo") programarEscucha();
 }
 
 /** Un aviso que dura unos segundos y vuelve a «listo». */
@@ -562,10 +618,18 @@ function decir(texto, audioUrl) {
         vozDelNavegador(texto, terminar);
       };
       reproductor.onended = terminar;
-      reproductor.onerror = planB;
+      reproductor.onerror = () => {
+        rastro("voz: el audio no se pudo reproducir");
+        planB();
+      };
       reproductor.src = audioUrl;
-      reproductor.play().catch(planB);
+      rastro("voz: suena el audio del servidor", audio ? `(sonido ${audio.state})` : "");
+      reproductor.play().catch((e) => {
+        rastro("voz: el navegador no dejó sonar el audio:", e?.name || e, "— va la voz del navegador");
+        planB();
+      });
     } else {
+      rastro("voz: no vino audio del servidor — va la voz del navegador");
       vozDelNavegador(texto, terminar);
     }
   });
@@ -632,40 +696,74 @@ function hayOidoLocal() {
 }
 
 /* -------------------------------------------------------------------------
- * Escuchar solo (el teléfono)
+ * Mantener apretado (el teléfono)
  *
- * No hay un botón que apretar: después de «Empezar», el teléfono escucha. Cada
- * frase se manda, y mientras se contesta NO se escucha: ni al tiempo de pensar,
- * ni mientras habla (el teléfono, que está en el mismo salón que los parlantes,
- * se escucharía a sí mismo y contestaría una y otra vez). Vuelve cuando la
- * respuesta terminó de sonar.
+ * Escucha mientras el dedo está apoyado en la pantalla y pregunta al soltar.
+ * Un toque corto no es hablar (se lo toma por un roce): recuerda cómo se hace.
+ * Mientras la pantalla de la sala dice la respuesta, apretar no hace nada: el
+ * teléfono, en el mismo salón que los parlantes, se escucharía a sí mismo.
  * ---------------------------------------------------------------------- */
 
-let armado = false; // ya se tocó «Empezar»
-let bloqueoEscucha = ""; // por qué NO se vuelve a escuchar solo (sin permiso, por ejemplo)
 let esperandoPantalla = false; // la pantalla está diciendo la respuesta
-let fallosSeguidos = 0;
-let relojEscucha = 0;
+let sostenida = false; // el dedo sigue apoyado
+let apretado = null; // { id, desde }
+const TOQUE_MINIMO = 350; // ms: menos que esto es un roce, no una pregunta
 
-/** Cada fallo seguido espera más: un micrófono caído no se martilla. */
-const retrasoEscucha = () => Math.min(8000, 400 * 2 ** Math.min(fallosSeguidos, 5));
-
-function programarEscucha(ms = retrasoEscucha()) {
-  if (!manosLibres || !armado || bloqueoEscucha) return;
-  clearTimeout(relojEscucha);
-  relojEscucha = setTimeout(escucharAhora, ms);
-}
-
-function escucharAhora() {
-  if (!manosLibres || !armado || bloqueoEscucha || esperandoPantalla) return;
-  if (Estado.actual !== "listo" || escucha) return;
-  if (!hayOidoLocal()) {
-    bloqueoEscucha = "sin_soporte";
-    rastro("este navegador no puede escuchar con", config.oido);
-    avisar(config.oido === "navegador" ? TX.sinOido : TX.sinMicrofono, { fijo: true });
+function apretar(e) {
+  if (!mantener || apretado || e.button > 0) return;
+  if (Estado.actual === "inicio" || Estado.actual === "apagada") return;
+  e.preventDefault();
+  // Con los ajustes abiertos, tocar afuera los cierra: no es hablar.
+  if (!$("ajustes").hidden) {
+    abrirAjustes(false);
     return;
   }
-  rastro("escucha automática con", config.oido);
+  if (Estado.actual === "pensando") return;
+  if (esperandoPantalla) {
+    avisar(TX.espera, { error: false });
+    return;
+  }
+  apretado = { id: e.pointerId, desde: performance.now() };
+  try {
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+  } catch {
+    /* sin captura: igual llega el pointerup al documento */
+  }
+  tocar();
+  if (Estado.actual === "hablando") callar();
+  if (escucha) cancelarEscucha();
+  if (!hayOidoLocal()) {
+    apretado = null;
+    avisar(config.oido === "navegador" ? TX.sinOido : TX.sinMicrofono);
+    return;
+  }
+  sostenida = true;
+  rastro("apretado: escucha");
+  escucharSegunOido();
+}
+
+function soltar(e) {
+  if (!apretado || (e && e.pointerId !== undefined && e.pointerId !== apretado.id)) return;
+  const duro = performance.now() - apretado.desde;
+  apretado = null;
+  sostenida = false;
+  if (duro < TOQUE_MINIMO) {
+    rastro(`toque de ${Math.round(duro)} ms: no es hablar`);
+    cancelarEscucha();
+    avisar(TX.mantener, { error: false });
+    return;
+  }
+  if (!escucha) {
+    rastro(`soltado a los ${(duro / 1000).toFixed(1)} s, pero no había nada escuchando`);
+    return;
+  }
+  rastro(`soltado a los ${(duro / 1000).toFixed(1)} s: se pregunta`);
+  // Soltar es un toque terminado: el momento de dejar lista la voz.
+  destrabarVoz();
+  escucha.detener();
+}
+
+function escucharSegunOido() {
   if (config.oido === "tiempo_real") escucharTiempoReal();
   else if (config.oido === "servidor") escucharConServidor();
   else escucharConNavegador();
@@ -682,8 +780,8 @@ function tocar() {
 }
 
 function alternarEscucha() {
-  // Un teléfono escucha solo: aquí no se toca (ver «Escuchar solo»).
-  if (manosLibres) return;
+  // Un teléfono se mantiene apretado: ver «Mantener apretado».
+  if (mantener) return;
   if (Estado.actual === "inicio" || Estado.actual === "apagada") return;
   tocar();
   rastro("toque, estaba:", Estado.actual, escucha ? "(cierra la escucha)" : "");
@@ -699,15 +797,14 @@ function alternarEscucha() {
     avisar(Reconocedor || config.oido === "servidor" ? TX.sinMicrofono : TX.sinOido);
     return;
   }
-  if (config.oido === "tiempo_real") escucharTiempoReal();
-  else if (config.oido === "servidor") escucharConServidor();
-  else escucharConNavegador();
+  escucharSegunOido();
 }
 
 function cancelarEscucha() {
   escucha?.cancelar();
   escucha = null;
   cerrarTiempoReal();
+  if (mantener) cerrarMicrofono();
 }
 
 /* --- Avisos al otro lado de la sala ------------------------------------- */
@@ -754,9 +851,8 @@ async function esperarPantalla() {
       break;
     }
   }
-  esperandoPantalla = false;
   await dormir(600); // la cola del eco de la sala
-  programarEscucha(0);
+  esperandoPantalla = false;
 }
 
 let ultimoAviso = 0;
@@ -782,7 +878,12 @@ function avisarSala(estado, parcial = "") {
  */
 const idiomasDictado = () => [...new Set([config.idioma, "es-419", "es-ES"])];
 
-function escucharConNavegador(intento = 0) {
+/**
+ * Dictado del navegador. Con el dedo apoyado, cada pausa cierra el dictado y
+ * se abre otro que sigue la misma frase (`previo`): el modo continuo de Chrome
+ * en Android repite lo ya dicho en cada resultado.
+ */
+function escucharConNavegador(intento = 0, previo = "") {
   const idiomas = idiomasDictado();
   const rec = new Reconocedor();
   rec.lang = idiomas[Math.min(intento, idiomas.length - 1)];
@@ -790,7 +891,7 @@ function escucharConNavegador(intento = 0) {
   rec.continuous = false;
   rec.maxAlternatives = 1;
 
-  let final = "";
+  let final = previo ? `${previo} ` : "";
   let parcial = "";
   let fallo = "";
   let cancelada = false;
@@ -843,7 +944,8 @@ function escucharConNavegador(intento = 0) {
     }
     const visto = `${final} ${parcial}`.trim();
     clearTimeout(relojQuieto);
-    if (visto) relojQuieto = setTimeout(() => cortar("la frase no cambia hace 2,5 s"), 2500);
+    // Con el dedo apoyado, la frase termina al soltar: no hay que adivinarlo.
+    if (visto && !sostenida) relojQuieto = setTimeout(() => cortar("la frase no cambia hace 2,5 s"), 2500);
     pulsoRemoto = 0.95;
     rastro("resultado:", visto);
     mostrarEscuchado(visto);
@@ -862,7 +964,12 @@ function escucharConNavegador(intento = 0) {
     if (cancelada) return;
     // Un idioma que este navegador no tiene: se prueba con el siguiente.
     if (fallo === "language-not-supported" && intento < idiomas.length - 1) {
-      escucharConNavegador(intento + 1);
+      escucharConNavegador(intento + 1, previo);
+      return;
+    }
+    // Una pausa con el dedo todavía apoyado: se sigue escuchando la misma frase.
+    if (sostenida && !["not-allowed", "service-not-allowed", "audio-capture"].includes(fallo)) {
+      escucharConNavegador(intento, texto);
       return;
     }
     if (texto) {
@@ -871,20 +978,20 @@ function escucharConNavegador(intento = 0) {
     }
     avisarSala("listo");
     $("respuesta").textContent = "";
-    if (fallo === "not-allowed" || fallo === "service-not-allowed") {
-      // Sin permiso no hay nada que reintentar: se queda dicho.
-      if (manosLibres) bloqueoEscucha = fallo;
-      avisar(TX.sinMicrofono, { fijo: manosLibres });
+    if (fallo === "service-not-allowed") {
+      // Safari en iPhone: el dictado sólo arranca con un toque terminado (un
+      // clic), no con el dedo apoyado. Con «mantener apretado» no hay forma:
+      // hace falta el oído en tiempo real (ElevenLabs), que usa el micrófono
+      // abierto en «Empezar». Se queda dicho, para quien maneja el panel.
+      rastro("el navegador no deja dictar al apoyar el dedo: usar el oído «ElevenLabs en tiempo real» en el panel");
+      avisar(TX.dictadoBloqueado, { fijo: true });
+    } else if (fallo === "not-allowed") {
+      // Sin permiso del micrófono no hay nada que reintentar: se queda dicho.
+      avisar(TX.sinMicrofono, { fijo: true });
     } else if (fallo === "audio-capture") {
-      fallosSeguidos++;
       avisar(TX.sinMicrofono);
     } else if (fallo === "network") {
-      fallosSeguidos++;
       avisar(TX.sinRed);
-    } else if (manosLibres) {
-      // Un silencio no es un error: el dictado se cierra solo a los segundos y
-      // se vuelve a abrir, sin escribir nada.
-      poner("listo");
     } else {
       avisar(TX.noEscuche, { error: false });
     }
@@ -898,17 +1005,22 @@ function escucharConNavegador(intento = 0) {
       avisarSala("listo");
     },
   };
-  mostrarPregunta("");
-  mostrarEscuchado("");
-  poner("escuchando");
+  // Al seguir una frase (`previo`) no se borra lo que ya se ve.
+  if (!previo) {
+    mostrarPregunta("");
+    mostrarEscuchado("");
+    poner("escuchando");
+    avisarSala("escuchando", "");
+  }
   document.body.dataset.mic = "pendiente";
-  avisarSala("escuchando", "");
   try {
     rec.start();
   } catch (e) {
     escucha = null;
     rastro("ERROR al arrancar:", e?.name || e);
-    avisar(TX.sinMicrofono);
+    // Si no se pudo seguir la frase, se pregunta con lo que ya se entendió.
+    if (previo) preguntar(previo);
+    else avisar(TX.sinMicrofono);
   }
 }
 
@@ -946,7 +1058,8 @@ async function escucharConServidor() {
     if (v > 0.12) {
       oyoVoz = true;
       silencioDesde = 0;
-    } else if (oyoVoz && v < 0.06) {
+    } else if (oyoVoz && v < 0.06 && !sostenida) {
+      // Con el dedo apoyado, corta el dedo, no el silencio.
       silencioDesde ||= ahora;
       if (ahora - silencioDesde > 1200) detener();
     }
@@ -964,16 +1077,9 @@ async function escucharConServidor() {
   grabador.onstop = async () => {
     escucha = null;
     clearInterval(vigilar);
+    if (mantener) cerrarMicrofono();
     if (cancelada) return;
     const blob = new Blob(partes, { type: grabador.mimeType || tipo || "audio/webm" });
-    // Escuchando solo, la mayoría de las ventanas son silencio: mandarlas a
-    // transcribir sería pagar para que conteste «nada».
-    if (manosLibres && !oyoVoz) {
-      rastro("ventana sin voz: no se manda");
-      avisarSala("listo");
-      poner("listo");
-      return;
-    }
     if (blob.size < 1500) {
       avisarSala("listo");
       avisar(TX.noEscuche, { error: false });
@@ -1024,19 +1130,24 @@ async function escucharConServidor() {
 /* -------------------------------------------------------------------------
  * Escuchar en tiempo real: ElevenLabs Scribe v2 Realtime, por WebSocket
  *
- * El audio del micrófono viaja sin parar a ElevenLabs, que devuelve lo que va
- * entendiendo (`partial_transcript`) y, en cada pausa, la frase terminada
- * (`committed_transcript`): ahí se pregunta. Por eso no hay nada que tocar.
+ * El audio del micrófono viaja a ElevenLabs, que devuelve lo que va entendiendo
+ * (`partial_transcript`) y, en cada pausa, el tramo terminado
+ * (`committed_transcript`).
+ *
+ * Una conexión por pregunta, y sólo mientras se habla: nada viaja (ni se paga)
+ * entre una pregunta y otra.
+ *  - En el teléfono, con el dedo apoyado, los tramos se juntan y se pregunta al
+ *    soltar. El audio se guarda desde el primer instante y sale cuando la
+ *    conexión está lista: lo dicho mientras conecta no se pierde.
+ *  - En la computadora (tecla o clic), se pregunta en la primera pausa; otra
+ *    tecla corta antes y pregunta con lo que haya.
+ * Al terminar de hablar se manda SILENCIO (ceros) y se pide cerrar el tramo,
+ * para que la última palabra llegue antes de cerrar.
  *
  * La key no se toca acá: el servidor pide un token de un solo uso y manda la
  * dirección ya armada (POST presentacion/token). Formato según la
  * documentación de ElevenLabs: PCM de 16 bits a 16 kHz, en base 64, dentro de
  * `{ message_type: "input_audio_chunk", audio_base_64, commit, sample_rate }`.
- *
- * Mientras se contesta, la conexión sigue abierta pero se manda SILENCIO (ceros)
- * en vez del micrófono: ElevenLabs corta la conexión a los 15 segundos si no
- * recibe audio, y reconectar en cada turno perdería el principio de lo que se
- * dice al volver.
  * ---------------------------------------------------------------------- */
 
 const rt = {
@@ -1046,8 +1157,11 @@ const rt = {
   mudo: null,
   activo: false, // se quiere escuchar (reconectar si se cae)
   listo: false, // llegó session_started
-  pausado: false, // se está contestando: se manda silencio
-  continuo: false, // escucha solo, frase tras frase (teléfono)
+  soltada: false, // ya se terminó de hablar: se manda silencio y se espera el cierre
+  commit: false, // el próximo envío pide cerrar el tramo
+  dicho: "", // los tramos ya cerrados de esta pregunta
+  ultimoParcial: "", // lo que va entendiendo del tramo abierto
+  relojCierre: 0,
   resto: new Float32Array(0),
   cola: [],
   colaN: 0,
@@ -1057,32 +1171,25 @@ const rt = {
 };
 
 const MUESTRAS_POR_ENVIO = 3200; // 200 ms a 16 kHz (la documentación recomienda entre 0,1 y 1 s)
+const MUESTRAS_MAX_ENVIO = 16000; // 1 s: lo guardado mientras conecta sale en trozos de a uno
+const MUESTRAS_GUARDADAS = 16000 * 15; // lo que se guarda mientras conecta, como mucho
 
 async function escucharTiempoReal() {
-  // Ya hay una conexión: sólo se vuelve a escuchar.
-  if (rt.ws && rt.ws.readyState <= 1) {
-    reanudarTiempoReal();
-    return;
-  }
-  rt.continuo = manosLibres;
+  cerrarTiempoReal();
   rt.activo = true;
-  rt.pausado = false;
   rt.listo = false;
-  if (!rt.continuo) {
-    // Desde la computadora: una frase y se cierra, como los otros modos.
-    escucha = {
-      detener: () => {
-        escucha = null;
-        cerrarTiempoReal();
-        poner("listo");
-      },
-      cancelar: () => {
-        escucha = null;
-        cerrarTiempoReal();
-        avisarSala("listo");
-      },
-    };
-  }
+  rt.soltada = false;
+  rt.commit = false;
+  rt.dicho = "";
+  rt.ultimoParcial = "";
+  escucha = {
+    detener: terminarTiempoReal,
+    cancelar: () => {
+      escucha = null;
+      cerrarTiempoReal();
+      avisarSala("listo");
+    },
+  };
   mostrarPregunta("");
   mostrarEscuchado("");
   poner("escuchando");
@@ -1100,6 +1207,9 @@ async function conectarTiempoReal() {
     fallaTiempoReal(TX.sinMicrofono, { fatal: e?.name === "NotAllowedError" || e?.name === "SecurityError" });
     return;
   }
+  if (!rt.activo) return;
+  // El micrófono empieza a guardarse ya, mientras se pide el token y se conecta.
+  if (!rt.proc) conectarAudioTiempoReal(flujo);
   let r;
   const t0 = performance.now();
   try {
@@ -1121,15 +1231,11 @@ async function conectarTiempoReal() {
     return;
   }
   rt.ws = ws;
-  ws.onopen = () => {
-    rastro("WebSocket abierto");
-    conectarAudioTiempoReal(flujo);
-  };
+  ws.onopen = () => rastro("WebSocket abierto");
   ws.onmessage = mensajeTiempoReal;
   ws.onerror = () => rastro("WebSocket: error de conexión");
   ws.onclose = (ev) => {
     rastro("WebSocket cerrado", ev.code, ev.reason || "");
-    soltarAudioTiempoReal();
     if (rt.ws === ws) rt.ws = null;
     rt.listo = false;
     if (rt.activo) reconectarTiempoReal();
@@ -1173,10 +1279,9 @@ function soltarAudioTiempoReal() {
 }
 
 function enviarAudioTiempoReal(entrada) {
-  const ws = rt.ws;
-  if (!ws || ws.readyState !== 1 || !rt.listo || !audio) return;
-  // Contestando, en vez del micrófono se manda silencio: ver arriba.
-  const muestras = rt.pausado ? new Float32Array(entrada.length) : entrada;
+  if (!audio) return;
+  // Terminado de hablar, en vez del micrófono va silencio: ver arriba.
+  const muestras = rt.soltada ? new Float32Array(entrada.length) : entrada;
 
   // De la frecuencia del equipo (44,1 o 48 kHz) a 16 kHz, promediando.
   const razon = audio.sampleRate / 16000;
@@ -1195,6 +1300,13 @@ function enviarAudioTiempoReal(entrada) {
   rt.resto = buf.slice(Math.floor(n * razon));
   rt.cola.push(pcm);
   rt.colaN += n;
+
+  const ws = rt.ws;
+  if (!ws || ws.readyState !== 1 || !rt.listo) {
+    // Todavía conectando: se guarda (con un tope, por si nunca conecta).
+    while (rt.colaN > MUESTRAS_GUARDADAS && rt.cola.length > 1) rt.colaN -= rt.cola.shift().length;
+    return;
+  }
   if (rt.colaN < MUESTRAS_POR_ENVIO) return;
 
   const todo = new Int16Array(rt.colaN);
@@ -1205,12 +1317,18 @@ function enviarAudioTiempoReal(entrada) {
   }
   rt.cola = [];
   rt.colaN = 0;
-  const bytes = new Uint8Array(todo.buffer);
-  let binario = "";
-  for (let i = 0; i < bytes.length; i += 0x8000) binario += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
-  ws.send(JSON.stringify({ message_type: "input_audio_chunk", audio_base_64: btoa(binario), commit: false, sample_rate: 16000 }));
-  rt.enviados++;
-  if (rt.enviados === 1) rastro("primer audio enviado");
+  // Lo guardado mientras conectaba puede pasar del segundo: sale en trozos.
+  for (let desde = 0; desde < todo.length; desde += MUESTRAS_MAX_ENVIO) {
+    const trozo = todo.subarray(desde, Math.min(todo.length, desde + MUESTRAS_MAX_ENVIO));
+    const bytes = new Uint8Array(trozo.buffer, trozo.byteOffset, trozo.byteLength);
+    let binario = "";
+    for (let i = 0; i < bytes.length; i += 0x8000) binario += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    const commit = rt.commit && desde + MUESTRAS_MAX_ENVIO >= todo.length;
+    if (commit) rt.commit = false;
+    ws.send(JSON.stringify({ message_type: "input_audio_chunk", audio_base_64: btoa(binario), commit, sample_rate: 16000 }));
+    rt.enviados++;
+    if (rt.enviados === 1) rastro("primer audio enviado");
+  }
 }
 
 function mensajeTiempoReal(ev) {
@@ -1224,10 +1342,8 @@ function mensajeTiempoReal(ev) {
     case "session_started":
       rt.listo = true;
       rt.reintento = 0;
-      fallosSeguidos = 0;
       rastro("sesión abierta", m.session_id || "");
-      if (!rt.pausado) {
-        poner("escuchando");
+      if (!rt.soltada) {
         document.body.dataset.mic = "abierto";
         avisarSala("escuchando", "");
       }
@@ -1235,15 +1351,16 @@ function mensajeTiempoReal(ev) {
     case "partial_transcript":
       // Es lo que va entendiendo; un parcial vacío es sólo la señal de que la
       // conexión sigue viva.
-      if (rt.pausado || !m.text) break;
-      vigilarFrase(m.text);
+      if (!m.text) break;
+      rt.ultimoParcial = m.text;
+      if (!sostenida && !rt.soltada) vigilarFrase(m.text);
       pulsoRemoto = 0.9;
-      mostrarEscuchado(m.text);
-      avisarSala("escuchando", m.text);
+      mostrarEscuchado(`${rt.dicho} ${m.text}`.trim());
+      avisarSala("escuchando", `${rt.dicho} ${m.text}`.trim());
       break;
     case "committed_transcript":
       soltarVigilancia();
-      frasePorTiempoReal(m.text);
+      tramoTiempoReal(m.text);
       break;
     case "warning":
       rastro("aviso:", m.warning || "");
@@ -1265,9 +1382,9 @@ function mensajeTiempoReal(ev) {
 }
 
 /**
- * Perro guardián del corte de frase. El VAD de ElevenLabs corta por silencio;
- * con ruido de fondo (una sala, una calle) puede no cortar nunca y la página
- * se queda escuchando sin contestar. Si lo entendido lleva un rato sin cambiar
+ * Perro guardián del corte de frase en la computadora. El VAD de ElevenLabs
+ * corta por silencio; con ruido de fondo puede no cortar nunca y la página se
+ * queda escuchando sin contestar. Si lo entendido lleva un rato sin cambiar
  * —o la frase ya dura demasiado—, se da por terminada con lo que haya.
  */
 function vigilarFrase(texto) {
@@ -1279,10 +1396,9 @@ function vigilarFrase(texto) {
   const quieto = Math.max(2000, ((config.silencio || 1.5) + 1) * 1000);
   const resto = Math.max(0, 20000 - (Date.now() - rt.inicioFrase));
   rt.relojFrase = setTimeout(() => {
-    const t = rt.parcial;
-    rastro("la frase no se cortó sola; se da por terminada:", t);
+    rastro("la frase no se cortó sola; se da por terminada:", rt.parcial);
     soltarVigilancia();
-    if (t) frasePorTiempoReal(t);
+    cerrarFraseTiempoReal();
   }, Math.min(quieto, resto));
 }
 
@@ -1293,43 +1409,65 @@ function soltarVigilancia() {
   rt.inicioFrase = 0;
 }
 
-/** Una frase terminada: lo que se dijo hasta la pausa. */
-function frasePorTiempoReal(texto) {
+/** Un tramo cerrado: se junta con lo anterior. */
+function tramoTiempoReal(texto) {
   texto = String(texto || "").trim();
-  if (rt.pausado) {
-    rastro("frase ignorada (se está contestando):", texto);
+  rt.ultimoParcial = "";
+  if (texto) rt.dicho = `${rt.dicho} ${texto}`.trim();
+  rastro("tramo:", texto || "(vacío)");
+  if (sostenida) {
+    mostrarEscuchado(rt.dicho);
     return;
   }
-  // Un «mm» o un ruido suelto no es una pregunta.
+  if (rt.soltada) {
+    // Ya se soltó: puede venir otro tramo pegado; se espera un instante.
+    clearTimeout(rt.relojCierre);
+    rt.relojCierre = setTimeout(cerrarFraseTiempoReal, 400);
+    return;
+  }
+  // En la computadora, la primera pausa es el final de la pregunta. Un «mm» o
+  // un ruido suelto no es una pregunta: se sigue escuchando.
+  if (rt.dicho.replace(/[\s.,;:¿?¡!…-]/g, "").length < 3) {
+    rastro("frase demasiado corta, se ignora:", rt.dicho);
+    rt.dicho = "";
+    return;
+  }
+  cerrarFraseTiempoReal();
+}
+
+/** Se terminó de hablar (se soltó, u otra tecla): lo que falte, y se pregunta. */
+function terminarTiempoReal() {
+  if (!rt.activo || rt.soltada) return;
+  rt.soltada = true;
+  rt.commit = true;
+  soltarVigilancia();
+  // Lo que falta llega en cuanto se cierra el tramo. Si no conectó todavía, lo
+  // guardado sale al conectar: se espera un poco más.
+  clearTimeout(rt.relojCierre);
+  rt.relojCierre = setTimeout(cerrarFraseTiempoReal, rt.listo ? 1200 : 5000);
+}
+
+function cerrarFraseTiempoReal() {
+  clearTimeout(rt.relojCierre);
+  const texto = `${rt.dicho} ${rt.ultimoParcial}`.trim();
+  escucha = null;
+  cerrarTiempoReal();
+  if (mantener) cerrarMicrofono();
   if (texto.replace(/[\s.,;:¿?¡!…-]/g, "").length < 3) {
-    rastro("frase demasiado corta, se ignora:", texto);
+    rastro("no se entendió nada:", texto || "(vacío)");
+    avisarSala("listo");
+    $("respuesta").textContent = "";
+    avisar(TX.noEscuche, { error: false });
     return;
   }
   rastro("frase:", texto);
-  rt.pausado = true;
-  soltarVigilancia();
-  if (!rt.continuo) {
-    escucha = null;
-    cerrarTiempoReal();
-  }
   preguntar(texto);
-}
-
-/** Se terminó de contestar: se vuelve a escuchar por la misma conexión. */
-function reanudarTiempoReal() {
-  rt.pausado = false;
-  if (rt.ws && rt.listo) {
-    poner("escuchando");
-    document.body.dataset.mic = "abierto";
-    avisarSala("escuchando", "");
-    rastro("escuchando de nuevo");
-  }
 }
 
 function reconectarTiempoReal() {
   rt.reintento++;
   if (rt.reintento > 4) {
-    rastro("no se pudo reconectar: se espera y se vuelve a empezar");
+    rastro("no se pudo reconectar");
     fallaTiempoReal(TX.sinRed, {});
     return;
   }
@@ -1343,9 +1481,11 @@ function reconectarTiempoReal() {
 
 function cerrarTiempoReal() {
   soltarVigilancia();
+  clearTimeout(rt.relojCierre);
   rt.activo = false;
   rt.listo = false;
-  rt.pausado = false;
+  rt.soltada = false;
+  rt.commit = false;
   rt.reintento = 0;
   clearTimeout(rt.relojReconexion);
   soltarAudioTiempoReal();
@@ -1365,19 +1505,14 @@ function cerrarTiempoReal() {
 
 /**
  * Algo falló. Un problema sin arreglo (permiso, key, saldo) deja el mensaje en
- * pantalla y no vuelve a intentar; el resto se vuelve a intentar con espera.
+ * pantalla; el resto se va solo a los segundos.
  */
 function fallaTiempoReal(mensaje, { fatal = false } = {}) {
   cerrarTiempoReal();
+  if (mantener) cerrarMicrofono();
   escucha = null;
   avisarSala("listo");
-  if (fatal) {
-    if (manosLibres) bloqueoEscucha = "tiempo_real";
-    avisar(mensaje, { fijo: true });
-    return;
-  }
-  fallosSeguidos++;
-  avisar(mensaje);
+  avisar(mensaje, { fijo: fatal });
 }
 
 /* -------------------------------------------------------------------------
@@ -1675,6 +1810,7 @@ async function empezar() {
   await audio?.resume?.().catch(() => {});
   // En Safari la voz del navegador sólo arranca si la primera vez fue en un toque.
   if (window.speechSynthesis) speechSynthesis.speak(new SpeechSynthesisUtterance(""));
+  destrabarVoz();
   // El micrófono se abre ahora para que la esfera lo escuche (y para pedir el
   // permiso una sola vez, antes de que haya público mirando) SÓLO donde se
   // puede compartir: con la transcripción en el servidor —que es quien lo usa—
@@ -1686,6 +1822,9 @@ async function empezar() {
     try {
       await abrirMicrofono();
       rastro("micrófono abierto para medirlo");
+      // En un teléfono se abre sólo para pedir el permiso ahora, una vez: si
+      // queda abierto, Safari baja o apaga la voz. Se abre de nuevo al apretar.
+      if (mantener) cerrarMicrofono();
     } catch (e) {
       rastro("micrófono:", e?.name || e);
     }
@@ -1699,9 +1838,6 @@ async function empezar() {
   $("nota-microfono").textContent = config.oido === "navegador" ? TX.notaNavegador : "";
   pintarSala();
   vigilarSala();
-  // El teléfono empieza a escuchar solo, sin que nadie toque nada.
-  armado = true;
-  programarEscucha(500);
 }
 
 async function arrancar() {
@@ -1729,14 +1865,28 @@ async function arrancar() {
   boton.focus();
 }
 
-// Tocar la esfera sólo sirve en la computadora. En un teléfono no se toca nada:
-// escucha sola (ver «Escuchar solo»).
-if (!manosLibres) $("orbe").addEventListener("click", alternarEscucha);
+document.body.classList.toggle("sin-pantalla-completa", !document.fullscreenEnabled);
 
-// Si el teléfono estuvo en segundo plano, el micrófono y la conexión pueden
-// haberse cortado: al volver se retoma solo.
+// En la computadora, la esfera se toca (o se aprieta una tecla). En un
+// teléfono se mantiene apretada la pantalla entera: ver «Mantener apretado».
+if (mantener) {
+  const escena = document.querySelector(".escena");
+  escena.addEventListener("pointerdown", apretar);
+  document.addEventListener("pointerup", soltar);
+  document.addEventListener("pointercancel", soltar);
+  // Un dedo apoyado un rato abre el menú de copiar o la lupa: acá no.
+  escena.addEventListener("contextmenu", (e) => e.preventDefault());
+} else {
+  $("orbe").addEventListener("click", alternarEscucha);
+}
+
+// Si el teléfono se va a segundo plano con el dedo apoyado, no queda escuchando.
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible" && manosLibres && armado && !bloqueoEscucha) programarEscucha(300);
+  if (document.visibilityState !== "hidden" || !apretado) return;
+  apretado = null;
+  sostenida = false;
+  cancelarEscucha();
+  poner("listo");
 });
 $("abrir-ajustes").addEventListener("click", () => abrirAjustes());
 $("pantalla-completa").addEventListener("click", pantallaCompleta);

@@ -31,9 +31,9 @@ $p = PROMOTUR_Asistente_Panel::presentacion();
 		'elevenlabs' => 'ElevenLabs (Scribe)',
 	);
 	$modos = array(
-		'navegador' => __( 'El navegador (Chrome)', 'caaguazu-portal' ),
+		'navegador' => __( 'El navegador (sólo en computadora)', 'caaguazu-portal' ),
 		'servidor'  => __( 'El servidor (graba y transcribe)', 'caaguazu-portal' ),
-		'tiempo_real' => __( 'ElevenLabs en tiempo real (manos libres, WebSocket)', 'caaguazu-portal' ),
+		'tiempo_real' => __( 'ElevenLabs en tiempo real (el que anda en teléfonos)', 'caaguazu-portal' ),
 	);
 	?>
 	<form class="promotur-form" method="post" action="<?php echo esc_url( $accion ); ?>" autocomplete="off">
@@ -92,6 +92,13 @@ $p = PROMOTUR_Asistente_Panel::presentacion();
 				</label>
 			</div>
 			<p class="promotur-muted"><?php esc_html_e( 'Recuerda su propia charla, sin depender de la memoria del asistente de la app. El modelo va por la misma API y endpoint; vacío = el del asistente.', 'caaguazu-portal' ); ?></p>
+			<?php if ( null !== $p['temperatura'] ) : ?>
+				<label class="promotur-field">
+					<span><?php esc_html_e( 'Creatividad (temperatura)', 'caaguazu-portal' ); ?></span>
+					<input type="number" name="temperatura" min="0" max="1.5" step="0.05" value="<?php echo esc_attr( $p['temperatura'] ); ?>">
+				</label>
+				<p class="promotur-muted"><?php esc_html_e( 'Cuánto varía cómo dice las cosas: 0 repite siempre lo mismo; 0,9 tiene personalidad; más de 1,2 empieza a divagar. Los datos no cambian: el prompt le pide decirlos tal cual. La del asistente de la app es aparte.', 'caaguazu-portal' ); ?></p>
+			<?php endif; ?>
 			<label class="promotur-field">
 				<span><input type="checkbox" name="catalogo" value="1"<?php checked( $p['catalogo'] ); ?>> <?php esc_html_e( 'Sumar lo publicado en la app (lugares, eventos, artículos)', 'caaguazu-portal' ); ?></span>
 			</label>
@@ -159,7 +166,12 @@ $p = PROMOTUR_Asistente_Panel::presentacion();
 				<?php echo promotur_icon( 'chat' ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 				<span><?php esc_html_e( 'Oído', 'caaguazu-portal' ); ?></span>
 			</div>
-			<p class="promotur-muted"><?php esc_html_e( 'Quién entiende lo que se dice. El navegador es gratis, pero usa el micrófono del equipo. El servidor graba y transcribe por pedido. En tiempo real, ElevenLabs escucha todo el tiempo y corta solo en cada pausa: el teléfono queda siempre escuchando, sin tocar nada (usa la key de ElevenLabs).', 'caaguazu-portal' ); ?></p>
+			<p class="promotur-muted"><?php esc_html_e( 'Quién entiende lo que se dice. En un teléfono se habla manteniendo apretada la pantalla. El navegador es gratis, pero en iPhone no deja dictar así: sirve para la computadora. El servidor graba y transcribe al soltar. En tiempo real, ElevenLabs va entendiendo mientras se habla (usa la key de ElevenLabs).', 'caaguazu-portal' ); ?></p>
+			<?php if ( 'navegador' === $p['oido_modo'] ) : ?>
+				<p class="promotur-form-msg is-error"><?php esc_html_e( 'Con el navegador, un iPhone no escucha al mantener apretado. Para hablar desde un teléfono, elegí «ElevenLabs en tiempo real».', 'caaguazu-portal' ); ?></p>
+			<?php elseif ( 'tiempo_real' === $p['oido_modo'] && '' === $p['oido_key'] ) : ?>
+				<p class="promotur-form-msg is-error"><?php esc_html_e( 'Falta la key de ElevenLabs: sin ella, la presentación usa el navegador.', 'caaguazu-portal' ); ?></p>
+			<?php endif; ?>
 			<div class="promotur-grid promotur-grid--2">
 				<label class="promotur-field">
 					<span><?php esc_html_e( 'Quién transcribe', 'caaguazu-portal' ); ?></span>

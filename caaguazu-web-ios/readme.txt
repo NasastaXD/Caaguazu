@@ -131,6 +131,38 @@ propio, idioma elegido), y eso vive en su navegador, no acá.
 
 == Changelog ==
 
+= 2.5.4 =
+* Presentación en el teléfono: la voz vuelve a sonar. En el teléfono la voz
+  sale directo del reproductor (no por el AudioContext, que Safari comparte con
+  el micrófono y suspende), el reproductor se «destraba» en cada toque
+  (Empezar, soltar el dedo) y el micrófono se cierra al terminar cada pregunta
+  (abierto, Safari baja o apaga lo que suena).
+* `?debug=1` dice qué pasa con la voz: si sonó el audio del servidor, si el
+  navegador no lo dejó sonar, o si fue la voz del navegador.
+
+= 2.5.3 =
+* Presentación en el teléfono: vuelven el engranaje (ajustes) y la pantalla
+  completa, a la vista en su esquina. Tocarlos no hace hablar, y con los
+  ajustes abiertos tocar la pantalla los cierra. En iPhone, donde la pantalla
+  completa no existe, ese botón no se dibuja.
+
+= 2.5.2 =
+* Presentación: si el teléfono no deja dictar a la página (Safari en iPhone,
+  «service-not-allowed»), lo dice en pantalla en vez de quedar en silencio. En
+  iPhone, el dictado del navegador no arranca con el dedo apoyado: hay que usar
+  el oído «ElevenLabs en tiempo real».
+
+= 2.5.1 =
+* Presentación en el teléfono: se habla **manteniendo apretada la pantalla**,
+  como un walkie-talkie, y pregunta al soltar. Ya no escucha todo el tiempo:
+  tomaba el ruido de la sala (contestaba solo) y con ruido no cerraba la frase
+  (no contestaba). Un toque corto no pregunta nada y recuerda cómo se habla.
+* Tiempo real (ElevenLabs): una conexión por pregunta, sólo mientras se habla.
+  Lo dicho mientras conecta se guarda y sale apenas conecta; al soltar se manda
+  silencio y se pide cerrar el tramo para no perder la última palabra.
+* La capa de «Empezar» ya no se come el primer toque mientras se desvanece.
+* La computadora del escenario sigue igual (tecla o clic).
+
 = 2.5.0 =
 * `/turismo/vitrina/` ahora muestra la misma página que `/turismo/propuesta/`
   (las dos direcciones siguen andando). La vitrina anterior, con modo

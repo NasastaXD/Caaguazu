@@ -97,6 +97,7 @@ class PROMOTUR_Asistente_Panel {
 			'etiquetas'       => CZUAPI_Presentacion::etiquetas_activas() || (bool) get_option( 'czuapi_pres_etiquetas', 0 ),
 			'modelo'          => (string) get_option( 'czuapi_pres_modelo', '' ),
 			'modelo_activo'   => CZUAPI_Presentacion::modelo(),
+			'temperatura'     => method_exists( 'CZUAPI_Presentacion', 'temperatura' ) ? CZUAPI_Presentacion::temperatura() : null,
 			'catalogo'        => CZUAPI_Presentacion::usa_catalogo(),
 			'borradores'      => method_exists( 'CZUAPI_Presentacion', 'usa_borradores' ) && CZUAPI_Presentacion::usa_borradores(),
 			'web'             => method_exists( 'CZUAPI_Presentacion', 'usa_web' ) && CZUAPI_Presentacion::usa_web(),
@@ -258,7 +259,7 @@ class PROMOTUR_Asistente_Panel {
 			return;
 		}
 		$campos = array(
-			'activo', 'catalogo', 'borradores', 'web', 'persona', 'persona_fabrica', 'conocimiento', 'turnos', 'modelo', 'etiquetas',
+			'activo', 'catalogo', 'borradores', 'web', 'persona', 'persona_fabrica', 'conocimiento', 'turnos', 'modelo', 'temperatura', 'etiquetas',
 			'voz_proveedor', 'voz_endpoint', 'voz_key', 'voz_key_borrar', 'voz_modelo', 'voz_id', 'voz_velocidad',
 			'oido_modo', 'oido_proveedor', 'oido_silencio', 'oido_endpoint', 'oido_key', 'oido_key_borrar', 'oido_modelo', 'oido_idioma',
 		);
