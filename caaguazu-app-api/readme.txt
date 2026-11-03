@@ -168,6 +168,17 @@ depende de cómo se llame el tag.
 * Repo privado: definir `CZUAPI_GITHUB_TOKEN` (PAT de solo lectura) en
   `wp-config.php`, o cargarlo desde **Caaguazú API → Actualizaciones**.
 
+== Cambios en 0.12.0 ==
+
+* **Taller de cuentos:** `GET/POST /taller` presta el proveedor del asistente
+  a un HTML de escritura aparte. Se entra con la cuenta del panel
+  (`/auth/login` → token), sólo con `promotur_manage_asistente` (Profesor), con
+  el interruptor `czuapi_taller_activo` prendido en wp-admin y un tope por
+  persona y por día (`czuapi_taller_tope_dia`, 150 por defecto). La key nunca
+  sale del servidor. Con `stream` pasa el SSE del proveedor tal cual; sin él,
+  devuelve `{ texto, modelo }`. De los parámetros extra pasan sólo los de una
+  lista (`thinking`, `reasoning_effort`, `top_p`…).
+
 == Cambios en 0.11.9 ==
 
 * La presentación tiene su propia temperatura (`czuapi_pres_temperatura`, 0,9

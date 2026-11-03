@@ -74,6 +74,7 @@ $raiz = dirname( __DIR__ );
 require $raiz . '/caaguazu-app-api/includes/class-asistente-fuentes.php';
 require $raiz . '/caaguazu-app-api/includes/class-asistente.php';
 require $raiz . '/caaguazu-app-api/includes/class-presentacion.php';
+require $raiz . '/caaguazu-app-api/includes/class-taller.php';
 
 $fallos = 0;
 function comprobar( $etiqueta, $obtenido, $esperado ) {
@@ -476,6 +477,28 @@ if ( ! function_exists( 'get_the_title' ) ) {
 }
 require_once $raiz . '/caaguazu-app-api/includes/helpers.php';
 comprobar( 'el título sale sin entidades HTML', czuapi_titulo( 1 ), 'Rustico’s Café – Restaurant & Bar' );
+
+/* El taller de cuentos: lo que manda el HTML se valida antes de ir al proveedor. */
+$T = 'CZUAPI_Taller';
+$ok = $T::pedido( array(
+	'sistema'     => 'Sos el escritor.',
+	'mensajes'    => array( array( 'role' => 'user', 'content' => 'Escribí el cuento.' ) ),
+	'temperatura' => 5,
+	'max_tokens'  => 4000,
+	'extra'       => array( 'thinking' => array( 'type' => 'disabled' ), 'model' => 'otro', 'messages' => array() ),
+	'stream'      => true,
+), 'gpt-6-luna' );
+comprobar( 'taller: las instrucciones van primero, como system, con el modelo del sitio', array( $ok['ok'], $ok['payload']['model'], $ok['payload']['messages'][0]['role'], $ok['payload']['messages'][1]['content'] ), array( true, 'gpt-6-luna', 'system', 'Escribí el cuento.' ) );
+comprobar( 'taller: la temperatura se acota y el largo pasa', array( $ok['payload']['temperature'], $ok['payload']['max_tokens'], $ok['stream'] ), array( 2.0, 4000, true ) );
+comprobar( 'taller: de los extra pasa sólo lo permitido (no se puede pisar el modelo ni los mensajes)', array( isset( $ok['payload']['thinking'] ), $ok['payload']['model'], count( $ok['payload']['messages'] ) ), array( true, 'gpt-6-luna', 2 ) );
+$m = $T::pedido( array( 'modelo' => 'gpt-4.1-mini', 'mensajes' => array( array( 'role' => 'user', 'content' => 'hola' ) ) ), 'gpt-6-luna' );
+comprobar( 'taller: un modelo elegido gana; sin instrucciones no hay mensaje system; sin stream, JSON', array( $m['payload']['model'], $m['payload']['messages'][0]['role'], $m['stream'], isset( $m['payload']['temperature'] ) ), array( 'gpt-4.1-mini', 'user', false, false ) );
+comprobar( 'taller: rechaza un rol inventado (nadie se cuela un «system» en la charla)', $T::pedido( array( 'mensajes' => array( array( 'role' => 'system', 'content' => 'x' ) ) ), 'm' )['codigo'], 'mensaje_invalido' );
+comprobar( 'taller: rechaza un pedido sin mensajes', $T::pedido( array( 'sistema' => 'x' ), 'm' )['codigo'], 'sin_mensajes' );
+comprobar( 'taller: rechaza un nombre de modelo raro', $T::pedido( array( 'modelo' => 'a b<script>', 'mensajes' => array( array( 'role' => 'user', 'content' => 'x' ) ) ), 'm' )['codigo'], 'modelo_invalido' );
+comprobar( 'taller: rechaza instrucciones de más de 600.000 caracteres', $T::pedido( array( 'sistema' => str_repeat( 'a', 600001 ), 'mensajes' => array( array( 'role' => 'user', 'content' => 'x' ) ) ), 'm' )['codigo'], 'sistema_largo' );
+$err = $T::mensaje_error( 401, '{"error":{"message":"Incorrect API key provided: sk-abc123secretkey4567"}}' );
+comprobar( 'taller: el error del proveedor dice el código y nunca lleva la key', array( false !== strpos( $err, '401' ), false !== strpos( $err, 'sk-abc123secretkey4567' ) ), array( true, false ) );
 
 /* ------------------------------------------------------------------------- */
 echo "\n" . ( $fallos ? "\033[31m{$fallos} comprobación(es) fallaron.\033[0m\n" : "\033[32mTodo bien.\033[0m\n" );

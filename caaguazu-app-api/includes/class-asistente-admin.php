@@ -136,6 +136,19 @@ class CZUAPI_Asistente_Admin {
 				<p class="description" style="max-width:720px"><?php esc_html_e( 'Lo que no está en ninguna ficha y el asistente tiene que saber: teléfonos de emergencia, transporte, clima, cómo llegar a la ciudad. Va entero en cada pregunta, así que conviene corto.', 'caaguazu-app-api' ); ?></p>
 				<textarea name="conocimiento" rows="10" class="large-text"><?php echo esc_textarea( CZUAPI_Asistente::conocimiento() ); ?></textarea>
 
+				<h2><?php esc_html_e( 'Taller de cuentos', 'caaguazu-app-api' ); ?></h2>
+				<p class="description" style="max-width:720px"><?php esc_html_e( 'Deja que el taller de cuentos (un archivo HTML aparte) use este mismo proveedor. Se entra con la cuenta del panel y sólo lo pueden usar los Profesores; la key nunca sale del servidor. El taller manda sus propias instrucciones al modelo, así que cada pedido es largo: el tope es por persona y por día.', 'caaguazu-app-api' ); ?></p>
+				<table class="form-table"><tbody>
+					<tr><th><?php esc_html_e( 'Taller', 'caaguazu-app-api' ); ?></th><td>
+						<label><input type="checkbox" name="taller_activo" value="1" <?php checked( (bool) get_option( 'czuapi_taller_activo', 0 ) ); ?>>
+						<?php esc_html_e( 'Prendido: los Profesores pueden usar la IA desde el taller', 'caaguazu-app-api' ); ?></label>
+					</td></tr>
+					<tr><th><?php esc_html_e( 'Pedidos por día (por persona)', 'caaguazu-app-api' ); ?></th><td>
+						<input type="number" name="taller_tope_dia" class="small-text" step="1" min="0" value="<?php echo esc_attr( (string) get_option( 'czuapi_taller_tope_dia', '' ) ); ?>" placeholder="<?php echo esc_attr( (string) CZUAPI_Taller::TOPE_DIA_DEFAULT ); ?>">
+						<p class="description"><?php esc_html_e( '0 = sin tope.', 'caaguazu-app-api' ); ?></p>
+					</td></tr>
+				</tbody></table>
+
 				<?php submit_button( __( 'Guardar', 'caaguazu-app-api' ) ); ?>
 			</form>
 
@@ -382,6 +395,9 @@ class CZUAPI_Asistente_Admin {
 		$razona = sanitize_key( wp_unslash( $_POST['razonamiento'] ?? '' ) );
 		update_option( 'czuapi_ia_razonamiento', in_array( $razona, array( 'low', 'medium', 'high' ), true ) ? $razona : '', false );
 		update_option( 'czuapi_ia_aviso_email', sanitize_email( wp_unslash( $_POST['aviso_email'] ?? '' ) ), false );
+		update_option( 'czuapi_taller_activo', empty( $_POST['taller_activo'] ) ? 0 : 1, false );
+		$tope = trim( (string) wp_unslash( $_POST['taller_tope_dia'] ?? '' ) );
+		update_option( 'czuapi_taller_tope_dia', '' === $tope ? '' : absint( $tope ), false );
 
 		/*
 		 * La personalidad igual a la de fábrica se guarda VACÍA: así, cuando la
