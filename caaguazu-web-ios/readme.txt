@@ -131,6 +131,15 @@ propio, idioma elegido), y eso vive en su navegador, no acá.
 
 == Changelog ==
 
+= 2.5.5 =
+* El nombre de la app es **Caaguazú Go**, el mismo que en Android y en iPhone:
+  debajo del ícono al agregarla a la pantalla de inicio (`short_name` del
+  manifiesto y `apple-mobile-web-app-title`), y en el título de la pestaña.
+  Antes decía «Caaguazú» bajo el ícono y «Caaguazú Turismo» en la pestaña.
+  Qué probar: agregar el sitio a la pantalla de inicio desde Safari y mirar el
+  nombre debajo del ícono. Si ya estaba agregado, hay que quitarlo y agregarlo
+  de nuevo: iOS guarda el nombre del momento en que se agregó.
+
 = 2.5.4 =
 * Presentación en el teléfono: la voz vuelve a sonar. En el teléfono la voz
   sale directo del reproductor (no por el AudioContext, que Safari comparte con

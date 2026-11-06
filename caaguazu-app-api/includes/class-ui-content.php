@@ -85,13 +85,17 @@ class CZUAPI_UI_Content {
 
 		$strings = get_option( self::OPT_STRINGS . $locale, null );
 		if ( ! is_array( $strings ) ) {
-			// Sin nada cargado: se cae a español, y si tampoco hay, al set
-			// base. Nunca se devuelve vacío — un menú sin etiquetas es peor
-			// que un menú en otro idioma.
-			$strings = get_option( self::OPT_STRINGS . 'es', null );
-			if ( ! is_array( $strings ) ) {
-				$strings = self::base();
-			}
+			// Sin nada cargado para este idioma, NO se cae a castellano. Los
+			// dos clientes —la app y el espejo web de iOS— traen sus propios
+			// textos en los tres idiomas y ponen los del panel ENCIMA; un
+			// castellano mandado acá pisaba sus traducciones buenas. Pasaba:
+			// en inglés y en portugués la app mostraba «Inventario»,
+			// «Artículos» y «Recorridos» en lugar de «Tourism Inventory» o
+			// «Artigos Turísticos», justo lo que ve un revisor de Apple, que
+			// trabaja con el teléfono en inglés.
+			//
+			// El castellano sí cae al set base, como antes: es el original.
+			$strings = 'es' === $locale ? self::base() : array();
 		}
 
 		/**
@@ -102,7 +106,9 @@ class CZUAPI_UI_Content {
 		 */
 		$strings = apply_filters( 'czuapi_strings', $strings, $locale );
 
-		return CZUAPI_Response::with_etag( $strings, $request, 300 );
+		// Un objeto aunque esté vacío: `array()` sale como `[]` en JSON, y los
+		// clientes esperan `{}`.
+		return CZUAPI_Response::with_etag( empty( $strings ) ? new stdClass() : $strings, $request, 300 );
 	}
 
 	public function manifest( $request ) {
