@@ -1,6 +1,6 @@
 {
-  "name": "Caaguazú Turismo",
-  "short_name": "Caaguazú",
+  "name": "Caaguazú Go",
+  "short_name": "Caaguazú Go",
   "description": "Guía turística de Caaguazú.",
   "start_url": "./index.html",
   "scope": "./",

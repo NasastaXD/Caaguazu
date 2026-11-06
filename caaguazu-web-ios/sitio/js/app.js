@@ -141,7 +141,7 @@ async function enrutar() {
 
   if (!vigente()) return;
   const h1 = pantalla.querySelector("h1");
-  document.title = h1 && encontrada.seccion !== "inicio" ? `${h1.textContent.trim()} · Caaguazú Turismo` : "Caaguazú Turismo";
+  document.title = h1 && encontrada.seccion !== "inicio" ? `${h1.textContent.trim()} · Caaguazú Go` : "Caaguazú Go";
   // Al navegar —no al abrir— el lector de pantalla va al contenido nuevo.
   if (!primera) {
     contenedor.focus({ preventScroll: true });
