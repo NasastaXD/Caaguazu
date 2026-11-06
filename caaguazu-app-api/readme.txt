@@ -168,6 +168,14 @@ depende de cómo se llame el tag.
 * Repo privado: definir `CZUAPI_GITHUB_TOKEN` (PAT de solo lectura) en
   `wp-config.php`, o cargarlo desde **Caaguazú API → Actualizaciones**.
 
+== Cambios en 0.11.10 ==
+
+* `/strings/{idioma}` ya no devuelve los textos en castellano para un idioma que
+  no tiene nada cargado: devuelve `{}`. La app y el espejo web traen sus propios
+  textos y ponen los del panel encima, así que ese castellano pisaba sus
+  traducciones: en inglés y en portugués se veían «Inventario», «Artículos» y
+  «Recorridos». Qué probar: la app en inglés tiene que decir «Tourism
+  Inventory», «Tourism Articles» y «Routes».
 == Cambios en 0.11.9 ==
 
 * La presentación tiene su propia temperatura (`czuapi_pres_temperatura`, 0,9
